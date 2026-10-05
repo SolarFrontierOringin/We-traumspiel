@@ -1,0 +1,63 @@
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:#02050b;color:#eef4ff;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{min-height:100vh}
+#app{width:min(1200px,100%);margin:0 auto;padding:10px}
+header{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+h1{margin:0;font-size:clamp(22px,6vw,32px)}
+.hint{color:#aab8ce;line-height:1.45}
+.small-button,.icon-button{width:auto;padding:9px 12px}
+button{border:0;border-radius:10px;background:#2776d2;color:#fff;font-weight:700;cursor:pointer;padding:10px 12px}
+button:hover{background:#3288ed}
+button:disabled{background:#34445b;color:#aeb8c7;cursor:not-allowed}
+.top-resources{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:8px}
+.resource-chip{padding:7px 10px;border:1px solid #263754;border-radius:12px;background:#0a1120;font-size:14px}
+.save-menu{border:1px solid #263754;border-radius:14px;background:#09111f;padding:12px;margin-bottom:8px}
+.save-menu-head{display:flex;justify-content:space-between;align-items:center}
+.save-buttons{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.danger{background:#8f3030}.save-status{margin-top:8px;min-height:20px}
+.game-layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:10px}
+.solar-system{position:relative;width:100%;height:min(78vh,680px);min-height:480px;overflow:hidden;border:1px solid #263754;border-radius:20px;background:
+radial-gradient(circle at 18% 22%,rgba(255,255,255,.85) 0 1px,transparent 1.6px),
+radial-gradient(circle at 72% 15%,rgba(255,255,255,.75) 0 1px,transparent 1.6px),
+radial-gradient(circle at 84% 68%,rgba(255,255,255,.75) 0 1px,transparent 1.6px),
+radial-gradient(circle at 33% 78%,rgba(255,255,255,.65) 0 1px,transparent 1.6px),
+radial-gradient(circle,#18243d 0%,#080f1d 52%,#02050b 100%);
+background-size:140px 120px,190px 160px,230px 180px,170px 210px,auto}
+.orbit{position:absolute;left:50%;top:50%;border:1px solid rgba(145,170,210,.28);border-radius:50%;transform:translate(-50%,-50%);pointer-events:none}
+.body-wrap{position:absolute;transform:translate(-50%,-50%);z-index:4}
+.body{position:relative;width:42px;height:42px;border:2px solid rgba(255,255,255,.25);border-radius:50%;display:grid;place-items:center;cursor:pointer;user-select:none;padding:0;z-index:2}
+.body.selected{outline:3px solid #7cc7ff;outline-offset:3px}
+.body-label{position:absolute;top:calc(100% + 5px);left:50%;transform:translateX(-50%);white-space:nowrap;font-size:12px;color:#d9e4f4;text-shadow:0 1px 4px #000;pointer-events:none}
+.sun{width:82px;height:82px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff4a0,#ffad22 55%,#e45c0b);box-shadow:0 0 42px #ff9b1c}
+.mercury{width:22px;height:22px;background:#8c8b87}.venus{width:30px;height:30px;background:#d9a45c}
+.earth{width:38px;height:38px;background:radial-gradient(circle at 35% 35%,#57b9ff 0 35%,#2475d1 36% 62%,#4caf50 63%)}
+.mars{width:30px;height:30px;background:#b54b36}.jupiter{width:52px;height:52px;background:linear-gradient(#d4a77a 0 18%,#b97850 18% 35%,#e0bd91 35% 52%,#a96548 52% 68%,#d0a073 68%)}
+.moon{width:18px;height:18px;background:#aaa;border:2px solid #ddd}
+.building-badge{position:absolute;left:30px;top:12px;width:38px;height:38px;padding:0;border-radius:10px;background:#2776d2;font-size:18px;z-index:5}
+.moon-orbit{position:absolute;border:1px dashed rgba(200,220,255,.35);border-radius:50%;pointer-events:none;z-index:1}
+.panel{border:1px solid #263754;border-radius:18px;background:#09111f;padding:14px;align-self:start;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.panel h2,.panel h3{margin-top:0}
+.stat{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #1b2a41}
+.stat:last-child{border-bottom:0}
+.good{color:#75e09b}.warn{color:#ffd36a}.bad{color:#ff7c7c}
+hr{border:0;border-top:1px solid #24334a;margin:14px 0}
+.build-menu{display:grid;gap:8px}
+.build-card{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:9px;border:1px solid #263754;border-radius:12px;background:#0c1627}
+.build-card small{display:block;color:#aab8ce;margin-top:3px;line-height:1.35}
+.build-card button{width:auto;min-width:88px}
+.rocket-window{margin-top:8px}.rocket-box{display:grid;gap:8px}
+select,input{max-width:100%;font:inherit}
+select{padding:7px;border-radius:8px;background:#eef2f7;color:#111}
+.qty-row{display:grid;grid-template-columns:44px 1fr 44px;gap:6px;align-items:center}
+.qty-row button{font-size:20px}
+.cargo-row{display:grid;gap:6px}
+.cargo-row input[type=number]{width:110px;padding:7px;border-radius:8px;border:0}
+.rocket-flight{padding:9px;border:1px solid #263754;border-radius:10px;margin-top:7px}
+.progress{height:7px;background:#1d2a3d;border-radius:8px;overflow:hidden;margin:6px 0}
+.progress i{display:block;height:100%;background:#2776d2}
+@media(max-width:760px){
+#app{padding:7px}header{align-items:flex-start}.game-layout{grid-template-columns:1fr}
+.solar-system{height:520px;min-height:520px}.panel{width:100%}
+.save-buttons{grid-template-columns:1fr 1fr}.save-buttons button:last-child{grid-column:1/-1}
+}
+@media(max-width:430px){.solar-system{height:500px;min-height:500px}.body-label{font-size:11px}.building-badge{left:26px;top:8px;width:34px;height:34px}.sun{width:72px;height:72px}}
