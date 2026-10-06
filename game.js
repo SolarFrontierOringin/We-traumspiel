@@ -380,10 +380,17 @@ function renderTopResources() {
   if (state.steel > 0.000001) parts.push(`🔩 Stahl: <strong>${formatTons(state.steel)}</strong>`);
   if (electricityProduction('earth') > 0) parts.push(`⚡ Strom: <strong>${electricityProduction('earth').toFixed(0)} MW/s</strong>`);
 
-  topResources.innerHTML = parts.length
+  const html = parts.length
     ? parts.join(' &nbsp;|&nbsp; ')
     : '<span class="hint">Noch keine Rohstoffe abgebaut</span>';
-  applyLanguage();
+
+  // Nur neu zeichnen, wenn sich der Inhalt wirklich geändert hat.
+  // Dadurch blinkt die Meldung bei 250-ms-Updates nicht mehr.
+  if (topResources.dataset.lastRawHtml !== html) {
+    topResources.innerHTML = html;
+    topResources.dataset.lastRawHtml = html;
+    applyLanguage(topResources);
+  }
 }
 
 function resourceRows(body) {
@@ -721,6 +728,11 @@ function applyLanguage(root=document.body){
 
   const map = translations[lang] || {};
   const entries = Object.entries(map).sort((a,b) => b[0].length - a[0].length);
+
+  // Übersetzungen werden nur auf dem aktuellen deutschen Ausgangstext angewendet.
+  // Bereits übersetzte Zieltexte werden vorher geschützt. Das verhindert z.B.
+  // dass "Temperature" bei jedem Rendern zu "Temperaturee", "Temperatureee" usw. wird.
+  const targetEntries = entries.slice().sort((a,b) => b[1].length - a[1].length);
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   const nodes = [];
   let node;
@@ -732,29 +744,38 @@ function applyLanguage(root=document.body){
 
     const leading = value.match(/^\s*/)?.[0] || '';
     const trailing = value.match(/\s*$/)?.[0] || '';
-    const core = value.trim();
+    let core = value.trim();
+    if (!core) return;
 
-    // Exact match first. This is important for labels such as
-    // "Temperatur" -> "Temperature" and prevents repeated additions.
-    if (Object.prototype.hasOwnProperty.call(map, core)) {
-      textNode.nodeValue = leading + map[core] + trailing;
-      return;
+    const placeholders = [];
+    let index = 0;
+    const protectTargets = (text) => {
+      for (const [, target] of targetEntries) {
+        if (!target || !text.includes(target)) continue;
+        const token = `\uE100${index++}\uE101`;
+        placeholders.push([token, target]);
+        text = text.split(target).join(token);
+      }
+      return text;
+    };
+
+    // Bereits vorhandene englische/französische Texte schützen.
+    core = protectTargets(core);
+
+    // Danach ausschließlich deutsche Ausgangstexte ersetzen.
+    for (const [source, target] of entries) {
+      if (!source || !core.includes(source)) continue;
+      const token = `\uE200${index++}\uE201`;
+      placeholders.push([token, target]);
+      core = core.split(source).join(token);
     }
 
-    // Translate mixed text without ever feeding an already translated
-    // word back into the translator. No MutationObserver is used anymore.
-    let translated = core;
-    const placeholders = [];
-    entries.forEach(([source, target], index) => {
-      if (!translated.includes(source)) return;
-      const token = `\\uE000${index}\\uE001`;
-      placeholders.push([token, target]);
-      translated = translated.split(source).join(token);
-    });
-    placeholders.forEach(([token, target]) => {
-      translated = translated.split(token).join(target);
-    });
-    textNode.nodeValue = leading + translated + trailing;
+    // Platzhalter wieder einsetzen.
+    for (const [token, target] of placeholders) {
+      core = core.split(token).join(target);
+    }
+
+    textNode.nodeValue = leading + core + trailing;
   });
 }
 
