@@ -64,7 +64,7 @@ const bodies = {
   mercury: { name: 'Merkur', type: 'Planet', className: 'mercury', temperature: 'ca. 167 °C Durchschnitt', resources: { stone: 20000, coal: 20000, gas: 40000 }, storage: {}, orbit: 150 },
   venus: { name: 'Venus', type: 'Planet', className: 'venus', temperature: 'ca. 464 °C Durchschnitt', resources: { stone: 20000, coal: 20000, gas: 40000 }, storage: {}, orbit: 235 },
   earth: { name: 'Erde', type: 'Startplanet', className: 'earth', temperature: 'ca. 15 °C Durchschnitt', resources: { stone: 20000, coal: 20000, gas: 40000, iron: 2000000 }, storage: null, orbit: 320 },
-  luna: { name: 'Luna', type: 'Mond der Erde', className: 'luna', temperature: 'ca. -20 °C Durchschnitt', resources: { iron: 2000000, silicon: 4000000 }, storage: {}, orbit: 0, moonOf: 'earth', moonOrbit: 85 },
+  luna: { name: 'Luna', type: 'Mond der Erde', className: 'luna', temperature: 'ca. -20 °C Durchschnitt', resources: { iron: 2000000, silicon: 4000000 }, storage: {}, orbit: 0, moonOf: 'earth', moonOrbit: 55 },
   mars: { name: 'Mars', type: 'Planet', className: 'mars', temperature: 'ca. -63 °C Durchschnitt', resources: { stone: 20000, coal: 20000, gas: 40000 }, storage: {}, orbit: 405 },
   jupiter: { name: 'Jupiter', type: 'Gasplanet', className: 'jupiter', temperature: 'ca. -110 °C Wolkenobergrenze', resources: { hydrogen: 100000, helium: 50000 }, storage: {}, orbit: 515 }
 };
@@ -245,6 +245,9 @@ function renderSystem() {
   moon.type = 'button';
   moon.setAttribute('aria-label', 'Luna');
   moon.title = 'Luna';
+  const moonAngle = 225 * Math.PI / 180;
+  moon.style.left = `${Math.cos(moonAngle) * bodies.luna.moonOrbit}px`;
+  moon.style.top = `${Math.sin(moonAngle) * bodies.luna.moonOrbit}px`;
   moon.innerHTML = '<span class="body-label">Luna</span>' +
     `<span class="building-badge moon-building-badge" role="button" tabindex="0" title="Gebäudemenü öffnen">${totalBuildingsOnPlanet('luna') > 0 ? `🏭 ${totalBuildingsOnPlanet('luna')}` : '🏗️'}</span>`;
   const moonBuildingBadge = moon.querySelector('.moon-building-badge');
@@ -357,6 +360,7 @@ function renderSystem() {
     menu.querySelector('#build-steelworks-floating').addEventListener('click', buildSteelworks);
     menu.querySelector('#build-rocket-station').addEventListener('click', buildRocketStation);
   }
+  applyLanguage();
 }
 
 function renderTopResources() {
@@ -379,6 +383,7 @@ function renderTopResources() {
   topResources.innerHTML = parts.length
     ? parts.join(' &nbsp;|&nbsp; ')
     : '<span class="hint">Noch keine Rohstoffe abgebaut</span>';
+  applyLanguage();
 }
 
 function resourceRows(body) {
@@ -409,12 +414,14 @@ function renderInfo() {
   const body = bodies[state.selected];
   if (state.selected === 'sun') {
     infoPanel.innerHTML = `<h2>☀️ Sonne</h2><p class="hint">${body.type}</p><div class="stat"><span>Temperatur</span><strong>${body.temperature}</strong></div><h3>🌐 Rohstoffe</h3><p class="hint">Keine abbaubaren Rohstoffe.</p>`;
+    applyLanguage();
     return;
   }
   const bld = getBuildingsOnPlanet(state.selected);
   const localStorage = getPlanetStorage(state.selected);
   infoPanel.innerHTML = `<h2>${state.selected === 'earth' ? '🌍' : '🪐'} ${body.name}</h2><p class="hint">${body.type}</p><div class="stat"><span>Temperatur</span><strong>${body.temperature}</strong></div><h3>🌐 Rohstoffe auf dem Planeten</h3>${resourceRows(body)}<h3>📦 Lager auf ${body.name}</h3>${formatStorage(state.selected)}<hr><h3>🏭 Gebäude auf ${body.name}</h3><div class="stat"><span>Gebäude gesamt</span><strong>${totalBuildingsOnPlanet(state.selected)}</strong></div><div class="stat"><span>Eisenproduktion</span><strong>${formatTons(ironProduction(state.selected))}/s</strong></div><div class="stat"><span>Siliziumproduktion</span><strong>${formatTons(siliconProduction(state.selected))}/s</strong></div><div class="stat"><span>Siliziumverbrauch</span><strong>${formatTons(siliconUse(state.selected))}/s</strong></div>${state.selected === 'earth' ? `<div class="stat"><span>Eisenverbrauch</span><strong>${formatTons(ironUse('earth'))}/s</strong></div><div class="stat"><span>Stahlproduktion</span><strong>${formatTons(steelProduction('earth'))}/s</strong></div><div class="stat"><span>Stromproduktion</span><strong>${electricityProduction('earth').toFixed(2)} MW/s</strong></div>` : `<div class="stat"><span>Eisenverbrauch</span><strong>${formatTons(ironUse(state.selected))}/s</strong></div><div class="stat"><span>Stahlproduktion</span><strong>${formatTons(steelProduction(state.selected))}/s</strong></div><div class="stat"><span>Stromproduktion</span><strong>${electricityProduction(state.selected).toFixed(2)} MW/s</strong></div>`}<hr>${renderRocketWindow(body)}`;
   bindRocketControls();
+  applyLanguage();
 }
 
 function buildResourceBuilding(key) {
@@ -708,54 +715,60 @@ const translations = {
   }
 };
 function applyLanguage(root=document.body){
-  const lang=localStorage.getItem(LANGUAGE_KEY)||'de';
-  if(languageSelect && languageSelect.value!==lang) languageSelect.value=lang;
-  if(lang==='de') return;
-  const map=translations[lang] || {};
-  const entries=Object.entries(map).sort((a,b)=>b[0].length-a[0].length);
-  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
-  const nodes=[]; let n; while(n=walker.nextNode()) nodes.push(n);
-  nodes.forEach(node=>{
-    let t=node.nodeValue;
-    if(!t || !t.trim()) return;
-    const leading=t.match(/^\s*/)?.[0] || '';
-    const trailing=t.match(/\s*$/)?.[0] || '';
-    const core=t.trim();
-    const exact=map[core];
-    if(exact){
-      node.nodeValue=leading+exact+trailing;
+  const lang = localStorage.getItem(LANGUAGE_KEY) || 'de';
+  if (languageSelect && languageSelect.value !== lang) languageSelect.value = lang;
+  if (lang === 'de') return;
+
+  const map = translations[lang] || {};
+  const entries = Object.entries(map).sort((a,b) => b[0].length - a[0].length);
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  const nodes = [];
+  let node;
+  while ((node = walker.nextNode())) nodes.push(node);
+
+  nodes.forEach(textNode => {
+    let value = textNode.nodeValue;
+    if (!value || !value.trim()) return;
+
+    const leading = value.match(/^\s*/)?.[0] || '';
+    const trailing = value.match(/\s*$/)?.[0] || '';
+    const core = value.trim();
+
+    // Exact match first. This is important for labels such as
+    // "Temperatur" -> "Temperature" and prevents repeated additions.
+    if (Object.prototype.hasOwnProperty.call(map, core)) {
+      textNode.nodeValue = leading + map[core] + trailing;
       return;
     }
-    // For mixed text, protect all translated phrases first so repeated
-    // MutationObserver runs can never turn "Temperature" into "Temperaturee".
-    let out=core;
-    const placeholders=[];
-    entries.forEach(([de,tr],i)=>{
-      if(out.includes(de)){
-        const token=`\uE000${i}\uE001`;
-        placeholders.push([token,tr]);
-        out=out.split(de).join(token);
-      }
+
+    // Translate mixed text without ever feeding an already translated
+    // word back into the translator. No MutationObserver is used anymore.
+    let translated = core;
+    const placeholders = [];
+    entries.forEach(([source, target], index) => {
+      if (!translated.includes(source)) return;
+      const token = `\\uE000${index}\\uE001`;
+      placeholders.push([token, target]);
+      translated = translated.split(source).join(token);
     });
-    placeholders.forEach(([token,tr])=>{ out=out.split(token).join(tr); });
-    node.nodeValue=leading+out+trailing;
+    placeholders.forEach(([token, target]) => {
+      translated = translated.split(token).join(target);
+    });
+    textNode.nodeValue = leading + translated + trailing;
   });
 }
-function setLanguage(lang){
-  localStorage.setItem(LANGUAGE_KEY,lang);
-  renderSystem(); renderInfo(); renderTopResources();
-  if(typeof renderEconomy==='function' && !document.querySelector('#economy-panel')?.hidden) renderEconomy();
-  applyLanguage();
-}
-if(languageSelect){ languageSelect.value=localStorage.getItem(LANGUAGE_KEY)||'de'; languageSelect.addEventListener('change',()=>setLanguage(languageSelect.value)); }
 
-let languageObserverTimer=0;
-const languageObserver=new MutationObserver(()=>{
-  if((localStorage.getItem(LANGUAGE_KEY)||'de')==='de') return;
-  clearTimeout(languageObserverTimer);
-  languageObserverTimer=setTimeout(()=>applyLanguage(),0);
-});
-languageObserver.observe(document.body,{childList:true,subtree:true});
+function setLanguage(lang){
+  localStorage.setItem(LANGUAGE_KEY, lang);
+  // Reload from the original German HTML/JS strings. This gives every
+  // language a clean source and makes switching between EN/FR reliable.
+  location.reload();
+}
+
+if(languageSelect){
+  languageSelect.value = localStorage.getItem(LANGUAGE_KEY) || 'de';
+  languageSelect.addEventListener('change', () => setLanguage(languageSelect.value));
+}
 
 setupSaveMenu();
 loadGame(false);
