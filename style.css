@@ -16,7 +16,7 @@ button:disabled{background:#34445b;color:#aeb8c7;cursor:not-allowed}
 .save-buttons{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
 .danger{background:#8f3030}.save-status{margin-top:8px;min-height:20px}
 .game-layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:10px}
-.solar-system{position:relative;width:100%;height:min(78vh,680px);min-height:480px;overflow:hidden;border:1px solid #263754;border-radius:20px;background:
+.solar-system-viewport{position:relative;width:100%;height:min(78vh,680px);min-height:480px;overflow:auto;border:1px solid #263754;border-radius:20px;background:#02050b;-webkit-overflow-scrolling:touch}.solar-system{position:relative;width:1060px;height:1060px;min-width:1060px;min-height:1060px;overflow:visible;border-radius:20px;background:
 radial-gradient(circle at 18% 22%,rgba(255,255,255,.85) 0 1px,transparent 1.6px),
 radial-gradient(circle at 72% 15%,rgba(255,255,255,.75) 0 1px,transparent 1.6px),
 radial-gradient(circle at 84% 68%,rgba(255,255,255,.75) 0 1px,transparent 1.6px),
@@ -34,7 +34,7 @@ background-size:140px 120px,190px 160px,230px 180px,170px 210px,auto}
 .mars{width:30px;height:30px;background:#b54b36}.jupiter{width:52px;height:52px;background:linear-gradient(#d4a77a 0 18%,#b97850 18% 35%,#e0bd91 35% 52%,#a96548 52% 68%,#d0a073 68%)}
 .moon{width:18px;height:18px;background:#aaa;border:2px solid #ddd}
 .building-badge{position:absolute;left:30px;top:12px;width:38px;height:38px;padding:0;border-radius:10px;background:#2776d2;font-size:18px;z-index:5}
-.moon-orbit{position:absolute;border:1px dashed rgba(200,220,255,.35);border-radius:50%;pointer-events:none;z-index:1}
+.moon-system{position:absolute;transform:translate(-50%,-50%);width:0;height:0;z-index:4}.moon-orbit{position:absolute;border:1px dashed rgba(200,220,255,.35);border-radius:50%;pointer-events:none;z-index:1}
 .panel{border:1px solid #263754;border-radius:18px;background:#09111f;padding:14px;align-self:start;box-shadow:0 10px 30px rgba(0,0,0,.25)}
 .panel h2,.panel h3{margin-top:0}
 .stat{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #1b2a41}
@@ -57,9 +57,9 @@ select{padding:7px;border-radius:8px;background:#eef2f7;color:#111}
 .progress i{display:block;height:100%;background:#2776d2}
 @media(max-width:760px){
 #app{padding:7px}header{align-items:flex-start}.game-layout{grid-template-columns:1fr}
-.solar-system{height:520px;min-height:520px}.panel{width:100%}
+.solar-system-viewport{height:520px;min-height:520px}.panel{width:100%}
 .save-buttons{grid-template-columns:1fr 1fr}.save-buttons button:last-child{grid-column:1/-1}
 }
-@media(max-width:430px){.solar-system{height:500px;min-height:500px}.body-label{font-size:11px}.building-badge{left:26px;top:8px;width:34px;height:34px}.sun{width:72px;height:72px}}
+@media(max-width:430px){.solar-system-viewport{height:500px;min-height:500px}.body-label{font-size:11px}.building-badge{left:26px;top:8px;width:34px;height:34px}.sun{width:72px;height:72px}}
 
 .language-select{display:flex;align-items:center;gap:5px}.language-select select{width:auto;min-width:92px;padding:8px 9px;border:1px solid #263754;border-radius:9px;background:#0b1525;color:#fff;font-weight:700}.header-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}@media(max-width:760px){.language-select select{min-width:82px;font-size:12px}.header-actions{gap:5px}}

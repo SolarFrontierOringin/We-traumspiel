@@ -711,18 +711,50 @@ function applyLanguage(root=document.body){
   const lang=localStorage.getItem(LANGUAGE_KEY)||'de';
   if(languageSelect && languageSelect.value!==lang) languageSelect.value=lang;
   if(lang==='de') return;
-  const map=translations[lang];
+  const map=translations[lang] || {};
+  const entries=Object.entries(map).sort((a,b)=>b[0].length-a[0].length);
   const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
   const nodes=[]; let n; while(n=walker.nextNode()) nodes.push(n);
   nodes.forEach(node=>{
     let t=node.nodeValue;
-    Object.entries(map).sort((a,b)=>b[0].length-a[0].length).forEach(([de,tr])=>{ if(t.includes(de)) t=t.split(de).join(tr); });
-    node.nodeValue=t;
+    if(!t || !t.trim()) return;
+    const leading=t.match(/^\s*/)?.[0] || '';
+    const trailing=t.match(/\s*$/)?.[0] || '';
+    const core=t.trim();
+    const exact=map[core];
+    if(exact){
+      node.nodeValue=leading+exact+trailing;
+      return;
+    }
+    // For mixed text, protect all translated phrases first so repeated
+    // MutationObserver runs can never turn "Temperature" into "Temperaturee".
+    let out=core;
+    const placeholders=[];
+    entries.forEach(([de,tr],i)=>{
+      if(out.includes(de)){
+        const token=`\uE000${i}\uE001`;
+        placeholders.push([token,tr]);
+        out=out.split(de).join(token);
+      }
+    });
+    placeholders.forEach(([token,tr])=>{ out=out.split(token).join(tr); });
+    node.nodeValue=leading+out+trailing;
   });
 }
-function setLanguage(lang){ localStorage.setItem(LANGUAGE_KEY,lang); renderSystem(); renderInfo(); renderTopResources(); if(typeof renderEconomy==='function' && !document.querySelector('#economy-panel')?.hidden) renderEconomy(); applyLanguage(); }
+function setLanguage(lang){
+  localStorage.setItem(LANGUAGE_KEY,lang);
+  renderSystem(); renderInfo(); renderTopResources();
+  if(typeof renderEconomy==='function' && !document.querySelector('#economy-panel')?.hidden) renderEconomy();
+  applyLanguage();
+}
 if(languageSelect){ languageSelect.value=localStorage.getItem(LANGUAGE_KEY)||'de'; languageSelect.addEventListener('change',()=>setLanguage(languageSelect.value)); }
-const languageObserver=new MutationObserver(()=>{ if((localStorage.getItem(LANGUAGE_KEY)||'de')!=='de') applyLanguage(); });
+
+let languageObserverTimer=0;
+const languageObserver=new MutationObserver(()=>{
+  if((localStorage.getItem(LANGUAGE_KEY)||'de')==='de') return;
+  clearTimeout(languageObserverTimer);
+  languageObserverTimer=setTimeout(()=>applyLanguage(),0);
+});
 languageObserver.observe(document.body,{childList:true,subtree:true});
 
 setupSaveMenu();
@@ -730,4 +762,11 @@ loadGame(false);
 renderSystem();
 renderInfo();
 renderTopResources();
+const solarViewport = document.querySelector('#solar-system-viewport');
+if (solarViewport) {
+  requestAnimationFrame(() => {
+    solarViewport.scrollLeft = Math.max(0, (solarSystem.offsetWidth - solarViewport.clientWidth) / 2);
+    solarViewport.scrollTop = Math.max(0, (solarSystem.offsetHeight - solarViewport.clientHeight) / 2);
+  });
+}
 requestAnimationFrame(updateResources);
