@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Weltraum Game</title>
+  <title>Solar Frontier: Origins – v0.8 FIX</title>
   <meta name="theme-color" content="#02050b">
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="style.css">
@@ -12,8 +12,8 @@
   <main id="app">
     <header>
       <div>
-        <h1>🚀 Weltraum Game</h1>
-        <div class="hint">Sonnensystem · Rohstoffe · Aufbau · Transport</div>
+        <h1>🚀 Solar Frontier: Origins</h1>
+        <div class="hint">Sonnensystem · Rohstoffe · Aufbau · Transport · <strong>v0.8 FIX</strong></div>
       </div>
       <button id="save-menu-button" class="small-button">💾 Spiel</button>
     </header>
@@ -34,7 +34,9 @@
     </section>
 
     <section class="game-layout">
-      <div id="solar-system" class="solar-system" aria-label="Sonnensystem"></div>
+      <div class="solar-system-viewport" aria-label="Scrollbare Galaxie">
+        <div id="solar-system" class="solar-system" aria-label="Sonnensystem"></div>
+      </div>
       <aside id="info-panel" class="panel"></aside>
     </section>
   </main>
