@@ -60,7 +60,8 @@ const buildingTypes = {
   glassFactory: { name: 'Glasfabrik', icon: '🪟', resource: null, rate: 0, cost: 60, text: 'verbraucht 0,20 t Silizium/s + 0,10 t Stein/s · produziert 0,15 t Glas/s' },
   heliumExtractor: { name: 'Helium-Extraktor', icon: '🧪', resource: 'helium3', rate: 0.1, cost: 120, text: '0,1 t Helium-3/s · nur auf Luna, Venus und Jupiter' },
   fusionReactor: { name: 'Fusionsreaktor', icon: '⚛️', resource: null, rate: 0, cost: 250, text: 'verbraucht 0,02 t Helium-3/s · produziert 50 MW Strom/s' },
-  researchLab: { name: 'Forschungslabor', icon: '🔬', resource: null, rate: 0, cost: 0, text: 'nur auf der Erde · benötigt Baustoffe, Glas und Elektronik' }
+  researchLab: { name: 'Forschungslabor', icon: '🔬', resource: null, rate: 0, cost: 0, text: 'nur auf der Erde · benötigt Baustoffe, Glas und Elektronik' },
+  solarPlant: { name: 'Solaranlage', icon: '☀️', resource: null, rate: 0, cost: 30, text: '20 MW Strom/s · 30 t Stahl · 10 t Baustoffe · 20 t Elektronik · Forschung erforderlich' }
 };
 
 const rocketTypes = {
@@ -97,15 +98,15 @@ const bodies = {
   jupiter: { name: 'Jupiter', type: 'Gasplanet', className: 'jupiter', temperature: 'ca. -110 °C Wolkenobergrenze', resources: { hydrogen: 100000, helium: 50000, helium3: 40000000 }, storage: {}, orbit: 515 }
 };
 
-const resourceNames = { stone: 'Stein', coal: 'Kohle', gas: 'Gas', iron: 'Eisen', silicon: 'Silizium', lithium: 'Lithium', copperOre: 'Kupfererz', copper: 'Kupfer', batteries: 'Batterien', buildingMaterials: 'Baustoffe', machines: 'Maschinen', glass: 'Glas', steel: 'Stahl', hydrogen: 'Wasserstoff', helium: 'Helium', helium3: 'Helium-3' };
-const resourceIcons = { stone: '🪨', coal: '⚫', gas: '🔥', iron: '🧲', silicon: '🔷', lithium: '🔋', copperOre: '🟠', copper: '🟤', batteries: '🔋', buildingMaterials: '🧱', machines: '⚙️', glass: '🪟', steel: '🔩', hydrogen: '💨', helium: '💨', helium3: '🧪' };
+const resourceNames = { stone: 'Stein', coal: 'Kohle', gas: 'Gas', iron: 'Eisen', silicon: 'Silizium', lithium: 'Lithium', copperOre: 'Kupfererz', copper: 'Kupfer', batteries: 'Batterien', buildingMaterials: 'Baustoffe', machines: 'Maschinen', glass: 'Glas', electronics: 'Elektronik', steel: 'Stahl', hydrogen: 'Wasserstoff', helium: 'Helium', helium3: 'Helium-3' };
+const resourceIcons = { stone: '🪨', coal: '⚫', gas: '🔥', iron: '🧲', silicon: '🔷', lithium: '🔋', copperOre: '🟠', copper: '🟤', batteries: '🔋', buildingMaterials: '🧱', machines: '⚙️', glass: '🪟', electronics: '💻', steel: '🔩', hydrogen: '💨', helium: '💨', helium3: '🧪' };
 
 function formatTons(value) { return `${value.toFixed(2)} t`; }
 
 function getBuildingsOnPlanet(id) {
   if (id === 'earth') return state.buildings;
   if (!bodies[id].buildings) {
-    bodies[id].buildings = { steelworks: 0, stoneQuarry: 0, buildingMaterialsFactory: 0, coalMine: 0, gasPlant: 0, ironMine: 0, siliconMine: 0, lithiumMine: 0, copperMine: 0, copperSmelter: 0, lithiumRefinery: 0, machineFactory: 0, glassFactory: 0, heliumExtractor: 0, fusionReactor: 0, outpost: 0, rocketStation: 0, coalPowerPlant: 0, researchLab: 0 };
+    bodies[id].buildings = { steelworks: 0, stoneQuarry: 0, buildingMaterialsFactory: 0, coalMine: 0, gasPlant: 0, ironMine: 0, siliconMine: 0, lithiumMine: 0, copperMine: 0, copperSmelter: 0, lithiumRefinery: 0, machineFactory: 0, glassFactory: 0, heliumExtractor: 0, fusionReactor: 0, outpost: 0, rocketStation: 0, coalPowerPlant: 0, solarPlant: 0, researchLab: 0 };
   }
   return bodies[id].buildings;
 }
@@ -117,7 +118,7 @@ function getPlanetStorage(id) {
 function storageAmount(id, resource) { return Number(getPlanetStorage(id)[resource] || 0); }
 function formatStorage(id) {
   const st = getPlanetStorage(id);
-  const keys = ['stone','coal','gas','iron','silicon','lithium','copperOre','copper','batteries','buildingMaterials','machines','glass','steel','hydrogen','helium','helium3'];
+  const keys = ['stone','coal','gas','iron','silicon','lithium','copperOre','copper','batteries','buildingMaterials','machines','glass','electronics','steel','hydrogen','helium','helium3'];
   const rows = keys.filter(k => Number(st[k] || 0) > 0.000001).map(k => `<div class="stat"><span>${resourceIcons[k] || ''} ${resourceNames[k] || k}</span><strong>${formatTons(st[k])}</strong></div>`);
   return rows.length ? rows.join('') : '<p class="hint">Lager ist leer.</p>';
 }
@@ -145,21 +146,33 @@ function glassProduction(id = state.selected) { return getBuildingsOnPlanet(id).
 function helium3Production(id = state.selected) { return Number(getBuildingsOnPlanet(id).heliumExtractor || 0) * 0.1; }
 function fusionHelium3Use(id = state.selected) { return Number(getBuildingsOnPlanet(id).fusionReactor || 0) * 0.02; }
 function fusionElectricityProduction(id = state.selected) { return Number(getBuildingsOnPlanet(id).fusionReactor || 0) * 50; }
-function electricityProduction(id = state.selected) { return getBuildingsOnPlanet(id).coalPowerPlant * 20 + fusionElectricityProduction(id); }
+function solarElectricityProduction(id = state.selected) { return Number(getBuildingsOnPlanet(id).solarPlant || 0) * 20; }
+function electricityProduction(id = state.selected) { return getBuildingsOnPlanet(id).coalPowerPlant * 20 + fusionElectricityProduction(id) + solarElectricityProduction(id); }
 function coalPowerUse(id = state.selected) { return getBuildingsOnPlanet(id).coalPowerPlant * 0.0002; }
 
 function totalBuildingsOnPlanet(id) { return Object.values(getBuildingsOnPlanet(id)).reduce((a, b) => a + b, 0); }
 
 
 const researchTypes = {
-  industrialBasics: { name: 'Industrielle Grundlagen', icon: '🏭', cost: 25, time: 30, text: 'Grundlage für fortgeschrittene Industrie.' },
-  rocketEngineering: { name: 'Raketentechnik I', icon: '🚀', cost: 40, time: 45, text: 'Verbessert die interplanetare Raumfahrt.' },
-  resourceEfficiency: { name: 'Rohstoffeffizienz I', icon: '⛏️', cost: 50, time: 60, text: 'Verbessert die Effizienz von Produktionsgebäuden.' },
-  fusionTechnology: { name: 'Fusionstechnologie', icon: '⚛️', cost: 75, time: 90, text: 'Schaltet die nächste Stufe der Fusionsforschung frei.' }
+  solarPlant: {
+    name: 'Solaranlage',
+    icon: '☀️',
+    category: 'Industrielle Grundlagen',
+    cost: 100,
+    time: 120,
+    text: 'Schaltet die Solaranlage frei. Die Solaranlage bleibt im Baumenü sichtbar, bis diese Forschung abgeschlossen ist.'
+  }
 };
 
 function researchLabCount() { return Number(getBuildingsOnPlanet('earth').researchLab || 0); }
 function researchAvailable() { return researchLabCount() > 0; }
+
+function formatResearchTime(seconds) {
+  const total = Math.max(0, Math.ceil(seconds));
+  const minutes = Math.floor(total / 60);
+  const secs = total % 60;
+  return `${minutes}:${String(secs).padStart(2, '0')}`;
+}
 
 function renderResearch() {
   const panel = document.querySelector('#research-content');
@@ -167,26 +180,42 @@ function renderResearch() {
   const completed = state.research?.completed || {};
   const active = state.research?.active;
   const activeDef = active ? researchTypes[active.key] : null;
-  const cards = Object.entries(researchTypes).map(([key, r]) => {
-    const done = !!completed[key];
-    const running = active && active.key === key;
-    const disabled = done || !!active || !researchAvailable() || Number(state.research.points || 0) < r.cost;
-    return `<div class="research-card ${done ? 'research-done' : ''}">
-      <div><strong>${r.icon} ${r.name}</strong><small>${r.text}</small><small>🧪 ${r.cost} Forschungspunkte · ⏱️ ${r.time} Sekunden</small></div>
-      <button class="research-button" data-research="${key}" ${disabled ? 'disabled' : ''}>${done ? 'Abgeschlossen' : running ? 'Läuft …' : 'Forschen'}</button>
-    </div>`;
-  }).join('');
-  const progress = active && activeDef ? Math.min(100, ((performance.now() - active.started) / (activeDef.time * 1000)) * 100) : 0;
-  const remaining = active && activeDef ? Math.max(0, activeDef.time - (performance.now() - active.started) / 1000) : 0;
+  const running = !!active;
+  const researchedSolar = !!completed.solarPlant;
+  const enoughPoints = Number(state.research.points || 0) >= 100;
+  const canResearchSolar = researchAvailable() && !running && !researchedSolar && enoughPoints;
+  const remaining = active && activeDef
+    ? Math.max(0, activeDef.time - (performance.now() - active.started) / 1000)
+    : 0;
+  const progress = active && activeDef
+    ? Math.min(100, ((performance.now() - active.started) / (activeDef.time * 1000)) * 100)
+    : 0;
+
   panel.innerHTML = `<div class="research-overview">
     <div class="stat"><span>🔬 Forschungslabor auf Erde</span><strong>${researchLabCount()}</strong></div>
-    <div class="stat"><span>🧪 Forschungspunkte</span><strong>${Number(state.research.points || 0).toFixed(1)}</strong></div>
+    <div class="stat"><span>🧪 Forschungspunkte</span><strong>${Number(state.research.points || 0).toFixed(0)}</strong></div>
   </div>
-  ${active && activeDef ? `<div class="research-active"><strong>${activeDef.icon} ${activeDef.name}</strong><small>${remaining.toFixed(1)} s verbleiben</small><div class="research-progress"><i style="width:${progress}%"></i></div></div>` : ''}
-  <h3>🌳 Forschungsbaum</h3>
-  <p class="hint">Das Forschungssystem ist jetzt eingebaut. Weitere Technologien können später ergänzt werden.</p>
-  <div class="research-tree">${cards}</div>`;
-  panel.querySelectorAll('.research-button').forEach(btn => btn.addEventListener('click', () => startResearch(btn.dataset.research)));
+  ${active && activeDef ? `<div class="research-active"><strong>${activeDef.icon} ${activeDef.name}</strong><small>${formatResearchTime(remaining)} verbleiben</small><div class="research-progress"><i style="width:${progress}%"></i></div></div>` : ''}
+
+  <h3>1️⃣ Industrielle Grundlagen</h3>
+  <div class="research-tree">
+    <div class="research-card ${researchedSolar ? 'research-done' : ''}">
+      <div>
+        <strong>☀️ Forschung: Solaranlage</strong>
+        <small>Schaltet die Solaranlage frei.</small>
+        <small>🧪 100 Forschungspunkte · ⏱️ 2:00 Minuten</small>
+        <small>Die Solaranlage ist bereits im Baumenü sichtbar, solange die Forschung noch benötigt wird.</small>
+      </div>
+      <button class="research-button" data-research="solarPlant" ${canResearchSolar ? '' : 'disabled'}>${researchedSolar ? 'Abgeschlossen' : active?.key === 'solarPlant' ? 'Läuft …' : 'Forschen'}</button>
+    </div>
+  </div>
+
+  <h3>2️⃣ Raketentechnik</h3>
+  <div class="research-empty"><p class="hint">Aktuell leer – weitere Forschungen werden später ergänzt.</p></div>`;
+
+  panel.querySelectorAll('.research-button').forEach(btn =>
+    btn.addEventListener('click', () => startResearch(btn.dataset.research))
+  );
 }
 
 function startResearch(key) {
@@ -196,6 +225,7 @@ function startResearch(key) {
   state.research.points -= r.cost;
   state.research.active = { key, started: performance.now() };
   renderResearch();
+  saveGame(false);
 }
 
 function updateResearch(now) {
@@ -207,6 +237,7 @@ function updateResearch(now) {
     state.research.completed[active.key] = true;
     state.research.active = null;
     renderResearch();
+    saveGame(false);
   }
 }
 
@@ -294,6 +325,7 @@ function loadGame(showMessage = true) {
     state.buildings.heliumExtractor = Number(state.buildings.heliumExtractor || 0);
     state.buildings.fusionReactor = Number(state.buildings.fusionReactor || 0);
     state.buildings.researchLab = Number(state.buildings.researchLab || 0);
+    state.buildings.solarPlant = Number(state.buildings.solarPlant || 0);
     state.buildings.outpost = Number(state.buildings.outpost || 0);
     Object.values(bodies).forEach(body => {
       if (!body.buildings) return;
@@ -306,6 +338,7 @@ function loadGame(showMessage = true) {
        body.buildings.heliumExtractor = Number(body.buildings.heliumExtractor || 0);
        body.buildings.fusionReactor = Number(body.buildings.fusionReactor || 0);
        body.buildings.researchLab = Number(body.buildings.researchLab || 0);
+       body.buildings.solarPlant = Number(body.buildings.solarPlant || 0);
        body.buildings.outpost = Number(body.buildings.outpost || 0);
     });
 
@@ -506,6 +539,7 @@ function renderSystem() {
       ${buildButton('glassFactory')}
       ${buildButton('heliumExtractor')}
       ${buildButton('fusionReactor')}
+      ${buildButton('solarPlant')}
       ${state.selected === 'earth' ? `<div class="build-card research-lab-card"><div><strong>🔬 Forschungslabor</strong><small>Nur auf der Erde · benötigt Baustoffe, Glas und Elektronik · Kostenmengen werden noch festgelegt</small></div><button class="build-resource" id="build-research-lab" ${getBuildingsOnPlanet('earth').researchLab ? 'disabled' : ''}>${getBuildingsOnPlanet('earth').researchLab ? 'Gebaut' : 'Bauen'}</button></div>` : ''}
       <div class="build-card"><div><strong>⚡ Kohlekraftwerk</strong><small>20 MW Strom/s · verbraucht 0,0002 t Kohle/s · 90 t Stahl</small></div><button class="build-resource" id="build-coal-power" ${Number(getPlanetStorage(state.selected).steel || 0) >= 90 ? '' : 'disabled'}>Bauen (${getBuildingsOnPlanet(state.selected).coalPowerPlant})</button></div>
       <div class="build-card outpost-card"><div><strong>🛰️ Außenposten</strong><small>100 t Stahl · 60 Sekunden Bauzeit · maximal 1 pro Planet · Voraussetzung für weitere Gebäude auf allen Außenplaneten</small></div><button class="build-resource" id="build-outpost" ${getBuildingsOnPlanet(state.selected).outpost || outpostBuildQueue[state.selected] || (state.selected !== 'luna' && getBuildingsOnPlanet(state.selected).rocketStation === 0) || Number(getPlanetStorage(state.selected).steel || 0) < 100 ? 'disabled' : ''}>Bauen (${getBuildingsOnPlanet(state.selected).outpost ? 'Gebaut' : 'Bauen'})</button></div>
@@ -580,8 +614,19 @@ function isBuildingAllowed(key, planetId = state.selected) {
 function buildButton(key) {
   const b = buildingTypes[key];
   const count = getBuildingsOnPlanet(state.selected)[key];
-  const cost = buildingCost(key);
   const storage = getPlanetStorage(state.selected);
+
+  if (key === 'solarPlant') {
+    const researched = !!state.research?.completed?.solarPlant;
+    const affordable = Number(storage.steel || 0) >= 30 &&
+      Number(storage.buildingMaterials || 0) >= 10 &&
+      Number(storage.electronics || 0) >= 20 &&
+      isBuildingAllowed(key) && researched;
+    const status = researched ? '' : ' · Voraussetzung: Forschung „Solaranlage“';
+    return `<div class="build-card"><div><strong>${b.icon} ${b.name}</strong><small>20 MW Strom/s · 30 t Stahl · 10 t Baustoffe · 20 t Elektronik${status}</small></div><button class="build-resource" data-building="${key}" ${affordable ? '' : 'disabled'}>Bauen (${count})</button></div>`;
+  }
+
+  const cost = buildingCost(key);
   const affordable = Number(storage.steel || 0) >= cost && isBuildingAllowed(key);
   const costText = cost === 0 ? 'kostenlos' : `${cost} t Stahl`;
   const extraText = key === 'ironMine' && state.selected !== 'earth' ? ' · nicht kostenlos' : '';
@@ -598,21 +643,38 @@ function renderInfo() {
   }
   const bld = getBuildingsOnPlanet(state.selected);
   const localStorage = getPlanetStorage(state.selected);
-  infoPanel.innerHTML = `<h2>${state.selected === 'earth' ? '🌍' : '🪐'} ${body.name}</h2><p class="hint">${body.type}</p><div class="stat"><span>Temperatur</span><strong>${body.temperature}</strong></div><h3>🌐 Rohstoffe auf dem Planeten</h3>${resourceRows(body)}<h3>📦 Lager auf ${body.name}</h3>${formatStorage(state.selected)}<hr><h3>🏭 Gebäude auf ${body.name}</h3><div class="stat"><span>Gebäude gesamt</span><strong>${totalBuildingsOnPlanet(state.selected)}</strong></div><div class="stat"><span>Eisenproduktion</span><strong>${formatTons(ironProduction(state.selected))}/s</strong></div><div class="stat"><span>Siliziumproduktion</span><strong>${formatTons(siliconProduction(state.selected))}/s</strong></div><div class="stat"><span>Siliziumverbrauch</span><strong>${formatTons(siliconUse(state.selected))}/s</strong></div><div class="stat"><span>Lithiumproduktion</span><strong>${formatTons(lithiumProduction(state.selected))}/s</strong></div><div class="stat"><span>Kupfererzproduktion</span><strong>${formatTons(copperProduction(state.selected))}/s</strong></div><div class="stat"><span>Kupferverbrauch</span><strong>${formatTons(copperSmeltingUse(state.selected))}/s</strong></div><div class="stat"><span>Kupferproduktion</span><strong>${formatTons(copperSmeltingProduction(state.selected))}/s</strong></div><div class="stat"><span>Lithiumverbrauch</span><strong>${formatTons(lithiumRefineryLithiumUse(state.selected))}/s</strong></div><div class="stat"><span>Kupferverbrauch für Batterien</span><strong>${formatTons(lithiumRefineryCopperUse(state.selected))}/s</strong></div><div class="stat"><span>Batterieproduktion</span><strong>${formatTons(batteryProduction(state.selected))}/s</strong></div><div class="stat"><span>Baustoffverbrauch Stein</span><strong>${formatTons(buildingMaterialsStoneUse(state.selected))}/s</strong></div><div class="stat"><span>Baustoffproduktion</span><strong>${formatTons(buildingMaterialsProduction(state.selected))}/s</strong></div><div class="stat"><span>Stahlverbrauch Maschinenfabrik</span><strong>${formatTons(machineFactorySteelUse(state.selected))}/s</strong></div><div class="stat"><span>Kupferverbrauch Maschinenfabrik</span><strong>${formatTons(machineFactoryCopperUse(state.selected))}/s</strong></div><div class="stat"><span>Maschinenproduktion</span><strong>${formatTons(machineProduction(state.selected))}/s</strong></div><div class="stat"><span>Glasverbrauch Silizium</span><strong>${formatTons(glassFactorySiliconUse(state.selected))}/s</strong></div><div class="stat"><span>Glasverbrauch Stein</span><strong>${formatTons(glassFactoryStoneUse(state.selected))}/s</strong></div><div class="stat"><span>Glasproduktion</span><strong>${formatTons(glassProduction(state.selected))}/s</strong></div><div class="stat"><span>Helium-3-Produktion</span><strong>${formatTons(helium3Production(state.selected))}/s</strong></div><div class="stat"><span>Helium-3-Verbrauch Fusionsreaktor</span><strong>${formatTons(fusionHelium3Use(state.selected))}/s</strong></div><div class="stat"><span>Fusionsstrom</span><strong>${fusionElectricityProduction(state.selected).toFixed(2)} MW/s</strong></div>${state.selected === 'earth' ? `<div class="stat"><span>Eisenverbrauch</span><strong>${formatTons(ironUse('earth'))}/s</strong></div><div class="stat"><span>Stahlproduktion</span><strong>${formatTons(steelProduction('earth'))}/s</strong></div><div class="stat"><span>Stromproduktion</span><strong>${electricityProduction('earth').toFixed(2)} MW/s</strong></div>` : `<div class="stat"><span>Eisenverbrauch</span><strong>${formatTons(ironUse(state.selected))}/s</strong></div><div class="stat"><span>Stahlproduktion</span><strong>${formatTons(steelProduction(state.selected))}/s</strong></div><div class="stat"><span>Stromproduktion</span><strong>${electricityProduction(state.selected).toFixed(2)} MW/s</strong></div>`}<hr>${renderRocketWindow(body)}`;
+  infoPanel.innerHTML = `<h2>${state.selected === 'earth' ? '🌍' : '🪐'} ${body.name}</h2><p class="hint">${body.type}</p><div class="stat"><span>Temperatur</span><strong>${body.temperature}</strong></div><h3>🌐 Rohstoffe auf dem Planeten</h3>${resourceRows(body)}<h3>📦 Lager auf ${body.name}</h3>${formatStorage(state.selected)}<hr><h3>🏭 Gebäude auf ${body.name}</h3><div class="stat"><span>Gebäude gesamt</span><strong>${totalBuildingsOnPlanet(state.selected)}</strong></div><div class="stat"><span>Eisenproduktion</span><strong>${formatTons(ironProduction(state.selected))}/s</strong></div><div class="stat"><span>Siliziumproduktion</span><strong>${formatTons(siliconProduction(state.selected))}/s</strong></div><div class="stat"><span>Siliziumverbrauch</span><strong>${formatTons(siliconUse(state.selected))}/s</strong></div><div class="stat"><span>Lithiumproduktion</span><strong>${formatTons(lithiumProduction(state.selected))}/s</strong></div><div class="stat"><span>Kupfererzproduktion</span><strong>${formatTons(copperProduction(state.selected))}/s</strong></div><div class="stat"><span>Kupferverbrauch</span><strong>${formatTons(copperSmeltingUse(state.selected))}/s</strong></div><div class="stat"><span>Kupferproduktion</span><strong>${formatTons(copperSmeltingProduction(state.selected))}/s</strong></div><div class="stat"><span>Lithiumverbrauch</span><strong>${formatTons(lithiumRefineryLithiumUse(state.selected))}/s</strong></div><div class="stat"><span>Kupferverbrauch für Batterien</span><strong>${formatTons(lithiumRefineryCopperUse(state.selected))}/s</strong></div><div class="stat"><span>Batterieproduktion</span><strong>${formatTons(batteryProduction(state.selected))}/s</strong></div><div class="stat"><span>Baustoffverbrauch Stein</span><strong>${formatTons(buildingMaterialsStoneUse(state.selected))}/s</strong></div><div class="stat"><span>Baustoffproduktion</span><strong>${formatTons(buildingMaterialsProduction(state.selected))}/s</strong></div><div class="stat"><span>Stahlverbrauch Maschinenfabrik</span><strong>${formatTons(machineFactorySteelUse(state.selected))}/s</strong></div><div class="stat"><span>Kupferverbrauch Maschinenfabrik</span><strong>${formatTons(machineFactoryCopperUse(state.selected))}/s</strong></div><div class="stat"><span>Maschinenproduktion</span><strong>${formatTons(machineProduction(state.selected))}/s</strong></div><div class="stat"><span>Glasverbrauch Silizium</span><strong>${formatTons(glassFactorySiliconUse(state.selected))}/s</strong></div><div class="stat"><span>Glasverbrauch Stein</span><strong>${formatTons(glassFactoryStoneUse(state.selected))}/s</strong></div><div class="stat"><span>Glasproduktion</span><strong>${formatTons(glassProduction(state.selected))}/s</strong></div><div class="stat"><span>Helium-3-Produktion</span><strong>${formatTons(helium3Production(state.selected))}/s</strong></div><div class="stat"><span>Helium-3-Verbrauch Fusionsreaktor</span><strong>${formatTons(fusionHelium3Use(state.selected))}/s</strong></div><div class="stat"><span>Fusionsstrom</span><strong>${fusionElectricityProduction(state.selected).toFixed(2)} MW/s</strong></div><div class="stat"><span>Solarstrom</span><strong>${solarElectricityProduction(state.selected).toFixed(2)} MW/s</strong></div>${state.selected === 'earth' ? `<div class="stat"><span>Eisenverbrauch</span><strong>${formatTons(ironUse('earth'))}/s</strong></div><div class="stat"><span>Stahlproduktion</span><strong>${formatTons(steelProduction('earth'))}/s</strong></div><div class="stat"><span>Stromproduktion</span><strong>${electricityProduction('earth').toFixed(2)} MW/s</strong></div>` : `<div class="stat"><span>Eisenverbrauch</span><strong>${formatTons(ironUse(state.selected))}/s</strong></div><div class="stat"><span>Stahlproduktion</span><strong>${formatTons(steelProduction(state.selected))}/s</strong></div><div class="stat"><span>Stromproduktion</span><strong>${electricityProduction(state.selected).toFixed(2)} MW/s</strong></div>`}<hr>${renderRocketWindow(body)}`;
   bindRocketControls();
   applyLanguage();
+}
+
+function saveAfterBuild() {
+  saveGame(false);
 }
 
 function buildResourceBuilding(key) {
   const planetId = state.selected;
   const bld = getBuildingsOnPlanet(planetId);
-  const cost = buildingCost(key, planetId);
   const storage = getPlanetStorage(planetId);
   if (!isBuildingAllowed(key, planetId)) return;
-  if (Number(storage.steel || 0) < cost) return;
-  storage.steel -= cost;
+
+  if (key === 'solarPlant') {
+    if (!state.research?.completed?.industrialBasics) return;
+    if (Number(storage.steel || 0) < 30 ||
+        Number(storage.buildingMaterials || 0) < 10 ||
+        Number(storage.electronics || 0) < 20) return;
+    storage.steel -= 30;
+    storage.buildingMaterials -= 10;
+    storage.electronics -= 20;
+  } else {
+    const cost = buildingCost(key, planetId);
+    if (Number(storage.steel || 0) < cost) return;
+    storage.steel -= cost;
+  }
+
   bld[key]++;
   renderSystem(); renderInfo(); renderTopResources();
+  saveAfterBuild();
 }
 
 function buildSteelworks() {
@@ -626,6 +688,7 @@ function buildSteelworks() {
     bld.steelworks++;
   }
   renderSystem(); renderInfo(); renderTopResources();
+  saveAfterBuild();
 }
 
 function buildCoalPowerPlant() {
@@ -634,6 +697,7 @@ function buildCoalPowerPlant() {
   storage.steel -= 90;
   getBuildingsOnPlanet(state.selected).coalPowerPlant++;
   renderSystem(); renderInfo(); renderTopResources();
+  saveAfterBuild();
 }
 
 function buildRocketStation() {
@@ -641,6 +705,7 @@ function buildRocketStation() {
   if (bld.rocketStation > 0) return;
   bld.rocketStation = 1;
   renderSystem(); renderInfo();
+  saveAfterBuild();
 }
 
 function buildResearchLab() {
@@ -651,6 +716,7 @@ function buildResearchLab() {
   bld.researchLab = 1;
   renderSystem(); renderInfo(); renderTopResources();
   renderResearch();
+  saveAfterBuild();
 }
 
 function buildOutpost() {
@@ -664,6 +730,7 @@ function buildOutpost() {
   outpostBuildQueue[source] = 1;
   outpostBuildStarted[source] = performance.now();
   renderSystem(); renderInfo(); renderTopResources();
+  saveAfterBuild();
 }
 
 function buildHercules1() {
@@ -676,6 +743,7 @@ function buildHercules1() {
   rocketBuildQueue[source] = 1;
   rocketBuildStarted[source] = performance.now();
   renderInfo(); renderTopResources();
+  saveAfterBuild();
 }
 
 function getPlayerResourceAmount(resource, planetId = state.selected) { return Number(getPlanetStorage(planetId)[resource] || 0); }
@@ -975,11 +1043,21 @@ function updateResources(now) {
   // Das Lager der Erde ist gleichzeitig das Spieler-/Hauptlager.
   updateOutposts(now);
   updateRockets(now);
+  updateResearch(now);
 
-  // Alle 20 Sekunden werden die aktuellen Lagerstände aller Planeten
-  // in den Spielstand synchronisiert. Die Produktion selbst läuft
-  // weiterhin kontinuierlich über requestAnimationFrame.
-  if (!updateResources.lastStorageSync || now - updateResources.lastStorageSync >= 20000) {
+  // Forschungs-Timer sichtbar und synchron im Sekundenrhythmus aktualisieren.
+  if (!updateResources.lastResearchUiUpdate || now - updateResources.lastResearchUiUpdate >= 250) {
+    const researchPanel = document.querySelector('#research-panel');
+    if (researchPanel && !researchPanel.hidden && state.research?.active) {
+      updateResources.lastResearchUiUpdate = now;
+      renderResearch();
+    }
+  }
+
+  // Alle 5 Sekunden werden die aktuellen Lagerstände, Gebäude,
+  // Forschungspunkte und laufenden Spielzustände automatisch gespeichert.
+  // Die Produktion selbst läuft weiterhin kontinuierlich über requestAnimationFrame.
+  if (!updateResources.lastStorageSync || now - updateResources.lastStorageSync >= 5000) {
     updateResources.lastStorageSync = now;
     saveGame(false);
   }
