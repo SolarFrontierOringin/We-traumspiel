@@ -16,12 +16,30 @@
         <div class="hint">Sonnensystem · Rohstoffe · Aufbau · Transport</div>
       </div>
       <div class="header-actions">
-        <button id="news-button" class="small-button">📰 Neuigkeiten</button>
-        <button id="economy-button" class="small-button">📊 Wirtschaft</button>
-        <div class="language-select"><span>🌐</span><select id="language-select" aria-label="Sprache"><option value="de">Deutsch</option><option value="en">English</option><option value="fr">Français</option></select></div>
-        <button id="save-menu-button" class="small-button">💾 Spiel</button>
+        <button id="main-menu-button" class="small-button menu-button">☰ Menü</button>
       </div>
     </header>
+
+    <section id="main-menu" class="main-menu" hidden>
+      <div class="main-menu-head">
+        <strong>☰ Menü</strong>
+        <button id="main-menu-close" class="icon-button">✕</button>
+      </div>
+      <div class="main-menu-items">
+        <button id="news-button" class="menu-item">📰 <span>Neuigkeiten</span></button>
+        <button id="economy-button" class="menu-item">📊 <span>Wirtschaft</span></button>
+        <div class="menu-item menu-language">
+          <span>🌐 <span>Sprache</span></span>
+          <select id="language-select" aria-label="Sprache">
+            <option value="de">Deutsch</option>
+            <option value="en">English</option>
+            <option value="fr">Français</option>
+          </select>
+        </div>
+        <button id="save-menu-button" class="menu-item">💾 <span>Spiel</span></button>
+        <button id="introduction-button" class="menu-item">📖 <span>Einführung</span></button>
+      </div>
+    </section>
 
     <section id="news-panel" class="news-panel" hidden>
       <div class="news-head">
@@ -54,6 +72,28 @@
         <strong>💡 Hinweis für Spieler</strong>
         <p>Das Spiel befindet sich aktiv in Entwicklung. Änderungen und neue Updates können jederzeit hinzukommen.</p>
       </div>
+    </section>
+
+    <section id="introduction-panel" class="introduction-panel" hidden>
+      <div class="introduction-head">
+        <div>
+          <h2>📖 Einführung</h2>
+          <div class="hint">Willkommen bei Solar Frontier: Origins</div>
+        </div>
+        <button id="introduction-close" class="icon-button">✕</button>
+      </div>
+      <article class="introduction-content">
+        <h3>🚀 Dein Ziel</h3>
+        <p>Baue deine Kolonie auf, gewinne Rohstoffe und entwickle den interplanetaren Transport.</p>
+        <h3>🪐 Planeten</h3>
+        <p>Tippe auf einen Planeten, um seine Informationen, Rohstoffe und sein Lager zu sehen. Über das 🏗️-Symbol öffnest du das Gebäudemenü.</p>
+        <h3>🏭 Gebäude</h3>
+        <p>Baue Produktionsgebäude und achte auf Produktion und Verbrauch. Die erste Eisenmine auf der Erde ist kostenlos.</p>
+        <h3>🚀 Raketen</h3>
+        <p>Baue eine Raketenstation, produziere Herkules-1-Raketen und transportiere bis zu 120 t Fracht pro Rakete zwischen erreichbaren Planeten.</p>
+        <h3>💾 Spielstand</h3>
+        <p>Über <strong>☰ Menü → 💾 Spiel</strong> kannst du deinen Spielstand speichern, laden oder neu starten.</p>
+      </article>
     </section>
 
     <section id="economy-panel" class="economy-panel" hidden>

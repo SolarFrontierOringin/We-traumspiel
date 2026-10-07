@@ -63,3 +63,11 @@ select{padding:7px;border-radius:8px;background:#eef2f7;color:#111}
 @media(max-width:430px){.solar-system-viewport{height:500px;min-height:500px}.body-label{font-size:11px}.building-badge{left:26px;top:8px;width:34px;height:34px}.sun{width:72px;height:72px}}
 
 .language-select{display:flex;align-items:center;gap:5px}.language-select select{width:auto;min-width:92px;padding:8px 9px;border:1px solid #263754;border-radius:9px;background:#0b1525;color:#fff;font-weight:700}.header-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}@media(max-width:760px){.language-select select{min-width:82px;font-size:12px}.header-actions{gap:5px}}
+
+/* Hauptmenü */
+.main-menu{border:1px solid #263754;border-radius:16px;background:#09111f;padding:12px;margin-bottom:8px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.main-menu-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:18px}
+.main-menu-items{display:grid;gap:8px}.menu-item{width:100%;min-height:48px;display:flex;align-items:center;justify-content:flex-start;gap:10px;padding:10px 13px;border:1px solid #263754;border-radius:12px;background:#0c1627;color:#fff;text-align:left;font-size:15px}.menu-item:hover{background:#14243d}.menu-language{justify-content:space-between}.menu-language>span{display:flex;align-items:center;gap:10px}.menu-language select{width:auto;min-width:110px}.menu-button{font-size:15px}
+/* Einführung */
+.introduction-panel{border:1px solid #263754;border-radius:16px;background:#09111f;padding:14px;margin-bottom:8px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.introduction-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}.introduction-content h3{margin:16px 0 5px}.introduction-content h3:first-child{margin-top:8px}.introduction-content p{color:#c7d4e8;line-height:1.55;margin:0}
