@@ -13,7 +13,7 @@
     <header>
       <div>
         <h1>🚀 Weltraum Game</h1>
-        <div class="hint">Neues Updat ist raus. Es gibt eine Neue Forschung und damit könnt eueren Kernreaktor bauen.</div>
+        <div class="hint">Sonnensystem · Rohstoffe · Aufbau · Transport</div>
       </div>
       <div class="header-actions">
         <button id="main-menu-button" class="small-button menu-button">☰ Menü</button>
@@ -29,6 +29,7 @@
         <button id="news-button" class="menu-item">📰 <span>Neuigkeiten</span></button>
         <button id="economy-button" class="menu-item">📊 <span>Wirtschaft</span></button>
         <button id="research-button" class="menu-item">🔬 <span>Forschung</span></button>
+        <button id="tasks-button" class="menu-item">📋 <span>Aufgaben</span></button>
         <div class="menu-item menu-language">
           <span>🌐 <span>Sprache</span></span>
           <select id="language-select" aria-label="Sprache">
@@ -51,28 +52,11 @@
         <button id="news-close" class="icon-button">✕</button>
       </div>
 
-      <div class="dev-status">
-        <div><span>📦 Aktuelle Version</span><strong>v1.0</strong></div>
-        <div><span>🚀 Nächstes Update</span><strong>v0.9</strong></div>
-        <div><span>📅 Geplant</span><strong>Noch offen</strong></div>
-      </div>
-
-      <article class="news-entry current">
-        <div class="news-version">🛠️ v0.9 · Aktuelle Entwicklung</div>
-        <h3>Was gerade im Spiel entsteht</h3>
-        <ul>
-          <li>Weiterentwicklung des Sonnensystems</li>
-          <li>Rohstoffabbau und Gebäude auf der Erde</li>
-          <li>Helium-3-Abbau und Fusionsenergie</li>
-          <li>Raketenbau und interplanetarer Transport</li>
-          <li>Speichern und Laden des Spielstands</li>
-        </ul>
+      <article class="news-announcement">
+        <div class="news-announcement-label">📢 Aktuelle Ankündigung</div>
+        <h3>Solar Frontier: Origins wird weiterentwickelt</h3>
+        <p>Das Spiel befindet sich aktiv in Entwicklung. Neue Inhalte, Aufgaben und technische Erweiterungen werden nach und nach hinzugefügt.</p>
       </article>
-
-      <div class="news-footer">
-        <strong>💡 Hinweis für Spieler</strong>
-        <p>Das Spiel befindet sich aktiv in Entwicklung. Änderungen und neue Updates können jederzeit hinzukommen.</p>
-      </div>
     </section>
 
     <section id="research-panel" class="research-panel" hidden>
@@ -84,6 +68,11 @@
         <button id="research-close" class="icon-button">✕</button>
       </div>
       <div id="research-content"></div>
+    </section>
+
+    <section id="tasks-panel" class="tasks-panel" hidden>
+      <div class="tasks-head"><div><h2>📋 Aufgaben</h2><div class="hint">Einführung · Ziele und Fortschritt</div></div><button id="tasks-close" class="icon-button">✕</button></div>
+      <div id="tasks-content"></div>
     </section>
 
     <section id="introduction-panel" class="introduction-panel" hidden>
