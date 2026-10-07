@@ -28,6 +28,8 @@ const state = {
     copperSmelter: 0,
     lithiumRefinery: 0,
     machineFactory: 0,
+    glassFactory: 0,
+    outpost: 0,
     rocketStation: 0,
     coalPowerPlant: 0
   },
@@ -46,7 +48,8 @@ const buildingTypes = {
   copperMine: { name: 'Kupfermine', icon: '🟠', resource: 'copperOre', rate: 0.05, cost: 30, text: '0,05 t Kupfererz/s pro Gebäude' },
   copperSmelter: { name: 'Kupferschmelze', icon: '🔥', resource: null, rate: 0, cost: 50, text: 'verbraucht 0,10 t Kupfererz/s · produziert 0,08 t Kupfer/s' },
   lithiumRefinery: { name: 'Lithiumraffinerie', icon: '🔋', resource: null, rate: 0, cost: 80, text: 'verbraucht 0,3 t Lithium/s + 0,3 t Kupfer/s · produziert 0,1 t Batterien/s' },
-  machineFactory: { name: 'Maschinenfabrik', icon: '⚙️', resource: null, rate: 0, cost: 100, text: 'verbraucht 0,10 t Stahl/s + 0,05 t Kupfer/s · produziert 0,05 t Maschinen/s' }
+  machineFactory: { name: 'Maschinenfabrik', icon: '⚙️', resource: null, rate: 0, cost: 100, text: 'verbraucht 0,10 t Stahl/s + 0,05 t Kupfer/s · produziert 0,05 t Maschinen/s' },
+  glassFactory: { name: 'Glasfabrik', icon: '🪟', resource: null, rate: 0, cost: 60, text: 'verbraucht 0,20 t Silizium/s + 0,10 t Stein/s · produziert 0,15 t Glas/s' }
 };
 
 const rocketTypes = {
@@ -66,6 +69,8 @@ const rockets = [];
 const rocketBuildQueue = {};
 const rocketBuildStarted = {};
 const rocketStock = {};
+const outpostBuildQueue = {};
+const outpostBuildStarted = {};
 let rocketQuantity = 1;
 let rocketCargoResource = 'stone';
 let rocketCargoAmount = 0;
@@ -76,20 +81,20 @@ const bodies = {
   mercury: { name: 'Merkur', type: 'Planet', className: 'mercury', temperature: 'ca. 167 °C Durchschnitt', resources: { stone: 20000, coal: 20000, gas: 40000, copperOre: 30000 }, storage: {}, orbit: 150 },
   venus: { name: 'Venus', type: 'Planet', className: 'venus', temperature: 'ca. 464 °C Durchschnitt', resources: { stone: 20000, coal: 20000, gas: 40000 }, storage: {}, orbit: 235 },
   earth: { name: 'Erde', type: 'Startplanet', className: 'earth', temperature: 'ca. 15 °C Durchschnitt', resources: { stone: 20000, coal: 20000, gas: 40000, iron: 2000000, lithium: 30000, copperOre: 30000 }, storage: null, orbit: 320 },
-  luna: { name: 'Luna', type: 'Mond der Erde', className: 'luna', temperature: 'ca. -20 °C Durchschnitt', resources: { iron: 2000000, silicon: 4000000 }, storage: {}, orbit: 0, moonOf: 'earth', moonOrbit: 55 },
+  luna: { name: 'Luna', type: 'Mond der Erde', className: 'luna', temperature: 'ca. -20 °C Durchschnitt', resources: { iron: 2000000, silicon: 4000000, lithium: 6000000 }, storage: {}, orbit: 0, moonOf: 'earth', moonOrbit: 55 },
   mars: { name: 'Mars', type: 'Planet', className: 'mars', temperature: 'ca. -63 °C Durchschnitt', resources: { stone: 20000, coal: 20000, gas: 40000 }, storage: {}, orbit: 405 },
   jupiter: { name: 'Jupiter', type: 'Gasplanet', className: 'jupiter', temperature: 'ca. -110 °C Wolkenobergrenze', resources: { hydrogen: 100000, helium: 50000 }, storage: {}, orbit: 515 }
 };
 
-const resourceNames = { stone: 'Stein', coal: 'Kohle', gas: 'Gas', iron: 'Eisen', silicon: 'Silizium', lithium: 'Lithium', copperOre: 'Kupfererz', copper: 'Kupfer', batteries: 'Batterien', buildingMaterials: 'Baustoffe', machines: 'Maschinen', steel: 'Stahl', hydrogen: 'Wasserstoff', helium: 'Helium' };
-const resourceIcons = { stone: '🪨', coal: '⚫', gas: '🔥', iron: '🧲', silicon: '🔷', lithium: '🔋', copperOre: '🟠', copper: '🟤', batteries: '🔋', buildingMaterials: '🧱', machines: '⚙️', steel: '🔩', hydrogen: '💨', helium: '💨' };
+const resourceNames = { stone: 'Stein', coal: 'Kohle', gas: 'Gas', iron: 'Eisen', silicon: 'Silizium', lithium: 'Lithium', copperOre: 'Kupfererz', copper: 'Kupfer', batteries: 'Batterien', buildingMaterials: 'Baustoffe', machines: 'Maschinen', glass: 'Glas', steel: 'Stahl', hydrogen: 'Wasserstoff', helium: 'Helium' };
+const resourceIcons = { stone: '🪨', coal: '⚫', gas: '🔥', iron: '🧲', silicon: '🔷', lithium: '🔋', copperOre: '🟠', copper: '🟤', batteries: '🔋', buildingMaterials: '🧱', machines: '⚙️', glass: '🪟', steel: '🔩', hydrogen: '💨', helium: '💨' };
 
 function formatTons(value) { return `${value.toFixed(2)} t`; }
 
 function getBuildingsOnPlanet(id) {
   if (id === 'earth') return state.buildings;
   if (!bodies[id].buildings) {
-    bodies[id].buildings = { steelworks: 0, stoneQuarry: 0, buildingMaterialsFactory: 0, coalMine: 0, gasPlant: 0, ironMine: 0, siliconMine: 0, lithiumMine: 0, copperMine: 0, copperSmelter: 0, lithiumRefinery: 0, machineFactory: 0, rocketStation: 0, coalPowerPlant: 0 };
+    bodies[id].buildings = { steelworks: 0, stoneQuarry: 0, buildingMaterialsFactory: 0, coalMine: 0, gasPlant: 0, ironMine: 0, siliconMine: 0, lithiumMine: 0, copperMine: 0, copperSmelter: 0, lithiumRefinery: 0, machineFactory: 0, glassFactory: 0, outpost: 0, rocketStation: 0, coalPowerPlant: 0 };
   }
   return bodies[id].buildings;
 }
@@ -101,7 +106,7 @@ function getPlanetStorage(id) {
 function storageAmount(id, resource) { return Number(getPlanetStorage(id)[resource] || 0); }
 function formatStorage(id) {
   const st = getPlanetStorage(id);
-  const keys = ['stone','coal','gas','iron','silicon','lithium','copperOre','copper','batteries','buildingMaterials','machines','steel','hydrogen','helium'];
+  const keys = ['stone','coal','gas','iron','silicon','lithium','copperOre','copper','batteries','buildingMaterials','machines','glass','steel','hydrogen','helium'];
   const rows = keys.filter(k => Number(st[k] || 0) > 0.000001).map(k => `<div class="stat"><span>${resourceIcons[k] || ''} ${resourceNames[k] || k}</span><strong>${formatTons(st[k])}</strong></div>`);
   return rows.length ? rows.join('') : '<p class="hint">Lager ist leer.</p>';
 }
@@ -123,6 +128,9 @@ function buildingMaterialsProduction(id = state.selected) { return getBuildingsO
 function machineFactorySteelUse(id = state.selected) { return getBuildingsOnPlanet(id).machineFactory * 0.10; }
 function machineFactoryCopperUse(id = state.selected) { return getBuildingsOnPlanet(id).machineFactory * 0.05; }
 function machineProduction(id = state.selected) { return getBuildingsOnPlanet(id).machineFactory * 0.05; }
+function glassFactorySiliconUse(id = state.selected) { return getBuildingsOnPlanet(id).glassFactory * 0.20; }
+function glassFactoryStoneUse(id = state.selected) { return getBuildingsOnPlanet(id).glassFactory * 0.10; }
+function glassProduction(id = state.selected) { return getBuildingsOnPlanet(id).glassFactory * 0.15; }
 function electricityProduction(id = state.selected) { return getBuildingsOnPlanet(id).coalPowerPlant * 20; }
 function coalPowerUse(id = state.selected) { return getBuildingsOnPlanet(id).coalPowerPlant * 0.0002; }
 
@@ -152,6 +160,8 @@ function getSaveData() {
     rocketBuildQueue,
     rocketBuildStarted,
     rocketStock,
+    outpostBuildQueue,
+    outpostBuildStarted,
     rocketQuantity,
     rocketCargoResource,
     rocketCargoAmount,
@@ -186,7 +196,7 @@ function loadGame(showMessage = true) {
     const defaultResources = {
       mercury: { copperOre: 30000 },
       earth: { lithium: 30000, copperOre: 30000 },
-      luna: { lithium: 30000 }
+      luna: { lithium: 6000000 }
     };
     Object.entries(defaultResources).forEach(([id, additions]) => {
       if (!bodies[id]) return;
@@ -202,6 +212,8 @@ function loadGame(showMessage = true) {
     state.buildings.copperSmelter = Number(state.buildings.copperSmelter || 0);
     state.buildings.lithiumRefinery = Number(state.buildings.lithiumRefinery || 0);
     state.buildings.machineFactory = Number(state.buildings.machineFactory || 0);
+    state.buildings.glassFactory = Number(state.buildings.glassFactory || 0);
+    state.buildings.outpost = Number(state.buildings.outpost || 0);
     Object.values(bodies).forEach(body => {
       if (!body.buildings) return;
       body.buildings.lithiumMine = Number(body.buildings.lithiumMine || 0);
@@ -209,6 +221,8 @@ function loadGame(showMessage = true) {
       body.buildings.copperSmelter = Number(body.buildings.copperSmelter || 0);
       body.buildings.lithiumRefinery = Number(body.buildings.lithiumRefinery || 0);
       body.buildings.machineFactory = Number(body.buildings.machineFactory || 0);
+       body.buildings.glassFactory = Number(body.buildings.glassFactory || 0);
+       body.buildings.outpost = Number(body.buildings.outpost || 0);
     });
 
     rockets.length = 0;
@@ -219,6 +233,10 @@ function loadGame(showMessage = true) {
     Object.assign(rocketBuildStarted, data.rocketBuildStarted || {});
     Object.keys(rocketStock).forEach(k => delete rocketStock[k]);
     Object.assign(rocketStock, data.rocketStock || {});
+    Object.keys(outpostBuildQueue).forEach(k => delete outpostBuildQueue[k]);
+    Object.assign(outpostBuildQueue, data.outpostBuildQueue || {});
+    Object.keys(outpostBuildStarted).forEach(k => delete outpostBuildStarted[k]);
+    Object.assign(outpostBuildStarted, data.outpostBuildStarted || {});
     rocketQuantity = Number(data.rocketQuantity) || 1;
     rocketCargoResource = data.rocketCargoResource || 'stone';
     rocketCargoAmount = Number(data.rocketCargoAmount) || 0;
@@ -399,7 +417,9 @@ function renderSystem() {
       ${buildButton('copperSmelter')}
       ${buildButton('lithiumRefinery')}
       ${buildButton('machineFactory')}
+      ${buildButton('glassFactory')}
       <div class="build-card"><div><strong>⚡ Kohlekraftwerk</strong><small>20 MW Strom/s · verbraucht 0,0002 t Kohle/s · 90 t Stahl</small></div><button class="build-resource" id="build-coal-power" ${state.steel >= 90 ? '' : 'disabled'}>Bauen (${getBuildingsOnPlanet(state.selected).coalPowerPlant})</button></div>
+      <div class="build-card outpost-card"><div><strong>🛰️ Außenposten</strong><small>100 t Stahl · 60 Sekunden Bauzeit · maximal 1 pro Planet · Raketenstation erforderlich</small></div><button class="build-resource" id="build-outpost" ${getBuildingsOnPlanet(state.selected).outpost || getBuildingsOnPlanet(state.selected).rocketStation === 0 || state.steel < 100 ? 'disabled' : ''}>Bauen (${getBuildingsOnPlanet(state.selected).outpost ? 'Gebaut' : 'Bauen'})</button></div>
       <div class="build-card rocket-station-card"><div><strong>🚀 Raketenstation</strong><small>Startet Herkules-1-Raketen · Rakete kostet 45 t Stahl</small></div><button class="build-resource" id="build-rocket-station" ${getBuildingsOnPlanet(state.selected).rocketStation ? 'disabled' : ''}>${getBuildingsOnPlanet(state.selected).rocketStation ? 'Gebaut' : 'Bauen'}</button></div>`;
 
     menu.style.left = '50%';
@@ -417,6 +437,7 @@ function renderSystem() {
     menu.querySelector('#build-coal-power').addEventListener('click', buildCoalPowerPlant);
     menu.querySelector('#build-steelworks-floating').addEventListener('click', buildSteelworks);
     menu.querySelector('#build-rocket-station').addEventListener('click', buildRocketStation);
+    menu.querySelector('#build-outpost').addEventListener('click', buildOutpost);
   }
   applyLanguage();
 }
@@ -477,7 +498,7 @@ function renderInfo() {
   }
   const bld = getBuildingsOnPlanet(state.selected);
   const localStorage = getPlanetStorage(state.selected);
-  infoPanel.innerHTML = `<h2>${state.selected === 'earth' ? '🌍' : '🪐'} ${body.name}</h2><p class="hint">${body.type}</p><div class="stat"><span>Temperatur</span><strong>${body.temperature}</strong></div><h3>🌐 Rohstoffe auf dem Planeten</h3>${resourceRows(body)}<h3>📦 Lager auf ${body.name}</h3>${formatStorage(state.selected)}<hr><h3>🏭 Gebäude auf ${body.name}</h3><div class="stat"><span>Gebäude gesamt</span><strong>${totalBuildingsOnPlanet(state.selected)}</strong></div><div class="stat"><span>Eisenproduktion</span><strong>${formatTons(ironProduction(state.selected))}/s</strong></div><div class="stat"><span>Siliziumproduktion</span><strong>${formatTons(siliconProduction(state.selected))}/s</strong></div><div class="stat"><span>Siliziumverbrauch</span><strong>${formatTons(siliconUse(state.selected))}/s</strong></div><div class="stat"><span>Lithiumproduktion</span><strong>${formatTons(lithiumProduction(state.selected))}/s</strong></div><div class="stat"><span>Kupfererzproduktion</span><strong>${formatTons(copperProduction(state.selected))}/s</strong></div><div class="stat"><span>Kupferverbrauch</span><strong>${formatTons(copperSmeltingUse(state.selected))}/s</strong></div><div class="stat"><span>Kupferproduktion</span><strong>${formatTons(copperSmeltingProduction(state.selected))}/s</strong></div><div class="stat"><span>Lithiumverbrauch</span><strong>${formatTons(lithiumRefineryLithiumUse(state.selected))}/s</strong></div><div class="stat"><span>Kupferverbrauch für Batterien</span><strong>${formatTons(lithiumRefineryCopperUse(state.selected))}/s</strong></div><div class="stat"><span>Batterieproduktion</span><strong>${formatTons(batteryProduction(state.selected))}/s</strong></div><div class="stat"><span>Baustoffverbrauch Stein</span><strong>${formatTons(buildingMaterialsStoneUse(state.selected))}/s</strong></div><div class="stat"><span>Baustoffproduktion</span><strong>${formatTons(buildingMaterialsProduction(state.selected))}/s</strong></div><div class="stat"><span>Stahlverbrauch Maschinenfabrik</span><strong>${formatTons(machineFactorySteelUse(state.selected))}/s</strong></div><div class="stat"><span>Kupferverbrauch Maschinenfabrik</span><strong>${formatTons(machineFactoryCopperUse(state.selected))}/s</strong></div><div class="stat"><span>Maschinenproduktion</span><strong>${formatTons(machineProduction(state.selected))}/s</strong></div>${state.selected === 'earth' ? `<div class="stat"><span>Eisenverbrauch</span><strong>${formatTons(ironUse('earth'))}/s</strong></div><div class="stat"><span>Stahlproduktion</span><strong>${formatTons(steelProduction('earth'))}/s</strong></div><div class="stat"><span>Stromproduktion</span><strong>${electricityProduction('earth').toFixed(2)} MW/s</strong></div>` : `<div class="stat"><span>Eisenverbrauch</span><strong>${formatTons(ironUse(state.selected))}/s</strong></div><div class="stat"><span>Stahlproduktion</span><strong>${formatTons(steelProduction(state.selected))}/s</strong></div><div class="stat"><span>Stromproduktion</span><strong>${electricityProduction(state.selected).toFixed(2)} MW/s</strong></div>`}<hr>${renderRocketWindow(body)}`;
+  infoPanel.innerHTML = `<h2>${state.selected === 'earth' ? '🌍' : '🪐'} ${body.name}</h2><p class="hint">${body.type}</p><div class="stat"><span>Temperatur</span><strong>${body.temperature}</strong></div><h3>🌐 Rohstoffe auf dem Planeten</h3>${resourceRows(body)}<h3>📦 Lager auf ${body.name}</h3>${formatStorage(state.selected)}<hr><h3>🏭 Gebäude auf ${body.name}</h3><div class="stat"><span>Gebäude gesamt</span><strong>${totalBuildingsOnPlanet(state.selected)}</strong></div><div class="stat"><span>Eisenproduktion</span><strong>${formatTons(ironProduction(state.selected))}/s</strong></div><div class="stat"><span>Siliziumproduktion</span><strong>${formatTons(siliconProduction(state.selected))}/s</strong></div><div class="stat"><span>Siliziumverbrauch</span><strong>${formatTons(siliconUse(state.selected))}/s</strong></div><div class="stat"><span>Lithiumproduktion</span><strong>${formatTons(lithiumProduction(state.selected))}/s</strong></div><div class="stat"><span>Kupfererzproduktion</span><strong>${formatTons(copperProduction(state.selected))}/s</strong></div><div class="stat"><span>Kupferverbrauch</span><strong>${formatTons(copperSmeltingUse(state.selected))}/s</strong></div><div class="stat"><span>Kupferproduktion</span><strong>${formatTons(copperSmeltingProduction(state.selected))}/s</strong></div><div class="stat"><span>Lithiumverbrauch</span><strong>${formatTons(lithiumRefineryLithiumUse(state.selected))}/s</strong></div><div class="stat"><span>Kupferverbrauch für Batterien</span><strong>${formatTons(lithiumRefineryCopperUse(state.selected))}/s</strong></div><div class="stat"><span>Batterieproduktion</span><strong>${formatTons(batteryProduction(state.selected))}/s</strong></div><div class="stat"><span>Baustoffverbrauch Stein</span><strong>${formatTons(buildingMaterialsStoneUse(state.selected))}/s</strong></div><div class="stat"><span>Baustoffproduktion</span><strong>${formatTons(buildingMaterialsProduction(state.selected))}/s</strong></div><div class="stat"><span>Stahlverbrauch Maschinenfabrik</span><strong>${formatTons(machineFactorySteelUse(state.selected))}/s</strong></div><div class="stat"><span>Kupferverbrauch Maschinenfabrik</span><strong>${formatTons(machineFactoryCopperUse(state.selected))}/s</strong></div><div class="stat"><span>Maschinenproduktion</span><strong>${formatTons(machineProduction(state.selected))}/s</strong></div><div class="stat"><span>Glasverbrauch Silizium</span><strong>${formatTons(glassFactorySiliconUse(state.selected))}/s</strong></div><div class="stat"><span>Glasverbrauch Stein</span><strong>${formatTons(glassFactoryStoneUse(state.selected))}/s</strong></div><div class="stat"><span>Glasproduktion</span><strong>${formatTons(glassProduction(state.selected))}/s</strong></div>${state.selected === 'earth' ? `<div class="stat"><span>Eisenverbrauch</span><strong>${formatTons(ironUse('earth'))}/s</strong></div><div class="stat"><span>Stahlproduktion</span><strong>${formatTons(steelProduction('earth'))}/s</strong></div><div class="stat"><span>Stromproduktion</span><strong>${electricityProduction('earth').toFixed(2)} MW/s</strong></div>` : `<div class="stat"><span>Eisenverbrauch</span><strong>${formatTons(ironUse(state.selected))}/s</strong></div><div class="stat"><span>Stahlproduktion</span><strong>${formatTons(steelProduction(state.selected))}/s</strong></div><div class="stat"><span>Stromproduktion</span><strong>${electricityProduction(state.selected).toFixed(2)} MW/s</strong></div>`}<hr>${renderRocketWindow(body)}`;
   bindRocketControls();
   applyLanguage();
 }
@@ -517,6 +538,17 @@ function buildRocketStation() {
   if (bld.rocketStation > 0) return;
   bld.rocketStation = 1;
   renderSystem(); renderInfo();
+}
+
+function buildOutpost() {
+  const source = state.selected;
+  const bld = getBuildingsOnPlanet(source);
+  if (source === 'sun' || bld.outpost > 0 || !bld.rocketStation || outpostBuildQueue[source]) return;
+  if (state.steel < 100) return;
+  state.steel -= 100;
+  outpostBuildQueue[source] = 1;
+  outpostBuildStarted[source] = performance.now();
+  renderSystem(); renderInfo(); renderTopResources();
 }
 
 function buildHercules1() {
@@ -679,6 +711,17 @@ function bindRocketControls() {
   }));
 }
 
+function updateOutposts(now) {
+  Object.keys(outpostBuildQueue).forEach(id => {
+    if (outpostBuildQueue[id] > 0 && now - (outpostBuildStarted[id] || 0) >= 60000) {
+      getBuildingsOnPlanet(id).outpost = 1;
+      outpostBuildQueue[id] = 0;
+      outpostBuildStarted[id] = 0;
+      renderSystem(); renderInfo();
+    }
+  });
+}
+
 function updateRockets(now) {
   Object.keys(bodies).forEach(id => {
     if (id === 'sun') return;
@@ -774,6 +817,20 @@ function updateResources(now) {
         storage.buildingMaterials = Number(storage.buildingMaterials || 0) + buildingMaterialsProduction(id) * delta * (usedStone / neededStone);
       }
     }
+    if (bld.glassFactory > 0) {
+      const neededSilicon = glassFactorySiliconUse(id) * delta;
+      const neededStone = glassFactoryStoneUse(id) * delta;
+      const availableSilicon = Number(storage.silicon || 0);
+      const availableStone = Number(storage.stone || 0);
+      const siliconFactor = neededSilicon > 0 ? Math.min(1, availableSilicon / neededSilicon) : 0;
+      const stoneFactor = neededStone > 0 ? Math.min(1, availableStone / neededStone) : 0;
+      const factor = Math.min(siliconFactor, stoneFactor);
+      if (factor > 0) {
+        storage.silicon = availableSilicon - neededSilicon * factor;
+        storage.stone = availableStone - neededStone * factor;
+        storage.glass = Number(storage.glass || 0) + glassProduction(id) * delta * factor;
+      }
+    }
     if (bld.machineFactory > 0) {
       const neededSteel = machineFactorySteelUse(id) * delta;
       const neededCopper = machineFactoryCopperUse(id) * delta;
@@ -791,6 +848,7 @@ function updateResources(now) {
   });
 
   // Das Lager der Erde ist gleichzeitig das Spieler-/Hauptlager.
+  updateOutposts(now);
   updateRockets(now);
 
   // Alle 20 Sekunden werden die aktuellen Lagerstände aller Planeten
