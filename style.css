@@ -71,3 +71,17 @@ select{padding:7px;border-radius:8px;background:#eef2f7;color:#111}
 /* Einführung */
 .introduction-panel{border:1px solid #263754;border-radius:16px;background:#09111f;padding:14px;margin-bottom:8px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
 .introduction-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}.introduction-content h3{margin:16px 0 5px}.introduction-content h3:first-child{margin-top:8px}.introduction-content p{color:#c7d4e8;line-height:1.55;margin:0}
+
+/* Forschung */
+.research-panel{border:1px solid #263754;border-radius:16px;background:#09111f;padding:14px;margin-bottom:8px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.research-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.research-tree{display:grid;gap:9px}
+.research-card{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:11px;border:1px solid #263754;border-radius:12px;background:#0c1627}
+.research-card small{display:block;color:#aab8ce;margin-top:4px;line-height:1.35}
+.research-button{min-width:105px}
+.research-done{border-color:#3f7d5b}
+.research-active{margin:10px 0;padding:10px;border:1px solid #3b5f87;border-radius:12px;background:#0c1627}
+.research-active small{display:block;color:#aab8ce;margin-top:4px}
+.research-progress{height:8px;background:#1d2a3d;border-radius:8px;overflow:hidden;margin-top:8px}
+.research-progress i{display:block;height:100%;background:#2776d2}
+@media(max-width:430px){.research-card{grid-template-columns:1fr}.research-button{width:100%}}
