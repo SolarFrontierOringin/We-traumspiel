@@ -95,7 +95,8 @@ const buildingTypes = {
 
 const rocketTypes = {
   hercules1: { name: 'Herkules 1', icon: '🚀', cost: 45, capacity: 120 },
-  hercules2: { name: 'Herkules 2', icon: '🚀', costSteel: 300, costBatteries: 50, capacity: 300, compartments: 3 }
+  hercules2: { name: 'Herkules 2', icon: '🚀', costSteel: 300, costBatteries: 50, capacity: 300, compartments: 3 },
+  atlas1: { name: 'Atlas 1', icon: '🚀', costSteel: 340, costChips: 150, costBatteries: 200, capacity: 500, compartments: 3 }
 };
 
 const flightTimes = {
@@ -107,6 +108,8 @@ const flightTimes = {
   luna: 10
 };
 
+function atlasFlightTime(destination) { return Math.max(1, (flightTimes[destination] || 20) - 1); }
+
 const rockets = [];
 const rocketBuildQueue = {};
 const rocketBuildStarted = {};
@@ -114,6 +117,9 @@ const rocketStock = {};
 const rocketStock2 = {};
 const rocketBuildQueue2 = {};
 const rocketBuildStarted2 = {};
+const rocketStockAtlas1 = {};
+const rocketBuildQueueAtlas1 = {};
+const rocketBuildStartedAtlas1 = {};
 const outpostBuildQueue = {};
 const outpostBuildStarted = {};
 let rocketQuantity = 1;
@@ -137,8 +143,8 @@ const bodies = {
   jupiter: { name: 'Jupiter', type: 'Gasplanet', className: 'jupiter', temperature: 'ca. -110 °C Wolkenobergrenze', resources: { hydrogen: 100000, helium: 50000, helium3: 40000000 }, storage: {}, orbit: 515 }
 };
 
-const resourceNames = { concrete: 'Beton', stone: 'Stein', coal: 'Kohle', gas: 'Gas', iron: 'Eisen', silicon: 'Silizium', lithium: 'Lithium', copperOre: 'Kupfererz', copper: 'Kupfer', batteries: 'Batterien', buildingMaterials: 'Baustoffe', machines: 'Maschinen', glass: 'Glas', electronics: 'Elektronik', steel: 'Stahl', hydrogen: 'Wasserstoff', helium: 'Helium', helium3: 'Helium-3', crudeOil: 'Rohöl', uranium: 'Uran', processedUranium: 'Aufbereitetes Uran', nuclearFuel: 'Kernbrennstoff' };
-const resourceIcons = { concrete: '🏗️', stone: '🪨', coal: '⚫', gas: '🔥', iron: '🧲', silicon: '🔷', lithium: '🔋', copperOre: '🟠', copper: '🟤', batteries: '🔋', buildingMaterials: '🧱', machines: '⚙️', glass: '🪟', electronics: '💻', steel: '🔩', hydrogen: '💨', helium: '💨', helium3: '🧪', crudeOil: '🛢️', uranium: '☢️', processedUranium: '🧪', nuclearFuel: '⚛️' };
+const resourceNames = { concrete: 'Beton', stone: 'Stein', coal: 'Kohle', gas: 'Gas', iron: 'Eisen', silicon: 'Silizium', lithium: 'Lithium', copperOre: 'Kupfererz', copper: 'Kupfer', batteries: 'Batterien', buildingMaterials: 'Baustoffe', machines: 'Maschinen', glass: 'Glas', electronics: 'Elektronik', steel: 'Stahl', hydrogen: 'Wasserstoff', helium: 'Helium', helium3: 'Helium-3', crudeOil: 'Rohöl', uranium: 'Uran', processedUranium: 'Aufbereitetes Uran', nuclearFuel: 'Kernbrennstoff', chips: 'Chips' };
+const resourceIcons = { concrete: '🏗️', stone: '🪨', coal: '⚫', gas: '🔥', iron: '🧲', silicon: '🔷', lithium: '🔋', copperOre: '🟠', copper: '🟤', batteries: '🔋', buildingMaterials: '🧱', machines: '⚙️', glass: '🪟', electronics: '💻', steel: '🔩', hydrogen: '💨', helium: '💨', helium3: '🧪', crudeOil: '🛢️', uranium: '☢️', processedUranium: '🧪', nuclearFuel: '⚛️', chips: '💾' };
 
 function formatTons(value) { return `${value.toFixed(2)} t`; }
 
@@ -221,6 +227,10 @@ const researchTypes = {
     name: 'Mondbasis', icon: '🌙', category: 'Industrielle Grundlagen', cost: 1200, time: 300,
     text: 'Schaltet die Mondbasis frei. Die Mondbasis kann auf allen Planeten gebaut werden.'
   },
+  atlas1: {
+    name: 'Atlas 1', icon: '🚀', category: 'Raketentechnik', cost: 8000, time: 480,
+    text: 'Schaltet den Bau und Einsatz der Atlas 1 frei. 500 t/L Kapazität, 3 Frachtabteilungen und 1 Sekunde kürzere Flugzeit als Herkules.'
+  },
   fusionReactor: {
     name: 'Fusionsreaktor', icon: '⚛️', category: 'Fortschrittliche Forschung', cost: 6000, time: 600,
     text: 'Schaltet den Fusionsreaktor frei. Der Fusionsreaktor bleibt im Baumenü sichtbar, ist aber bis zum Abschluss dieser Forschung gesperrt.'
@@ -239,22 +249,6 @@ const taskTypes = {
     unit: 'Gebäude',
     reward: 5,
     getProgress: () => totalIronMinesBuilt()
-  },
-  intro_iron_mines_3: {
-    name: 'Besitze 3 Eisenminen',
-    description: 'Baue insgesamt drei Eisenminen.',
-    target: 3,
-    unit: 'Gebäude',
-    reward: 0,
-    getProgress: () => totalIronMinesBuilt()
-  },
-  intro_building_materials_factory: {
-    name: 'Baue 1 Baustofffabrik',
-    description: 'Baue deine erste Baustofffabrik.',
-    target: 1,
-    unit: 'Gebäude',
-    reward: 0,
-    getProgress: () => Object.keys(bodies).filter(id => id !== 'sun').reduce((sum, id) => sum + Number(getBuildingsOnPlanet(id).buildingMaterialsFactory || 0), 0)
   },
   intro_iron_1000: {
     name: 'Baue 1.000 t Eisenerz ab',
@@ -279,6 +273,22 @@ const taskTypes = {
     unit: 't',
     reward: 0,
     getProgress: () => Number(state.tasks?.steelProduced || 0)
+  },
+  intro_iron_mines_3: {
+    name: 'Besitze 3 Eisenminen',
+    description: 'Baue insgesamt drei Eisenminen.',
+    target: 3,
+    unit: 'Gebäude',
+    reward: 0,
+    getProgress: () => totalIronMinesBuilt()
+  },
+  intro_building_materials_factory: {
+    name: 'Baue 1 Baustofffabrik',
+    description: 'Baue deine erste Baustofffabrik.',
+    target: 1,
+    unit: 'Gebäude',
+    reward: 0,
+    getProgress: () => Object.keys(bodies).filter(id => id !== 'sun').reduce((sum, id) => sum + Number(getBuildingsOnPlanet(id).buildingMaterialsFactory || 0), 0)
   }
 };
 
@@ -361,12 +371,15 @@ function renderResearch() {
   const researchedSolar = !!completed.solarPlant;
   const researchedFusion = !!completed.fusionReactor;
   const researchedNuclear = !!completed.nuclearReactor;
+  const researchedAtlas1 = !!completed.atlas1;
   const enoughSolarPoints = Number(state.research.points || 0) >= researchTypes.solarPlant.cost;
   const enoughFusionPoints = Number(state.research.points || 0) >= researchTypes.fusionReactor.cost;
   const enoughNuclearPoints = Number(state.research.points || 0) >= researchTypes.nuclearReactor.cost;
   const canResearchSolar = researchAvailable() && !running && !researchedSolar && enoughSolarPoints;
   const canResearchFusion = researchAvailable() && !running && !researchedFusion && enoughFusionPoints;
   const canResearchNuclear = researchAvailable() && !running && !researchedNuclear && enoughNuclearPoints;
+  const enoughAtlasPoints = Number(state.research.points || 0) >= researchTypes.atlas1.cost;
+  const canResearchAtlas1 = researchAvailable() && !running && !researchedAtlas1 && enoughAtlasPoints;
   const remaining = active && activeDef
     ? Math.max(0, activeDef.time - (performance.now() - active.started) / 1000)
     : 0;
@@ -403,7 +416,16 @@ function renderResearch() {
   </div>
 
   <h3>2️⃣ Raketentechnik</h3>
-  <div class="research-empty"><p class="hint">Aktuell leer – weitere Forschungen werden später ergänzt.</p></div>
+  <div class="research-tree">
+    <div class="research-card ${researchedAtlas1 ? 'research-done' : ''}">
+      <div>
+        <strong>🚀 Forschung: Atlas 1</strong>
+        <small>Schaltet die Atlas 1 frei. 500 t/L, 3 Frachtabteilungen, alle erreichbaren Planeten.</small>
+        <small>🧪 8.000 Forschungspunkte · ⏱️ 8:00 Minuten</small>
+      </div>
+      <button class="research-button" data-research="atlas1" ${canResearchAtlas1 ? '' : 'disabled'}>${researchedAtlas1 ? 'Abgeschlossen' : active?.key === 'atlas1' ? 'Läuft …' : 'Forschen'}</button>
+    </div>
+  </div>
 
   <h3>3️⃣ Fortschrittliche Forschung</h3>
   <div class="research-tree">
@@ -491,6 +513,9 @@ function getSaveData() {
     rocketStock2,
     rocketBuildQueue2,
     rocketBuildStarted2,
+    rocketStockAtlas1,
+    rocketBuildQueueAtlas1,
+    rocketBuildStartedAtlas1,
     outpostBuildQueue,
     outpostBuildStarted,
     rocketQuantity,
@@ -615,6 +640,12 @@ function loadGame(showMessage = true) {
     Object.assign(rocketBuildQueue2, data.rocketBuildQueue2 || {});
     Object.keys(rocketBuildStarted2).forEach(k => delete rocketBuildStarted2[k]);
     Object.assign(rocketBuildStarted2, data.rocketBuildStarted2 || {});
+    Object.keys(rocketStockAtlas1).forEach(k => delete rocketStockAtlas1[k]);
+    Object.assign(rocketStockAtlas1, data.rocketStockAtlas1 || {});
+    Object.keys(rocketBuildQueueAtlas1).forEach(k => delete rocketBuildQueueAtlas1[k]);
+    Object.assign(rocketBuildQueueAtlas1, data.rocketBuildQueueAtlas1 || {});
+    Object.keys(rocketBuildStartedAtlas1).forEach(k => delete rocketBuildStartedAtlas1[k]);
+    Object.assign(rocketBuildStartedAtlas1, data.rocketBuildStartedAtlas1 || {});
     Object.keys(outpostBuildQueue).forEach(k => delete outpostBuildQueue[k]);
     Object.assign(outpostBuildQueue, data.outpostBuildQueue || {});
     Object.keys(outpostBuildStarted).forEach(k => delete outpostBuildStarted[k]);
@@ -820,7 +851,7 @@ function renderSystem() {
       ${state.selected === 'earth' ? `<div class="build-card research-lab-card"><div><strong>🔬 Forschungslabor</strong><small>Nur auf der Erde · benötigt Baustoffe, Glas und Elektronik · Kostenmengen werden noch festgelegt</small></div><button class="build-resource" id="build-research-lab" ${getBuildingsOnPlanet('earth').researchLab ? 'disabled' : ''}>${getBuildingsOnPlanet('earth').researchLab ? 'Gebaut' : 'Bauen'}</button></div>` : ''}
       <div class="build-card"><div><strong>⚡ Kohlekraftwerk</strong><small>20 MW Strom/s · verbraucht 0,0002 t Kohle/s · 90 t Stahl</small></div><button class="build-resource" id="build-coal-power" ${Number(getPlanetStorage(state.selected).steel || 0) >= 90 ? '' : 'disabled'}>Bauen (${getBuildingsOnPlanet(state.selected).coalPowerPlant})</button></div>
       <div class="build-card outpost-card"><div><strong>🛰️ Außenposten</strong><small>100 t Stahl · 60 Sekunden Bauzeit · maximal 1 pro Planet · Voraussetzung für weitere Gebäude auf allen Außenplaneten</small></div><button class="build-resource" id="build-outpost" ${getBuildingsOnPlanet(state.selected).outpost || outpostBuildQueue[state.selected] || (state.selected !== 'luna' && getBuildingsOnPlanet(state.selected).rocketStation === 0) || Number(getPlanetStorage(state.selected).steel || 0) < 100 ? 'disabled' : ''}>Bauen (${getBuildingsOnPlanet(state.selected).outpost ? 'Gebaut' : 'Bauen'})</button></div>
-      <div class="build-card rocket-station-card"><div><strong>🚀 Raketenstation</strong><small>Startet Herkules-1-Raketen · Rakete kostet 45 t Stahl</small></div><button class="build-resource" id="build-rocket-station" ${getBuildingsOnPlanet(state.selected).rocketStation || !isBuildingAllowed('rocketStation', state.selected) ? 'disabled' : ''}>${getBuildingsOnPlanet(state.selected).rocketStation ? 'Gebaut' : 'Bauen'}</button></div>`;
+      <div class="build-card rocket-station-card"><div><strong>🚀 Raketenstation</strong><small>Startet Herkules-1-, Herkules-2- und Atlas-1-Raketen</small></div><button class="build-resource" id="build-rocket-station" ${getBuildingsOnPlanet(state.selected).rocketStation || !isBuildingAllowed('rocketStation', state.selected) ? 'disabled' : ''}>${getBuildingsOnPlanet(state.selected).rocketStation ? 'Gebaut' : 'Bauen'}</button></div>`;
 
     menu.style.left = '50%';
     menu.style.top = 'calc(50% - 150px)';
@@ -1213,6 +1244,21 @@ function buildHercules1() {
   saveAfterBuild();
 }
 
+function buildAtlas1() {
+  const source = state.selected;
+  ensureRocketData(source);
+  if (source === 'sun' || !getBuildingsOnPlanet(source).rocketStation || rocketBuildQueueAtlas1[source] > 0 || !state.research?.completed?.atlas1) return;
+  const storage = getPlanetStorage(source);
+  if (Number(storage.steel || 0) < 340 || Number(storage.chips || 0) < 150 || Number(storage.batteries || 0) < 200) return;
+  storage.steel -= 340;
+  storage.chips -= 150;
+  storage.batteries -= 200;
+  rocketBuildQueueAtlas1[source] = 1;
+  rocketBuildStartedAtlas1[source] = performance.now();
+  renderInfo(); renderTopResources();
+  saveAfterBuild();
+}
+
 function buildHercules2() {
   const source = state.selected;
   ensureRocketData(source);
@@ -1236,6 +1282,9 @@ function ensureRocketData(planetId) {
   if (rocketStock2[planetId] === undefined) rocketStock2[planetId] = 0;
   if (rocketBuildQueue2[planetId] === undefined) rocketBuildQueue2[planetId] = 0;
   if (rocketBuildStarted2[planetId] === undefined) rocketBuildStarted2[planetId] = 0;
+  if (rocketStockAtlas1[planetId] === undefined) rocketStockAtlas1[planetId] = 0;
+  if (rocketBuildQueueAtlas1[planetId] === undefined) rocketBuildQueueAtlas1[planetId] = 0;
+  if (rocketBuildStartedAtlas1[planetId] === undefined) rocketBuildStartedAtlas1[planetId] = 0;
 }
 
 function launchHercules1(source, destination, quantity) {
@@ -1310,12 +1359,26 @@ function launchHercules2(source, destination) {
   renderInfo(); renderTopResources();
 }
 
+function launchAtlas1(source, destination) {
+  ensureRocketData(source);
+  if (!getBuildingsOnPlanet(source).rocketStation || !rocketStockAtlas1[source] || !bodies[destination] || destination === source || destination === 'sun' || !state.research?.completed?.atlas1) return;
+  const cargo = (rocketCargoSlots || []).map(slot => ({ resource: slot.resource, amount: Math.max(0, Number(slot.amount) || 0) })).filter(slot => slot.resource && slot.amount > 0);
+  const total = cargo.reduce((sum, slot) => sum + slot.amount, 0);
+  if (!cargo.length || total > 500.000001) return;
+  const sourceStorage = getPlanetStorage(source);
+  for (const slot of cargo) if (Number(sourceStorage[slot.resource] || 0) + 0.000001 < slot.amount) return;
+  for (const slot of cargo) { sourceStorage[slot.resource] = Number(sourceStorage[slot.resource] || 0) - slot.amount; if (Math.abs(sourceStorage[slot.resource]) < 0.000001) sourceStorage[slot.resource] = 0; }
+  rocketStockAtlas1[source]--;
+  rockets.push({ id: Date.now() + Math.random(), name: rocketTypes.atlas1.name, type: 'atlas1', from: source, to: destination, started: performance.now(), duration: atlasFlightTime(destination) * 1000, status: 'outbound', capacity: 500, compartments: 3, cargo: cargo });
+  renderInfo(); renderTopResources();
+}
+
 function returnRocket(rocketId, cargoResource = null, cargoAmount = 0) {
   const rocket = rockets.find(r => String(r.id) === String(rocketId));
   if (!rocket || rocket.status !== 'arrived') return;
   const source = rocket.to;
   const destination = rocket.from;
-  const duration = (flightTimes[rocket.from] || flightTimes[rocket.to] || 20) * 1000;
+  const duration = rocket.type === 'atlas1' ? atlasFlightTime(rocket.from) * 1000 : (flightTimes[rocket.from] || flightTimes[rocket.to] || 20) * 1000;
   const storage = getPlanetStorage(source);
   const returnCapacity = rocket.type === 'hercules2' ? 300 : 120;
   const amount = Math.max(0, Math.min(returnCapacity, Number(cargoAmount) || 0));
@@ -1352,6 +1415,9 @@ function renderRocketWindow(body) {
   const buildQueue2 = rocketBuildQueue2[source] || 0;
   const buildStarted1 = rocketBuildStarted[source] || 0;
   const buildStarted2 = rocketBuildStarted2[source] || 0;
+  const stockAtlas1 = rocketStockAtlas1[source] || 0;
+  const buildQueueAtlas1 = rocketBuildQueueAtlas1[source] || 0;
+  const buildStartedAtlas1 = rocketBuildStartedAtlas1[source] || 0;
 
   const destinations = Object.entries(bodies)
     .filter(([id]) => id !== 'sun' && id !== source && flightTimes[id] !== undefined)
@@ -1368,6 +1434,8 @@ function renderRocketWindow(body) {
     const remaining = Math.max(0, (r.duration - elapsed) / 1000);
     const pct = Math.min(100, elapsed / r.duration * 100);
     const isH2 = r.type === 'hercules2';
+    const isAtlas1 = r.type === 'atlas1';
+    const maxCapacity = isAtlas1 ? 500 : (isH2 ? 300 : 120);
     const cargo = r.deliveredCargo || r.cargo;
     const cargoText = Array.isArray(cargo)
       ? (cargo.length ? cargo.map(c => `${resourceIcons[c.resource] || ''} ${resourceNames[c.resource] || c.resource}: ${c.amount.toFixed(2)} ${c.resource === 'crudeOil' ? 'L' : 't'}`).join(' · ') : 'Keine Fracht')
@@ -1377,7 +1445,7 @@ function renderRocketWindow(body) {
       const returnOptions = ['stone','coal','gas','crudeOil','iron','silicon','lithium','copperOre','copper','batteries','buildingMaterials','machines','uranium','processedUranium','nuclearFuel','steel']
         .filter(k => Number(getPlanetStorage(r.to)[k] || 0) > 0.000001)
         .map(k => `<option value="${k}">${resourceIcons[k] || ''} ${resourceNames[k] || k}</option>`).join('');
-      return `<div class="rocket-flight arrived"><strong>🚀 ${r.name}</strong><span>📍 ${bodies[r.to].name} · angekommen</span><div class="rocket-cargo">📦 Hinflug: ${cargoText}</div><div class="rocket-return-box"><select class="rocket-return-resource" data-rocket-id="${r.id}"><option value="">Keine Rückfracht</option>${returnOptions}</select><input class="rocket-return-amount" data-rocket-id="${r.id}" type="number" min="0" max="${isH2 ? 300 : 120}" step="0.01" value="0"><button class="rocket-return" data-rocket-id="${r.id}">↩️ Zurück nach ${bodies[r.from].name}</button></div><small>Rückflug ${bodies[r.to].name} → ${bodies[r.from].name}: ${flightTimes[r.from] || flightTimes[r.to] || 20} Sekunden · max. ${isH2 ? '300' : '120'} t/L</small></div>`;
+      return `<div class="rocket-flight arrived"><strong>🚀 ${r.name}</strong><span>📍 ${bodies[r.to].name} · angekommen</span><div class="rocket-cargo">📦 Hinflug: ${cargoText}</div><div class="rocket-return-box"><select class="rocket-return-resource" data-rocket-id="${r.id}"><option value="">Keine Rückfracht</option>${returnOptions}</select><input class="rocket-return-amount" data-rocket-id="${r.id}" type="number" min="0" max="${maxCapacity}" step="0.01" value="0"><button class="rocket-return" data-rocket-id="${r.id}">↩️ Zurück nach ${bodies[r.from].name}</button></div><small>Rückflug ${bodies[r.to].name} → ${bodies[r.from].name}: ${r.type === 'atlas1' ? atlasFlightTime(r.from) : (flightTimes[r.from] || flightTimes[r.to] || 20)} Sekunden · max. ${maxCapacity} t/L</small></div>`;
     }
     if (r.status === 'returning') return `<div class="rocket-flight"><strong>🚀 ${r.name}</strong><span>↩️ ${bodies[r.fromReturn || r.from].name} → ${bodies[r.to].name}</span><div class="rocket-cargo">📦 Rückflug</div><div class="rocket-progress"><i style="width:${pct}%"></i></div><small>${remaining.toFixed(1)} s bis Ankunft</small></div>`;
     return `<div class="rocket-flight"><strong>🚀 ${r.name}</strong><span>🚀 ${bodies[r.from].name} → ${bodies[r.to].name}</span><div class="rocket-cargo">📦 ${cargoText}</div><div class="rocket-progress"><i style="width:${pct}%"></i></div><small>${remaining.toFixed(1)} s bis Ankunft</small></div>`;
@@ -1387,8 +1455,11 @@ function renderRocketWindow(body) {
   const buildPct1 = buildQueue1 ? Math.min(100, (performance.now()-buildStarted1)/30000*100) : 0;
   const buildRemaining2 = buildQueue2 ? Math.max(0, 30 - (performance.now() - buildStarted2)/1000) : 0;
   const buildPct2 = buildQueue2 ? Math.min(100, (performance.now()-buildStarted2)/30000*100) : 0;
+  const buildRemainingAtlas1 = buildQueueAtlas1 ? Math.max(0, 30 - (performance.now() - buildStartedAtlas1)/1000) : 0;
+  const buildPctAtlas1 = buildQueueAtlas1 ? Math.min(100, (performance.now()-buildStartedAtlas1)/30000*100) : 0;
   const localSteel = getPlayerResourceAmount('steel', source);
   const localBatteries = getPlayerResourceAmount('batteries', source);
+  const localChips = getPlayerResourceAmount('chips', source);
 
   const cargoOptions = ['stone','coal','gas','crudeOil','iron','silicon','lithium','copperOre','copper','batteries','buildingMaterials','machines','uranium','processedUranium','nuclearFuel','steel']
     .map(key => `<option value="${key}">${resourceIcons[key] || ''} ${resourceNames[key] || key}</option>`).join('');
@@ -1416,6 +1487,18 @@ function renderRocketWindow(body) {
     <div class="rocket-build-box hercules2-box"><strong>🚀 Herkules 2</strong><small>300 t Stahl + 50 t Batterien · 30 Sekunden Bauzeit · 300 t/L Kapazität · 3 Frachtabteilungen</small>${buildQueue2 ? `<div class="rocket-progress"><i style="width:${buildPct2}%"></i></div>` : ''}<button id="build-hercules2" ${buildQueue2 || localSteel < 300 || localBatteries < 50 ? 'disabled' : ''}>🚀 Herkules 2 bauen – 300 t Stahl + 50 t Batterien</button></div>
     <div class="rocket-stock">Herkules 2 verfügbar: <strong>${stock2}</strong></div>
 
+    <div class="rocket-build-box atlas1-box"><strong>🚀 Atlas 1</strong><small>340 t Stahl + 150 t Chips + 200 t Batterien · 30 Sekunden Bauzeit · 500 t/L Kapazität · 3 Frachtabteilungen · Forschung erforderlich</small>${buildQueueAtlas1 ? `<div class="rocket-progress"><i style="width:${buildPctAtlas1}%"></i></div>` : ''}<button id="build-atlas1" ${buildQueueAtlas1 || stockAtlas1 < 0 || localSteel < 340 || localChips < 150 || localBatteries < 200 || !state.research?.completed?.atlas1 ? 'disabled' : ''}>🚀 Atlas 1 bauen – 340 t Stahl + 150 t Chips + 200 t Batterien</button></div>
+    <div class="rocket-stock">Atlas 1 verfügbar: <strong>${stockAtlas1}</strong></div>
+
+    <div class="rocket-h2-launch atlas1-launch">
+      <strong>🚀 Atlas 1 · Mehrere Frachtabteilungen</strong>
+      <div class="rocket-capacity">Gesamtkapazität: <strong>500 t/L</strong> · Belegung: <strong>${h2Total.toFixed(2)} t/L</strong></div>
+      <div class="rocket-compartments">${h2SlotsHtml}</div>
+      ${h2Total > 500 ? '<small class="bad">Maximal 500 t/L pro Atlas 1.</small>' : ''}
+      <button class="rocket-launch" id="launch-atlas1" ${stockAtlas1 < 1 || h2Total <= 0 || h2Total > 500.000001 || !state.research?.completed?.atlas1 ? 'disabled' : ''}>🚀 Atlas 1 nach ${bodies[target].name} starten</button>
+      <p class="hint">Alle Planeten erreichbar · 1 Sekunde schneller als Herkules · 3 Frachtabteilungen.</p>
+    </div>
+
     <div class="transport-route"><label for="rocket-destination"><strong>🎯 Zielplanet</strong></label><select id="rocket-destination">${destinations}</select></div>
 
     <div class="rocket-h1-launch">
@@ -1442,6 +1525,7 @@ function renderRocketWindow(body) {
 function bindRocketControls() {
   const b=infoPanel.querySelector('#build-hercules'); if(b)b.addEventListener('click',buildHercules1);
   const b2=infoPanel.querySelector('#build-hercules2'); if(b2)b2.addEventListener('click',buildHercules2);
+  const ba=infoPanel.querySelector('#build-atlas1'); if(ba)ba.addEventListener('click',buildAtlas1);
   const d=infoPanel.querySelector('#rocket-destination'); if(d)d.addEventListener('change',()=>{rocketDestination=d.value;renderInfo();});
   const m=infoPanel.querySelector('#rocket-minus'); if(m)m.addEventListener('click',()=>{rocketQuantity=Math.max(1,rocketQuantity-1);renderInfo();});
   const p=infoPanel.querySelector('#rocket-plus'); if(p)p.addEventListener('click',()=>{rocketQuantity=Math.min(Math.max(1,rocketStock[state.selected] || 1),rocketQuantity+1);renderInfo();});
@@ -1463,6 +1547,7 @@ function bindRocketControls() {
   }));
   const l=infoPanel.querySelector('#launch-hercules'); if(l)l.addEventListener('click',()=>launchHercules1(state.selected,rocketDestination,rocketQuantity));
   const l2=infoPanel.querySelector('#launch-hercules2'); if(l2)l2.addEventListener('click',()=>launchHercules2(state.selected,rocketDestination));
+  const la=infoPanel.querySelector('#launch-atlas1'); if(la)la.addEventListener('click',()=>launchAtlas1(state.selected,rocketDestination));
   infoPanel.querySelectorAll('.rocket-return').forEach(x=>x.addEventListener('click',()=>{
     const id=x.dataset.rocketId;
     const resourceEl=infoPanel.querySelector(`.rocket-return-resource[data-rocket-id="${id}"]`);
@@ -1496,6 +1581,12 @@ function updateRockets(now) {
       rocketStock2[id] += rocketBuildQueue2[id];
       rocketBuildQueue2[id] = 0;
       rocketBuildStarted2[id] = 0;
+      renderInfo();
+    }
+    if (rocketBuildQueueAtlas1[id] > 0 && now - rocketBuildStartedAtlas1[id] >= 30000) {
+      rocketStockAtlas1[id] += rocketBuildQueueAtlas1[id];
+      rocketBuildQueueAtlas1[id] = 0;
+      rocketBuildStartedAtlas1[id] = 0;
       renderInfo();
     }
   });
