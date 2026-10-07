@@ -81,7 +81,7 @@ const bodies = {
   mercury: { name: 'Merkur', type: 'Planet', className: 'mercury', temperature: 'ca. 167 °C Durchschnitt', resources: { stone: 20000, coal: 20000, gas: 40000, copperOre: 30000 }, storage: {}, orbit: 150 },
   venus: { name: 'Venus', type: 'Planet', className: 'venus', temperature: 'ca. 464 °C Durchschnitt', resources: { stone: 20000, coal: 20000, gas: 40000 }, storage: {}, orbit: 235 },
   earth: { name: 'Erde', type: 'Startplanet', className: 'earth', temperature: 'ca. 15 °C Durchschnitt', resources: { stone: 20000, coal: 20000, gas: 40000, iron: 2000000, lithium: 30000, copperOre: 30000 }, storage: null, orbit: 320 },
-  luna: { name: 'Luna', type: 'Mond der Erde', className: 'luna', temperature: 'ca. -20 °C Durchschnitt', resources: { iron: 2000000, silicon: 4000000, lithium: 6000000 }, storage: {}, orbit: 0, moonOf: 'earth', moonOrbit: 55 },
+  luna: { name: 'Luna', type: 'Mond der Erde', className: 'luna', temperature: 'ca. -20 °C Durchschnitt', resources: { stone: 3000000, iron: 2000000, silicon: 4000000, lithium: 6000000 }, storage: {}, orbit: 0, moonOf: 'earth', moonOrbit: 55 },
   mars: { name: 'Mars', type: 'Planet', className: 'mars', temperature: 'ca. -63 °C Durchschnitt', resources: { stone: 20000, coal: 20000, gas: 40000 }, storage: {}, orbit: 405 },
   jupiter: { name: 'Jupiter', type: 'Gasplanet', className: 'jupiter', temperature: 'ca. -110 °C Wolkenobergrenze', resources: { hydrogen: 100000, helium: 50000 }, storage: {}, orbit: 515 }
 };
@@ -196,7 +196,7 @@ function loadGame(showMessage = true) {
     const defaultResources = {
       mercury: { copperOre: 30000 },
       earth: { lithium: 30000, copperOre: 30000 },
-      luna: { lithium: 6000000 }
+      luna: { stone: 3000000, lithium: 6000000 }
     };
     Object.entries(defaultResources).forEach(([id, additions]) => {
       if (!bodies[id]) return;
