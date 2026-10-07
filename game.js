@@ -90,7 +90,7 @@ const buildingTypes = {
   nuclearFuelPlant: { name: 'Kernbrennstoffanlage', icon: '☢️', resource: null, rate: 0, cost: 1000, text: 'verbraucht 0,01 t aufbereitetes Uran/s · produziert 0,008 t Kernbrennstoff/s · 1.000 t Stahl · 600 t Baustoffe · 100 t Elektronik' },
   nuclearReactor: { name: 'Kernreaktor', icon: '☢️', resource: null, rate: 0, cost: 5000, text: 'verbraucht 0,01 t Kernbrennstoff/s · erzeugt 1.000 MW Strom/s · 5.000 t Stahl · 7.000 t Baustoffe · 2.000 t Elektronik' },
   chipFactory: { name: 'Chipfabrik', icon: '💾', resource: null, rate: 0, cost: 1000, text: 'verbraucht 0,1 t Lithium/s + 0,3 t Kupfer/s · produziert 0,015 t Chips/s · 1.000 t Beton · 2.000 t Baustoffe · 600 t Elektronik' },
-  solarSail: { name: 'Sonnensegel', icon: '☀️', resource: null, rate: 0, cost: 5000, text: 'senkt die Merkur-Temperatur um 10 °C · 5.000 t Stahl · 10.000 t Baustoffe · 5.000 t Glas · 2.000 t Chips · 1.000 t Elektronik' }
+  solarSail: { name: 'Sonnensegel', icon: '☀️', resource: null, rate: 0, cost: 5000, text: 'senkt die Temperatur von Merkur/Venus um 10 °C · 5.000 t Stahl · 10.000 t Baustoffe · 5.000 t Glas · 2.000 t Chips · 1.000 t Elektronik' }
 };
 
 const rocketTypes = {
@@ -130,7 +130,7 @@ let planetResourcesOpen = false;
 const bodies = {
   sun: { name: 'Sonne', type: 'Stern', className: 'sun', temperature: 'ca. 5.500 °C Oberfläche', resources: {}, storage: {}, orbit: 0 },
   mercury: { name: 'Merkur', type: 'Planet', className: 'mercury', temperature: '430 °C', resources: { stone: 20000, iron: 10000000, silicon: 8000000, lithium: 2000000, copperOre: 30000, uranium: 30000000 }, storage: {}, orbit: 150 },
-  venus: { name: 'Venus', type: 'Planet', className: 'venus', temperature: 'ca. 464 °C Durchschnitt', resources: { stone: 20000, coal: 20000, gas: 40000, helium3: 20000000 }, storage: {}, orbit: 235 },
+  venus: { name: 'Venus', type: 'Planet', className: 'venus', temperature: '490 °C', resources: { stone: 10000000, iron: 50000000, silicon: 30000000, lithium: 5000000, copperOre: 3000000, uranium: 20000000, helium3: 20000000 }, storage: {}, orbit: 235 },
   earth: { name: 'Erde', type: 'Startplanet', className: 'earth', temperature: 'ca. 15 °C Durchschnitt', resources: { stone: 20000, coal: 20000, gas: 40000, iron: 2000000, lithium: 30000, crudeOil: 6000000, copperOre: 30000, uranium: 1000000 }, storage: null, orbit: 320 },
   luna: { name: 'Luna', type: 'Mond der Erde', className: 'luna', temperature: 'ca. -20 °C Durchschnitt', resources: { stone: 3000000, iron: 2000000, silicon: 4000000, lithium: 6000000, helium3: 10000000, uranium: 3000000 }, storage: {}, orbit: 0, moonOf: 'earth', moonOrbit: 55 },
   mars: { name: 'Mars', type: 'Planet', className: 'mars', temperature: 'ca. -63 °C Durchschnitt', resources: { stone: 20000, coal: 20000, gas: 40000, uranium: 10000000 }, storage: {}, orbit: 405 },
@@ -203,6 +203,7 @@ function chipFactoryCopperUse(id = state.selected) { return Number(getBuildingsO
 function chipProduction(id = state.selected) { return Number(getBuildingsOnPlanet(id).chipFactory || 0) * 0.015; }
 
 function mercuryTemperature() { return Math.max(50, 430 - Number(getBuildingsOnPlanet('mercury').solarSail || 0) * 10); }
+function venusTemperature() { return Math.max(50, 490 - Number(getBuildingsOnPlanet('venus').solarSail || 0) * 10); }
 
 function totalBuildingsOnPlanet(id) { return Object.values(getBuildingsOnPlanet(id)).reduce((a, b) => a + b, 0); }
 
@@ -238,6 +239,22 @@ const taskTypes = {
     unit: 'Gebäude',
     reward: 5,
     getProgress: () => totalIronMinesBuilt()
+  },
+  intro_iron_mines_3: {
+    name: 'Besitze 3 Eisenminen',
+    description: 'Baue insgesamt drei Eisenminen.',
+    target: 3,
+    unit: 'Gebäude',
+    reward: 0,
+    getProgress: () => totalIronMinesBuilt()
+  },
+  intro_building_materials_factory: {
+    name: 'Baue 1 Baustofffabrik',
+    description: 'Baue deine erste Baustofffabrik.',
+    target: 1,
+    unit: 'Gebäude',
+    reward: 0,
+    getProgress: () => Object.keys(bodies).filter(id => id !== 'sun').reduce((sum, id) => sum + Number(getBuildingsOnPlanet(id).buildingMaterialsFactory || 0), 0)
   },
   intro_iron_1000: {
     name: 'Baue 1.000 t Eisenerz ab',
@@ -519,7 +536,7 @@ function loadGame(showMessage = true) {
       mercury: { stone: 20000, iron: 10000000, silicon: 8000000, lithium: 2000000, copperOre: 30000, uranium: 30000000 },
       earth: { lithium: 30000, copperOre: 30000, crudeOil: 6000000, uranium: 1000000 },
       luna: { stone: 3000000, lithium: 6000000, helium3: 10000000, uranium: 3000000 },
-      venus: { helium3: 20000000 },
+      venus: { stone: 10000000, iron: 50000000, silicon: 30000000, lithium: 5000000, copperOre: 3000000, uranium: 20000000, helium3: 20000000 },
       jupiter: { helium3: 40000000 },
       mars: { uranium: 10000000 }
     };
@@ -532,6 +549,11 @@ function loadGame(showMessage = true) {
         }
       });
     });
+    // Alte Venus-Vorkommen aus früheren Versionen entfernen.
+    if (bodies.venus?.resources) {
+      delete bodies.venus.resources.coal;
+      delete bodies.venus.resources.gas;
+    }
     state.buildings.lithiumMine = Number(state.buildings.lithiumMine || 0);
     state.buildings.copperMine = Number(state.buildings.copperMine || 0);
     state.buildings.copperSmelter = Number(state.buildings.copperSmelter || 0);
@@ -925,10 +947,11 @@ function buildingCost(key, planetId = state.selected) {
 }
 
 function isBuildingAllowed(key, planetId = state.selected) {
-  // Merkur bleibt bis 50 °C vollständig gesperrt; nur Sonnensegel sind vorher erlaubt.
+  // Merkur und Venus bleiben bis 50 °C vollständig gesperrt; nur Sonnensegel sind vorher erlaubt.
   if (planetId === 'mercury' && mercuryTemperature() > 50 && key !== 'solarSail') return false;
-  // Sonnensegel gibt es ausschließlich auf Merkur.
-  if (key === 'solarSail' && planetId !== 'mercury') return false;
+  if (planetId === 'venus' && venusTemperature() > 50 && key !== 'solarSail') return false;
+  // Sonnensegel gibt es auf Merkur und Venus.
+  if (key === 'solarSail' && !['mercury','venus'].includes(planetId)) return false;
   // Die Mondbasis darf auf allen Planeten außer Sonne und Erde gebaut werden.
   if (key === 'moonBase' && ['sun', 'earth'].includes(planetId)) return false;
   if (planetId === 'sun') return false;
@@ -1038,7 +1061,7 @@ function renderInfo() {
   }
   const bld = getBuildingsOnPlanet(state.selected);
   const localStorage = getPlanetStorage(state.selected);
-  infoPanel.innerHTML = `<h2>${state.selected === 'earth' ? '🌍' : '🪐'} ${body.name}</h2><p class="hint">${body.type}</p><div class="stat"><span>Temperatur</span><strong>${state.selected === 'mercury' ? mercuryTemperature().toFixed(0) + ' °C' : body.temperature}</strong></div><h3>🌐 Rohstoffe auf dem Planeten</h3>${resourceRows(body)}<h3>📦 Lager auf ${body.name}</h3>${formatStorage(state.selected)}<hr><h3>🏭 Gebäude auf ${body.name}</h3><div class="stat"><span>Gebäude gesamt</span><strong>${totalBuildingsOnPlanet(state.selected)}</strong></div><div class="stat"><span>Eisenproduktion</span><strong>${formatTons(ironProduction(state.selected))}/s</strong></div><div class="stat"><span>Siliziumproduktion</span><strong>${formatTons(siliconProduction(state.selected))}/s</strong></div><div class="stat"><span>Siliziumverbrauch</span><strong>${formatTons(siliconUse(state.selected))}/s</strong></div><div class="stat"><span>🔋 Lithiumproduktion (Mine)</span><strong>${formatTons(lithiumProduction(state.selected))}/s</strong></div><div class="stat"><span>🟠 Kupfererzproduktion (Mine)</span><strong>${formatTons(copperProduction(state.selected))}/s</strong></div><div class="stat"><span>Kupferverbrauch</span><strong>${formatTons(copperSmeltingUse(state.selected))}/s</strong></div><div class="stat"><span>Kupferproduktion</span><strong>${formatTons(copperSmeltingProduction(state.selected))}/s</strong></div><div class="stat"><span>Lithiumverbrauch</span><strong>${formatTons(lithiumRefineryLithiumUse(state.selected))}/s</strong></div><div class="stat"><span>Kupferverbrauch für Batterien</span><strong>${formatTons(lithiumRefineryCopperUse(state.selected))}/s</strong></div><div class="stat"><span>🔋 Batterieproduktion</span><strong>${formatTons(batteryProduction(state.selected))}/s</strong></div><div class="stat"><span>🧱 Baustoffe im Lager</span><strong>${formatTons(Number(localStorage.buildingMaterials || 0))}</strong></div><div class="stat"><span>🧱 Baustoffproduktion</span><strong>${formatTons(buildingMaterialsProduction(state.selected))}/s</strong></div><div class="stat"><span>🪨 Baustoffverbrauch Stein</span><strong>${formatTons(buildingMaterialsStoneUse(state.selected))}/s</strong></div><div class="stat"><span>Stahlverbrauch Maschinenfabrik</span><strong>${formatTons(machineFactorySteelUse(state.selected))}/s</strong></div><div class="stat"><span>Kupferverbrauch Maschinenfabrik</span><strong>${formatTons(machineFactoryCopperUse(state.selected))}/s</strong></div><div class="stat"><span>Maschinenproduktion</span><strong>${formatTons(machineProduction(state.selected))}/s</strong></div><div class="stat"><span>Glasverbrauch Silizium</span><strong>${formatTons(glassFactorySiliconUse(state.selected))}/s</strong></div><div class="stat"><span>Glasverbrauch Stein</span><strong>${formatTons(glassFactoryStoneUse(state.selected))}/s</strong></div><div class="stat"><span>Glasproduktion</span><strong>${formatTons(glassProduction(state.selected))}/s</strong></div><div class="stat"><span>☢️ Uranproduktion</span><strong>${formatTons(uraniumProduction(state.selected))}/s</strong></div><div class="stat"><span>☢️ Uranverbrauch Aufbereitung</span><strong>${formatTons(processedUraniumUraniumUse(state.selected))}/s</strong></div><div class="stat"><span>🧪 Aufbereitetes Uran</span><strong>${formatTons(processedUraniumProduction(state.selected))}/s</strong></div><div class="stat"><span>⚛️ Kernbrennstoffverbrauch</span><strong>${formatTons(nuclearFuelProcessedUraniumUse(state.selected))}/s</strong></div><div class="stat"><span>⚛️ Kernbrennstoffproduktion</span><strong>${formatTons(nuclearFuelProduction(state.selected))}/s</strong></div><div class="stat"><span>☢️ Kernreaktor-Verbrauch</span><strong>${formatTons(nuclearReactorNuclearFuelUse(state.selected))}/s</strong></div><div class="stat"><span>☢️ Kernreaktor-Strom</span><strong>${nuclearReactorElectricityProduction(state.selected).toFixed(2)} MW/s</strong></div><div class="stat"><span>💾 Chipfabrik Lithiumverbrauch</span><strong>${formatTons(chipFactoryLithiumUse(state.selected))}/s</strong></div><div class="stat"><span>💾 Chipfabrik Kupferverbrauch</span><strong>${formatTons(chipFactoryCopperUse(state.selected))}/s</strong></div><div class="stat"><span>💾 Chipproduktion</span><strong>${formatTons(chipProduction(state.selected))}/s</strong></div>${state.selected === 'mercury' ? `<div class="stat"><span>☀️ Sonnensegel</span><strong>${getBuildingsOnPlanet('mercury').solarSail}</strong></div><div class="stat"><span>🌡️ Merkur-Kühlung</span><strong>-${getBuildingsOnPlanet('mercury').solarSail * 10} °C</strong></div>` : ''}<div class="stat"><span>Helium-3-Produktion</span><strong>${formatTons(helium3Production(state.selected))}/s</strong></div><div class="stat"><span>Helium-3-Verbrauch Fusionsreaktor</span><strong>${formatTons(fusionHelium3Use(state.selected))}/s</strong></div><div class="stat"><span>Fusionsstrom</span><strong>${fusionElectricityProduction(state.selected).toFixed(2)} MW/s</strong></div><div class="stat"><span>Solarstrom</span><strong>${solarElectricityProduction(state.selected).toFixed(2)} MW/s</strong></div>${state.selected === 'earth' ? `<div class="stat"><span>Eisenverbrauch</span><strong>${formatTons(ironUse('earth'))}/s</strong></div><div class="stat"><span>Stahlproduktion</span><strong>${formatTons(steelProduction('earth'))}/s</strong></div><div class="stat"><span>Stromproduktion</span><strong>${electricityProduction('earth').toFixed(2)} MW/s</strong></div>` : `<div class="stat"><span>Eisenverbrauch</span><strong>${formatTons(ironUse(state.selected))}/s</strong></div><div class="stat"><span>Stahlproduktion</span><strong>${formatTons(steelProduction(state.selected))}/s</strong></div><div class="stat"><span>Stromproduktion</span><strong>${electricityProduction(state.selected).toFixed(2)} MW/s</strong></div><div class="stat"><span>Rohölproduktion</span><strong>${crudeOilProduction(state.selected).toFixed(2)} L/s</strong></div><div class="stat"><span>Rohölverbrauch</span><strong>0,00 L/s</strong></div><div class="stat"><span>Rohölpumpen-Stromverbrauch</span><strong>${crudeOilElectricityUse(state.selected).toFixed(2)} MW/s</strong></div>`}<hr>${renderRocketWindow(body)}`;
+  infoPanel.innerHTML = `<h2>${state.selected === 'earth' ? '🌍' : '🪐'} ${body.name}</h2><p class="hint">${body.type}</p><div class="stat"><span>Temperatur</span><strong>${state.selected === 'mercury' ? mercuryTemperature().toFixed(0) + ' °C' : state.selected === 'venus' ? venusTemperature().toFixed(0) + ' °C' : body.temperature}</strong></div><h3>🌐 Rohstoffe auf dem Planeten</h3>${resourceRows(body)}<h3>📦 Lager auf ${body.name}</h3>${formatStorage(state.selected)}<hr><h3>🏭 Gebäude auf ${body.name}</h3><div class="stat"><span>Gebäude gesamt</span><strong>${totalBuildingsOnPlanet(state.selected)}</strong></div><div class="stat"><span>Eisenproduktion</span><strong>${formatTons(ironProduction(state.selected))}/s</strong></div><div class="stat"><span>Siliziumproduktion</span><strong>${formatTons(siliconProduction(state.selected))}/s</strong></div><div class="stat"><span>Siliziumverbrauch</span><strong>${formatTons(siliconUse(state.selected))}/s</strong></div><div class="stat"><span>🔋 Lithiumproduktion (Mine)</span><strong>${formatTons(lithiumProduction(state.selected))}/s</strong></div><div class="stat"><span>🟠 Kupfererzproduktion (Mine)</span><strong>${formatTons(copperProduction(state.selected))}/s</strong></div><div class="stat"><span>Kupferverbrauch</span><strong>${formatTons(copperSmeltingUse(state.selected))}/s</strong></div><div class="stat"><span>Kupferproduktion</span><strong>${formatTons(copperSmeltingProduction(state.selected))}/s</strong></div><div class="stat"><span>Lithiumverbrauch</span><strong>${formatTons(lithiumRefineryLithiumUse(state.selected))}/s</strong></div><div class="stat"><span>Kupferverbrauch für Batterien</span><strong>${formatTons(lithiumRefineryCopperUse(state.selected))}/s</strong></div><div class="stat"><span>🔋 Batterieproduktion</span><strong>${formatTons(batteryProduction(state.selected))}/s</strong></div><div class="stat"><span>🧱 Baustoffe im Lager</span><strong>${formatTons(Number(localStorage.buildingMaterials || 0))}</strong></div><div class="stat"><span>🧱 Baustoffproduktion</span><strong>${formatTons(buildingMaterialsProduction(state.selected))}/s</strong></div><div class="stat"><span>🪨 Baustoffverbrauch Stein</span><strong>${formatTons(buildingMaterialsStoneUse(state.selected))}/s</strong></div><div class="stat"><span>Stahlverbrauch Maschinenfabrik</span><strong>${formatTons(machineFactorySteelUse(state.selected))}/s</strong></div><div class="stat"><span>Kupferverbrauch Maschinenfabrik</span><strong>${formatTons(machineFactoryCopperUse(state.selected))}/s</strong></div><div class="stat"><span>Maschinenproduktion</span><strong>${formatTons(machineProduction(state.selected))}/s</strong></div><div class="stat"><span>Glasverbrauch Silizium</span><strong>${formatTons(glassFactorySiliconUse(state.selected))}/s</strong></div><div class="stat"><span>Glasverbrauch Stein</span><strong>${formatTons(glassFactoryStoneUse(state.selected))}/s</strong></div><div class="stat"><span>Glasproduktion</span><strong>${formatTons(glassProduction(state.selected))}/s</strong></div><div class="stat"><span>☢️ Uranproduktion</span><strong>${formatTons(uraniumProduction(state.selected))}/s</strong></div><div class="stat"><span>☢️ Uranverbrauch Aufbereitung</span><strong>${formatTons(processedUraniumUraniumUse(state.selected))}/s</strong></div><div class="stat"><span>🧪 Aufbereitetes Uran</span><strong>${formatTons(processedUraniumProduction(state.selected))}/s</strong></div><div class="stat"><span>⚛️ Kernbrennstoffverbrauch</span><strong>${formatTons(nuclearFuelProcessedUraniumUse(state.selected))}/s</strong></div><div class="stat"><span>⚛️ Kernbrennstoffproduktion</span><strong>${formatTons(nuclearFuelProduction(state.selected))}/s</strong></div><div class="stat"><span>☢️ Kernreaktor-Verbrauch</span><strong>${formatTons(nuclearReactorNuclearFuelUse(state.selected))}/s</strong></div><div class="stat"><span>☢️ Kernreaktor-Strom</span><strong>${nuclearReactorElectricityProduction(state.selected).toFixed(2)} MW/s</strong></div><div class="stat"><span>💾 Chipfabrik Lithiumverbrauch</span><strong>${formatTons(chipFactoryLithiumUse(state.selected))}/s</strong></div><div class="stat"><span>💾 Chipfabrik Kupferverbrauch</span><strong>${formatTons(chipFactoryCopperUse(state.selected))}/s</strong></div><div class="stat"><span>💾 Chipproduktion</span><strong>${formatTons(chipProduction(state.selected))}/s</strong></div>${['mercury','venus'].includes(state.selected) ? `<div class="stat"><span>☀️ Sonnensegel</span><strong>${getBuildingsOnPlanet(state.selected).solarSail}</strong></div><div class="stat"><span>🌡️ Kühlung</span><strong>-${getBuildingsOnPlanet(state.selected).solarSail * 10} °C</strong></div><div class="stat"><span>🔒 Gebäude-Freigabe</span><strong>${(state.selected === 'mercury' ? mercuryTemperature() : venusTemperature()) <= 50 ? 'freigegeben' : 'nur Sonnensegel'}</strong></div>` : ''}<div class="stat"><span>Helium-3-Produktion</span><strong>${formatTons(helium3Production(state.selected))}/s</strong></div><div class="stat"><span>Helium-3-Verbrauch Fusionsreaktor</span><strong>${formatTons(fusionHelium3Use(state.selected))}/s</strong></div><div class="stat"><span>Fusionsstrom</span><strong>${fusionElectricityProduction(state.selected).toFixed(2)} MW/s</strong></div><div class="stat"><span>Solarstrom</span><strong>${solarElectricityProduction(state.selected).toFixed(2)} MW/s</strong></div>${state.selected === 'earth' ? `<div class="stat"><span>Eisenverbrauch</span><strong>${formatTons(ironUse('earth'))}/s</strong></div><div class="stat"><span>Stahlproduktion</span><strong>${formatTons(steelProduction('earth'))}/s</strong></div><div class="stat"><span>Stromproduktion</span><strong>${electricityProduction('earth').toFixed(2)} MW/s</strong></div>` : `<div class="stat"><span>Eisenverbrauch</span><strong>${formatTons(ironUse(state.selected))}/s</strong></div><div class="stat"><span>Stahlproduktion</span><strong>${formatTons(steelProduction(state.selected))}/s</strong></div><div class="stat"><span>Stromproduktion</span><strong>${electricityProduction(state.selected).toFixed(2)} MW/s</strong></div><div class="stat"><span>Rohölproduktion</span><strong>${crudeOilProduction(state.selected).toFixed(2)} L/s</strong></div><div class="stat"><span>Rohölverbrauch</span><strong>0,00 L/s</strong></div><div class="stat"><span>Rohölpumpen-Stromverbrauch</span><strong>${crudeOilElectricityUse(state.selected).toFixed(2)} MW/s</strong></div>`}<hr>${renderRocketWindow(body)}`;
   bindRocketControls();
   applyLanguage();
 }
@@ -1082,7 +1105,8 @@ function buildResourceBuilding(key) {
     storage.buildingMaterials -= 2000;
     storage.electronics -= 600;
   } else if (key === 'solarSail') {
-    if (planetId !== 'mercury' || mercuryTemperature() <= 50) return;
+    if (!['mercury','venus'].includes(planetId)) return;
+    if ((planetId === 'mercury' ? mercuryTemperature() : venusTemperature()) <= 50) return;
     if (Number(storage.steel || 0) < 5000 ||
         Number(storage.buildingMaterials || 0) < 10000 ||
         Number(storage.glass || 0) < 5000 ||
