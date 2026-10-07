@@ -132,12 +132,3 @@ select{padding:7px;border-radius:8px;background:#eef2f7;color:#111}
 .task-progress i{display:block;height:100%;background:#2776d2}
 .task-done .task-progress i{background:#3f9b68}
 @media(max-width:430px){.task-title{align-items:flex-start;flex-direction:column}.task-reward{white-space:normal}}
-
-
-/* Neuigkeiten – kompakte Einzelankündigung */
-.news-panel{border:1px solid #263754;border-radius:16px;background:#09111f;padding:14px;margin-bottom:8px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
-.news-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px}
-.news-announcement{margin:0;padding:14px;border:1px solid #315273;border-radius:14px;background:#0c1627}
-.news-announcement-label{font-size:13px;color:#7cc7ff;font-weight:800;text-transform:uppercase;letter-spacing:.03em;margin-bottom:6px}
-.news-announcement h3{margin:0 0 7px;font-size:18px}
-.news-announcement p{margin:0;color:#c7d4e8;line-height:1.5}
