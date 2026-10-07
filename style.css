@@ -109,3 +109,11 @@ select{padding:7px;border-radius:8px;background:#eef2f7;color:#111}
 }
 
 .planet-resource-subtitle{display:block;padding:7px 0;color:#d9e4f4}
+
+/* Herkules 2 */
+.rocket-h2-launch,.hercules2-box{margin-top:10px;padding:10px;border:1px solid #315273;border-radius:12px;background:#0b1728}
+.rocket-compartments{display:grid;gap:7px;margin-top:8px}
+.rocket-compartment{display:grid;grid-template-columns:1fr 105px;gap:6px;align-items:center;padding:7px;border:1px solid #263754;border-radius:9px;background:#0c1627}
+.rocket-compartment strong,.rocket-compartment small{grid-column:1/-1}
+.rocket-compartment small{color:#aab8ce}
+@media(max-width:430px){.rocket-compartment{grid-template-columns:1fr}.rocket-compartment input{width:100%}}

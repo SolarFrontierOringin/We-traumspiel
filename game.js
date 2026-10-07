@@ -72,7 +72,8 @@ const buildingTypes = {
 };
 
 const rocketTypes = {
-  hercules1: { name: 'Herkules 1', icon: '🚀', cost: 45 }
+  hercules1: { name: 'Herkules 1', icon: '🚀', cost: 45, capacity: 120 },
+  hercules2: { name: 'Herkules 2', icon: '🚀', costSteel: 300, costBatteries: 50, capacity: 300, compartments: 3 }
 };
 
 const flightTimes = {
@@ -88,12 +89,20 @@ const rockets = [];
 const rocketBuildQueue = {};
 const rocketBuildStarted = {};
 const rocketStock = {};
+const rocketStock2 = {};
+const rocketBuildQueue2 = {};
+const rocketBuildStarted2 = {};
 const outpostBuildQueue = {};
 const outpostBuildStarted = {};
 let rocketQuantity = 1;
 let rocketCargoResource = 'stone';
 let rocketCargoAmount = 0;
 let rocketDestination = 'mars';
+let rocketCargoSlots = [
+  { resource: 'stone', amount: 0 },
+  { resource: 'iron', amount: 0 },
+  { resource: 'steel', amount: 0 }
+];
 let planetResourcesOpen = false;
 
 const bodies = {
@@ -126,7 +135,7 @@ function getPlanetStorage(id) {
 function storageAmount(id, resource) { return Number(getPlanetStorage(id)[resource] || 0); }
 function formatStorage(id) {
   const st = getPlanetStorage(id);
-  const keys = ['stone','coal','gas','iron','silicon','lithium','copperOre','copper','batteries','buildingMaterials','machines','glass','electronics','steel','hydrogen','helium','helium3'];
+  const keys = ['stone','coal','gas','crudeOil','iron','silicon','lithium','copperOre','copper','batteries','buildingMaterials','machines','glass','electronics','steel','hydrogen','helium','helium3'];
   const rows = keys.filter(k => Number(st[k] || 0) > 0.000001).map(k => `<div class="stat"><span>${resourceIcons[k] || ''} ${resourceNames[k] || k}</span><strong>${formatTons(st[k])}</strong></div>`);
   return rows.length ? rows.join('') : '<p class="hint">Lager ist leer.</p>';
 }
@@ -313,11 +322,15 @@ function getSaveData() {
     rocketBuildQueue,
     rocketBuildStarted,
     rocketStock,
+    rocketStock2,
+    rocketBuildQueue2,
+    rocketBuildStarted2,
     outpostBuildQueue,
     outpostBuildStarted,
     rocketQuantity,
     rocketCargoResource,
     rocketCargoAmount,
+    rocketCargoSlots,
     rocketDestination
   };
 }
@@ -404,6 +417,12 @@ function loadGame(showMessage = true) {
     Object.assign(rocketBuildStarted, data.rocketBuildStarted || {});
     Object.keys(rocketStock).forEach(k => delete rocketStock[k]);
     Object.assign(rocketStock, data.rocketStock || {});
+    Object.keys(rocketStock2).forEach(k => delete rocketStock2[k]);
+    Object.assign(rocketStock2, data.rocketStock2 || {});
+    Object.keys(rocketBuildQueue2).forEach(k => delete rocketBuildQueue2[k]);
+    Object.assign(rocketBuildQueue2, data.rocketBuildQueue2 || {});
+    Object.keys(rocketBuildStarted2).forEach(k => delete rocketBuildStarted2[k]);
+    Object.assign(rocketBuildStarted2, data.rocketBuildStarted2 || {});
     Object.keys(outpostBuildQueue).forEach(k => delete outpostBuildQueue[k]);
     Object.assign(outpostBuildQueue, data.outpostBuildQueue || {});
     Object.keys(outpostBuildStarted).forEach(k => delete outpostBuildStarted[k]);
@@ -411,6 +430,10 @@ function loadGame(showMessage = true) {
     rocketQuantity = Number(data.rocketQuantity) || 1;
     rocketCargoResource = data.rocketCargoResource || 'stone';
     rocketCargoAmount = Number(data.rocketCargoAmount) || 0;
+    rocketCargoSlots = Array.isArray(data.rocketCargoSlots) && data.rocketCargoSlots.length
+      ? data.rocketCargoSlots.slice(0, 3).map(s => ({ resource: s.resource || 'stone', amount: Number(s.amount) || 0 }))
+      : [{ resource: 'stone', amount: 0 }, { resource: 'iron', amount: 0 }, { resource: 'steel', amount: 0 }];
+    while (rocketCargoSlots.length < 3) rocketCargoSlots.push({ resource: 'stone', amount: 0 });
     rocketDestination = data.rocketDestination || 'mars';
 
     renderSystem();
@@ -899,12 +922,29 @@ function buildHercules1() {
   saveAfterBuild();
 }
 
+function buildHercules2() {
+  const source = state.selected;
+  ensureRocketData(source);
+  if (source === 'sun' || !getBuildingsOnPlanet(source).rocketStation || rocketBuildQueue2[source] > 0) return;
+  const storage = getPlanetStorage(source);
+  if (Number(storage.steel || 0) < 300 || Number(storage.batteries || 0) < 50) return;
+  storage.steel -= 300;
+  storage.batteries -= 50;
+  rocketBuildQueue2[source] = 1;
+  rocketBuildStarted2[source] = performance.now();
+  renderInfo(); renderTopResources();
+  saveAfterBuild();
+}
+
 function getPlayerResourceAmount(resource, planetId = state.selected) { return Number(getPlanetStorage(planetId)[resource] || 0); }
 
 function ensureRocketData(planetId) {
   if (rocketStock[planetId] === undefined) rocketStock[planetId] = 0;
   if (rocketBuildQueue[planetId] === undefined) rocketBuildQueue[planetId] = 0;
   if (rocketBuildStarted[planetId] === undefined) rocketBuildStarted[planetId] = 0;
+  if (rocketStock2[planetId] === undefined) rocketStock2[planetId] = 0;
+  if (rocketBuildQueue2[planetId] === undefined) rocketBuildQueue2[planetId] = 0;
+  if (rocketBuildStarted2[planetId] === undefined) rocketBuildStarted2[planetId] = 0;
 }
 
 function launchHercules1(source, destination, quantity) {
@@ -927,6 +967,7 @@ function launchHercules1(source, destination, quantity) {
     rockets.push({
       id: Date.now() + Math.random(),
       name: rocketTypes.hercules1.name,
+      type: 'hercules1',
       from: source,
       to: destination,
       started: performance.now(),
@@ -939,6 +980,45 @@ function launchHercules1(source, destination, quantity) {
   renderInfo(); renderTopResources();
 }
 
+function launchHercules2(source, destination) {
+  ensureRocketData(source);
+  if (!getBuildingsOnPlanet(source).rocketStation || !rocketStock2[source] || !bodies[destination] || destination === source || destination === 'sun') return;
+
+  const cargo = (rocketCargoSlots || []).map(slot => ({
+    resource: slot.resource,
+    amount: Math.max(0, Number(slot.amount) || 0)
+  })).filter(slot => slot.resource && slot.amount > 0);
+
+  const total = cargo.reduce((sum, slot) => sum + slot.amount, 0);
+  if (!cargo.length || total > 300.000001) return;
+
+  const sourceStorage = getPlanetStorage(source);
+  for (const slot of cargo) {
+    if (Number(sourceStorage[slot.resource] || 0) + 0.000001 < slot.amount) return;
+  }
+  for (const slot of cargo) {
+    sourceStorage[slot.resource] = Number(sourceStorage[slot.resource] || 0) - slot.amount;
+    if (Math.abs(sourceStorage[slot.resource]) < 0.000001) sourceStorage[slot.resource] = 0;
+  }
+
+  rocketStock2[source]--;
+  const duration = (flightTimes[destination] || 20) * 1000;
+  rockets.push({
+    id: Date.now() + Math.random(),
+    name: rocketTypes.hercules2.name,
+    type: 'hercules2',
+    from: source,
+    to: destination,
+    started: performance.now(),
+    duration,
+    status: 'outbound',
+    capacity: 300,
+    compartments: 3,
+    cargo: cargo
+  });
+  renderInfo(); renderTopResources();
+}
+
 function returnRocket(rocketId, cargoResource = null, cargoAmount = 0) {
   const rocket = rockets.find(r => String(r.id) === String(rocketId));
   if (!rocket || rocket.status !== 'arrived') return;
@@ -946,7 +1026,8 @@ function returnRocket(rocketId, cargoResource = null, cargoAmount = 0) {
   const destination = rocket.from;
   const duration = (flightTimes[rocket.from] || flightTimes[rocket.to] || 20) * 1000;
   const storage = getPlanetStorage(source);
-  const amount = Math.max(0, Math.min(120, Number(cargoAmount) || 0));
+  const returnCapacity = rocket.type === 'hercules2' ? 300 : 120;
+  const amount = Math.max(0, Math.min(returnCapacity, Number(cargoAmount) || 0));
   if (cargoResource && amount > 0) {
     const available = Number(storage[cargoResource] || 0);
     if (amount > available + 0.000001) return;
@@ -973,72 +1054,124 @@ function renderRocketWindow(body) {
   if (!bodies[rocketDestination] || rocketDestination === source || rocketDestination === 'sun') {
     rocketDestination = Object.keys(bodies).find(id => id !== 'sun' && id !== source) || 'earth';
   }
-  const stock = rocketStock[source] || 0;
-  const buildQueue = rocketBuildQueue[source] || 0;
-  const buildStarted = rocketBuildStarted[source] || 0;
+
+  const stock1 = rocketStock[source] || 0;
+  const stock2 = rocketStock2[source] || 0;
+  const buildQueue1 = rocketBuildQueue[source] || 0;
+  const buildQueue2 = rocketBuildQueue2[source] || 0;
+  const buildStarted1 = rocketBuildStarted[source] || 0;
+  const buildStarted2 = rocketBuildStarted2[source] || 0;
+
   const destinations = Object.entries(bodies)
     .filter(([id]) => id !== 'sun' && id !== source && flightTimes[id] !== undefined)
     .map(([id, b]) => `<option value="${id}" ${rocketDestination === id ? 'selected' : ''}>${b.name} · ${flightTimes[id] || 20} s</option>`).join('');
 
-  const qty = Math.max(1, Math.min(rocketQuantity, Math.max(1, stock)));
+  const qty = Math.max(1, Math.min(rocketQuantity, Math.max(1, stock1)));
   rocketQuantity = qty;
   const target = rocketDestination;
   const sec = flightTimes[target] || 20;
+
   const active = rockets.filter(r => r.status !== 'returned' && (r.from === source || r.to === source));
   const list = active.length ? active.map(r => {
     const elapsed = performance.now() - r.started;
     const remaining = Math.max(0, (r.duration - elapsed) / 1000);
     const pct = Math.min(100, elapsed / r.duration * 100);
+    const isH2 = r.type === 'hercules2';
     const cargo = r.deliveredCargo || r.cargo;
-    const cargoText = cargo && cargo.amount > 0
-      ? `${resourceIcons[cargo.resource] || ''} ${resourceNames[cargo.resource] || cargo.resource}: ${cargo.amount.toFixed(2)} t`
-      : 'Keine Fracht';
+    const cargoText = Array.isArray(cargo)
+      ? (cargo.length ? cargo.map(c => `${resourceIcons[c.resource] || ''} ${resourceNames[c.resource] || c.resource}: ${c.amount.toFixed(2)} ${c.resource === 'crudeOil' ? 'L' : 't'}`).join(' · ') : 'Keine Fracht')
+      : (cargo && cargo.amount > 0 ? `${resourceIcons[cargo.resource] || ''} ${resourceNames[cargo.resource] || cargo.resource}: ${cargo.amount.toFixed(2)} ${cargo.resource === 'crudeOil' ? 'L' : 't'}` : 'Keine Fracht');
+
     if (r.status === 'arrived') {
-      const returnOptions = ['stone','coal','gas','iron','silicon','lithium','copperOre','copper','batteries','buildingMaterials','machines','steel'].filter(k => Number(getPlanetStorage(r.to)[k] || 0) > 0.000001)
+      const returnOptions = ['stone','coal','gas','crudeOil','iron','silicon','lithium','copperOre','copper','batteries','buildingMaterials','machines','steel']
+        .filter(k => Number(getPlanetStorage(r.to)[k] || 0) > 0.000001)
         .map(k => `<option value="${k}">${resourceIcons[k] || ''} ${resourceNames[k] || k}</option>`).join('');
-      return `<div class="rocket-flight arrived"><strong>🚀 ${r.name}</strong><span>📍 ${bodies[r.to].name} · angekommen</span><div class="rocket-cargo">📦 Hinflug: ${cargoText}</div><div class="rocket-return-box"><select class="rocket-return-resource" data-rocket-id="${r.id}"><option value="">Keine Rückfracht</option>${returnOptions}</select><input class="rocket-return-amount" data-rocket-id="${r.id}" type="number" min="0" max="120" step="0.01" value="0"><button class="rocket-return" data-rocket-id="${r.id}">↩️ Zurück nach ${bodies[r.from].name}</button></div><small>Rückflug ${bodies[r.to].name} → ${bodies[r.from].name}: ${flightTimes[r.from] || flightTimes[r.to] || 20} Sekunden · max. 120 t</small></div>`;
+      return `<div class="rocket-flight arrived"><strong>🚀 ${r.name}</strong><span>📍 ${bodies[r.to].name} · angekommen</span><div class="rocket-cargo">📦 Hinflug: ${cargoText}</div><div class="rocket-return-box"><select class="rocket-return-resource" data-rocket-id="${r.id}"><option value="">Keine Rückfracht</option>${returnOptions}</select><input class="rocket-return-amount" data-rocket-id="${r.id}" type="number" min="0" max="${isH2 ? 300 : 120}" step="0.01" value="0"><button class="rocket-return" data-rocket-id="${r.id}">↩️ Zurück nach ${bodies[r.from].name}</button></div><small>Rückflug ${bodies[r.to].name} → ${bodies[r.from].name}: ${flightTimes[r.from] || flightTimes[r.to] || 20} Sekunden · max. ${isH2 ? '300' : '120'} t/L</small></div>`;
     }
     if (r.status === 'returning') return `<div class="rocket-flight"><strong>🚀 ${r.name}</strong><span>↩️ ${bodies[r.fromReturn || r.from].name} → ${bodies[r.to].name}</span><div class="rocket-cargo">📦 Rückflug</div><div class="rocket-progress"><i style="width:${pct}%"></i></div><small>${remaining.toFixed(1)} s bis Ankunft</small></div>`;
     return `<div class="rocket-flight"><strong>🚀 ${r.name}</strong><span>🚀 ${bodies[r.from].name} → ${bodies[r.to].name}</span><div class="rocket-cargo">📦 ${cargoText}</div><div class="rocket-progress"><i style="width:${pct}%"></i></div><small>${remaining.toFixed(1)} s bis Ankunft</small></div>`;
   }).join('') : '<p class="hint">Keine aktiven Transporte mit diesem Planeten.</p>';
 
-  const buildRemaining = buildQueue ? Math.max(0, 30 - (performance.now() - buildStarted)/1000) : 0;
-  const buildPct = buildQueue ? Math.min(100, (performance.now()-buildStarted)/30000*100) : 0;
+  const buildRemaining1 = buildQueue1 ? Math.max(0, 30 - (performance.now() - buildStarted1)/1000) : 0;
+  const buildPct1 = buildQueue1 ? Math.min(100, (performance.now()-buildStarted1)/30000*100) : 0;
+  const buildRemaining2 = buildQueue2 ? Math.max(0, 30 - (performance.now() - buildStarted2)/1000) : 0;
+  const buildPct2 = buildQueue2 ? Math.min(100, (performance.now()-buildStarted2)/30000*100) : 0;
   const localSteel = getPlayerResourceAmount('steel', source);
-  const cargoOptions = ['stone','coal','gas','iron','silicon','lithium','copperOre','copper','batteries','buildingMaterials','machines','steel'].map(key => `<option value="${key}" ${rocketCargoResource === key ? 'selected' : ''}>${resourceIcons[key] || ''} ${resourceNames[key] || key} (${formatTons(getPlayerResourceAmount(key, source))})</option>`).join('');
-  const cargoMax = Math.min(120, getPlayerResourceAmount(rocketCargoResource, source));
-  const cargoAmount = Math.min(cargoMax, Math.max(0, Number(rocketCargoAmount) || 0));
-  rocketCargoAmount = cargoAmount;
-  const totalCargo = cargoAmount * qty;
-  const cargoPossible = totalCargo <= getPlayerResourceAmount(rocketCargoResource, source) + 0.000001 && cargoAmount > 0;
+  const localBatteries = getPlayerResourceAmount('batteries', source);
+
+  const cargoOptions = ['stone','coal','gas','crudeOil','iron','silicon','lithium','copperOre','copper','batteries','buildingMaterials','machines','steel']
+    .map(key => `<option value="${key}">${resourceIcons[key] || ''} ${resourceNames[key] || key}</option>`).join('');
+
+  rocketCargoSlots = rocketCargoSlots.slice(0, 3);
+  while (rocketCargoSlots.length < 3) rocketCargoSlots.push({ resource: 'stone', amount: 0 });
+  rocketCargoSlots.forEach(slot => {
+    const available = getPlayerResourceAmount(slot.resource, source);
+    slot.amount = Math.max(0, Math.min(Number(slot.amount) || 0, available, 300));
+  });
+  const h2Total = rocketCargoSlots.reduce((sum, s) => sum + Number(s.amount || 0), 0);
+  const h2Possible = h2Total > 0 && h2Total <= 300.000001;
+
+  const h2SlotsHtml = rocketCargoSlots.map((slot, i) => {
+    const available = getPlayerResourceAmount(slot.resource, source);
+    return `<div class="rocket-compartment"><strong>Frachtabteilung ${i+1}</strong><select class="rocket-h2-resource" data-slot="${i}">${cargoOptions.replace(`value="${slot.resource}"`, `value="${slot.resource}" selected`)}</select><input class="rocket-h2-amount" data-slot="${i}" type="number" min="0" max="${Math.min(300, available)}" step="0.01" value="${Number(slot.amount || 0).toFixed(2)}"><small>Verfügbar: ${formatTons(available)}</small></div>`;
+  }).join('');
 
   return `<section class="rocket-window"><h3>🚀 Transportzentrale</h3>
-    <p class="hint"><strong>Startplanet:</strong> ${body.name} · Raketen und Fracht werden aus dem Lager dieses Planeten genommen.</p>
-    <div class="rocket-stock">Herkules 1 verfügbar: <strong>${stock}</strong> · Kapazität: <strong>120 t/Rakete</strong></div>
-    <div class="rocket-build-box"><strong>🏗️ Raketenbau auf ${body.name}</strong><small>45 t Stahl · 30 Sekunden Bauzeit · ${buildQueue ? buildRemaining.toFixed(1)+' s verbleiben' : 'bereit'}</small>${buildQueue ? `<div class="rocket-progress"><i style="width:${buildPct}%"></i></div>` : ''}<button id="build-hercules" ${buildQueue || localSteel < 45 ? 'disabled' : ''}>🚀 1 Herkules 1 bauen – 45 t Stahl</button></div>
+    <p class="hint"><strong>Startplanet:</strong> ${body.name} · Herkules 1 und 2 können von Raketenstationen gestartet werden.</p>
+
+    <div class="rocket-build-box"><strong>🏗️ Herkules 1</strong><small>45 t Stahl · 30 Sekunden Bauzeit · 120 t/L Kapazität</small>${buildQueue1 ? `<div class="rocket-progress"><i style="width:${buildPct1}%"></i></div>` : ''}<button id="build-hercules" ${buildQueue1 || localSteel < 45 ? 'disabled' : ''}>🚀 Herkules 1 bauen – 45 t Stahl</button></div>
+    <div class="rocket-stock">Herkules 1 verfügbar: <strong>${stock1}</strong></div>
+
+    <div class="rocket-build-box hercules2-box"><strong>🚀 Herkules 2</strong><small>300 t Stahl + 50 t Batterien · 30 Sekunden Bauzeit · 300 t/L Kapazität · 3 Frachtabteilungen</small>${buildQueue2 ? `<div class="rocket-progress"><i style="width:${buildPct2}%"></i></div>` : ''}<button id="build-hercules2" ${buildQueue2 || localSteel < 300 || localBatteries < 50 ? 'disabled' : ''}>🚀 Herkules 2 bauen – 300 t Stahl + 50 t Batterien</button></div>
+    <div class="rocket-stock">Herkules 2 verfügbar: <strong>${stock2}</strong></div>
+
     <div class="transport-route"><label for="rocket-destination"><strong>🎯 Zielplanet</strong></label><select id="rocket-destination">${destinations}</select></div>
-    <div class="rocket-quantity"><strong>Anzahl:</strong><button class="qty-btn" id="rocket-minus">−</button><span>${qty}</span><button class="qty-btn" id="rocket-plus">+</button></div>
-    <div class="rocket-capacity">Gesamtkapazität: <strong>${qty*120} t</strong></div>
-    <div class="rocket-cargo-box"><strong>📦 Fracht pro Rakete</strong><select id="rocket-cargo-resource">${cargoOptions}</select><div class="cargo-input-row"><input id="rocket-cargo-range" type="range" min="0" max="${cargoMax}" step="0.01" value="${cargoAmount}"><input id="rocket-cargo-number" type="number" min="0" max="${cargoMax}" step="0.01" value="${cargoAmount.toFixed(2)}"></div><div class="rocket-cargo-summary">${resourceIcons[rocketCargoResource] || ''} ${formatTons(cargoAmount)} pro Rakete · <strong>${formatTons(totalCargo)}</strong> insgesamt</div>${cargoPossible ? '' : '<small class="bad">Nicht genug Fracht im Lager oder Menge ist 0 t.</small>'}</div>
-    <button class="rocket-launch" id="launch-hercules" ${stock < qty || !cargoPossible ? 'disabled' : ''}>🚀 ${qty} Herkules 1 nach ${bodies[target].name} starten</button>
-    <p class="hint">Flugzeit: ${sec} Sekunden · Fracht wird bei Ankunft ins Lager von ${bodies[target].name} gelegt.</p>
+
+    <div class="rocket-h1-launch">
+      <strong>🚀 Herkules 1 · Einzelfracht</strong>
+      <div class="rocket-quantity"><strong>Anzahl:</strong><button class="qty-btn" id="rocket-minus">−</button><span>${qty}</span><button class="qty-btn" id="rocket-plus">+</button></div>
+      <div class="rocket-capacity">Gesamtkapazität: <strong>${qty*120} t/L</strong></div>
+      <div class="rocket-cargo-box"><strong>📦 Fracht pro Rakete</strong><select id="rocket-cargo-resource">${cargoOptions.replace(`value="${rocketCargoResource}"`, `value="${rocketCargoResource}" selected`)}</select><div class="cargo-input-row"><input id="rocket-cargo-number" type="number" min="0" max="${Math.min(120,getPlayerResourceAmount(rocketCargoResource,source))}" step="0.01" value="${Number(rocketCargoAmount||0).toFixed(2)}"></div></div>
+      <button class="rocket-launch" id="launch-hercules" ${stock1 < qty || !(Number(rocketCargoAmount)>0) ? 'disabled' : ''}>🚀 ${qty} Herkules 1 nach ${bodies[target].name} starten</button>
+    </div>
+
+    <div class="rocket-h2-launch">
+      <strong>🚀 Herkules 2 · Mehrere Frachtabteilungen</strong>
+      <div class="rocket-capacity">Gesamtkapazität: <strong>300 t/L</strong> · Belegung: <strong>${h2Total.toFixed(2)} t/L</strong></div>
+      <div class="rocket-compartments">${h2SlotsHtml}</div>
+      ${h2Total > 300 ? '<small class="bad">Maximal 300 t/L pro Herkules 2.</small>' : ''}
+      <button class="rocket-launch" id="launch-hercules2" ${stock2 < 1 || !h2Possible ? 'disabled' : ''}>🚀 Herkules 2 nach ${bodies[target].name} starten</button>
+      <p class="hint">Gleiche Flugzeit wie Herkules 1 · kann alle erreichbaren Planeten anfliegen.</p>
+    </div>
+
+    <p class="hint">Flugzeit zum Ziel: ${sec} Sekunden. Die Fracht wird bei Ankunft in das Lager des Zielplaneten gelegt.</p>
     <hr><h3>📡 Aktive Transporte</h3>${list}</section>`;
 }
 
 function bindRocketControls() {
   const b=infoPanel.querySelector('#build-hercules'); if(b)b.addEventListener('click',buildHercules1);
+  const b2=infoPanel.querySelector('#build-hercules2'); if(b2)b2.addEventListener('click',buildHercules2);
   const d=infoPanel.querySelector('#rocket-destination'); if(d)d.addEventListener('change',()=>{rocketDestination=d.value;renderInfo();});
   const m=infoPanel.querySelector('#rocket-minus'); if(m)m.addEventListener('click',()=>{rocketQuantity=Math.max(1,rocketQuantity-1);renderInfo();});
   const p=infoPanel.querySelector('#rocket-plus'); if(p)p.addEventListener('click',()=>{rocketQuantity=Math.min(Math.max(1,rocketStock[state.selected] || 1),rocketQuantity+1);renderInfo();});
   const resource=infoPanel.querySelector('#rocket-cargo-resource');
   if(resource) resource.addEventListener('change',()=>{rocketCargoResource=resource.value;rocketCargoAmount=Math.min(120,getPlayerResourceAmount(rocketCargoResource,state.selected));renderInfo();});
-  const range=infoPanel.querySelector('#rocket-cargo-range');
   const number=infoPanel.querySelector('#rocket-cargo-number');
-  if(range && number){
-    range.addEventListener('input',()=>{rocketCargoAmount=Math.max(0,Math.min(Number(range.max),Number(range.value)||0));number.value=rocketCargoAmount.toFixed(2);renderInfo();});
-    number.addEventListener('input',()=>{rocketCargoAmount=Math.max(0,Math.min(Number(number.max),Number(number.value)||0));range.value=rocketCargoAmount;renderInfo();});
-  }
+  if(number) number.addEventListener('input',()=>{rocketCargoAmount=Math.max(0,Math.min(Number(number.max),Number(number.value)||0));});
+
+  infoPanel.querySelectorAll('.rocket-h2-resource').forEach(el=>el.addEventListener('change',()=>{
+    const i=Number(el.dataset.slot);
+    rocketCargoSlots[i].resource=el.value;
+    const available=getPlayerResourceAmount(el.value,state.selected);
+    rocketCargoSlots[i].amount=Math.min(Number(rocketCargoSlots[i].amount)||0,available,300);
+    renderInfo();
+  }));
+  infoPanel.querySelectorAll('.rocket-h2-amount').forEach(el=>el.addEventListener('input',()=>{
+    const i=Number(el.dataset.slot);
+    rocketCargoSlots[i].amount=Math.max(0,Math.min(300,Number(el.value)||0));
+  }));
   const l=infoPanel.querySelector('#launch-hercules'); if(l)l.addEventListener('click',()=>launchHercules1(state.selected,rocketDestination,rocketQuantity));
+  const l2=infoPanel.querySelector('#launch-hercules2'); if(l2)l2.addEventListener('click',()=>launchHercules2(state.selected,rocketDestination));
   infoPanel.querySelectorAll('.rocket-return').forEach(x=>x.addEventListener('click',()=>{
     const id=x.dataset.rocketId;
     const resourceEl=infoPanel.querySelector(`.rocket-return-resource[data-rocket-id="${id}"]`);
@@ -1068,6 +1201,12 @@ function updateRockets(now) {
       rocketBuildStarted[id] = 0;
       renderInfo();
     }
+    if (rocketBuildQueue2[id] > 0 && now - rocketBuildStarted2[id] >= 30000) {
+      rocketStock2[id] += rocketBuildQueue2[id];
+      rocketBuildQueue2[id] = 0;
+      rocketBuildStarted2[id] = 0;
+      renderInfo();
+    }
   });
   for (const rocket of rockets) {
     if (rocket.status === 'returned') continue;
@@ -1075,7 +1214,16 @@ function updateRockets(now) {
       if (rocket.status === 'outbound') {
         rocket.status = 'arrived';
         rocket.arrivedAt = now;
-        if (rocket.cargo && rocket.cargo.amount > 0) {
+        if (Array.isArray(rocket.cargo)) {
+          const targetStorage = getPlanetStorage(rocket.to);
+          rocket.deliveredCargo = rocket.cargo.map(c => ({ ...c }));
+          rocket.cargo.forEach(c => {
+            if (c.amount > 0) {
+              targetStorage[c.resource] = Number(targetStorage[c.resource] || 0) + c.amount;
+              c.amount = 0;
+            }
+          });
+        } else if (rocket.cargo && rocket.cargo.amount > 0) {
           const targetStorage = getPlanetStorage(rocket.to);
           targetStorage[rocket.cargo.resource] = Number(targetStorage[rocket.cargo.resource] || 0) + rocket.cargo.amount;
           rocket.deliveredCargo = { ...rocket.cargo };
@@ -1379,10 +1527,10 @@ const LANGUAGE_KEY = 'solarFrontierLanguage_v1';
 const languageSelect = document.querySelector('#language-select');
 const translations = {
   en: {
-    'Weltraum Game':'Space Game','Sonnensystem · Rohstoffe · Aufbau · Transport':'Solar System · Resources · Development · Transport','Neuigkeiten':'News','Wirtschaft':'Economy','Forschung':'Research','Forschungsbaum':'Research Tree','Forschungslabor':'Research Lab','Forschungspunkte':'Research Points','Forschen':'Research','Abgeschlossen':'Completed','Spiel':'Game','Menü':'Menu','Einführung':'Introduction','Sprache':'Language','Willkommen bei Solar Frontier: Origins':'Welcome to Solar Frontier: Origins','Dein Ziel':'Your Goal','Planeten':'Planets','Raketen':'Rockets','Neuigkeiten & Updates':'News & Updates','Entwicklungsstand von Solar Frontier: Origins':'Development status of Solar Frontier: Origins','Aktuelle Version':'Current Version','Nächstes Update':'Next Update','Geplant':'Planned','Aktuelle Entwicklung':'Current Development','Was gerade im Spiel entsteht':'What is currently being developed','Weiterentwicklung des Sonnensystems':'Solar system development','Rohstoffabbau und Gebäude auf der Erde':'Resource extraction and buildings on Earth','Siliziummine und weitere Produktionsgebäude':'Silicon mine and additional production buildings','Raketenbau und interplanetarer Transport':'Rocket construction and interplanetary transport','Speichern und Laden des Spielstands':'Saving and loading the game','Hinweis für Spieler':'Player Notice','Das Spiel befindet sich aktiv in Entwicklung. Änderungen und neue Updates können jederzeit hinzukommen.':'The game is actively in development. Changes and new updates may be added at any time.','Wirtschafts-Dashboard':'Economy Dashboard','Überblick über Lager, Produktion, Verbrauch und Gebäude':'Overview of storage, production, consumption and buildings','Spielstand':'Save Game','Speichern':'Save','Laden':'Load','Neustart':'Restart','Sonne':'Sun','Merkur':'Mercury','Venus':'Venus','Erde':'Earth','Mars':'Mars','Jupiter':'Jupiter','Luna':'Moon','Stern':'Star','Planet':'Planet','Startplanet':'Starting Planet','Temperatur':'Temperature','Rohstoffe':'Resources','Lager':'Storage','Gebäude':'Buildings','Gebäude gesamt':'Total Buildings','Eisen':'Iron','Stahl':'Steel','Stein':'Stone','Kohle':'Coal','Gas':'Gas','Silizium':'Silicon','Wasser':'Water','Metalle':'Metals','Gestein':'Rock','Energie':'Energy','Eisenproduktion':'Iron Production','Eisenverbrauch':'Iron Consumption','Stahlproduktion':'Steel Production','Siliziumproduktion':'Silicon Production','Batterien':'Batteries','Batterieproduktion':'Battery Production','Produktionskette: Batterien':'Battery Production Chain','Siliziumverbrauch':'Silicon Consumption','Stromproduktion':'Electricity Production','Bauen':'Build','kostenlos':'free','weitere':'additional','Steinbruch':'Stone Quarry','Kohlemine':'Coal Mine','Gasförderanlage':'Gas Plant','Eisenmine':'Iron Mine','Siliziummine':'Silicon Mine','Stahlwerk':'Steel Mill','Kohlekraftwerk':'Coal Power Plant','Raketenstation':'Rocket Station','Maschinenfabrik':'Machine Factory','Maschinen':'Machines','Transportzentrale':'Transport Center','Zielplanet':'Destination Planet','Anzahl':'Amount','Fracht pro Rakete':'Cargo per Rocket','Aktive Transporte':'Active Transports','Keine abbaubaren Rohstoffe.':'No extractable resources.','Noch keine Rohstoffe abgebaut':'No resources extracted yet','Bauzeit':'Build Time','Flugzeit':'Flight Time','Rückflug':'Return Flight','Hinflug':'Outbound Flight','Gesamtkapazität':'Total Capacity','verfügbar':'available','bis Ankunft':'until arrival','Sekunden':'seconds','t Stahl':'t steel','t Eisen':'t iron','t Stein':'t stone','t Kohle':'t coal','t Gas':'t gas','t Silizium':'t silicon','Herkules 1':'Hercules 1','Keine Rückfracht':'No return cargo','zurück':'back','Starten':'Launch','Schließen':'Close'
+    'Weltraum Game':'Space Game','Sonnensystem · Rohstoffe · Aufbau · Transport':'Solar System · Resources · Development · Transport','Neuigkeiten':'News','Wirtschaft':'Economy','Forschung':'Research','Forschungsbaum':'Research Tree','Forschungslabor':'Research Lab','Forschungspunkte':'Research Points','Forschen':'Research','Abgeschlossen':'Completed','Spiel':'Game','Menü':'Menu','Einführung':'Introduction','Sprache':'Language','Willkommen bei Solar Frontier: Origins':'Welcome to Solar Frontier: Origins','Dein Ziel':'Your Goal','Planeten':'Planets','Raketen':'Rockets','Neuigkeiten & Updates':'News & Updates','Entwicklungsstand von Solar Frontier: Origins':'Development status of Solar Frontier: Origins','Aktuelle Version':'Current Version','Nächstes Update':'Next Update','Geplant':'Planned','Aktuelle Entwicklung':'Current Development','Was gerade im Spiel entsteht':'What is currently being developed','Weiterentwicklung des Sonnensystems':'Solar system development','Rohstoffabbau und Gebäude auf der Erde':'Resource extraction and buildings on Earth','Siliziummine und weitere Produktionsgebäude':'Silicon mine and additional production buildings','Raketenbau und interplanetarer Transport':'Rocket construction and interplanetary transport','Speichern und Laden des Spielstands':'Saving and loading the game','Hinweis für Spieler':'Player Notice','Das Spiel befindet sich aktiv in Entwicklung. Änderungen und neue Updates können jederzeit hinzukommen.':'The game is actively in development. Changes and new updates may be added at any time.','Wirtschafts-Dashboard':'Economy Dashboard','Überblick über Lager, Produktion, Verbrauch und Gebäude':'Overview of storage, production, consumption and buildings','Spielstand':'Save Game','Speichern':'Save','Laden':'Load','Neustart':'Restart','Sonne':'Sun','Merkur':'Mercury','Venus':'Venus','Erde':'Earth','Mars':'Mars','Jupiter':'Jupiter','Luna':'Moon','Stern':'Star','Planet':'Planet','Startplanet':'Starting Planet','Temperatur':'Temperature','Rohstoffe':'Resources','Lager':'Storage','Gebäude':'Buildings','Gebäude gesamt':'Total Buildings','Eisen':'Iron','Stahl':'Steel','Stein':'Stone','Kohle':'Coal','Gas':'Gas','Silizium':'Silicon','Wasser':'Water','Metalle':'Metals','Gestein':'Rock','Energie':'Energy','Eisenproduktion':'Iron Production','Eisenverbrauch':'Iron Consumption','Stahlproduktion':'Steel Production','Siliziumproduktion':'Silicon Production','Batterien':'Batteries','Batterieproduktion':'Battery Production','Produktionskette: Batterien':'Battery Production Chain','Siliziumverbrauch':'Silicon Consumption','Stromproduktion':'Electricity Production','Bauen':'Build','kostenlos':'free','weitere':'additional','Steinbruch':'Stone Quarry','Kohlemine':'Coal Mine','Gasförderanlage':'Gas Plant','Eisenmine':'Iron Mine','Siliziummine':'Silicon Mine','Stahlwerk':'Steel Mill','Kohlekraftwerk':'Coal Power Plant','Raketenstation':'Rocket Station','Maschinenfabrik':'Machine Factory','Maschinen':'Machines','Transportzentrale':'Transport Center','Zielplanet':'Destination Planet','Anzahl':'Amount','Fracht pro Rakete':'Cargo per Rocket','Aktive Transporte':'Active Transports','Keine abbaubaren Rohstoffe.':'No extractable resources.','Noch keine Rohstoffe abgebaut':'No resources extracted yet','Bauzeit':'Build Time','Flugzeit':'Flight Time','Rückflug':'Return Flight','Hinflug':'Outbound Flight','Gesamtkapazität':'Total Capacity','verfügbar':'available','bis Ankunft':'until arrival','Sekunden':'seconds','t Stahl':'t steel','t Eisen':'t iron','t Stein':'t stone','t Kohle':'t coal','t Gas':'t gas','t Silizium':'t silicon','Herkules 1':'Hercules 1','Herkules 2':'Hercules 2','Frachtabteilung':'Cargo compartment','Gesamtkapazität':'Total capacity','Keine Rückfracht':'No return cargo','zurück':'back','Starten':'Launch','Schließen':'Close'
   },
   fr: {
-    'Weltraum Game':'Jeu spatial','Sonnensystem · Rohstoffe · Aufbau · Transport':'Système solaire · Ressources · Développement · Transport','Neuigkeiten':'Actualités','Wirtschaft':'Économie','Forschung':'Recherche','Forschungsbaum':'Arbre technologique','Forschungslabor':'Laboratoire de recherche','Forschungspunkte':'Points de recherche','Forschen':'Rechercher','Abgeschlossen':'Terminé','Spiel':'Jeu','Menü':'Menu','Einführung':'Introduction','Sprache':'Langue','Neuigkeiten & Updates':'Actualités & mises à jour','Entwicklungsstand von Solar Frontier: Origins':'État du développement de Solar Frontier: Origins','Aktuelle Version':'Version actuelle','Nächstes Update':'Prochaine mise à jour','Geplant':'Prévu','Aktuelle Entwicklung':'Développement actuel','Was gerade im Spiel entsteht':'Développement en cours','Weiterentwicklung des Sonnensystems':'Développement du système solaire','Rohstoffabbau und Gebäude auf der Erde':'Extraction de ressources et bâtiments sur Terre','Siliziummine und weitere Produktionsgebäude':'Mine de silicium et autres bâtiments de production','Raketenbau und interplanetarer Transport':'Construction de fusées et transport interplanétaire','Speichern und Laden des Spielstands':'Sauvegarde et chargement de la partie','Hinweis für Spieler':'Information aux joueurs','Das Spiel befindet sich aktiv in Entwicklung. Änderungen und neue Updates können jederzeit hinzukommen.':'Le jeu est en développement actif. Des changements et mises à jour peuvent être ajoutés à tout moment.','Wirtschafts-Dashboard':'Tableau de bord économique','Überblick über Lager, Produktion, Verbrauch und Gebäude':'Aperçu du stockage, de la production, de la consommation et des bâtiments','Spielstand':'Sauvegarde','Speichern':'Sauvegarder','Laden':'Charger','Neustart':'Redémarrer','Sonne':'Soleil','Merkur':'Mercure','Venus':'Vénus','Erde':'Terre','Mars':'Mars','Jupiter':'Jupiter','Luna':'Lune','Stern':'Étoile','Planet':'Planète','Startplanet':'Planète de départ','Temperatur':'Température','Rohstoffe':'Ressources','Lager':'Stockage','Gebäude':'Bâtiments','Gebäude gesamt':'Bâtiments au total','Eisen':'Fer','Stahl':'Acier','Stein':'Pierre','Kohle':'Charbon','Gas':'Gaz','Silizium':'Silicium','Wasser':'Eau','Metalle':'Métaux','Gestein':'Roche','Energie':'Énergie','Eisenproduktion':'Production de fer','Eisenverbrauch':'Consommation de fer','Stahlproduktion':'Production d’acier','Siliziumproduktion':'Production de silicium','Batterien':'Batteries','Batterieproduktion':'Production de batteries','Produktionskette: Batterien':'Chaîne de production des batteries','Siliziumverbrauch':'Consommation de silicium','Stromproduktion':'Production d’électricité','Bauen':'Construire','kostenlos':'gratuit','weitere':'supplémentaire','Steinbruch':'Carrière de pierre','Kohlemine':'Mine de charbon','Gasförderanlage':'Installation de gaz','Eisenmine':'Mine de fer','Siliziummine':'Mine de silicium','Stahlwerk':'Aciérie','Kohlekraftwerk':'Centrale à charbon','Raketenstation':'Station de fusées','Maschinenfabrik':'Usine de machines','Maschinen':'Machines','Transportzentrale':'Centre de transport','Zielplanet':'Planète destination','Anzahl':'Quantité','Fracht pro Rakete':'Fret par fusée','Aktive Transporte':'Transports actifs','Keine abbaubaren Rohstoffe.':'Aucune ressource exploitable.','Noch keine Rohstoffe abgebaut':'Aucune ressource extraite','Bauzeit':'Temps de construction','Flugzeit':'Temps de vol','Rückflug':'Vol retour','Hinflug':'Vol aller','Gesamtkapazität':'Capacité totale','verfügbar':'disponible','bis Ankunft':'avant l’arrivée','Sekunden':'secondes','t Stahl':'t acier','t Eisen':'t fer','t Stein':'t pierre','t Kohle':'t charbon','t Gas':'t gaz','t Silizium':'t silicium','Herkules 1':'Hercules 1','Keine Rückfracht':'Aucun fret retour','zurück':'retour','Starten':'Lancer','Schließen':'Fermer'
+    'Weltraum Game':'Jeu spatial','Sonnensystem · Rohstoffe · Aufbau · Transport':'Système solaire · Ressources · Développement · Transport','Neuigkeiten':'Actualités','Wirtschaft':'Économie','Forschung':'Recherche','Forschungsbaum':'Arbre technologique','Forschungslabor':'Laboratoire de recherche','Forschungspunkte':'Points de recherche','Forschen':'Rechercher','Abgeschlossen':'Terminé','Spiel':'Jeu','Menü':'Menu','Einführung':'Introduction','Sprache':'Langue','Neuigkeiten & Updates':'Actualités & mises à jour','Entwicklungsstand von Solar Frontier: Origins':'État du développement de Solar Frontier: Origins','Aktuelle Version':'Version actuelle','Nächstes Update':'Prochaine mise à jour','Geplant':'Prévu','Aktuelle Entwicklung':'Développement actuel','Was gerade im Spiel entsteht':'Développement en cours','Weiterentwicklung des Sonnensystems':'Développement du système solaire','Rohstoffabbau und Gebäude auf der Erde':'Extraction de ressources et bâtiments sur Terre','Siliziummine und weitere Produktionsgebäude':'Mine de silicium et autres bâtiments de production','Raketenbau und interplanetarer Transport':'Construction de fusées et transport interplanétaire','Speichern und Laden des Spielstands':'Sauvegarde et chargement de la partie','Hinweis für Spieler':'Information aux joueurs','Das Spiel befindet sich aktiv in Entwicklung. Änderungen und neue Updates können jederzeit hinzukommen.':'Le jeu est en développement actif. Des changements et mises à jour peuvent être ajoutés à tout moment.','Wirtschafts-Dashboard':'Tableau de bord économique','Überblick über Lager, Produktion, Verbrauch und Gebäude':'Aperçu du stockage, de la production, de la consommation et des bâtiments','Spielstand':'Sauvegarde','Speichern':'Sauvegarder','Laden':'Charger','Neustart':'Redémarrer','Sonne':'Soleil','Merkur':'Mercure','Venus':'Vénus','Erde':'Terre','Mars':'Mars','Jupiter':'Jupiter','Luna':'Lune','Stern':'Étoile','Planet':'Planète','Startplanet':'Planète de départ','Temperatur':'Température','Rohstoffe':'Ressources','Lager':'Stockage','Gebäude':'Bâtiments','Gebäude gesamt':'Bâtiments au total','Eisen':'Fer','Stahl':'Acier','Stein':'Pierre','Kohle':'Charbon','Gas':'Gaz','Silizium':'Silicium','Wasser':'Eau','Metalle':'Métaux','Gestein':'Roche','Energie':'Énergie','Eisenproduktion':'Production de fer','Eisenverbrauch':'Consommation de fer','Stahlproduktion':'Production d’acier','Siliziumproduktion':'Production de silicium','Batterien':'Batteries','Batterieproduktion':'Production de batteries','Produktionskette: Batterien':'Chaîne de production des batteries','Siliziumverbrauch':'Consommation de silicium','Stromproduktion':'Production d’électricité','Bauen':'Construire','kostenlos':'gratuit','weitere':'supplémentaire','Steinbruch':'Carrière de pierre','Kohlemine':'Mine de charbon','Gasförderanlage':'Installation de gaz','Eisenmine':'Mine de fer','Siliziummine':'Mine de silicium','Stahlwerk':'Aciérie','Kohlekraftwerk':'Centrale à charbon','Raketenstation':'Station de fusées','Maschinenfabrik':'Usine de machines','Maschinen':'Machines','Transportzentrale':'Centre de transport','Zielplanet':'Planète destination','Anzahl':'Quantité','Fracht pro Rakete':'Fret par fusée','Aktive Transporte':'Transports actifs','Keine abbaubaren Rohstoffe.':'Aucune ressource exploitable.','Noch keine Rohstoffe abgebaut':'Aucune ressource extraite','Bauzeit':'Temps de construction','Flugzeit':'Temps de vol','Rückflug':'Vol retour','Hinflug':'Vol aller','Gesamtkapazität':'Capacité totale','verfügbar':'disponible','bis Ankunft':'avant l’arrivée','Sekunden':'secondes','t Stahl':'t acier','t Eisen':'t fer','t Stein':'t pierre','t Kohle':'t charbon','t Gas':'t gaz','t Silizium':'t silicium','Herkules 1':'Hercules 1','Herkules 2':'Hercules 2','Frachtabteilung':'Cargo compartment','Gesamtkapazität':'Total capacity','Keine Rückfracht':'Aucun fret retour','zurück':'retour','Starten':'Lancer','Schließen':'Fermer'
   }
 };
 function applyLanguage(root=document.body){
