@@ -404,10 +404,13 @@ function renderSystem() {
 
   // Das Baumenü wird nur geöffnet, wenn der Spieler auf das 🏗️-Symbol tippt.
   if (state.selected !== 'sun' && state.buildMenuOpen) {
+    const selectedBuildings = getBuildingsOnPlanet(state.selected);
+    const selectedStorage = getPlanetStorage(state.selected);
+    const hasLunaOutpost = state.selected !== 'luna' || Number(selectedBuildings.outpost || 0) > 0;
     const menu = document.createElement('div');
     menu.className = 'planet-build-menu';
-    menu.innerHTML = `<div class="planet-build-header"><div class="planet-build-title">🏗️ Gebäude auf ${bodies[state.selected].name}</div><button type="button" class="build-menu-close" id="close-build-menu" aria-label="Gebäudemenü schließen">✕</button></div>
-      <div class="build-card steelworks-card"><div><strong>🏭 Stahlwerk</strong><small>0,2 t Stahl/s · verbraucht 0,2 t Eisen/s · erstes kostenlos · weitere 20 t Stahl</small></div><button class="build-resource" id="build-steelworks-floating" ${(getBuildingsOnPlanet(state.selected).steelworks === 0 || state.steel >= 20) ? '' : 'disabled'}>Bauen (${getBuildingsOnPlanet(state.selected).steelworks})</button></div>
+    menu.innerHTML = `<div class="planet-build-header"><div class="planet-build-title">🏗️ Gebäude auf ${bodies[state.selected].name}</div><button type="button" class="build-menu-close" id="close-build-menu" aria-label="Gebäudemenü schließen">✕</button></div>${state.selected === 'luna' && !hasLunaOutpost ? '<div class="build-card"><div><strong>🛰️ Außenposten erforderlich</strong><small>Auf Luna sind Gebäude erst nach Fertigstellung des Außenpostens verfügbar.</small></div><button class="build-resource" disabled>Gesperrt</button></div>' : ''}
+      <div class="build-card steelworks-card"><div><strong>🏭 Stahlwerk</strong><small>0,2 t Stahl/s · verbraucht 0,2 t Eisen/s · erstes kostenlos · weitere 20 t Stahl</small></div><button class="build-resource" id="build-steelworks-floating" ${((state.selected !== 'luna' || hasLunaOutpost) && (selectedBuildings.steelworks === 0 || Number(selectedStorage.steel || 0) >= 20)) ? '' : 'disabled'}>Bauen (${getBuildingsOnPlanet(state.selected).steelworks})</button></div>
       ${buildButton('stoneQuarry')}
       ${buildButton('buildingMaterialsFactory')}
       ${buildButton('coalMine')}
@@ -419,8 +422,8 @@ function renderSystem() {
       ${buildButton('lithiumRefinery')}
       ${buildButton('machineFactory')}
       ${buildButton('glassFactory')}
-      <div class="build-card"><div><strong>⚡ Kohlekraftwerk</strong><small>20 MW Strom/s · verbraucht 0,0002 t Kohle/s · 90 t Stahl</small></div><button class="build-resource" id="build-coal-power" ${state.steel >= 90 ? '' : 'disabled'}>Bauen (${getBuildingsOnPlanet(state.selected).coalPowerPlant})</button></div>
-      <div class="build-card outpost-card"><div><strong>🛰️ Außenposten</strong><small>100 t Stahl · 60 Sekunden Bauzeit · maximal 1 pro Planet · Raketenstation erforderlich</small></div><button class="build-resource" id="build-outpost" ${getBuildingsOnPlanet(state.selected).outpost || getBuildingsOnPlanet(state.selected).rocketStation === 0 || state.steel < 100 ? 'disabled' : ''}>Bauen (${getBuildingsOnPlanet(state.selected).outpost ? 'Gebaut' : 'Bauen'})</button></div>
+      <div class="build-card"><div><strong>⚡ Kohlekraftwerk</strong><small>20 MW Strom/s · verbraucht 0,0002 t Kohle/s · 90 t Stahl</small></div><button class="build-resource" id="build-coal-power" ${((state.selected !== 'luna' || hasLunaOutpost) && Number(selectedStorage.steel || 0) >= 90) ? '' : 'disabled'}>Bauen (${getBuildingsOnPlanet(state.selected).coalPowerPlant})</button></div>
+      <div class="build-card outpost-card"><div><strong>🛰️ Außenposten</strong><small>100 t Stahl · 60 Sekunden Bauzeit · maximal 1 pro Planet · Raketenstation erforderlich</small></div><button class="build-resource" id="build-outpost" ${selectedBuildings.outpost || selectedBuildings.rocketStation === 0 || Number(selectedStorage.steel || 0) < 100 ? 'disabled' : ''}>Bauen (${getBuildingsOnPlanet(state.selected).outpost ? 'Gebaut' : 'Bauen'})</button></div>
       <div class="build-card rocket-station-card"><div><strong>🚀 Raketenstation</strong><small>Startet Herkules-1-Raketen · Rakete kostet 45 t Stahl</small></div><button class="build-resource" id="build-rocket-station" ${getBuildingsOnPlanet(state.selected).rocketStation ? 'disabled' : ''}>${getBuildingsOnPlanet(state.selected).rocketStation ? 'Gebaut' : 'Bauen'}</button></div>`;
 
     menu.style.left = '50%';
@@ -484,7 +487,9 @@ function buildButton(key) {
   const b = buildingTypes[key];
   const count = getBuildingsOnPlanet(state.selected)[key];
   const cost = buildingCost(key);
-  const affordable = state.steel >= cost;
+  const localStorage = getPlanetStorage(state.selected);
+  const affordable = (state.selected !== 'luna' || Number(getBuildingsOnPlanet('luna').outpost || 0) > 0)
+    && Number(localStorage.steel || 0) >= cost;
   const costText = cost === 0 ? 'kostenlos' : `${cost} t Stahl`;
   const extraText = key === 'ironMine' && state.selected !== 'earth' ? ' · nicht kostenlos' : '';
   return `<div class="build-card"><div><strong>${b.icon} ${b.name}</strong><small>${b.text} · ${costText}${extraText}</small></div><button class="build-resource" data-building="${key}" ${affordable ? '' : 'disabled'}>Bauen (${count})</button></div>`;
@@ -507,35 +512,43 @@ function renderInfo() {
 function buildResourceBuilding(key) {
   const bld = getBuildingsOnPlanet(state.selected);
   const cost = buildingCost(key);
-  if (state.steel < cost) return;
+  const storage = getPlanetStorage(state.selected);
+  if (state.selected === 'luna' && Number(bld.outpost || 0) < 1) return;
+  if (Number(storage.steel || 0) < cost) return;
   // Schutz gegen unbeabsichtigtes mehrfaches kostenloses Bauen der Eisenmine.
-  if (key === 'ironMine' && state.selected !== 'earth' && state.steel < 20) return;
-  state.steel -= cost;
+  if (key === 'ironMine' && state.selected !== 'earth' && Number(storage.steel || 0) < 20) return;
+  storage.steel = Number(storage.steel || 0) - cost;
   bld[key]++;
   renderSystem(); renderInfo(); renderTopResources();
 }
 
 function buildSteelworks() {
   const bld = getBuildingsOnPlanet(state.selected);
+  const storage = getPlanetStorage(state.selected);
+  if (state.selected === 'luna' && Number(bld.outpost || 0) < 1) return;
   if (bld.steelworks === 0) {
     bld.steelworks = 1;
   } else {
-    if (state.steel < 20) return;
-    state.steel -= 20;
+    if (Number(storage.steel || 0) < 20) return;
+    storage.steel -= 20;
     bld.steelworks++;
   }
   renderSystem(); renderInfo(); renderTopResources();
 }
 
 function buildCoalPowerPlant() {
-  if (state.steel < 90) return;
-  state.steel -= 90;
-  getBuildingsOnPlanet(state.selected).coalPowerPlant++;
+  const storage = getPlanetStorage(state.selected);
+  const bld = getBuildingsOnPlanet(state.selected);
+  if (state.selected === 'luna' && Number(bld.outpost || 0) < 1) return;
+  if (Number(storage.steel || 0) < 90) return;
+  storage.steel -= 90;
+  bld.coalPowerPlant++;
   renderSystem(); renderInfo(); renderTopResources();
 }
 
 function buildRocketStation() {
   const bld = getBuildingsOnPlanet(state.selected);
+  if (state.selected === 'luna' && Number(bld.outpost || 0) < 1) return;
   if (bld.rocketStation > 0) return;
   bld.rocketStation = 1;
   renderSystem(); renderInfo();
@@ -545,8 +558,9 @@ function buildOutpost() {
   const source = state.selected;
   const bld = getBuildingsOnPlanet(source);
   if (source === 'sun' || bld.outpost > 0 || !bld.rocketStation || outpostBuildQueue[source]) return;
-  if (state.steel < 100) return;
-  state.steel -= 100;
+  const storage = getPlanetStorage(source);
+  if (Number(storage.steel || 0) < 100) return;
+  storage.steel -= 100;
   outpostBuildQueue[source] = 1;
   outpostBuildStarted[source] = performance.now();
   renderSystem(); renderInfo(); renderTopResources();
