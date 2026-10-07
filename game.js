@@ -436,8 +436,8 @@ function renderSystem() {
       ${buildButton('heliumExtractor')}
       ${buildButton('fusionReactor')}
       <div class="build-card"><div><strong>⚡ Kohlekraftwerk</strong><small>20 MW Strom/s · verbraucht 0,0002 t Kohle/s · 90 t Stahl</small></div><button class="build-resource" id="build-coal-power" ${Number(getPlanetStorage(state.selected).steel || 0) >= 90 ? '' : 'disabled'}>Bauen (${getBuildingsOnPlanet(state.selected).coalPowerPlant})</button></div>
-      <div class="build-card outpost-card"><div><strong>🛰️ Außenposten</strong><small>100 t Stahl · 60 Sekunden Bauzeit · maximal 1 pro Planet · auf Luna als Erstgebäude möglich</small></div><button class="build-resource" id="build-outpost" ${getBuildingsOnPlanet(state.selected).outpost || outpostBuildQueue[state.selected] || (state.selected !== 'luna' && getBuildingsOnPlanet(state.selected).rocketStation === 0) || Number(getPlanetStorage(state.selected).steel || 0) < 100 ? 'disabled' : ''}>Bauen (${getBuildingsOnPlanet(state.selected).outpost ? 'Gebaut' : 'Bauen'})</button></div>
-      <div class="build-card rocket-station-card"><div><strong>🚀 Raketenstation</strong><small>Startet Herkules-1-Raketen · Rakete kostet 45 t Stahl</small></div><button class="build-resource" id="build-rocket-station" ${getBuildingsOnPlanet(state.selected).rocketStation || state.selected === 'luna' && !getBuildingsOnPlanet(state.selected).outpost ? 'disabled' : ''}>${getBuildingsOnPlanet(state.selected).rocketStation ? 'Gebaut' : 'Bauen'}</button></div>`;
+      <div class="build-card outpost-card"><div><strong>🛰️ Außenposten</strong><small>100 t Stahl · 60 Sekunden Bauzeit · maximal 1 pro Planet · Voraussetzung für weitere Gebäude auf allen Außenplaneten</small></div><button class="build-resource" id="build-outpost" ${getBuildingsOnPlanet(state.selected).outpost || outpostBuildQueue[state.selected] || (state.selected !== 'luna' && getBuildingsOnPlanet(state.selected).rocketStation === 0) || Number(getPlanetStorage(state.selected).steel || 0) < 100 ? 'disabled' : ''}>Bauen (${getBuildingsOnPlanet(state.selected).outpost ? 'Gebaut' : 'Bauen'})</button></div>
+      <div class="build-card rocket-station-card"><div><strong>🚀 Raketenstation</strong><small>Startet Herkules-1-Raketen · Rakete kostet 45 t Stahl</small></div><button class="build-resource" id="build-rocket-station" ${getBuildingsOnPlanet(state.selected).rocketStation || !isBuildingAllowed('rocketStation', state.selected) ? 'disabled' : ''}>${getBuildingsOnPlanet(state.selected).rocketStation ? 'Gebaut' : 'Bauen'}</button></div>`;
 
     menu.style.left = '50%';
     menu.style.top = 'calc(50% - 150px)';
@@ -498,7 +498,7 @@ function buildingCost(key, planetId = state.selected) {
 
 function isBuildingAllowed(key, planetId = state.selected) {
   if (planetId === 'sun') return false;
-  if (planetId === 'luna' && key !== 'outpost' && Number(getBuildingsOnPlanet('luna').outpost || 0) < 1) return false;
+  if (planetId !== 'earth' && key !== 'outpost' && Number(getBuildingsOnPlanet(planetId).outpost || 0) < 1) return false;
   if (key === 'heliumExtractor' && !['luna','venus','jupiter'].includes(planetId)) return false;
   return true;
 }
