@@ -161,6 +161,10 @@ const researchTypes = {
     cost: 100,
     time: 120,
     text: 'Schaltet die Solaranlage frei. Die Solaranlage bleibt im Baumenü sichtbar, bis diese Forschung abgeschlossen ist.'
+  },
+  fusionReactor: {
+    name: 'Fusionsreaktor', icon: '⚛️', category: 'Fortschrittliche Forschung', cost: 6000, time: 600,
+    text: 'Schaltet den Fusionsreaktor frei. Der Fusionsreaktor bleibt im Baumenü sichtbar, ist aber bis zum Abschluss dieser Forschung gesperrt.'
   }
 };
 
@@ -182,8 +186,11 @@ function renderResearch() {
   const activeDef = active ? researchTypes[active.key] : null;
   const running = !!active;
   const researchedSolar = !!completed.solarPlant;
-  const enoughPoints = Number(state.research.points || 0) >= 100;
-  const canResearchSolar = researchAvailable() && !running && !researchedSolar && enoughPoints;
+  const researchedFusion = !!completed.fusionReactor;
+  const enoughSolarPoints = Number(state.research.points || 0) >= researchTypes.solarPlant.cost;
+  const enoughFusionPoints = Number(state.research.points || 0) >= researchTypes.fusionReactor.cost;
+  const canResearchSolar = researchAvailable() && !running && !researchedSolar && enoughSolarPoints;
+  const canResearchFusion = researchAvailable() && !running && !researchedFusion && enoughFusionPoints;
   const remaining = active && activeDef
     ? Math.max(0, activeDef.time - (performance.now() - active.started) / 1000)
     : 0;
@@ -211,7 +218,20 @@ function renderResearch() {
   </div>
 
   <h3>2️⃣ Raketentechnik</h3>
-  <div class="research-empty"><p class="hint">Aktuell leer – weitere Forschungen werden später ergänzt.</p></div>`;
+  <div class="research-empty"><p class="hint">Aktuell leer – weitere Forschungen werden später ergänzt.</p></div>
+
+  <h3>3️⃣ Fortschrittliche Forschung</h3>
+  <div class="research-tree">
+    <div class="research-card ${researchedFusion ? 'research-done' : ''}">
+      <div>
+        <strong>⚛️ Forschung: Fusionsreaktor</strong>
+        <small>Schaltet den Fusionsreaktor frei.</small>
+        <small>🧪 6.000 Forschungspunkte · ⏱️ 10:00 Minuten</small>
+        <small>Der Fusionsreaktor bleibt im Baumenü sichtbar, ist aber bis zum Abschluss der Forschung gesperrt.</small>
+      </div>
+      <button class="research-button" data-research="fusionReactor" ${canResearchFusion ? '' : 'disabled'}>${researchedFusion ? 'Abgeschlossen' : active?.key === 'fusionReactor' ? 'Läuft …' : 'Forschen'}</button>
+    </div>
+  </div>`;
 
   panel.querySelectorAll('.research-button').forEach(btn =>
     btn.addEventListener('click', () => startResearch(btn.dataset.research))
@@ -258,7 +278,8 @@ function getSaveData() {
       iron: state.iron,
       steel: state.steel,
       buildings: state.buildings,
-      buildMenuOpen: false
+      buildMenuOpen: false,
+      research: state.research
     },
     bodies,
     rockets,
@@ -626,6 +647,13 @@ function buildButton(key) {
     return `<div class="build-card"><div><strong>${b.icon} ${b.name}</strong><small>20 MW Strom/s · 30 t Stahl · 10 t Baustoffe · 20 t Elektronik${status}</small></div><button class="build-resource" data-building="${key}" ${affordable ? '' : 'disabled'}>Bauen (${count})</button></div>`;
   }
 
+  if (key === 'fusionReactor') {
+    const researched = !!state.research?.completed?.fusionReactor;
+    const affordable = Number(storage.steel || 0) >= b.cost && isBuildingAllowed(key) && researched;
+    const status = researched ? '' : ' · Voraussetzung: Forschung „Fusionsreaktor“';
+    return `<div class="build-card"><div><strong>${b.icon} ${b.name}</strong><small>${b.text} · ${b.cost} t Stahl${status}</small></div><button class="build-resource" data-building="${key}" ${affordable ? '' : 'disabled'}>Bauen (${count})</button></div>`;
+  }
+
   const cost = buildingCost(key);
   const affordable = Number(storage.steel || 0) >= cost && isBuildingAllowed(key);
   const costText = cost === 0 ? 'kostenlos' : `${cost} t Stahl`;
@@ -658,8 +686,13 @@ function buildResourceBuilding(key) {
   const storage = getPlanetStorage(planetId);
   if (!isBuildingAllowed(key, planetId)) return;
 
-  if (key === 'solarPlant') {
-    if (!state.research?.completed?.industrialBasics) return;
+  if (key === 'fusionReactor') {
+    if (!state.research?.completed?.fusionReactor) return;
+    const cost = buildingCost(key, planetId);
+    if (Number(storage.steel || 0) < cost) return;
+    storage.steel -= cost;
+  } else if (key === 'solarPlant') {
+    if (!state.research?.completed?.solarPlant) return;
     if (Number(storage.steel || 0) < 30 ||
         Number(storage.buildingMaterials || 0) < 10 ||
         Number(storage.electronics || 0) < 20) return;
