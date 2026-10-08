@@ -316,6 +316,10 @@ const researchTypes = {
     name: 'Kernreaktor', icon: '☢️', category: 'Fortschrittliche Forschung', cost: 10000, time: 600,
     text: 'Schaltet den Kernreaktor frei. Der Kernreaktor kann auf allen Planeten außer der Sonne gebaut werden.'
   },
+  co2ProcessingPlant: {
+    name: 'CO₂-Verarbeitung', icon: '⚗️', category: 'Industrielle Grundlagen', cost: 6000, time: 600, chipCost: 2000,
+    text: 'Schaltet die CO₂-Verarbeitung frei. Sie kann auf allen Planeten außer der Sonne gebaut werden.'
+  },
   solarSatellite: {
     name: 'Solar-Satellit', icon: '🛰️', category: 'Industrielle Grundlagen', cost: 30000, time: 1800, chipCost: 5000,
     text: 'Schaltet den Bau von Solar-Satelliten frei. Ein Solar-Satellit erzeugt im Sonnenorbit 10.000 MW/s.'
