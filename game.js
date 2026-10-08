@@ -742,6 +742,8 @@ function loadGame(showMessage = true) {
     bodies.venus.atmosphere = bodies.venus.atmosphere || { co2Initial: 100000000000000, pressureInitial: 92 };
     if (bodies.venus.atmosphere.co2Initial === undefined) bodies.venus.atmosphere.co2Initial = 100000000000000;
     if (bodies.venus.atmosphere.pressureInitial === undefined) bodies.venus.atmosphere.pressureInitial = 92;
+    state.buildings.ironMine = Math.max(0, Number(state.buildings.ironMine || 0));
+    state.iron = Math.max(0, Number(state.iron || 0));
     state.buildings.lithiumMine = Number(state.buildings.lithiumMine || 0);
     state.buildings.copperMine = Number(state.buildings.copperMine || 0);
     state.buildings.copperSmelter = Number(state.buildings.copperSmelter || 0);
@@ -1218,51 +1220,30 @@ function renderTopResources() {
   applyLanguage();
 }
 
-function syncEarthIronStorage() {
-  // Eisen auf der Erde liegt im zentralen Spieler-Lager `state.iron`.
-  // Diese Synchronisation stellt sicher, dass Anzeige und Spielwert immer
-  // exakt dieselbe Zahl verwenden – auch während des laufenden Abbaus.
-  const iron = Number(state.iron);
-  state.iron = Number.isFinite(iron) && iron >= 0 ? iron : 0;
-  return state.iron;
-}
-
 function refreshTopResourceValues() {
-  // Die Rohstoffübersicht muss immer den echten aktuellen Lagerbestand
-  // verwenden. Nur einzelne <strong>-Werte zu ändern reicht nicht aus,
-  // weil ein Rohstoff auch neu erscheinen oder auf 0 fallen kann.
-  syncEarthIronStorage();
   const table = document.querySelector('#planet-resources-dropdown .planet-resource-table');
   if (!table) return;
 
-  const resourceKeys = [
-    'stone','coal','gas','crudeOil','co2','carbon','oxygen','iron','steel','silicon','lithium',
-    'copperOre','copper','batteries','buildingMaterials','machines',
-    'glass','electronics','hydrogen','helium','helium3','uranium','processedUranium','nuclearFuel','chips'
-  ];
-
-  const html = Object.entries(bodies)
-    .filter(([id]) => id !== 'sun')
-    .map(([id, body]) => {
-      const storage = getPlanetStorage(id);
-      const entries = resourceKeys
-        .filter(key => Number(storage[key] || 0) > 0.000001)
-        .map(key => {
-          const amount = Number(storage[key] || 0);
-          const value = key === 'crudeOil'
-            ? amount.toLocaleString('de-DE', { maximumFractionDigits: 2 }) + ' L'
-            : formatTons(amount);
-          return `<span class="planet-resource-value" data-resource-key="${key}">${resourceIcons[key] || ''} ${resourceNames[key] || key}: <strong>${value}</strong></span>`;
-        }).join('');
-
-      if (!entries) return '';
-      return `<div class="planet-resource-line" data-planet-id="${id}">
-        <strong class="planet-resource-name">🪐 ${body.name}</strong>
-        <div class="planet-resource-values">${entries}</div>
-      </div>`;
-    }).join('');
-
-  table.innerHTML = html || '<p class="hint">Aktuell befinden sich keine Rohstoffe in Planetlagern.</p>';
+  table.querySelectorAll('.planet-resource-line').forEach(line => {
+    const id = line.dataset.planetId;
+    if (!id || !bodies[id]) return;
+    const storage = getPlanetStorage(id);
+    line.querySelectorAll('[data-resource-key]').forEach(el => {
+      const key = el.dataset.resourceKey;
+      const amount = Number(storage[key] || 0);
+      if (amount <= 0.000001) {
+        el.hidden = true;
+        return;
+      }
+      el.hidden = false;
+      const isOil = key === 'crudeOil';
+      const value = isOil
+        ? amount.toLocaleString('de-DE', { maximumFractionDigits: 2 }) + ' L'
+        : formatTons(amount);
+      const strong = el.querySelector('strong');
+      if (strong) strong.textContent = value;
+    });
+  });
 }
 
 function resourceRows(body) {
@@ -2056,9 +2037,24 @@ function updateResources(now) {
     if (id === 'sun') return;
     const bld = getBuildingsOnPlanet(id);
     const storage = getPlanetStorage(id);
+    // Eisenabbau auf der Erde bewusst separat verarbeiten.
+    // Dadurch wird das zentrale Erd-Lager `state.iron` direkt und eindeutig
+    // erhöht und kann nicht durch eine andere Lager-Logik aus dem Takt geraten.
+    if (id === 'earth') {
+      const ironMines = Math.max(0, Number(bld.ironMine || 0));
+      const availableIron = Math.max(0, Number(planet.resources.iron || 0));
+      const ironRate = 0.1 * ironMines;
+      const minedIron = Math.min(availableIron, ironRate * delta);
+      if (minedIron > 0) {
+        planet.resources.iron = availableIron - minedIron;
+        state.iron = Math.max(0, Number(state.iron || 0)) + minedIron;
+        state.tasks.ironMined = Number(state.tasks.ironMined || 0) + minedIron;
+      }
+    }
+
     Object.entries(buildingTypes).forEach(([key, b]) => {
       // Diese Gebäude werden unten separat verarbeitet.
-      if (key === 'crudeOilPump' || key === 'lithiumMine' || key === 'copperMine') return;
+      if (key === 'ironMine' || key === 'crudeOilPump' || key === 'lithiumMine' || key === 'copperMine') return;
       if (!b.resource) return;
 
       const resourceKey = b.resource;
@@ -2289,7 +2285,6 @@ function updateResources(now) {
   // Die Rohstoffanzeige oben wird direkt aus dem aktuellen Planetlager aktualisiert.
   // Dadurch bleibt sie synchron, auch wenn die Produktionswerte schneller steigen
   // als ein kompletter UI-Renderzyklus.
-  syncEarthIronStorage();
   refreshTopResourceValues();
   if (!updateResources.lastUiUpdate || now - updateResources.lastUiUpdate >= 500) {
     updateResources.lastUiUpdate = now;
