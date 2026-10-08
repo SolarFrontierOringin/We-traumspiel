@@ -30,7 +30,6 @@
         <button id="economy-button" class="menu-item">📊 <span>Wirtschaft</span></button>
         <button id="research-button" class="menu-item">🔬 <span>Forschung</span></button>
         <button id="tasks-button" class="menu-item">📋 <span>Aufgaben</span></button>
-        <button id="settings-button" class="menu-item">⚙️ <span>Einstellungen</span></button>
         <div class="menu-item menu-language">
           <span>🌐 <span>Sprache</span></span>
           <select id="language-select" aria-label="Sprache">
@@ -44,32 +43,6 @@
       </div>
     </section>
 
-
-    <section id="settings-panel" class="settings-panel" hidden>
-      <div class="settings-head">
-        <div>
-          <h2>⚙️ Einstellungen</h2>
-          <div class="hint">Musik und Spielsounds</div>
-        </div>
-        <button id="settings-close" class="icon-button">✕</button>
-      </div>
-      <div class="settings-card">
-        <div class="settings-row">
-          <div><strong>🎵 Hintergrundmusik</strong><small>„Pondering the Cosmos“</small></div>
-          <button id="music-toggle" class="settings-toggle">Ein</button>
-        </div>
-        <label class="settings-volume">
-          <span>Lautstärke</span>
-          <input id="music-volume" type="range" min="0" max="100" value="35" step="1">
-          <strong id="music-volume-value">35 %</strong>
-        </label>
-        <div class="settings-row">
-          <div><strong>🔊 Spielsounds</strong><small>Forschung, Gebäude und Raketenbau</small></div>
-          <button id="sound-toggle" class="settings-toggle">Ein</button>
-        </div>
-      </div>
-    </section>
-
     <section id="news-panel" class="news-panel" hidden>
       <div class="news-head">
         <div>
@@ -79,12 +52,28 @@
         <button id="news-close" class="icon-button">✕</button>
       </div>
 
+      <div class="dev-status">
+        <div><span>📦 Aktuelle Version</span><strong>v1.0</strong></div>
+        <div><span>🚀 Nächstes Update</span><strong>v0.9</strong></div>
+        <div><span>📅 Geplant</span><strong>Noch offen</strong></div>
+      </div>
+
       <article class="news-entry current">
-        <div class="news-version">🛠️ Aktuelle Entwicklung</div>
-        <h3>Neuigkeiten</h3>
-        <p>Solar Frontier: Origins wird laufend weiterentwickelt. Neue Planeten, Rohstoffe, Gebäude, Forschungen und Raketen werden Schritt für Schritt hinzugefügt. Änderungen und neue Updates können jederzeit hinzukommen.</p>
+        <div class="news-version">🛠️ v0.9 · Aktuelle Entwicklung</div>
+        <h3>Was gerade im Spiel entsteht</h3>
+        <ul>
+          <li>Weiterentwicklung des Sonnensystems</li>
+          <li>Rohstoffabbau und Gebäude auf der Erde</li>
+          <li>Helium-3-Abbau und Fusionsenergie</li>
+          <li>Raketenbau und interplanetarer Transport</li>
+          <li>Speichern und Laden des Spielstands</li>
+        </ul>
       </article>
 
+      <div class="news-footer">
+        <strong>💡 Hinweis für Spieler</strong>
+        <p>Das Spiel befindet sich aktiv in Entwicklung. Änderungen und neue Updates können jederzeit hinzukommen.</p>
+      </div>
     </section>
 
     <section id="research-panel" class="research-panel" hidden>
