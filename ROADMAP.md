@@ -54,9 +54,7 @@ Frontier: Origins**.
 
 ### Gebäude
 
--   [ ] Eisenmine
--   [ ] Stahlwerk
--   [ ] Kraftwerk
+-   [ x] CO2 Verarbeitung Und Produktio. 
 -   [ ] Siliziummine
 -   [ ] weitere Produktionsgebäude
 -   [ ] Baukosten korrekt vom Lager abziehen
