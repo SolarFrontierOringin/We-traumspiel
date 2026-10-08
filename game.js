@@ -1153,12 +1153,12 @@ function renderTopResources() {
           const value = isOil
             ? Number(amount).toLocaleString('de-DE', { maximumFractionDigits: 2 }) + ' L'
             : formatTons(Number(amount));
-          return `<span class="planet-resource-value">${resourceIcons[key] || ''} ${resourceNames[key] || key}: <strong>${value}</strong></span>`;
+          return `<span class="planet-resource-value" data-resource-key="${key}">${resourceIcons[key] || ''} ${resourceNames[key] || key}: <strong>${value}</strong></span>`;
         }).join('');
 
       if (!entries) return '';
 
-      return `<div class="planet-resource-line">
+      return `<div class="planet-resource-line" data-planet-id="${id}">
         <strong class="planet-resource-name">🪐 ${body.name}</strong>
         <div class="planet-resource-values">${entries}</div>
       </div>`;
@@ -1216,6 +1216,32 @@ function renderTopResources() {
   }
 
   applyLanguage();
+}
+
+function refreshTopResourceValues() {
+  const table = document.querySelector('#planet-resources-dropdown .planet-resource-table');
+  if (!table) return;
+
+  table.querySelectorAll('.planet-resource-line').forEach(line => {
+    const id = line.dataset.planetId;
+    if (!id || !bodies[id]) return;
+    const storage = getPlanetStorage(id);
+    line.querySelectorAll('[data-resource-key]').forEach(el => {
+      const key = el.dataset.resourceKey;
+      const amount = Number(storage[key] || 0);
+      if (amount <= 0.000001) {
+        el.hidden = true;
+        return;
+      }
+      el.hidden = false;
+      const isOil = key === 'crudeOil';
+      const value = isOil
+        ? amount.toLocaleString('de-DE', { maximumFractionDigits: 2 }) + ' L'
+        : formatTons(amount);
+      const strong = el.querySelector('strong');
+      if (strong) strong.textContent = value;
+    });
+  });
 }
 
 function resourceRows(body) {
@@ -2239,7 +2265,11 @@ function updateResources(now) {
   // Wichtig: Während des laufenden Spiels NICHT ständig renderInfo()/renderSystem()
   // aufrufen. Das würde das scrollbare Gebäudemenü jede Sekunde neu erzeugen
   // und auf dem Handy wieder nach oben springen lassen.
-  if (!updateResources.lastUiUpdate || now - updateResources.lastUiUpdate >= 250) {
+  // Die Rohstoffanzeige oben wird direkt aus dem aktuellen Planetlager aktualisiert.
+  // Dadurch bleibt sie synchron, auch wenn die Produktionswerte schneller steigen
+  // als ein kompletter UI-Renderzyklus.
+  refreshTopResourceValues();
+  if (!updateResources.lastUiUpdate || now - updateResources.lastUiUpdate >= 500) {
     updateResources.lastUiUpdate = now;
     renderTopResources();
   }
