@@ -8,6 +8,52 @@ const saveMenu = document.querySelector('#save-menu');
 const saveStatus = document.querySelector('#save-status');
 const SAVE_KEY = 'weltraumGameSave_v1';
 
+// ==========================================
+// AUDIO
+// ==========================================
+const AUDIO_SETTINGS_KEY = 'solarFrontierAudio_v1';
+const backgroundMusic = new Audio('Ruskerdax - Pondering the Cosmos.mp3');
+backgroundMusic.loop = true;
+backgroundMusic.preload = 'auto';
+let audioSettings = (() => {
+  try { return Object.assign({ musicEnabled: true, musicVolume: 0.35, soundsEnabled: true }, JSON.parse(localStorage.getItem(AUDIO_SETTINGS_KEY) || '{}')); }
+  catch { return { musicEnabled: true, musicVolume: 0.35, soundsEnabled: true }; }
+})();
+backgroundMusic.volume = Math.max(0, Math.min(1, Number(audioSettings.musicVolume) || 0));
+let audioUnlocked = false;
+let soundContext = null;
+
+function unlockAudio(){
+  audioUnlocked = true;
+  if (audioSettings.musicEnabled) backgroundMusic.play().catch(()=>{});
+}
+function saveAudioSettings(){ localStorage.setItem(AUDIO_SETTINGS_KEY, JSON.stringify(audioSettings)); }
+function playUiSound(type='click'){
+  if (!audioSettings.soundsEnabled || !audioUnlocked) return;
+  try {
+    soundContext ||= new (window.AudioContext || window.webkitAudioContext)();
+    if (soundContext.state === 'suspended') soundContext.resume();
+    const o = soundContext.createOscillator();
+    const g = soundContext.createGain();
+    const now = soundContext.currentTime;
+    const cfg = type === 'research' ? {a:660,b:990,d:.18} : type === 'build' ? {a:440,b:660,d:.14} : {a:520,b:700,d:.08};
+    o.type = 'sine'; o.frequency.setValueAtTime(cfg.a, now); o.frequency.exponentialRampToValueAtTime(cfg.b, now + cfg.d);
+    g.gain.setValueAtTime(.0001, now); g.gain.exponentialRampToValueAtTime(.08, now + .015); g.gain.exponentialRampToValueAtTime(.0001, now + cfg.d);
+    o.connect(g); g.connect(soundContext.destination); o.start(now); o.stop(now + cfg.d + .02);
+  } catch {}
+}
+function setupAudio(){
+  const toggle=document.querySelector('#music-toggle'), volume=document.querySelector('#music-volume'), value=document.querySelector('#music-volume-value'), soundToggle=document.querySelector('#sound-toggle');
+  if(!toggle || !volume || !value || !soundToggle) return;
+  volume.value=Math.round((Number(audioSettings.musicVolume)||0)*100); value.textContent=`${volume.value} %`;
+  const refresh=()=>{ toggle.textContent=audioSettings.musicEnabled?'Ein':'Aus'; toggle.classList.toggle('off',!audioSettings.musicEnabled); soundToggle.textContent=audioSettings.soundsEnabled?'Ein':'Aus'; soundToggle.classList.toggle('off',!audioSettings.soundsEnabled); };
+  refresh();
+  toggle.addEventListener('click',()=>{ unlockAudio(); audioSettings.musicEnabled=!audioSettings.musicEnabled; if(audioSettings.musicEnabled) backgroundMusic.play().catch(()=>{}); else backgroundMusic.pause(); saveAudioSettings(); refresh(); });
+  volume.addEventListener('input',()=>{ audioSettings.musicVolume=Number(volume.value)/100; backgroundMusic.volume=audioSettings.musicVolume; value.textContent=`${volume.value} %`; saveAudioSettings(); });
+  soundToggle.addEventListener('click',()=>{ unlockAudio(); audioSettings.soundsEnabled=!audioSettings.soundsEnabled; saveAudioSettings(); refresh(); if(audioSettings.soundsEnabled) playUiSound('click'); });
+}
+
+
 const state = {
   selected: 'earth',
   // Spielerbestand: Nur hier landen Rohstoffe, die tatsächlich abgebaut wurden.
@@ -471,6 +517,7 @@ function updateResearch(now) {
   if (!r) { state.research.active = null; return; }
   if (now - active.started >= r.time * 1000) {
     state.research.completed[active.key] = true;
+    playUiSound('research');
     state.research.active = null;
     renderResearch();
     saveGame(false);
@@ -1169,6 +1216,7 @@ function buildResourceBuilding(key) {
   }
 
   bld[key]++;
+  playUiSound('build');
   taskProgressUpdate();
   renderSystem(); renderInfo(); renderTopResources();
   saveAfterBuild();
@@ -1573,18 +1621,21 @@ function updateRockets(now) {
     ensureRocketData(id);
     if (rocketBuildQueue[id] > 0 && now - rocketBuildStarted[id] >= 30000) {
       rocketStock[id] += rocketBuildQueue[id];
+      playUiSound('build');
       rocketBuildQueue[id] = 0;
       rocketBuildStarted[id] = 0;
       renderInfo();
     }
     if (rocketBuildQueue2[id] > 0 && now - rocketBuildStarted2[id] >= 30000) {
       rocketStock2[id] += rocketBuildQueue2[id];
+      playUiSound('build');
       rocketBuildQueue2[id] = 0;
       rocketBuildStarted2[id] = 0;
       renderInfo();
     }
     if (rocketBuildQueueAtlas1[id] > 0 && now - rocketBuildStartedAtlas1[id] >= 30000) {
       rocketStockAtlas1[id] += rocketBuildQueueAtlas1[id];
+      playUiSound('build');
       rocketBuildQueueAtlas1[id] = 0;
       rocketBuildStartedAtlas1[id] = 0;
       renderInfo();
@@ -1867,8 +1918,12 @@ function setupMainMenu() {
   const introButton = document.querySelector('#introduction-button');
   const introPanel = document.querySelector('#introduction-panel');
   const introClose = document.querySelector('#introduction-close');
-  if (menuButton && menu) menuButton.addEventListener('click', () => { menu.hidden = !menu.hidden; });
+  if (menuButton && menu) menuButton.addEventListener('click', () => { unlockAudio(); menu.hidden = !menu.hidden; if(!menu.hidden) applyLanguage(menu); });
   if (menuClose && menu) menuClose.addEventListener('click', () => { menu.hidden = true; });
+  const settingsButton=document.querySelector('#settings-button'); const settingsPanel=document.querySelector('#settings-panel'); const settingsClose=document.querySelector('#settings-close');
+  if(settingsButton && settingsPanel) settingsButton.addEventListener('click',()=>{ unlockAudio(); settingsPanel.hidden=!settingsPanel.hidden; if(!settingsPanel.hidden && menu) menu.hidden=true; const panels=['#news-panel','#economy-panel','#research-panel','#tasks-panel','#introduction-panel']; panels.forEach(sel=>{const el=document.querySelector(sel); if(el) el.hidden=true;}); applyLanguage(settingsPanel); });
+  if(settingsClose && settingsPanel) settingsClose.addEventListener('click',()=>{settingsPanel.hidden=true;});
+  setupAudio();
   if (introButton && introPanel) introButton.addEventListener('click', () => {
     introPanel.hidden = false; if (menu) menu.hidden = true;
     const newsPanel=document.querySelector('#news-panel'), economyPanel=document.querySelector('#economy-panel');
@@ -1890,6 +1945,7 @@ function setupTopPanels() {
   const tasksButton = document.querySelector('#tasks-button');
   const tasksPanel = document.querySelector('#tasks-panel');
   const tasksClose = document.querySelector('#tasks-close');
+  const settingsPanel = document.querySelector('#settings-panel');
 
   if (newsButton && newsPanel) newsButton.addEventListener('click', () => {
     newsPanel.hidden = !newsPanel.hidden;
@@ -1982,6 +2038,8 @@ const translations = {
     'Weltraum Game':'Jeu spatial','Sonnensystem · Rohstoffe · Aufbau · Transport':'Système solaire · Ressources · Développement · Transport','Neuigkeiten':'Actualités','Wirtschaft':'Économie','Forschung':'Recherche','Forschungsbaum':'Arbre technologique','Forschungslabor':'Laboratoire de recherche','Forschungspunkte':'Points de recherche','Forschen':'Rechercher','Abgeschlossen':'Terminé','Spiel':'Jeu','Menü':'Menu','Einführung':'Introduction','Sprache':'Langue','Neuigkeiten & Updates':'Actualités & mises à jour','Entwicklungsstand von Solar Frontier: Origins':'État du développement de Solar Frontier: Origins','Aktuelle Ankündigung':'Annonce actuelle','Solar Frontier: Origins wird weiterentwickelt':'Solar Frontier: Origins continue son développement','Das Spiel befindet sich aktiv in Entwicklung. Neue Inhalte, Aufgaben und technische Erweiterungen werden nach und nach hinzugefügt.':'Le jeu est en développement actif. De nouveaux contenus, objectifs et améliorations techniques sont ajoutés progressivement.','Aktuelle Version':'Version actuelle','Nächstes Update':'Prochaine mise à jour','Geplant':'Prévu','Aktuelle Entwicklung':'Développement actuel','Was gerade im Spiel entsteht':'Développement en cours','Weiterentwicklung des Sonnensystems':'Développement du système solaire','Rohstoffabbau und Gebäude auf der Erde':'Extraction de ressources et bâtiments sur Terre','Siliziummine und weitere Produktionsgebäude':'Mine de silicium et autres bâtiments de production','Raketenbau und interplanetarer Transport':'Construction de fusées et transport interplanétaire','Speichern und Laden des Spielstands':'Sauvegarde et chargement de la partie','Hinweis für Spieler':'Information aux joueurs','Das Spiel befindet sich aktiv in Entwicklung. Änderungen und neue Updates können jederzeit hinzukommen.':'Le jeu est en développement actif. Des changements et mises à jour peuvent être ajoutés à tout moment.','Wirtschafts-Dashboard':'Tableau de bord économique','Überblick über Lager, Produktion, Verbrauch und Gebäude':'Aperçu du stockage, de la production, de la consommation et des bâtiments','Spielstand':'Sauvegarde','Speichern':'Sauvegarder','Laden':'Charger','Neustart':'Redémarrer','Sonne':'Soleil','Merkur':'Mercure','Venus':'Vénus','Erde':'Terre','Mars':'Mars','Jupiter':'Jupiter','Luna':'Lune','Stern':'Étoile','Planet':'Planète','Startplanet':'Planète de départ','Temperatur':'Température','Rohstoffe':'Ressources','Lager':'Stockage','Gebäude':'Bâtiments','Gebäude gesamt':'Bâtiments au total','Eisen':'Fer','Stahl':'Acier','Stein':'Pierre','Kohle':'Charbon','Gas':'Gaz','Silizium':'Silicium','Wasser':'Eau','Metalle':'Métaux','Gestein':'Roche','Energie':'Énergie','Eisenproduktion':'Production de fer','Eisenverbrauch':'Consommation de fer','Stahlproduktion':'Production d’acier','Siliziumproduktion':'Production de silicium','Batterien':'Batteries','Batterieproduktion':'Production de batteries','Produktionskette: Batterien':'Chaîne de production des batteries','Siliziumverbrauch':'Consommation de silicium','Stromproduktion':'Production d’électricité','Bauen':'Construire','kostenlos':'gratuit','weitere':'supplémentaire','Steinbruch':'Carrière de pierre','Kohlemine':'Mine de charbon','Gasförderanlage':'Installation de gaz','Eisenmine':'Mine de fer','Siliziummine':'Mine de silicium','Stahlwerk':'Aciérie','Kohlekraftwerk':'Centrale à charbon','Raketenstation':'Station de fusées','Maschinenfabrik':'Usine de machines','Maschinen':'Machines','Transportzentrale':'Centre de transport','Zielplanet':'Planète destination','Anzahl':'Quantité','Fracht pro Rakete':'Fret par fusée','Aktive Transporte':'Transports actifs','Keine abbaubaren Rohstoffe.':'Aucune ressource exploitable.','Noch keine Rohstoffe abgebaut':'Aucune ressource extraite','Bauzeit':'Temps de construction','Flugzeit':'Temps de vol','Rückflug':'Vol retour','Hinflug':'Vol aller','Gesamtkapazität':'Capacité totale','verfügbar':'disponible','bis Ankunft':'avant l’arrivée','Sekunden':'secondes','t Stahl':'t acier','t Eisen':'t fer','t Stein':'t pierre','t Kohle':'t charbon','t Gas':'t gaz','t Silizium':'t silicium','Herkules 1':'Hercules 1','Herkules 2':'Hercules 2','Frachtabteilung':'Cargo compartment','Gesamtkapazität':'Total capacity','Keine Rückfracht':'Aucun fret retour','zurück':'retour','Starten':'Lancer','Schließen':'Fermer','Uran':'Uranium','Uranmine':'Mine d’uranium','Uranaufbereitungsanlage':'Usine de traitement de l’uranium','Aufbereitetes Uran':'Uranium traité','Kernbrennstoffanlage':'Usine de combustible nucléaire','Kernbrennstoff':'Combustible nucléaire','Kernreaktor':'Réacteur nucléaire','Chipfabrik':'Usine de puces','Chips':'Puces','Beton':'Béton','Sonnensegel':'Voile solaire','Aufgaben':'Tâches','Einführung · Ziele und Fortschritt':'Introduction · objectifs et progression','Baue eine Eisenmine':'Construire une mine de fer','Baue 1.000 t Eisenerz ab':'Extraire 1 000 t de minerai de fer','Baue ein Stahlwerk':'Construire une aciérie','Produziere 1.000 t Stahl':'Produire 1 000 t d’acier','Baue deine erste Eisenmine.':'Construire votre première mine de fer.','Baue insgesamt 1.000 t Eisen aus Planetenvorkommen ab.':'Extraire au total 1 000 t de fer des gisements planétaires.','Baue dein erstes Stahlwerk.':'Construire votre première aciérie.','Produziere insgesamt 1.000 t Stahl.':'Produire au total 1 000 t d’acier.','Fortschritt':'Progression'
   }
 };
+translations.en['Einstellungen']='Settings'; translations.en['Musik und Spielsounds']='Music and Game Sounds'; translations.en['Hintergrundmusik']='Background Music'; translations.en['Lautstärke']='Volume'; translations.en['Spielsounds']='Game Sounds'; translations.en['Forschung, Gebäude und Raketenbau']='Research, Buildings and Rocket Construction'; translations.en['Ein']='On'; translations.en['Aus']='Off'; translations.en['Musik und Spielsounds']='Music and Game Sounds'; translations.fr['Einstellungen']='Paramètres'; translations.fr['Musik und Spielsounds']='Musique et sons du jeu'; translations.fr['Hintergrundmusik']='Musique de fond'; translations.fr['Lautstärke']='Volume'; translations.fr['Spielsounds']='Sons du jeu'; translations.fr['Forschung, Gebäude und Raketenbau']='Recherche, bâtiments et construction de fusées'; translations.fr['Ein']='Activé'; translations.fr['Aus']='Désactivé';
+
 function applyLanguage(root=document.body){
   const lang = localStorage.getItem(LANGUAGE_KEY) || 'de';
   if (languageSelect && languageSelect.value !== lang) languageSelect.value = lang;
@@ -2049,3 +2107,5 @@ if (solarViewport) {
   });
 }
 requestAnimationFrame(updateResources);
+
+['pointerdown','touchstart','keydown'].forEach(evt=>document.addEventListener(evt, unlockAudio, {once:true, passive:true}));

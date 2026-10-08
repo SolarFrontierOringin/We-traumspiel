@@ -30,6 +30,7 @@
         <button id="economy-button" class="menu-item">📊 <span>Wirtschaft</span></button>
         <button id="research-button" class="menu-item">🔬 <span>Forschung</span></button>
         <button id="tasks-button" class="menu-item">📋 <span>Aufgaben</span></button>
+        <button id="settings-button" class="menu-item">⚙️ <span>Einstellungen</span></button>
         <div class="menu-item menu-language">
           <span>🌐 <span>Sprache</span></span>
           <select id="language-select" aria-label="Sprache">
@@ -40,6 +41,32 @@
         </div>
         <button id="save-menu-button" class="menu-item">💾 <span>Spiel</span></button>
         <button id="introduction-button" class="menu-item">📖 <span>Einführung</span></button>
+      </div>
+    </section>
+
+
+    <section id="settings-panel" class="settings-panel" hidden>
+      <div class="settings-head">
+        <div>
+          <h2>⚙️ Einstellungen</h2>
+          <div class="hint">Musik und Spielsounds</div>
+        </div>
+        <button id="settings-close" class="icon-button">✕</button>
+      </div>
+      <div class="settings-card">
+        <div class="settings-row">
+          <div><strong>🎵 Hintergrundmusik</strong><small>„Pondering the Cosmos“</small></div>
+          <button id="music-toggle" class="settings-toggle">Ein</button>
+        </div>
+        <label class="settings-volume">
+          <span>Lautstärke</span>
+          <input id="music-volume" type="range" min="0" max="100" value="35" step="1">
+          <strong id="music-volume-value">35 %</strong>
+        </label>
+        <div class="settings-row">
+          <div><strong>🔊 Spielsounds</strong><small>Forschung, Gebäude und Raketenbau</small></div>
+          <button id="sound-toggle" class="settings-toggle">Ein</button>
+        </div>
       </div>
     </section>
 
@@ -55,9 +82,7 @@
       <article class="news-entry current">
         <div class="news-version">🛠️ Aktuelle Entwicklung</div>
         <h3>Neuigkeiten</h3>
-        <p><h3>Neu</h3></p>
-        <P>Atlas 1 Rakete steht jetzt zum Forschen bereit </P>
-        <p>Aufgaben liste erweitert. venus Merkur angepasst. Neue Geböude Hinzugefügt.</p>
+        <p>Solar Frontier: Origins wird laufend weiterentwickelt. Neue Planeten, Rohstoffe, Gebäude, Forschungen und Raketen werden Schritt für Schritt hinzugefügt. Änderungen und neue Updates können jederzeit hinzukommen.</p>
       </article>
 
     </section>

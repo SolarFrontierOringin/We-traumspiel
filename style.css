@@ -139,3 +139,16 @@ select{padding:7px;border-radius:8px;background:#eef2f7;color:#111}
 .news-entry.current{padding:12px;border:1px solid #263754;border-radius:12px;background:#0c1627}
 .news-entry.current h3{margin:8px 0 6px}.news-entry.current p{color:#c7d4e8;line-height:1.55;margin:0}
 .news-footer{margin-top:10px;padding:10px;border-top:1px solid #263754}.news-footer p{color:#aab8ce;line-height:1.45;margin-bottom:0}
+
+
+/* Einstellungen / Audio */
+.settings-panel{border:1px solid #263754;border-radius:16px;background:#09111f;padding:14px;margin-bottom:8px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.settings-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.settings-card{display:grid;gap:12px;margin-top:10px}
+.settings-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px;border:1px solid #263754;border-radius:12px;background:#0c1627}
+.settings-row small{display:block;color:#aab8ce;margin-top:3px}
+.settings-toggle{min-width:74px}
+.settings-toggle.off{background:#34445b;color:#c5cfdd}
+.settings-volume{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:12px;border:1px solid #263754;border-radius:12px;background:#0c1627}
+.settings-volume input{width:100%}
+@media(max-width:430px){.settings-volume{grid-template-columns:1fr}.settings-volume input{width:100%}}
