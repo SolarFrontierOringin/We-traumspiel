@@ -204,7 +204,7 @@ const bodies = {
   sun: { name: 'Sonne', type: 'Stern', className: 'sun', temperature: 'ca. 5.500 °C Oberfläche', resources: {}, storage: {}, buildings: { solarSatellite: 0 }, orbit: 0 },
   mercury: { name: 'Merkur', type: 'Planet', className: 'mercury', temperature: '430 °C', resources: { stone: 20000, iron: 10000000, silicon: 8000000, lithium: 2000000, copperOre: 30000, uranium: 30000000 }, storage: {}, orbit: 150 },
   venus: { name: 'Venus', type: 'Planet', className: 'venus', temperature: '490 °C', resources: { stone: 10000000, iron: 50000000, silicon: 30000000, lithium: 5000000, copperOre: 3000000, uranium: 20000000, helium3: 20000000, co2: 100000000000000 }, atmosphere: { co2Initial: 100000000000000, pressureInitial: 92 }, storage: {}, orbit: 235 },
-  earth: { name: 'Erde', type: 'Startplanet', className: 'earth', temperature: 'ca. 15 °C Durchschnitt', resources: { stone: 20000, coal: 20000, gas: 40000, iron: 2000000, lithium: 30000, crudeOil: 6000000, copperOre: 30000, uranium: 1000000 }, storage: null, orbit: 320 },
+  earth: { name: 'Erde', type: 'Startplanet', className: 'earth', temperature: 'ca. 15 °C Durchschnitt', resources: { stone: 20000, coal: 20000, gas: 40000, iron: 200000000, lithium: 30000, crudeOil: 6000000, copperOre: 30000, uranium: 1000000 }, storage: null, orbit: 320 },
   luna: { name: 'Luna', type: 'Mond der Erde', className: 'luna', temperature: 'ca. -20 °C Durchschnitt', resources: { stone: 3000000, iron: 2000000, silicon: 4000000, lithium: 6000000, helium3: 10000000, uranium: 3000000 }, storage: {}, orbit: 0, moonOf: 'earth', moonOrbit: 55 },
   mars: { name: 'Mars', type: 'Planet', className: 'mars', temperature: 'ca. -63 °C Durchschnitt', resources: { stone: 20000, coal: 20000, gas: 40000, uranium: 10000000 }, storage: {}, orbit: 405 },
   jupiter: { name: 'Jupiter', type: 'Gasplanet', className: 'jupiter', temperature: 'ca. -110 °C Wolkenobergrenze', resources: { helium3: 500000000, hydrogen: 5000000000, co2: 100000000 }, storage: {}, orbit: 515 }
@@ -244,7 +244,10 @@ function formatStorage(id) {
   return rows.length ? rows.join('') : '<p class="hint">Lager ist leer.</p>';
 }
 
-function ironProduction(id = state.selected) { return getBuildingsOnPlanet(id).ironMine * 0.1; }
+function ironProduction(id = state.selected) {
+  const available = Number(bodies[id]?.resources?.iron || 0);
+  return available > 0 ? getBuildingsOnPlanet(id).ironMine * 0.1 : 0;
+}
 function steelProduction(id = state.selected) { return getBuildingsOnPlanet(id).steelworks * 0.2; }
 function ironUse(id = state.selected) { return getBuildingsOnPlanet(id).steelworks * 0.2; }
 function siliconProduction(id = state.selected) { return Number(getBuildingsOnPlanet(id).siliconMine || 0) * 0.3; }
@@ -712,6 +715,17 @@ function loadGame(showMessage = true) {
         }
       });
     });
+    // Eisen-Vorkommen der Erde auf die neue Gesamtmenge von 200.000.000 t anheben.
+    // Bei alten Spielständen wird bereits abgebaute Menge berücksichtigt.
+    if (bodies.earth?.resources) {
+      const oldIron = Number(bodies.earth.resources.iron);
+      if (Number.isFinite(oldIron) && oldIron >= 0 && oldIron <= 2000000) {
+        const minedFromOldDeposit = Math.max(0, 2000000 - oldIron);
+        bodies.earth.resources.iron = Math.max(0, 200000000 - minedFromOldDeposit);
+      } else if (!Number.isFinite(oldIron)) {
+        bodies.earth.resources.iron = 200000000;
+      }
+    }
     // Jupiter ist ausschließlich Gasressourcen vorbehalten. Alte Spielstände werden entsprechend bereinigt.
     if (bodies.jupiter) {
       bodies.jupiter.resources = {
@@ -865,6 +879,66 @@ function setupSaveMenu() {
   });
 }
 
+function rocketBodyPoint(id) {
+  const angles = { sun: 0, mercury: 25, venus: 150, earth: 250, mars: 70, jupiter: 145 };
+  if (id === 'sun') return { x: 530, y: 530 };
+  if (id === 'luna') {
+    const earth = rocketBodyPoint('earth');
+    const a = 225 * Math.PI / 180;
+    return {
+      x: earth.x + Math.cos(a) * Number(bodies.luna.moonOrbit || 55),
+      y: earth.y + Math.sin(a) * Number(bodies.luna.moonOrbit || 55)
+    };
+  }
+  const radius = Number(bodies[id]?.orbit || 0) / 2;
+  const a = (angles[id] || 0) * Math.PI / 180;
+  return { x: 530 + Math.cos(a) * radius, y: 530 + Math.sin(a) * radius };
+}
+
+function rocketOrbitPoint(id) {
+  const p = rocketBodyPoint(id);
+  if (id === 'sun') return p;
+  const a = id === 'luna' ? 225 * Math.PI / 180 : (({ mercury:25, venus:150, earth:250, mars:70, jupiter:145 }[id] || 0) * Math.PI / 180);
+  const offset = id === 'luna' ? 28 : Math.max(34, Number(bodies[id]?.className === 'jupiter' ? 42 : 30));
+  return { x: p.x + Math.cos(a) * offset, y: p.y + Math.sin(a) * offset };
+}
+
+function updateRocketVisuals(now = performance.now()) {
+  const layer = document.querySelector('#rocket-layer');
+  if (!layer) return;
+  layer.innerHTML = '';
+  for (const rocket of rockets) {
+    if (rocket.status === 'returned') continue;
+    const fromId = rocket.status === 'returning' ? (rocket.fromReturn || rocket.from) : rocket.from;
+    const toId = rocket.to;
+    if (!bodies[fromId] || !bodies[toId]) continue;
+
+    let start = rocketBodyPoint(fromId);
+    let end = rocketOrbitPoint(toId);
+    let progress = 1;
+    if (rocket.status === 'outbound' || rocket.status === 'returning') {
+      const elapsed = Math.max(0, now - Number(rocket.started || now));
+      progress = Math.min(1, rocket.duration > 0 ? elapsed / rocket.duration : 1);
+      if (rocket.status === 'returning') {
+        start = rocketOrbitPoint(fromId);
+        end = rocketBodyPoint(toId);
+      }
+    } else if (rocket.status === 'landed') {
+      end = rocketBodyPoint(toId);
+    }
+
+    const x = start.x + (end.x - start.x) * progress;
+    const y = start.y + (end.y - start.y) * progress;
+    const el = document.createElement('div');
+    el.className = `rocket-marker rocket-${rocket.status}`;
+    el.textContent = rocket.type === 'atlas1' ? '🚀' : '🚀';
+    el.title = `${rocket.name}: ${bodies[fromId].name} → ${bodies[toId].name}`;
+    el.style.left = `${x}px`;
+    el.style.top = `${y}px`;
+    layer.appendChild(el);
+  }
+}
+
 function renderSystem() {
   solarSystem.innerHTML = '';
   Object.values(bodies).forEach(body => {
@@ -986,6 +1060,12 @@ function renderSystem() {
     });
     solarSystem.appendChild(element);
   });
+
+  const rocketLayer = document.createElement('div');
+  rocketLayer.id = 'rocket-layer';
+  rocketLayer.setAttribute('aria-label', 'Raketenverkehr');
+  solarSystem.appendChild(rocketLayer);
+  updateRocketVisuals();
 
   // Das Baumenü wird nur geöffnet, wenn der Spieler auf das 🏗️-Symbol tippt.
   if (state.selected !== 'sun' && state.buildMenuOpen) {
@@ -1561,15 +1641,21 @@ function ensureRocketData(planetId) {
   if (rocketFactoryBuildStarted[planetId] === undefined) rocketFactoryBuildStarted[planetId] = 0;
 }
 
+function rocketLaunchError(message) {
+  if (typeof showSaveStatus === 'function') showSaveStatus('🚀 ' + message, false);
+}
+
 function launchHercules1(source, destination, quantity) {
   ensureRocketData(source);
-  if (Number(getBuildingsOnPlanet(source).landingPad || 0) < quantity || !rocketStock[source] || !bodies[destination] || destination === source || destination === 'sun') return;
-  quantity = Math.max(1, Math.min(quantity, rocketStock[source]));
+  quantity = Math.max(1, Math.min(Number(quantity) || 1, rocketStock[source] || 0));
+  if (!bodies[destination] || destination === source || destination === 'sun') { rocketLaunchError('Bitte einen anderen Zielplaneten auswählen.'); return; }
+  if (!rocketStock[source]) { rocketLaunchError('Keine Herkules-1-Rakete am Startplanet verfügbar.'); return; }
+  if (Number(getBuildingsOnPlanet(source).landingPad || 0) < quantity) { rocketLaunchError('Nicht genug Start- & Landerrampen für diesen Start.'); return; }
 
   const amountPerRocket = Math.max(0, Math.min(120, Number(rocketCargoAmount) || 0));
   const available = getPlayerResourceAmount(rocketCargoResource, source);
   const totalCargo = amountPerRocket * quantity;
-  if (amountPerRocket <= 0 || totalCargo > available + 0.000001) return;
+  if (totalCargo > available + 0.000001) { rocketLaunchError('Nicht genug Fracht im Lager.'); return; }
 
   const sourceStorage = getPlanetStorage(source);
   sourceStorage[rocketCargoResource] = Number(sourceStorage[rocketCargoResource] || 0) - totalCargo;
@@ -1596,7 +1682,9 @@ function launchHercules1(source, destination, quantity) {
 
 function launchHercules2(source, destination) {
   ensureRocketData(source);
-  if (Number(getBuildingsOnPlanet(source).landingPad || 0) < 1 || !rocketStock2[source] || !bodies[destination] || destination === source || destination === 'sun') return;
+  if (!bodies[destination] || destination === source || destination === 'sun') { rocketLaunchError('Bitte einen anderen Zielplaneten auswählen.'); return; }
+  if (!rocketStock2[source]) { rocketLaunchError('Keine Herkules-2-Rakete am Startplanet verfügbar.'); return; }
+  if (Number(getBuildingsOnPlanet(source).landingPad || 0) < 1) { rocketLaunchError('Für den Start wird eine Start- & Landerrampe benötigt.'); return; }
 
   const cargo = (rocketCargoSlots || []).map(slot => ({
     resource: slot.resource,
@@ -1604,7 +1692,7 @@ function launchHercules2(source, destination) {
   })).filter(slot => slot.resource && slot.amount > 0);
 
   const total = cargo.reduce((sum, slot) => sum + slot.amount, 0);
-  if (!cargo.length || total > 300.000001) return;
+  if (total > 300.000001) { rocketLaunchError('Die Fracht überschreitet 300 t Kapazität.'); return; }
 
   const sourceStorage = getPlanetStorage(source);
   for (const slot of cargo) {
@@ -1635,10 +1723,13 @@ function launchHercules2(source, destination) {
 
 function launchAtlas1(source, destination) {
   ensureRocketData(source);
-  if (Number(getBuildingsOnPlanet(source).landingPad || 0) < 1 || !rocketStockAtlas1[source] || !bodies[destination] || destination === source || destination === 'sun' || !state.research?.completed?.atlas1) return;
+  if (!bodies[destination] || destination === source || destination === 'sun') { rocketLaunchError('Bitte einen anderen Zielplaneten auswählen.'); return; }
+  if (!rocketStockAtlas1[source]) { rocketLaunchError('Keine Atlas-1-Rakete am Startplanet verfügbar.'); return; }
+  if (Number(getBuildingsOnPlanet(source).landingPad || 0) < 1) { rocketLaunchError('Für den Start wird eine Start- & Landerrampe benötigt.'); return; }
+  if (!state.research?.completed?.atlas1) { rocketLaunchError('Atlas 1 ist noch nicht erforscht.'); return; }
   const cargo = (rocketCargoSlots || []).map(slot => ({ resource: slot.resource, amount: Math.max(0, Number(slot.amount) || 0) })).filter(slot => slot.resource && slot.amount > 0);
   const total = cargo.reduce((sum, slot) => sum + slot.amount, 0);
-  if (!cargo.length || total > 500.000001) return;
+  if (total > 500.000001) { rocketLaunchError('Die Fracht überschreitet 500 t Kapazität.'); return; }
   const sourceStorage = getPlanetStorage(source);
   for (const slot of cargo) if (Number(sourceStorage[slot.resource] || 0) + 0.000001 < slot.amount) return;
   for (const slot of cargo) { sourceStorage[slot.resource] = Number(sourceStorage[slot.resource] || 0) - slot.amount; if (Math.abs(sourceStorage[slot.resource]) < 0.000001) sourceStorage[slot.resource] = 0; }
@@ -2152,6 +2243,10 @@ function updateResources(now) {
     updateResources.lastUiUpdate = now;
     renderTopResources();
   }
+
+  // Raketen werden unabhängig vom restlichen UI animiert, damit der Flugweg
+  // zwischen Startplanet und Zielorbit auf dem Sonnensystem sichtbar bleibt.
+  updateRocketVisuals(now);
 
   requestAnimationFrame(updateResources);
 }
