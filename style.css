@@ -193,7 +193,10 @@ select{padding:7px;border-radius:8px;background:#eef2f7;color:#111}
 .planet-build-menu{
   max-height:70vh;
   overflow-y:auto;
-  overflow-x:hidden;
+  overflow-x:auto;
+  width:min(92vw, 760px);
+  min-width:min(92vw, 560px);
+  max-width:92vw;
   -webkit-overflow-scrolling:touch;
   overscroll-behavior-y:contain;
   touch-action:pan-y;
@@ -239,3 +242,38 @@ select{padding:7px;border-radius:8px;background:#eef2f7;color:#111}
     width: auto !important;
   }
 }
+
+
+/* Gebäudeaktionen: Bauen, Details und Abriss in einer Reihe unter der Beschreibung */
+.planet-build-menu .building-card-actions{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:flex-start;
+  align-items:center;
+  gap:7px;
+  min-width:0;
+}
+.planet-build-menu .building-card-actions button{
+  flex:0 1 auto;
+  min-width:0;
+  max-width:100%;
+}
+.planet-build-menu .building-card-actions .building-build-action{
+  width:auto!important;
+  justify-self:auto;
+}
+.planet-build-menu .building-demolish-action{
+  padding:6px 9px;
+  min-height:28px;
+  font-size:11px;
+  line-height:1.2;
+  background:#8f3030;
+  white-space:nowrap;
+}
+.planet-build-menu .building-demolish-action:hover{background:#b33b3b}
+.planet-build-menu .building-demolish-action:disabled{background:#34445b;color:#aeb8c7}
+.planet-build-menu{touch-action:pan-x pan-y;overscroll-behavior:contain}
+.planet-build-menu .build-card{touch-action:pan-x pan-y;min-width:520px}
+.planet-build-menu .building-overview-tools,
+.planet-build-menu .building-category{min-width:520px}
+.planet-build-menu .planet-build-header{position:sticky;top:0;z-index:10;background:#09111f;min-width:520px}

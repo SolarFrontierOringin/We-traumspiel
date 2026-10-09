@@ -1219,6 +1219,7 @@ function renderSystem() {
       heading.innerHTML = `<span>${category.title}</span><span class="building-category-count">${entries.filter(c => !c.dataset.unavailable).length}</span><span class="building-category-arrow">▸</span>`;
       const content = document.createElement('div'); content.className = 'building-category-content'; content.hidden = true;
       entries.forEach(card => {
+        const key = keyForCard(card);
         const small = card.querySelector('small');
         const desc = small ? small.textContent : '';
         const detail = document.createElement('div'); detail.className = 'building-details'; detail.hidden = true;
@@ -1226,9 +1227,21 @@ function renderSystem() {
         const reqMatch = desc.match(/(?:Voraussetzung|benötigt|nur auf|nur Erde|nur Venus|nur Merkur|nur auf der Erde)[^·]*/i);
         detail.innerHTML = `<div><strong>Bauzeit:</strong> ${timeMatch ? timeMatch[1].trim() : 'Keine separate Bauzeit in den Gebäudedaten hinterlegt.'}</div><div><strong>Voraussetzungen:</strong> ${reqMatch ? reqMatch[0].trim() : (card.dataset.unavailable ? 'Auf diesem Planeten nicht verfügbar.' : 'Keine zusätzliche Voraussetzung in der Gebäudebeschreibung angegeben.')}</div><div><strong>Beschreibung:</strong> ${desc || 'Keine Beschreibung hinterlegt.'}</div><div><strong>Ausbau & Skalierung:</strong> Bestehende Produktions- und Verbrauchsregeln bleiben unverändert; weitere Angaben werden nur angezeigt, wenn sie in den vorhandenen Gebäudedaten hinterlegt sind.</div>`;
         const actions = document.createElement('div'); actions.className = 'building-card-actions';
+        const buildBtn = card.querySelector('.build-resource');
         const detailsBtn = document.createElement('button'); detailsBtn.type = 'button'; detailsBtn.className = 'building-details-toggle'; detailsBtn.textContent = 'Details';
         detailsBtn.addEventListener('click', () => { detail.hidden = !detail.hidden; detailsBtn.textContent = detail.hidden ? 'Details' : 'Details schließen'; });
-        actions.appendChild(detailsBtn); card.appendChild(actions); card.appendChild(detail); content.appendChild(card);
+        if (buildBtn) { buildBtn.classList.add('building-build-action'); actions.appendChild(buildBtn); }
+        actions.appendChild(detailsBtn);
+        const demolishBtn = document.createElement('button');
+        demolishBtn.type = 'button'; demolishBtn.className = 'building-demolish-action'; demolishBtn.textContent = 'Abriss (50 %)';
+        demolishBtn.disabled = !key || Number(getBuildingsOnPlanet(state.selected)[key] || 0) < 1;
+        demolishBtn.title = 'Gebäude abreißen; 50 % der hinterlegten Baukosten gehen zurück ins Lager dieses Planeten.';
+        demolishBtn.addEventListener('click', () => {
+          if (!key) { alert('Für dieses Gebäude ist kein Abriss hinterlegt.'); return; }
+          demolishBuilding(key, state.selected);
+        });
+        actions.appendChild(demolishBtn);
+        card.appendChild(actions); card.appendChild(detail); content.appendChild(card);
       });
       heading.addEventListener('click', () => {
         const opening = content.hidden;
@@ -1654,6 +1667,60 @@ function updateSolarProbeFlights() {
 
 function saveAfterBuild() {
   saveGame(false);
+}
+
+function demolishBuilding(key, planetId = state.selected) {
+  const buildings = getBuildingsOnPlanet(planetId);
+  const count = Number(buildings[key] || 0);
+  if (!count) return;
+  const name = buildingTypes[key]?.name || key;
+  if (!confirm(`${name} auf ${bodies[planetId].name} abreißen?\n50 % der hinterlegten Baukosten werden in das Lager dieses Planeten zurückgezahlt.`)) return;
+
+  const storage = getPlanetStorage(planetId);
+  const refunds = {};
+  const addRefund = (resource, amount) => {
+    if (amount > 0) refunds[resource] = (refunds[resource] || 0) + amount * 0.5;
+  };
+  // Kosten werden anhand der tatsächlich verwendeten Bau-Logik zurückerstattet.
+  const costs = {
+    polymerFactory: { steel: 500, buildingMaterials: 500, electronics: 200 },
+    moonBase: { steel: 300, buildingMaterials: 100 },
+    uraniumMine: { steel: 300, buildingMaterials: 200 },
+    uraniumProcessingPlant: { steel: 500, buildingMaterials: 300 },
+    nuclearFuelPlant: { steel: 1000, buildingMaterials: 600, electronics: 100 },
+    electronicsFactory: { steel: 500, buildingMaterials: 300 },
+    chipFactory: { concrete: 1000, buildingMaterials: 2000, electronics: 600 },
+    solarSail: { steel: 5000, buildingMaterials: 10000, glass: 5000, chips: 2000, electronics: 1000 },
+    nuclearReactor: { steel: 5000, buildingMaterials: 7000, electronics: 2000 },
+    solarPlant: { steel: 30, buildingMaterials: 10, electronics: 20 },
+    coalPowerPlant: { steel: 90 },
+    rocketFactory: { steel: 1000, buildingMaterials: 2000 },
+    landingPad: { steel: 2000, buildingMaterials: 3000, machines: 500, batteries: 300 },
+    outpost: { steel: 100 },
+    researchLab: {},
+    steelworks: { steel: count > 1 ? 20 : 0 },
+    ironMine: { steel: (planetId === 'earth' && count === 1) ? 0 : 20 }
+  };
+  if (costs[key]) {
+    for (const [resource, amount] of Object.entries(costs[key])) addRefund(resource, amount);
+  } else {
+    const cost = Number(buildingTypes[key]?.cost || 0);
+    addRefund('steel', cost);
+  }
+  for (const [resource, amount] of Object.entries(refunds)) {
+    storage[resource] = Number(storage[resource] || 0) + amount;
+  }
+  buildings[key] = Math.max(0, count - 1);
+  if (key === 'rocketFactory') {
+    delete rocketFactoryBuildQueue[planetId];
+    delete rocketFactoryBuildStarted[planetId];
+  }
+  if (key === 'outpost') {
+    delete outpostBuildQueue[planetId];
+    delete outpostBuildStarted[planetId];
+  }
+  playUiSound('build');
+  renderSystem(); renderInfo(); renderTopResources(); saveAfterBuild();
 }
 
 function buildResourceBuilding(key) {
@@ -2633,8 +2700,8 @@ function setupMainMenu() {
   const introButton = document.querySelector('#introduction-button');
   const introPanel = document.querySelector('#introduction-panel');
   const introClose = document.querySelector('#introduction-close');
-  if (menuButton && menu) menuButton.addEventListener('click', () => { unlockAudio(); menu.hidden = !menu.hidden; if(!menu.hidden) applyLanguage(menu); });
-  if (menuClose && menu) menuClose.addEventListener('click', () => { menu.hidden = true; });
+  if (menuButton && menu) menuButton.onclick = () => { unlockAudio(); menu.hidden = !menu.hidden; if(!menu.hidden) applyLanguage(menu); };
+  if (menuClose && menu) menuClose.onclick = () => { menu.hidden = true; };
   const settingsButton=document.querySelector('#settings-button'); const settingsPanel=document.querySelector('#settings-panel'); const settingsClose=document.querySelector('#settings-close');
   if(settingsButton && settingsPanel) settingsButton.addEventListener('click',()=>{ unlockAudio(); settingsPanel.hidden=!settingsPanel.hidden; if(!settingsPanel.hidden && menu) menu.hidden=true; const panels=['#news-panel','#economy-panel','#research-panel','#tasks-panel','#introduction-panel']; panels.forEach(sel=>{const el=document.querySelector(sel); if(el) el.hidden=true;}); applyLanguage(settingsPanel); });
   if(settingsClose && settingsPanel) settingsClose.addEventListener('click',()=>{settingsPanel.hidden=true;});

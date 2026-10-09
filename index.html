@@ -16,14 +16,14 @@
         <div class="hint">Sonnensystem · Rohstoffe · Aufbau · Transport</div>
       </div>
       <div class="header-actions">
-        <button id="main-menu-button" class="small-button menu-button">☰ Menü</button>
+        <button id="main-menu-button" class="small-button menu-button" type="button" onclick="const m=document.getElementById('main-menu'); if(m) m.hidden=!m.hidden;">☰ Menü</button>
       </div>
     </header>
 
     <section id="main-menu" class="main-menu" hidden>
       <div class="main-menu-head">
         <strong>☰ Menü</strong>
-        <button id="main-menu-close" class="icon-button">✕</button>
+        <button id="main-menu-close" class="icon-button" type="button" onclick="document.getElementById('main-menu').hidden=true">✕</button>
       </div>
       <div class="main-menu-items">
         <button id="news-button" class="menu-item">📰 <span>Neuigkeiten</span></button>
@@ -145,7 +145,7 @@
       <aside id="info-panel" class="panel"></aside>
     </section>
   </main>
-  <script src="game.js?v=demolition-refund-20261009"></script>
+  <script src="game.js?v=building-actions-horizontal-scroll-20261009"></script>
   <script>if ("serviceWorker" in navigator) navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{});</script>
 </body>
 </html>
