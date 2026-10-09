@@ -163,11 +163,3 @@ select{padding:7px;border-radius:8px;background:#eef2f7;color:#111}
 
 /* Zyklische Orbitmissionen */
 #mission-rocket-type,#mission-destination,#mission-resource,#mission-amount,#mission-wait{display:block;width:100%;margin-top:5px;padding:8px;border-radius:8px;background:#eef2f7;color:#111;border:0}#create-orbit-mission{width:100%;margin-top:10px}.mission-delete{background:#8f3030}
-
-
-/* Gebäudeübersicht: Fachbereiche und nicht verfügbare Gebäude */
-.build-category-title{padding:9px 10px;margin-top:8px;border-bottom:1px solid #315273;color:#9fcfff;font-weight:800;font-size:14px;letter-spacing:.2px}
-.build-category-title:first-of-type{margin-top:2px}
-.build-unavailable-title{color:#ffd36a;border-color:#6b5730}
-.build-card.build-unavailable{opacity:.68;border-style:dashed;background:#080e18}
-.build-card.build-unavailable button{background:#344052;color:#aab4c3}
