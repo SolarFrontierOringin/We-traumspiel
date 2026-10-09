@@ -1168,6 +1168,66 @@ function renderSystem() {
       <div class="build-card outpost-card"><div><strong>🛰️ Außenposten</strong><small>100 t Stahl · 60 Sekunden Bauzeit · maximal 1 pro Planet · Voraussetzung für weitere Gebäude auf allen Außenplaneten</small></div><button class="build-resource" id="build-outpost" ${getBuildingsOnPlanet(state.selected).outpost || outpostBuildQueue[state.selected] || Number(getPlanetStorage(state.selected).steel || 0) < 100 ? 'disabled' : ''}>Bauen (${getBuildingsOnPlanet(state.selected).outpost ? 'Gebaut' : 'Bauen'})</button></div>
       `;
 
+    // Gebäude nach Fachbereich ordnen; auf diesem Planeten nicht verfügbare
+    // Gebäude werden gesammelt ganz unten angezeigt.
+    const buildCategories = [
+      { title: '⛏️ Rohstoffgewinnung', keys: ['ironMine','stoneQuarry','coalMine','gasPlant','siliconMine','lithiumMine','copperMine','heliumExtractor','crudeOilPump','uraniumMine','bauxiteMine'] },
+      { title: '🏭 Verarbeitung & Industrie', keys: ['steelworks','buildingMaterialsFactory','co2ProcessingPlant','aluminiumOxideRefinery','aluminiumSmelter','copperSmelter','lithiumRefinery','machineFactory','glassFactory','electronicsFactory','chipFactory','polymerFactory','uraniumProcessingPlant','nuclearFuelPlant'] },
+      { title: '⚡ Energie & Forschung', keys: ['coalPowerPlant','solarPlant','fusionReactor','nuclearReactor','researchLab'] },
+      { title: '🪐 Planetare Infrastruktur', keys: ['co2Extraction','moonBase','solarSail','outpost'] },
+      { title: '🚀 Weltraum & Raumfahrt', keys: ['rocketFactory','landingPad','solarSatellite','solarProbe'] }
+    ];
+    const specialKeys = {
+      'build-steelworks-floating':'steelworks', 'build-coal-power':'coalPowerPlant',
+      'build-research-lab':'researchLab', 'build-rocket-factory':'rocketFactory',
+      'build-landing-pad':'landingPad', 'build-outpost':'outpost'
+    };
+    const cards = [...menu.querySelectorAll('.build-card')];
+    const keyForCard = card => {
+      const button = card.querySelector('[data-building],button[id^="build-"]');
+      if (!button) return null;
+      return button.dataset.building || specialKeys[button.id] || null;
+    };
+    const unavailable = [];
+    const categorized = new Map(buildCategories.map(c => [c.title, []]));
+    const unknown = [];
+    for (const card of cards) {
+      const key = keyForCard(card);
+      if (key && !isBuildingAllowed(key, state.selected)) {
+        card.classList.add('build-unavailable');
+        const small = card.querySelector('small');
+        if (small && !small.textContent.includes('Auf diesem Planeten nicht verfügbar')) {
+          small.textContent += ' · Auf diesem Planeten nicht verfügbar';
+        }
+        const button = card.querySelector('button');
+        if (button) button.disabled = true;
+        unavailable.push(card);
+        continue;
+      }
+      const category = buildCategories.find(c => c.keys.includes(key));
+      if (category) categorized.get(category.title).push(card);
+      else unknown.push(card);
+    }
+    const fragment = document.createDocumentFragment();
+    for (const category of buildCategories) {
+      const entries = categorized.get(category.title);
+      if (!entries.length) continue;
+      const heading = document.createElement('div');
+      heading.className = 'build-category-title';
+      heading.textContent = category.title;
+      fragment.appendChild(heading);
+      entries.forEach(card => fragment.appendChild(card));
+    }
+    unknown.forEach(card => fragment.appendChild(card));
+    if (unavailable.length) {
+      const heading = document.createElement('div');
+      heading.className = 'build-category-title build-unavailable-title';
+      heading.textContent = '🚫 Auf diesem Planeten nicht baubar';
+      fragment.appendChild(heading);
+      unavailable.forEach(card => fragment.appendChild(card));
+    }
+    menu.appendChild(fragment);
+
     menu.style.left = '50%';
     menu.style.top = 'calc(50% - 150px)';
     solarSystem.appendChild(menu);
