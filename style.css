@@ -160,3 +160,6 @@ select{padding:7px;border-radius:8px;background:#eef2f7;color:#111}
 .view-switch-btn.active{background:#2776d2;color:#fff;border-color:#4c94e6}
 @media(max-width:430px){.planet-view-switch{grid-template-columns:1fr 1fr}.view-switch-btn{font-size:13px}}
 .rocket-factory-queue{margin:8px 0;padding:9px;border:1px solid #315273;border-radius:10px;background:#0b1728;color:#c7d4e8}
+
+/* Zyklische Orbitmissionen */
+#mission-rocket-type,#mission-destination,#mission-resource,#mission-amount,#mission-wait{display:block;width:100%;margin-top:5px;padding:8px;border-radius:8px;background:#eef2f7;color:#111;border:0}#create-orbit-mission{width:100%;margin-top:10px}.mission-delete{background:#8f3030}
