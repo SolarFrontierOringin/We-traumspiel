@@ -189,11 +189,12 @@ const flightTimes = {
   earth: 5,
   mars: 20,
   jupiter: 30,
+  neptune: 60,
   luna: 10
 };
 
 function atlasFlightTime(destination) { return Math.max(1, (flightTimes[destination] || 20) - 1); }
-function hasPlanetSurface(id) { return id !== 'jupiter' && id !== 'sun'; }
+function hasPlanetSurface(id) { return id !== 'jupiter' && id !== 'neptune' && id !== 'sun'; }
 function rocketCanLand(id) { return hasPlanetSurface(id); }
 
 const rockets = [];
@@ -234,7 +235,8 @@ const bodies = {
   earth: { name: 'Erde', type: 'Startplanet', className: 'earth', temperature: 'ca. 15 °C Durchschnitt', resources: { stone: 20000, coal: 20000, gas: 40000, iron: 200000000, lithium: 30000, crudeOil: 6000000, copperOre: 30000, uranium: 1000000, bauxite: 10000000, water: 1000000000 }, storage: null, orbit: 320 },
   luna: { name: 'Luna', type: 'Mond der Erde', className: 'luna', temperature: 'ca. -20 °C Durchschnitt', resources: { stone: 3000000, iron: 2000000, silicon: 4000000, lithium: 6000000, helium3: 10000000, uranium: 3000000, bauxite: 10000000 }, storage: {}, orbit: 0, moonOf: 'earth', moonOrbit: 55 },
   mars: { name: 'Mars', type: 'Planet', className: 'mars', temperature: 'ca. -63 °C Durchschnitt', resources: { stone: 20000, coal: 20000, gas: 40000, uranium: 10000000, bauxite: 10000000 }, storage: {}, orbit: 405 },
-  jupiter: { name: 'Jupiter', type: 'Gasplanet', className: 'jupiter', temperature: 'ca. -110 °C Wolkenobergrenze', resources: { helium3: 500000000, hydrogen: 5000000000, co2: 100000000 }, storage: {}, orbit: 515 }
+  jupiter: { name: 'Jupiter', type: 'Gasplanet', className: 'jupiter', temperature: 'ca. -110 °C Wolkenobergrenze', resources: { helium3: 500000000, hydrogen: 5000000000, co2: 100000000 }, storage: {}, orbit: 515 },
+  neptune: { name: 'Neptun', type: 'Reiner Gasplanet', className: 'neptune', temperature: 'ca. -200 °C Wolkenobergrenze', resources: { hydrogen: 0, helium: 0 }, atmosphere: { pressure: 108 }, storage: {}, orbit: 610 }
 };
 
 const resourceNames = { bauxite: 'Bauxit', aluminiumOxide: 'Aluminiumoxid', aluminium: 'Aluminium', co2: 'CO₂', carbon: 'Kohlenstoff', oxygen: 'Sauerstoff', concrete: 'Beton', stone: 'Stein', coal: 'Kohle', gas: 'Gas', iron: 'Eisen', silicon: 'Silizium', lithium: 'Lithium', copperOre: 'Kupfererz', copper: 'Kupfer', batteries: 'Batterien', buildingMaterials: 'Baustoffe', machines: 'Maschinen', glass: 'Glas', electronics: 'Elektronik', steel: 'Stahl', hydrogen: 'Wasserstoff', helium: 'Helium', helium3: 'Helium-3', crudeOil: 'Rohöl', polymers: 'Polymere', uranium: 'Uran', processedUranium: 'Aufbereitetes Uran', nuclearFuel: 'Kernbrennstoff', chips: 'Chips', water: 'Wasser', grain: 'Getreide', vegetables: 'Gemüse' };
@@ -968,7 +970,7 @@ function setupSaveMenu() {
 }
 
 function rocketBodyPoint(id) {
-  const angles = { sun: 0, mercury: 25, venus: 150, earth: 250, mars: 70, jupiter: 145 };
+  const angles = { sun: 0, mercury: 25, venus: 150, earth: 250, mars: 70, jupiter: 145, neptune: 210 };
   if (id === 'sun') return { x: 530, y: 530 };
   if (id === 'luna') {
     const earth = rocketBodyPoint('earth');
@@ -1039,7 +1041,7 @@ function renderSystem() {
     }
   });
 
-  const angles = { sun: 0, mercury: 25, venus: 150, earth: 250, mars: 70, jupiter: 145 };
+  const angles = { sun: 0, mercury: 25, venus: 150, earth: 250, mars: 70, jupiter: 145, neptune: 210 };
 
   // Luna bekommt eine eigene Umlaufbahn um die Erde.
   const earthAngle = angles.earth * Math.PI / 180;
@@ -1620,7 +1622,7 @@ function buildButton(key) {
 }
 
 function setPlanetView(mode) {
-  if (state.selected === 'sun') return;
+  if (state.selected === 'sun' || !hasPlanetSurface(state.selected)) return;
   state.viewMode = mode === 'orbit' ? 'orbit' : 'surface';
   renderInfo();
 }
@@ -1632,6 +1634,7 @@ function bindPlanetViewControls() {
 }
 
 function renderPlanetViewSwitch() {
+  if (!hasPlanetSurface(state.selected)) return `<div class="planet-view-switch"><button type="button" class="view-switch-btn active" disabled>🛰️ Nur Orbit – keine Oberfläche</button></div>`;
   return `<div class="planet-view-switch" role="group" aria-label="Ansicht wechseln">
     <button type="button" class="view-switch-btn ${state.viewMode === 'surface' ? 'active' : ''}" data-planet-view="surface">🌍 Oberfläche</button>
     <button type="button" class="view-switch-btn ${state.viewMode === 'orbit' ? 'active' : ''}" data-planet-view="orbit">🛰️ Orbit</button>
@@ -1650,6 +1653,7 @@ function renderOrbitInfo(body) {
     : '<p class="hint">Keine Raketen in diesem Orbit.</p>';
   return `<h2>🛰️ ${body.name} – Orbit</h2>
     <p class="hint">Orbitalansicht · Raumverkehr und zukünftige Orbitalstationen</p>
+    ${body.atmosphere?.pressure ? `<div class="stat"><span>Atmosphärendruck</span><strong>${body.atmosphere.pressure} bar</strong></div>` : ''}
     ${renderPlanetViewSwitch()}
     <h3>🛰️ Orbitalstatus</h3>
     <div class="stat"><span>Raketen im Orbit</span><strong>${orbitalLanded.length}</strong></div>
@@ -1661,6 +1665,7 @@ function renderOrbitInfo(body) {
 
 function renderInfo() {
   const body = bodies[state.selected];
+  if (!hasPlanetSurface(state.selected)) state.viewMode = 'orbit';
   if (state.selected === 'sun') {
     infoPanel.innerHTML = `<h2>☀️ Sonne</h2><p class="hint">${body.type}</p><div class="stat"><span>Temperatur</span><strong>${body.temperature}</strong></div><h3>🛰️ Sonnenorbit</h3><div class="stat"><span>Solar-Satelliten</span><strong>${Number(body.buildings?.solarSatellite || 0)}</strong></div><div class="stat"><span>Solarstrom</span><strong>${solarSatelliteElectricityProduction().toLocaleString('de-DE')} MW/s</strong></div><h3>🌐 Rohstoffe</h3><p class="hint">Keine abbaubaren Rohstoffe.</p>`;
     applyLanguage();

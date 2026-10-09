@@ -277,3 +277,6 @@ select{padding:7px;border-radius:8px;background:#eef2f7;color:#111}
 .planet-build-menu .building-overview-tools,
 .planet-build-menu .building-category{min-width:520px}
 .planet-build-menu .planet-build-header{position:sticky;top:0;z-index:10;background:#09111f;min-width:520px}
+
+/* Neptun: blauer äußerer Gasplanet */
+.neptune{width:48px;height:48px;background:radial-gradient(circle at 32% 28%,#7de4ff 0%,#2588d8 35%,#06428f 72%,#021b4b 100%);box-shadow:0 0 18px rgba(36,139,255,.55)}
