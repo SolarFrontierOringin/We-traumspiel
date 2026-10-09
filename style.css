@@ -239,30 +239,3 @@ select{padding:7px;border-radius:8px;background:#eef2f7;color:#111}
     width: auto !important;
   }
 }
-
-
-/* Korrektur 1.1: Bauen-Schaltfläche mobil sichtbar und links ausgerichtet */
-.planet-build-menu .building-category-content .build-card {
-  grid-template-columns: minmax(0, 1fr) !important;
-  align-items: start;
-}
-.planet-build-menu .building-category-content .build-card > button.build-resource {
-  justify-self: start !important;
-  align-self: start;
-  display: inline-flex;
-  width: auto !important;
-  min-width: 0;
-  max-width: 100%;
-  margin: 6px 0 0;
-  white-space: nowrap;
-}
-.planet-build-menu .building-card-actions {
-  justify-content: flex-start !important;
-}
-@media (max-width: 430px) {
-  .planet-build-menu .building-category-content .build-card > button.build-resource {
-    justify-self: start !important;
-    padding: 7px 10px;
-    font-size: 12px;
-  }
-}
