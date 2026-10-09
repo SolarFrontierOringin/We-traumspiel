@@ -1168,14 +1168,12 @@ function renderSystem() {
       <div class="build-card outpost-card"><div><strong>🛰️ Außenposten</strong><small>100 t Stahl · 60 Sekunden Bauzeit · maximal 1 pro Planet · Voraussetzung für weitere Gebäude auf allen Außenplaneten</small></div><button class="build-resource" id="build-outpost" ${getBuildingsOnPlanet(state.selected).outpost || outpostBuildQueue[state.selected] || Number(getPlanetStorage(state.selected).steel || 0) < 100 ? 'disabled' : ''}>Bauen (${getBuildingsOnPlanet(state.selected).outpost ? 'Gebaut' : 'Bauen'})</button></div>
       `;
 
-    // Gebäude nach Fachbereich ordnen; auf diesem Planeten nicht verfügbare
-    // Gebäude werden gesammelt ganz unten angezeigt.
+    // Gebäudeübersicht Konzept 1.1: planetenabhängige, durchsuchbare Kategorien.
     const buildCategories = [
       { title: '⛏️ Rohstoffgewinnung', keys: ['ironMine','stoneQuarry','coalMine','gasPlant','siliconMine','lithiumMine','copperMine','heliumExtractor','crudeOilPump','uraniumMine','bauxiteMine'] },
       { title: '🏭 Verarbeitung & Industrie', keys: ['steelworks','buildingMaterialsFactory','co2ProcessingPlant','aluminiumOxideRefinery','aluminiumSmelter','copperSmelter','lithiumRefinery','machineFactory','glassFactory','electronicsFactory','chipFactory','polymerFactory','uraniumProcessingPlant','nuclearFuelPlant'] },
       { title: '⚡ Energie & Forschung', keys: ['coalPowerPlant','solarPlant','fusionReactor','nuclearReactor','researchLab'] },
-      { title: '🪐 Planetare Infrastruktur', keys: ['co2Extraction','moonBase','solarSail','outpost'] },
-      { title: '🚀 Weltraum & Raumfahrt', keys: ['rocketFactory','landingPad','solarSatellite','solarProbe'] }
+      { title: '🚀 Raumfahrt & Infrastruktur', keys: ['co2Extraction','moonBase','solarSail','outpost','rocketFactory','landingPad','solarSatellite','solarProbe'] }
     ];
     const specialKeys = {
       'build-steelworks-floating':'steelworks', 'build-coal-power':'coalPowerPlant',
@@ -1185,8 +1183,7 @@ function renderSystem() {
     const cards = [...menu.querySelectorAll('.build-card')];
     const keyForCard = card => {
       const button = card.querySelector('[data-building],button[id^="build-"]');
-      if (!button) return null;
-      return button.dataset.building || specialKeys[button.id] || null;
+      return button ? (button.dataset.building || specialKeys[button.id] || null) : null;
     };
     const unavailable = [];
     const categorized = new Map(buildCategories.map(c => [c.title, []]));
@@ -1195,38 +1192,78 @@ function renderSystem() {
       const key = keyForCard(card);
       if (key && !isBuildingAllowed(key, state.selected)) {
         card.classList.add('build-unavailable');
+        card.dataset.unavailable = 'true';
         const small = card.querySelector('small');
-        if (small && !small.textContent.includes('Auf diesem Planeten nicht verfügbar')) {
-          small.textContent += ' · Auf diesem Planeten nicht verfügbar';
-        }
+        if (small && !small.textContent.includes('Auf diesem Planeten nicht verfügbar')) small.textContent += ' · Auf diesem Planeten nicht verfügbar';
         const button = card.querySelector('button');
         if (button) button.disabled = true;
         unavailable.push(card);
-        continue;
       }
       const category = buildCategories.find(c => c.keys.includes(key));
       if (category) categorized.get(category.title).push(card);
       else unknown.push(card);
     }
-    const fragment = document.createDocumentFragment();
+
+    const tools = document.createElement('div');
+    tools.className = 'building-overview-tools';
+    tools.innerHTML = `<input class="building-search" type="search" placeholder="🔎 Gebäude, Rohstoff oder Beschreibung suchen…" aria-label="Gebäude suchen"><div class="building-filter-row"><label><input type="checkbox" class="building-filter-production"> Produktion</label><label><input type="checkbox" class="building-filter-consumption"> Verbrauch</label><label><input type="checkbox" class="building-show-unavailable"> Nicht verfügbare anzeigen</label></div><div class="building-result-count" aria-live="polite"></div>`;
+    menu.appendChild(tools);
+    const groups = [];
     for (const category of buildCategories) {
       const entries = categorized.get(category.title);
       if (!entries.length) continue;
-      const heading = document.createElement('div');
-      heading.className = 'build-category-title';
-      heading.textContent = category.title;
-      fragment.appendChild(heading);
-      entries.forEach(card => fragment.appendChild(card));
+      const section = document.createElement('section');
+      section.className = 'building-category';
+      const heading = document.createElement('button');
+      heading.type = 'button'; heading.className = 'building-category-toggle'; heading.setAttribute('aria-expanded', 'false');
+      heading.innerHTML = `<span>${category.title}</span><span class="building-category-count">${entries.filter(c => !c.dataset.unavailable).length}</span><span class="building-category-arrow">▸</span>`;
+      const content = document.createElement('div'); content.className = 'building-category-content'; content.hidden = true;
+      entries.forEach(card => {
+        const small = card.querySelector('small');
+        const desc = small ? small.textContent : '';
+        const detail = document.createElement('div'); detail.className = 'building-details'; detail.hidden = true;
+        const timeMatch = desc.match(/(?:Bauzeit|Bauzeit:?)\s*([^·]+)/i);
+        const reqMatch = desc.match(/(?:Voraussetzung|benötigt|nur auf|nur Erde|nur Venus|nur Merkur|nur auf der Erde)[^·]*/i);
+        detail.innerHTML = `<div><strong>Bauzeit:</strong> ${timeMatch ? timeMatch[1].trim() : 'Keine separate Bauzeit in den Gebäudedaten hinterlegt.'}</div><div><strong>Voraussetzungen:</strong> ${reqMatch ? reqMatch[0].trim() : (card.dataset.unavailable ? 'Auf diesem Planeten nicht verfügbar.' : 'Keine zusätzliche Voraussetzung in der Gebäudebeschreibung angegeben.')}</div><div><strong>Beschreibung:</strong> ${desc || 'Keine Beschreibung hinterlegt.'}</div><div><strong>Ausbau & Skalierung:</strong> Bestehende Produktions- und Verbrauchsregeln bleiben unverändert; weitere Angaben werden nur angezeigt, wenn sie in den vorhandenen Gebäudedaten hinterlegt sind.</div>`;
+        const actions = document.createElement('div'); actions.className = 'building-card-actions';
+        const detailsBtn = document.createElement('button'); detailsBtn.type = 'button'; detailsBtn.className = 'building-details-toggle'; detailsBtn.textContent = 'Details';
+        detailsBtn.addEventListener('click', () => { detail.hidden = !detail.hidden; detailsBtn.textContent = detail.hidden ? 'Details' : 'Details schließen'; });
+        actions.appendChild(detailsBtn); card.appendChild(actions); card.appendChild(detail); content.appendChild(card);
+      });
+      heading.addEventListener('click', () => {
+        const opening = content.hidden;
+        groups.forEach(g => { g.content.hidden = true; g.heading.setAttribute('aria-expanded','false'); g.heading.querySelector('.building-category-arrow').textContent = '▸'; });
+        content.hidden = !opening; heading.setAttribute('aria-expanded', String(opening)); heading.querySelector('.building-category-arrow').textContent = opening ? '▾' : '▸';
+      });
+      section.append(heading, content); menu.appendChild(section); groups.push({section,heading,content});
     }
-    unknown.forEach(card => fragment.appendChild(card));
-    if (unavailable.length) {
-      const heading = document.createElement('div');
-      heading.className = 'build-category-title build-unavailable-title';
-      heading.textContent = '🚫 Auf diesem Planeten nicht baubar';
-      fragment.appendChild(heading);
-      unavailable.forEach(card => fragment.appendChild(card));
-    }
-    menu.appendChild(fragment);
+    unknown.forEach(card => menu.appendChild(card));
+    const search = tools.querySelector('.building-search');
+    const production = tools.querySelector('.building-filter-production');
+    const consumption = tools.querySelector('.building-filter-consumption');
+    const showUnavailable = tools.querySelector('.building-show-unavailable');
+    const allCards = [...menu.querySelectorAll('.build-card')];
+    const updateBuildingFilters = () => {
+      const term = search.value.trim().toLocaleLowerCase(); let visible = 0;
+      allCards.forEach(card => {
+        const text = card.textContent.toLocaleLowerCase();
+        const unavailableCard = card.dataset.unavailable === 'true';
+        const hasProduction = /produziert|produktion|\+\s*[\d,.]+\s*(t|mw|l|punkte)/i.test(text);
+        const hasConsumption = /verbraucht|verbrauch|−|nimmt/i.test(text);
+        const match = (!term || text.includes(term)) && (!production.checked || hasProduction) && (!consumption.checked || hasConsumption) && (showUnavailable.checked || !unavailableCard);
+        card.hidden = !match; if (match) visible++;
+      });
+      groups.forEach(g => {
+        const count = [...g.content.querySelectorAll('.build-card')].filter(c => !c.hidden).length;
+        g.section.hidden = count === 0;
+        if (term) { g.content.hidden = false; g.heading.setAttribute('aria-expanded','true'); g.heading.querySelector('.building-category-arrow').textContent = '▾'; }
+      });
+      tools.querySelector('.building-result-count').textContent = `${visible} Gebäude${visible === 1 ? '' : ''} angezeigt`;
+    };
+    [search, production, consumption, showUnavailable].forEach(el => el.addEventListener('input', updateBuildingFilters));
+    [production, consumption, showUnavailable].forEach(el => el.addEventListener('change', updateBuildingFilters));
+    updateBuildingFilters();
+    if (groups.length) { groups[0].content.hidden = false; groups[0].heading.setAttribute('aria-expanded','true'); groups[0].heading.querySelector('.building-category-arrow').textContent = '▾'; }
 
     menu.style.left = '50%';
     menu.style.top = 'calc(50% - 150px)';

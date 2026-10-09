@@ -163,3 +163,27 @@ select{padding:7px;border-radius:8px;background:#eef2f7;color:#111}
 
 /* Zyklische Orbitmissionen */
 #mission-rocket-type,#mission-destination,#mission-resource,#mission-amount,#mission-wait{display:block;width:100%;margin-top:5px;padding:8px;border-radius:8px;background:#eef2f7;color:#111;border:0}#create-orbit-mission{width:100%;margin-top:10px}.mission-delete{background:#8f3030}
+
+
+/* Gebäudeübersicht Konzept 1.1 */
+.planet-build-menu{max-height:min(82vh,760px);overflow-y:auto;overscroll-behavior:contain;padding:12px;}
+.building-overview-tools{position:sticky;top:0;z-index:8;padding:8px 0;background:#09111f;border-bottom:1px solid #263754;margin-bottom:8px;}
+.building-search{display:block;width:100%;padding:10px 12px;border:1px solid #344967;border-radius:10px;background:#0c1627;color:#eef4ff;}
+.building-filter-row{display:flex;flex-wrap:wrap;gap:8px 12px;margin-top:8px;font-size:12px;color:#c7d4e8;}
+.building-filter-row label{display:flex;align-items:center;gap:4px;}
+.building-filter-row input{accent-color:#2776d2;}
+.building-result-count{font-size:12px;color:#aab8ce;margin-top:6px;}
+.building-category{border:1px solid #263754;border-radius:12px;background:#0a1424;margin:8px 0;overflow:hidden;}
+.building-category-toggle{display:flex;align-items:center;gap:9px;width:100%;padding:12px;text-align:left;background:#101e32;border-radius:0;}
+.building-category-toggle>span:first-child{flex:1;}
+.building-category-count{font-size:12px;color:#b8c8df;background:#1a2a42;border-radius:20px;padding:2px 8px;}
+.building-category-arrow{font-size:18px;}
+.building-category-content{padding:7px;}
+.building-category-content[hidden],.building-details[hidden],.build-card[hidden],.building-category[hidden]{display:none!important;}
+.building-category-content .build-card{margin:6px 0;grid-template-columns:minmax(0,1fr) auto;}
+.building-card-actions{grid-column:1/-1;display:flex;justify-content:flex-end;}
+.building-details-toggle{padding:6px 10px;font-size:12px;background:#263b59;}
+.building-details{grid-column:1/-1;padding:9px;border-top:1px solid #263754;color:#c7d4e8;font-size:12px;line-height:1.5;overflow-wrap:anywhere;}
+.building-details>div{padding:3px 0;}
+.build-unavailable{opacity:.65;filter:saturate(.55);}
+@media(max-width:430px){.building-filter-row{gap:8px}.building-category-content .build-card{grid-template-columns:minmax(0,1fr)}.building-card-actions{justify-content:flex-start}}
