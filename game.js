@@ -1242,6 +1242,9 @@ function renderSystem() {
     const production = tools.querySelector('.building-filter-production');
     const consumption = tools.querySelector('.building-filter-consumption');
     const showUnavailable = tools.querySelector('.building-show-unavailable');
+    // Auf Außenplaneten gesperrte Gebäude sichtbar lassen, damit die nötige
+    // Voraussetzung (z. B. Außenposten) direkt im Baumenü erkennbar bleibt.
+    if (state.selected !== 'earth') showUnavailable.checked = true;
     const allCards = [...menu.querySelectorAll('.build-card')];
     const updateBuildingFilters = () => {
       const term = search.value.trim().toLocaleLowerCase(); let visible = 0;
