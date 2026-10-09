@@ -6,7 +6,9 @@ const infoPanel = document.querySelector('#info-panel');
 const topResources = document.querySelector('#top-resources');
 const saveMenu = document.querySelector('#save-menu');
 const saveStatus = document.querySelector('#save-status');
-const SAVE_KEY = 'weltraumGameSave_v1';
+const SAVE_KEY = 'solarFrontierOriginsSave_v2';
+const LEGACY_SAVE_KEY = 'weltraumGameSave_v1';
+const BACKUP_SAVE_KEY = 'solarFrontierOriginsSave_backup_v2';
 
 // ==========================================
 // AUDIO
@@ -74,6 +76,9 @@ const state = {
   nuclearFuel: 0,
   chips: 0,
   concrete: 0,
+  bauxite: 0,
+  aluminiumOxide: 0,
+  aluminium: 0,
   buildings: {
     steelworks: 0,
     stoneQuarry: 0,
@@ -104,7 +109,10 @@ const state = {
     chipFactory: 0,
     solarSail: 0,
     solarSatellite: 0,
-    solarProbe: 0
+    solarProbe: 0,
+    bauxiteMine: 0,
+    aluminiumOxideRefinery: 0,
+    aluminiumSmelter: 0
   },
   lastUpdate: performance.now(),
   buildMenuOpen: false,
@@ -128,6 +136,9 @@ const buildingTypes = {
   co2Extraction: { name: 'CO₂-Extraktionsanlage', icon: '🌫️', resource: 'co2', rate: 0.25, cost: 25, text: 'extrahiert 0,25 t CO₂/s aus der Atmosphäre · nur auf Venus' },
   co2ProcessingPlant: { name: 'CO₂-Verarbeitung', icon: '⚗️', resource: null, rate: 0, cost: 50, text: 'verarbeitet 0,2 t CO₂/s → 0,1 t Kohlenstoff + 0,1 t Sauerstoff · auf allen Planeten außer der Sonne' },
   ironMine: { name: 'Eisenmine', icon: '🧲', resource: 'iron', rate: 0.1, cost: 20, text: '0,1 t Eisen/s' },
+  bauxiteMine: { name: 'Bauxitmine', icon: '⛏️', resource: 'bauxite', rate: 0.5, cost: 40, text: '0,5 t Bauxit/s · kein Verbrauch · nur Erde, Luna und Mars' },
+  aluminiumOxideRefinery: { name: 'Aluminiumoxidraffinerie', icon: '⚗️', resource: null, rate: 0, cost: 100, text: 'verbraucht 0,5 t Bauxit/s · produziert 0,25 t Aluminiumoxid/s' },
+  aluminiumSmelter: { name: 'Aluminiumhütte', icon: '🏭', resource: null, rate: 0, cost: 200, text: 'verbraucht 0,25 t Aluminiumoxid/s · produziert 0,125 t Aluminium/s' },
   siliconMine: { name: 'Siliziummine', icon: '🔷', resource: 'silicon', rate: 0.3, cost: 30, text: '0,3 t Silizium/s' },
   lithiumMine: { name: 'Lithiummine', icon: '🔋', resource: 'lithium', rate: 0.05, cost: 30, text: '0,05 t Lithium/s pro Gebäude' },
   copperMine: { name: 'Kupfermine', icon: '🟠', resource: 'copperOre', rate: 0.05, cost: 30, text: '0,05 t Kupfererz/s pro Gebäude' },
@@ -155,8 +166,8 @@ const buildingTypes = {
 
 const rocketTypes = {
   hercules1: { name: 'Herkules 1', icon: '🚀', cost: 45, capacity: 120 },
-  hercules2: { name: 'Herkules 2', icon: '🚀', costSteel: 300, costBatteries: 50, capacity: 300, compartments: 3 },
-  atlas1: { name: 'Atlas 1', icon: '🚀', costSteel: 340, costChips: 150, costBatteries: 200, capacity: 500, compartments: 3 }
+  hercules2: { name: 'Herkules 2', icon: '🚀', costSteel: 300, costBatteries: 50, costAluminium: 50, capacity: 300, compartments: 3 },
+  atlas1: { name: 'Atlas 1', icon: '🚀', costSteel: 340, costChips: 150, costBatteries: 200, costAluminium: 100, capacity: 500, compartments: 3 }
 };
 
 const flightTimes = {
@@ -204,14 +215,14 @@ const bodies = {
   sun: { name: 'Sonne', type: 'Stern', className: 'sun', temperature: 'ca. 5.500 °C Oberfläche', resources: {}, storage: {}, buildings: { solarSatellite: 0 }, orbit: 0 },
   mercury: { name: 'Merkur', type: 'Planet', className: 'mercury', temperature: '430 °C', resources: { stone: 20000, iron: 10000000, silicon: 8000000, lithium: 2000000, copperOre: 30000, uranium: 30000000 }, storage: {}, orbit: 150 },
   venus: { name: 'Venus', type: 'Planet', className: 'venus', temperature: '490 °C', resources: { stone: 10000000, iron: 50000000, silicon: 30000000, lithium: 5000000, copperOre: 3000000, uranium: 20000000, helium3: 20000000, co2: 100000000000000 }, atmosphere: { co2Initial: 100000000000000, pressureInitial: 92 }, storage: {}, orbit: 235 },
-  earth: { name: 'Erde', type: 'Startplanet', className: 'earth', temperature: 'ca. 15 °C Durchschnitt', resources: { stone: 20000, coal: 20000, gas: 40000, iron: 200000000, lithium: 30000, crudeOil: 6000000, copperOre: 30000, uranium: 1000000 }, storage: null, orbit: 320 },
-  luna: { name: 'Luna', type: 'Mond der Erde', className: 'luna', temperature: 'ca. -20 °C Durchschnitt', resources: { stone: 3000000, iron: 2000000, silicon: 4000000, lithium: 6000000, helium3: 10000000, uranium: 3000000 }, storage: {}, orbit: 0, moonOf: 'earth', moonOrbit: 55 },
-  mars: { name: 'Mars', type: 'Planet', className: 'mars', temperature: 'ca. -63 °C Durchschnitt', resources: { stone: 20000, coal: 20000, gas: 40000, uranium: 10000000 }, storage: {}, orbit: 405 },
+  earth: { name: 'Erde', type: 'Startplanet', className: 'earth', temperature: 'ca. 15 °C Durchschnitt', resources: { stone: 20000, coal: 20000, gas: 40000, iron: 200000000, lithium: 30000, crudeOil: 6000000, copperOre: 30000, uranium: 1000000, bauxite: 10000000 }, storage: null, orbit: 320 },
+  luna: { name: 'Luna', type: 'Mond der Erde', className: 'luna', temperature: 'ca. -20 °C Durchschnitt', resources: { stone: 3000000, iron: 2000000, silicon: 4000000, lithium: 6000000, helium3: 10000000, uranium: 3000000, bauxite: 10000000 }, storage: {}, orbit: 0, moonOf: 'earth', moonOrbit: 55 },
+  mars: { name: 'Mars', type: 'Planet', className: 'mars', temperature: 'ca. -63 °C Durchschnitt', resources: { stone: 20000, coal: 20000, gas: 40000, uranium: 10000000, bauxite: 10000000 }, storage: {}, orbit: 405 },
   jupiter: { name: 'Jupiter', type: 'Gasplanet', className: 'jupiter', temperature: 'ca. -110 °C Wolkenobergrenze', resources: { helium3: 500000000, hydrogen: 5000000000, co2: 100000000 }, storage: {}, orbit: 515 }
 };
 
-const resourceNames = { co2: 'CO₂', carbon: 'Kohlenstoff', oxygen: 'Sauerstoff', concrete: 'Beton', stone: 'Stein', coal: 'Kohle', gas: 'Gas', iron: 'Eisen', silicon: 'Silizium', lithium: 'Lithium', copperOre: 'Kupfererz', copper: 'Kupfer', batteries: 'Batterien', buildingMaterials: 'Baustoffe', machines: 'Maschinen', glass: 'Glas', electronics: 'Elektronik', steel: 'Stahl', hydrogen: 'Wasserstoff', helium: 'Helium', helium3: 'Helium-3', crudeOil: 'Rohöl', uranium: 'Uran', processedUranium: 'Aufbereitetes Uran', nuclearFuel: 'Kernbrennstoff', chips: 'Chips' };
-const resourceIcons = { co2: '🌫️', carbon: '⚫', oxygen: '🫧', concrete: '🏗️', stone: '🪨', coal: '⚫', gas: '🔥', iron: '🧲', silicon: '🔷', lithium: '🔋', copperOre: '🟠', copper: '🟤', batteries: '🔋', buildingMaterials: '🧱', machines: '⚙️', glass: '🪟', electronics: '💻', steel: '🔩', hydrogen: '💨', helium: '💨', helium3: '🧪', crudeOil: '🛢️', uranium: '☢️', processedUranium: '🧪', nuclearFuel: '⚛️', chips: '💾' };
+const resourceNames = { bauxite: 'Bauxit', aluminiumOxide: 'Aluminiumoxid', aluminium: 'Aluminium', co2: 'CO₂', carbon: 'Kohlenstoff', oxygen: 'Sauerstoff', concrete: 'Beton', stone: 'Stein', coal: 'Kohle', gas: 'Gas', iron: 'Eisen', silicon: 'Silizium', lithium: 'Lithium', copperOre: 'Kupfererz', copper: 'Kupfer', batteries: 'Batterien', buildingMaterials: 'Baustoffe', machines: 'Maschinen', glass: 'Glas', electronics: 'Elektronik', steel: 'Stahl', hydrogen: 'Wasserstoff', helium: 'Helium', helium3: 'Helium-3', crudeOil: 'Rohöl', uranium: 'Uran', processedUranium: 'Aufbereitetes Uran', nuclearFuel: 'Kernbrennstoff', chips: 'Chips' };
+const resourceIcons = { bauxite: '🪨', aluminiumOxide: '⚗️', aluminium: '🥈', co2: '🌫️', carbon: '⚫', oxygen: '🫧', concrete: '🏗️', stone: '🪨', coal: '⚫', gas: '🔥', iron: '🧲', silicon: '🔷', lithium: '🔋', copperOre: '🟠', copper: '🟤', batteries: '🔋', buildingMaterials: '🧱', machines: '⚙️', glass: '🪟', electronics: '💻', steel: '🔩', hydrogen: '💨', helium: '💨', helium3: '🧪', crudeOil: '🛢️', uranium: '☢️', processedUranium: '🧪', nuclearFuel: '⚛️', chips: '💾' };
 
 function formatTons(value) { return `${value.toFixed(2)} t`; }
 function formatLargeTons(value) {
@@ -227,7 +238,7 @@ function venusCo2ExtractionRate(id='venus') { return Number(getBuildingsOnPlanet
 function getBuildingsOnPlanet(id) {
   if (id === 'earth') return state.buildings;
   if (!bodies[id].buildings) {
-    bodies[id].buildings = { steelworks: 0, stoneQuarry: 0, buildingMaterialsFactory: 0, coalMine: 0, gasPlant: 0, co2Extraction: 0, co2ProcessingPlant: 0, ironMine: 0, siliconMine: 0, lithiumMine: 0, copperMine: 0, copperSmelter: 0, lithiumRefinery: 0, machineFactory: 0, glassFactory: 0, heliumExtractor: 0, fusionReactor: 0, outpost: 0, coalPowerPlant: 0, solarPlant: 0, researchLab: 0, moonBase: 0, crudeOilPump: 0, uraniumMine: 0, uraniumProcessingPlant: 0, nuclearFuelPlant: 0, nuclearReactor: 0, chipFactory: 0, solarSail: 0, solarSatellite: 0, solarProbe: 0 }
+    bodies[id].buildings = { steelworks: 0, stoneQuarry: 0, buildingMaterialsFactory: 0, coalMine: 0, gasPlant: 0, co2Extraction: 0, co2ProcessingPlant: 0, ironMine: 0, siliconMine: 0, lithiumMine: 0, copperMine: 0, copperSmelter: 0, lithiumRefinery: 0, machineFactory: 0, glassFactory: 0, heliumExtractor: 0, fusionReactor: 0, outpost: 0, coalPowerPlant: 0, solarPlant: 0, researchLab: 0, moonBase: 0, crudeOilPump: 0, uraniumMine: 0, uraniumProcessingPlant: 0, nuclearFuelPlant: 0, nuclearReactor: 0, chipFactory: 0, solarSail: 0, solarSatellite: 0, solarProbe: 0, bauxiteMine: 0, aluminiumOxideRefinery: 0, aluminiumSmelter: 0 }
   }
   return bodies[id].buildings;
 }
@@ -239,7 +250,7 @@ function getPlanetStorage(id) {
 function storageAmount(id, resource) { return Number(getPlanetStorage(id)[resource] || 0); }
 function formatStorage(id) {
   const st = getPlanetStorage(id);
-  const keys = ['stone','coal','gas','co2','carbon','oxygen','crudeOil','iron','silicon','lithium','copperOre','copper','batteries','buildingMaterials','machines','glass','electronics','steel','hydrogen','helium','helium3','uranium','processedUranium','nuclearFuel','chips','concrete'];
+  const keys = ['stone','coal','gas','co2','carbon','oxygen','crudeOil','iron','silicon','lithium','copperOre','copper','batteries','buildingMaterials','machines','glass','electronics','steel','hydrogen','helium','helium3','uranium','processedUranium','nuclearFuel','chips','concrete','bauxite','aluminiumOxide','aluminium'];
   const rows = keys.filter(k => Number(st[k] || 0) > 0.000001).map(k => `<div class="stat"><span>${resourceIcons[k] || ''} ${resourceNames[k] || k}</span><strong>${k === 'co2' ? formatLargeTons(st[k]) : formatTons(st[k])}</strong></div>`);
   return rows.length ? rows.join('') : '<p class="hint">Lager ist leer.</p>';
 }
@@ -617,28 +628,9 @@ function showSaveStatus(message, good = true) {
 
 function getSaveData() {
   return {
-    version: 1,
-    state: {
-      selected: state.selected,
-      viewMode: state.viewMode || 'surface',
-      stone: state.stone,
-      coal: state.coal,
-      gas: state.gas,
-      co2: state.co2,
-      crudeOil: state.crudeOil,
-      iron: state.iron,
-      steel: state.steel,
-      batteries: state.batteries,
-      uranium: state.uranium,
-      processedUranium: state.processedUranium,
-      nuclearFuel: state.nuclearFuel,
-      chips: state.chips,
-      concrete: state.concrete,
-      buildings: state.buildings,
-      buildMenuOpen: false,
-      research: state.research,
-      tasks: state.tasks
-    },
+    version: 2,
+    savedAt: new Date().toISOString(),
+    state: { ...state, lastUpdate: undefined, buildMenuOpen: false, buildings: { ...state.buildings } },
     bodies,
     rockets,
     rocketBuildQueue,
@@ -667,7 +659,10 @@ function getSaveData() {
 
 function saveGame(showMessage = true) {
   try {
-    localStorage.setItem(SAVE_KEY, JSON.stringify(getSaveData()));
+    const serialized = JSON.stringify(getSaveData());
+    const previous = localStorage.getItem(SAVE_KEY);
+    if (previous) localStorage.setItem(BACKUP_SAVE_KEY, previous);
+    localStorage.setItem(SAVE_KEY, serialized);
     if (showMessage) showSaveStatus('Spielstand gespeichert.');
   } catch (error) {
     console.error(error);
@@ -677,7 +672,16 @@ function saveGame(showMessage = true) {
 
 function loadGame(showMessage = true) {
   try {
-    const raw = localStorage.getItem(SAVE_KEY);
+    let raw = localStorage.getItem(SAVE_KEY);
+    let migratedLegacy = false;
+    if (!raw) {
+      const legacy = localStorage.getItem(LEGACY_SAVE_KEY);
+      if (legacy) { raw = legacy; migratedLegacy = true; }
+    }
+    if (!raw) {
+      const backup = localStorage.getItem(BACKUP_SAVE_KEY);
+      if (backup) raw = backup;
+    }
     if (!raw) {
       if (showMessage) showSaveStatus('Kein Spielstand vorhanden.', false);
       return false;
@@ -686,6 +690,10 @@ function loadGame(showMessage = true) {
     if (!data || !data.state || !data.bodies) throw new Error('Ungültiger Spielstand');
 
     Object.assign(state, data.state);
+    state.buildings = { ...state.buildings, ...(data.state.buildings || {}) };
+    state.bauxite = Math.max(0, Number(state.bauxite || 0));
+    state.aluminiumOxide = Math.max(0, Number(state.aluminiumOxide || 0));
+    state.aluminium = Math.max(0, Number(state.aluminium || 0));
     state.viewMode = data.state.viewMode === 'orbit' ? 'orbit' : 'surface';
     state.batteries = Number(data.state.batteries || 0);
     state.co2 = Number(data.state.co2 || 0);
@@ -700,11 +708,11 @@ function loadGame(showMessage = true) {
     // Neue Rohstoffvorkommen aus späteren Spielversionen auch in alten Spielständen ergänzen.
     const defaultResources = {
       mercury: { stone: 20000, iron: 10000000, silicon: 8000000, lithium: 2000000, copperOre: 30000, uranium: 30000000 },
-      earth: { lithium: 30000, copperOre: 30000, crudeOil: 6000000, uranium: 1000000 },
-      luna: { stone: 3000000, lithium: 6000000, helium3: 10000000, uranium: 3000000 },
+      earth: { lithium: 30000, copperOre: 30000, crudeOil: 6000000, uranium: 1000000, bauxite: 10000000 },
+      luna: { stone: 3000000, lithium: 6000000, helium3: 10000000, uranium: 3000000, bauxite: 10000000 },
       venus: { stone: 10000000, iron: 50000000, silicon: 30000000, lithium: 5000000, copperOre: 3000000, uranium: 20000000, helium3: 20000000, co2: 100000000000000 },
       jupiter: { helium3: 500000000, hydrogen: 5000000000, co2: 100000000 },
-      mars: { uranium: 10000000 }
+      mars: { uranium: 10000000, bauxite: 10000000 }
     };
     Object.entries(defaultResources).forEach(([id, additions]) => {
       if (!bodies[id]) return;
@@ -798,6 +806,9 @@ function loadGame(showMessage = true) {
        body.buildings.solarProbe = Number(body.buildings.solarProbe || 0);
        body.buildings.rocketFactory = Number(body.buildings.rocketFactory || 0);
        body.buildings.landingPad = Number(body.buildings.landingPad || 0);
+       body.buildings.bauxiteMine = Number(body.buildings.bauxiteMine || 0);
+       body.buildings.aluminiumOxideRefinery = Number(body.buildings.aluminiumOxideRefinery || 0);
+       body.buildings.aluminiumSmelter = Number(body.buildings.aluminiumSmelter || 0);
     });
 
     rockets.length = 0;
@@ -846,7 +857,8 @@ function loadGame(showMessage = true) {
     renderSystem();
     renderInfo();
     renderTopResources();
-    if (showMessage) showSaveStatus('Spielstand geladen.');
+    if (migratedLegacy) saveGame(false);
+    if (showMessage) showSaveStatus(migratedLegacy ? 'Alter Spielstand übernommen und neu gespeichert.' : 'Spielstand geladen.');
     return true;
   } catch (error) {
     console.error(error);
@@ -857,6 +869,8 @@ function loadGame(showMessage = true) {
 
 function restartGame() {
   localStorage.removeItem(SAVE_KEY);
+  localStorage.removeItem(LEGACY_SAVE_KEY);
+  localStorage.removeItem(BACKUP_SAVE_KEY);
   location.reload();
 }
 
@@ -1082,6 +1096,9 @@ function renderSystem() {
       ${buildButton('co2Extraction')}
       ${buildButton('co2ProcessingPlant')}
       ${buildButton('ironMine')}
+      ${buildButton('bauxiteMine')}
+      ${buildButton('aluminiumOxideRefinery')}
+      ${buildButton('aluminiumSmelter')}
       ${buildButton('siliconMine')}
       ${buildButton('lithiumMine')}
       ${buildButton('copperMine')}
@@ -1145,7 +1162,7 @@ function renderTopResources() {
       const resourceKeys = [
         'stone','coal','gas','crudeOil','co2','carbon','oxygen','iron','steel','silicon','lithium',
         'copperOre','copper','batteries','buildingMaterials','machines',
-        'glass','electronics','hydrogen','helium','helium3','uranium','processedUranium','nuclearFuel'
+        'glass','electronics','hydrogen','helium','helium3','uranium','processedUranium','nuclearFuel','bauxite','aluminiumOxide','aluminium'
       ];
       const entries = resourceKeys
         .filter(key => Number(storage[key] || 0) > 0.000001)
@@ -1267,6 +1284,8 @@ function isBuildingAllowed(key, planetId = state.selected) {
   // Sonnensegel gibt es auf Merkur und Venus.
   if (key === 'solarSail' && !['mercury','venus'].includes(planetId)) return false;
   if (key === 'co2Extraction' && planetId !== 'venus') return false;
+  if (key === 'bauxiteMine' && !['earth','luna','mars'].includes(planetId)) return false;
+  if (['aluminiumOxideRefinery','aluminiumSmelter'].includes(key) && planetId === 'sun') return false;
   // CO₂-Verarbeitung kann auf allen Planeten außer der Sonne gebaut werden.
   if (key === 'co2ProcessingPlant' && planetId === 'sun') return false;
   if (key === 'co2ProcessingPlant' && !state.research?.completed?.co2ProcessingPlant) return false;
@@ -1611,7 +1630,7 @@ function rocketFactoryHasCapacity(id) { return Number(getBuildingsOnPlanet(id).r
 function queueRocket(type, id = state.selected) {
   ensureRocketData(id);
   if (!rocketFactoryHasCapacity(id)) return;
-  const costs = { hercules1:{steel:45}, hercules2:{steel:300,batteries:50}, atlas1:{steel:340,chips:150,batteries:200} }[type];
+  const costs = { hercules1:{steel:45}, hercules2:{steel:300,batteries:50,aluminium:50}, atlas1:{steel:340,chips:150,batteries:200,aluminium:100} }[type];
   const storage=getPlanetStorage(id);
   for(const [r,c] of Object.entries(costs)) if(Number(storage[r]||0)<c) return;
   for(const [r,c] of Object.entries(costs)) storage[r]-=c;
@@ -1838,7 +1857,7 @@ function renderRocketWindow(body) {
       : (cargo && cargo.amount > 0 ? `${resourceIcons[cargo.resource] || ''} ${resourceNames[cargo.resource] || cargo.resource}: ${cargo.amount.toFixed(2)} ${cargo.resource === 'crudeOil' ? 'L' : 't'}` : 'Keine Fracht');
 
     if (r.status === 'orbit' || r.status === 'landed') {
-      const returnOptions = ['stone','coal','gas','crudeOil','co2','carbon','oxygen','iron','silicon','lithium','copperOre','copper','batteries','buildingMaterials','machines','uranium','processedUranium','nuclearFuel','steel']
+      const returnOptions = ['stone','coal','gas','crudeOil','co2','carbon','oxygen','iron','silicon','lithium','copperOre','copper','batteries','buildingMaterials','machines','uranium','processedUranium','nuclearFuel','steel','bauxite','aluminiumOxide','aluminium']
         .filter(k => Number(getPlanetStorage(r.to)[k] || 0) > 0.000001)
         .map(k => `<option value="${k}">${resourceIcons[k] || ''} ${resourceNames[k] || k}</option>`).join('');
       const phase = r.status === 'orbit' ? '🛰️ im Orbit' : '🛬 auf der Oberfläche';
@@ -1859,8 +1878,9 @@ function renderRocketWindow(body) {
   const localSteel = getPlayerResourceAmount('steel', source);
   const localBatteries = getPlayerResourceAmount('batteries', source);
   const localChips = getPlayerResourceAmount('chips', source);
+  const localAluminium = getPlayerResourceAmount('aluminium', source);
 
-  const cargoOptions = ['stone','coal','gas','crudeOil','co2','carbon','oxygen','iron','silicon','lithium','copperOre','copper','batteries','buildingMaterials','machines','uranium','processedUranium','nuclearFuel','steel']
+  const cargoOptions = ['stone','coal','gas','crudeOil','co2','carbon','oxygen','iron','silicon','lithium','copperOre','copper','batteries','buildingMaterials','machines','uranium','processedUranium','nuclearFuel','steel','bauxite','aluminiumOxide','aluminium']
     .map(key => `<option value="${key}">${resourceIcons[key] || ''} ${resourceNames[key] || key}</option>`).join('');
 
   rocketCargoSlots = rocketCargoSlots.slice(0, 3);
@@ -1884,10 +1904,10 @@ function renderRocketWindow(body) {
     <div class="rocket-build-box"><strong>🏗️ Herkules 1</strong><small>45 t Stahl · 30 Sekunden Bauzeit · 120 t/L Kapazität</small>${factoryQueue.length && factoryQueue[0]==='hercules1' ? `<div class="rocket-progress"><i style="width:${Math.min(100,(60-factoryRemaining)/60*100)}%"></i></div>` : ''}<button id="build-hercules" ${!rocketFactoryHasCapacity(source) || localSteel < 45 ? 'disabled' : ''}>🚀 Herkules 1 bauen – 45 t Stahl</button></div>
     <div class="rocket-stock">Herkules 1 verfügbar: <strong>${stock1}</strong></div>
 
-    <div class="rocket-build-box hercules2-box"><strong>🚀 Herkules 2</strong><small>300 t Stahl + 50 t Batterien · 30 Sekunden Bauzeit · 300 t/L Kapazität · 3 Frachtabteilungen</small><button id="build-hercules2" ${!rocketFactoryHasCapacity(source) || localSteel < 300 || localBatteries < 50 ? 'disabled' : ''}>🚀 Herkules 2 bauen – 300 t Stahl + 50 t Batterien</button></div>
+    <div class="rocket-build-box hercules2-box"><strong>🚀 Herkules 2</strong><small>300 t Stahl + 50 t Batterien + 50 t Aluminium · 30 Sekunden Bauzeit · 300 t/L Kapazität · 3 Frachtabteilungen</small><button id="build-hercules2" ${!rocketFactoryHasCapacity(source) || localSteel < 300 || localBatteries < 50 || localAluminium < 50 ? 'disabled' : ''}>🚀 Herkules 2 bauen – 300 t Stahl + 50 t Batterien + 50 t Aluminium</button></div>
     <div class="rocket-stock">Herkules 2 verfügbar: <strong>${stock2}</strong></div>
 
-    <div class="rocket-build-box atlas1-box"><strong>🚀 Atlas 1</strong><small>340 t Stahl + 150 t Chips + 200 t Batterien · 30 Sekunden Bauzeit · 500 t/L Kapazität · 3 Frachtabteilungen · Forschung erforderlich</small><button id="build-atlas1" ${!rocketFactoryHasCapacity(source) || localSteel < 340 || localChips < 150 || localBatteries < 200 || !state.research?.completed?.atlas1 ? 'disabled' : ''}>🚀 Atlas 1 bauen – 340 t Stahl + 150 t Chips + 200 t Batterien</button></div>
+    <div class="rocket-build-box atlas1-box"><strong>🚀 Atlas 1</strong><small>340 t Stahl + 150 t Chips + 200 t Batterien + 100 t Aluminium · 30 Sekunden Bauzeit · 500 t/L Kapazität · 3 Frachtabteilungen · Forschung erforderlich</small><button id="build-atlas1" ${!rocketFactoryHasCapacity(source) || localSteel < 340 || localChips < 150 || localBatteries < 200 || localAluminium < 100 || !state.research?.completed?.atlas1 ? 'disabled' : ''}>🚀 Atlas 1 bauen – 340 t Stahl + 150 t Chips + 200 t Batterien + 100 t Aluminium</button></div>
     <div class="rocket-stock">Atlas 1 verfügbar: <strong>${stockAtlas1}</strong></div>
 
     <div class="rocket-h2-launch atlas1-launch">
@@ -2122,6 +2142,25 @@ function updateResources(now) {
       const steelMade = steelProduction(id) * delta * (needed ? used / needed : 0);
       storage.steel = Number(storage.steel || 0) + steelMade;
       state.tasks.steelProduced = Number(state.tasks.steelProduced || 0) + steelMade;
+    }
+    // Aluminiumkette: Bauxit -> Aluminiumoxid -> Aluminium.
+    if (Number(bld.aluminiumOxideRefinery || 0) > 0) {
+      const neededBauxite = 0.5 * Number(bld.aluminiumOxideRefinery) * delta;
+      const availableBauxite = Number(storage.bauxite || 0);
+      const factor = neededBauxite > 0 ? Math.min(1, availableBauxite / neededBauxite) : 0;
+      if (factor > 0) {
+        storage.bauxite = Math.max(0, availableBauxite - neededBauxite * factor);
+        storage.aluminiumOxide = Number(storage.aluminiumOxide || 0) + 0.25 * Number(bld.aluminiumOxideRefinery) * delta * factor;
+      }
+    }
+    if (Number(bld.aluminiumSmelter || 0) > 0) {
+      const neededAluminiumOxide = 0.25 * Number(bld.aluminiumSmelter) * delta;
+      const availableAluminiumOxide = Number(storage.aluminiumOxide || 0);
+      const factor = neededAluminiumOxide > 0 ? Math.min(1, availableAluminiumOxide / neededAluminiumOxide) : 0;
+      if (factor > 0) {
+        storage.aluminiumOxide = Math.max(0, availableAluminiumOxide - neededAluminiumOxide * factor);
+        storage.aluminium = Number(storage.aluminium || 0) + 0.125 * Number(bld.aluminiumSmelter) * delta * factor;
+      }
     }
     if (bld.coalPowerPlant > 0) {
       const neededCoal = coalPowerUse(id) * delta;
@@ -2390,7 +2429,7 @@ function co2ProcessingProduction(id='earth', output='carbon') {
 function renderEconomy() {
   const panel = document.querySelector('#economy-content');
   if (!panel) return;
-  const resources = [['stone','🪨','Stein'],['coal','⚫','Kohle'],['gas','🔥','Gas'],['co2','🌫️','CO₂'],['carbon','⚫','Kohlenstoff'],['oxygen','🫧','Sauerstoff'],['crudeOil','🛢️','Rohöl'],['iron','🧲','Eisen'],['steel','🔩','Stahl'],['silicon','🔷','Silizium'],['lithium','🔋','Lithium'],['copperOre','🟠','Kupfererz'],['copper','🟤','Kupfer'],['batteries','🔋','Batterien'],['buildingMaterials','🧱','Baustoffe'],['machines','⚙️','Maschinen'],['uranium','☢️','Uran'],['processedUranium','🧪','Aufbereitetes Uran'],['nuclearFuel','⚛️','Kernbrennstoff'],['chips','💾','Chips'],['helium3','🧪','Helium-3']];
+  const resources = [['stone','🪨','Stein'],['coal','⚫','Kohle'],['gas','🔥','Gas'],['co2','🌫️','CO₂'],['carbon','⚫','Kohlenstoff'],['oxygen','🫧','Sauerstoff'],['crudeOil','🛢️','Rohöl'],['iron','🧲','Eisen'],['steel','🔩','Stahl'],['silicon','🔷','Silizium'],['lithium','🔋','Lithium'],['copperOre','🟠','Kupfererz'],['copper','🟤','Kupfer'],['batteries','🔋','Batterien'],['buildingMaterials','🧱','Baustoffe'],['machines','⚙️','Maschinen'],['uranium','☢️','Uran'],['processedUranium','🧪','Aufbereitetes Uran'],['nuclearFuel','⚛️','Kernbrennstoff'],['chips','💾','Chips'],['helium3','🧪','Helium-3'],['bauxite','🪨','Bauxit'],['aluminiumOxide','⚗️','Aluminiumoxid'],['aluminium','🥈','Aluminium']];
   const rows = resources.map(([key, icon, name]) => {
     const amount = key === 'co2' ? Object.keys(bodies).reduce((sum, id) => sum + storageAmount(id, 'co2'), 0) : getPlayerResourceAmount(key, 'earth');
     let production = 0, consumption = 0;
@@ -2414,7 +2453,11 @@ function renderEconomy() {
     if (key === 'processedUranium') { production = processedUraniumProduction('earth'); consumption = nuclearFuelProcessedUraniumUse('earth'); }
     if (key === 'nuclearFuel') { production = nuclearFuelProduction('earth'); consumption = nuclearReactorNuclearFuelUse('earth'); }
     if (key === 'chips') { production = chipProduction('earth'); consumption = 0; }
-    if (key === 'helium3') production = helium3Production('earth'); consumption = fusionHelium3Use('earth');
+    if (key === 'helium3') { production = helium3Production('earth'); consumption = fusionHelium3Use('earth'); }
+    if (key === 'bauxite') production = Number(getBuildingsOnPlanet('earth').bauxiteMine || 0) * 0.5;
+    if (key === 'aluminiumOxide') { production = Number(getBuildingsOnPlanet('earth').aluminiumOxideRefinery || 0) * 0.25; consumption = Number(getBuildingsOnPlanet('earth').aluminiumSmelter || 0) * 0.25; }
+    if (key === 'aluminium') production = Number(getBuildingsOnPlanet('earth').aluminiumSmelter || 0) * 0.125;
+    if (key === 'bauxite') consumption = Number(getBuildingsOnPlanet('earth').aluminiumOxideRefinery || 0) * 0.5;
     if (key === 'coal') consumption = coalPowerUse('earth');
     return `<div class="stat"><span>${icon} ${name}</span><strong>${key === 'crudeOil' ? amount.toLocaleString('de-DE', {maximumFractionDigits:2}) + ' L' : key === 'co2' ? formatLargeTons(amount) : formatTons(amount)}</strong><small>${production.toFixed(2)} ${key === 'crudeOil' ? 'L/s' : 't/s'} Produktion · ${consumption.toFixed(key === 'crudeOil' ? 2 : 4)} ${key === 'crudeOil' ? 'L/s' : 't/s'} Verbrauch</small></div>`;
   }).join('');
@@ -2438,6 +2481,8 @@ const translations = {
   }
 };
 translations.en['Solar-Satellit']='Solar Satellite'; translations.en['Sonnensonde']='Solar Probe'; translations.en['Solarstrom']='Solar Power'; translations.en['Sonnenorbit']='Solar Orbit'; translations.en['Solar-Satelliten auf Erde']='Solar Satellites on Earth'; translations.en['Sonnensonden']='Solar Probes'; translations.en['Im Sonnenorbit']='In Solar Orbit'; translations.en['Sonnensonden im Flug']='Solar Probes in Flight'; translations.en['Solar-Satellit zur Sonne starten']='Launch Solar Satellite to the Sun'; translations.en['Forschung: Solar-Satellit']='Research: Solar Satellite'; translations.en['Forschung: Sonnensonde']='Research: Solar Probe'; translations.en['CO₂']='CO₂'; translations.en['Atmosphärendruck']='Atmospheric Pressure'; translations.en['CO₂ in Atmosphäre']='CO₂ in Atmosphere'; translations.en['Gasabbau senkt den Atmosphärendruck direkt.']='Gas extraction directly lowers atmospheric pressure.'; translations.fr['Solar-Satellit']='Satellite solaire'; translations.fr['Sonnensonde']='Sonde solaire'; translations.fr['Solarstrom']='Énergie solaire'; translations.fr['Sonnenorbit']='Orbite solaire'; translations.fr['Solar-Satelliten auf Erde']='Satellites solaires sur Terre'; translations.fr['Sonnensonden']='Sondes solaires'; translations.fr['Im Sonnenorbit']='En orbite solaire'; translations.fr['Sonnensonden im Flug']='Sondes solaires en vol'; translations.fr['Solar-Satellit zur Sonne starten']='Lancer le satellite solaire vers le Soleil'; translations.fr['Forschung: Solar-Satellit']='Recherche : Satellite solaire'; translations.fr['Forschung: Sonnensonde']='Recherche : Sonde solaire'; translations.fr['CO₂']='CO₂'; translations.fr['Atmosphärendruck']='Pression atmosphérique'; translations.fr['CO₂ in Atmosphäre']='CO₂ dans l’atmosphère'; translations.fr['Gasabbau senkt den Atmosphärendruck direkt.']='L’extraction de gaz réduit directement la pression atmosphérique.';
+translations.en['Bauxit']='Bauxite'; translations.en['Aluminiumoxid']='Aluminum oxide'; translations.en['Aluminium']='Aluminum'; translations.en['Bauxitmine']='Bauxite Mine'; translations.en['Aluminiumoxidraffinerie']='Aluminum Oxide Refinery'; translations.en['Aluminiumhütte']='Aluminum Smelter';
+translations.fr['Bauxit']='Bauxite'; translations.fr['Aluminiumoxid']='Oxyde d’aluminium'; translations.fr['Aluminium']='Aluminium'; translations.fr['Bauxitmine']='Mine de bauxite'; translations.fr['Aluminiumoxidraffinerie']='Raffinerie d’oxyde d’aluminium'; translations.fr['Aluminiumhütte']='Fonderie d’aluminium';
 translations.en['Einstellungen']='Settings'; translations.en['Musik und Spielsounds']='Music and Game Sounds'; translations.en['Hintergrundmusik']='Background Music'; translations.en['Lautstärke']='Volume'; translations.en['Spielsounds']='Game Sounds'; translations.en['Forschung, Gebäude und Raketenbau']='Research, Buildings and Rocket Construction'; translations.en['Ein']='On'; translations.en['Aus']='Off'; translations.en['Musik und Spielsounds']='Music and Game Sounds'; translations.fr['Einstellungen']='Paramètres'; translations.fr['Musik und Spielsounds']='Musique et sons du jeu'; translations.fr['Hintergrundmusik']='Musique de fond'; translations.fr['Lautstärke']='Volume'; translations.fr['Spielsounds']='Sons du jeu'; translations.fr['Forschung, Gebäude und Raketenbau']='Recherche, bâtiments et construction de fusées'; translations.fr['Ein']='Activé'; translations.fr['Aus']='Désactivé';
 
 function applyLanguage(root=document.body){
@@ -2507,5 +2552,8 @@ if (solarViewport) {
   });
 }
 requestAnimationFrame(updateResources);
+// Zusätzlich zum 5-Sekunden-Autosave den aktuellen Stand beim Verlassen sichern.
+window.addEventListener('pagehide', () => saveGame(false));
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') saveGame(false); });
 
 ['pointerdown','touchstart','keydown'].forEach(evt=>document.addEventListener(evt, unlockAudio, {once:true, passive:true}));
