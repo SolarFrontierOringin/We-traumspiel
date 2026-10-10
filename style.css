@@ -329,7 +329,7 @@ select{padding:7px;border-radius:8px;background:#eef2f7;color:#111}
 
 
 /* Kompaktes, umklappbares Wirtschafts-Dashboard */
-.economy-quick-overview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:10px 0 12px}
+.economy-quick-overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin:10px 0 12px}
 .economy-quick-card{min-width:0;padding:10px;border:1px solid #263754;border-radius:11px;background:#0c1627;display:grid;gap:5px}
 .economy-quick-card span{font-size:12px;line-height:1.25;color:#aab8ce}
 .economy-quick-card strong{font-size:clamp(14px,3.6vw,19px);overflow-wrap:anywhere}
@@ -344,14 +344,15 @@ select{padding:7px;border-radius:8px;background:#eef2f7;color:#111}
 .economy-section-content .stat small{flex-basis:100%;font-size:11px;color:#aab8ce;line-height:1.35}
 .economy-section-content .stat strong{white-space:nowrap;font-size:13px}
 @media(max-width:430px){
- .economy-quick-overview{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+ .economy-quick-overview{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
  .economy-quick-card{padding:8px 6px}
  .economy-quick-card span{font-size:10px}
  .economy-quick-card strong{font-size:13px}
+ .economy-quick-card small{font-size:10px;color:#aab8ce;line-height:1.3}
  .economy-section summary{padding:10px;font-size:13px}
  .economy-section summary span{max-width:42%;font-size:10px}
 }
-@media(min-width:761px){.economy-quick-overview{grid-template-columns:repeat(3,minmax(0,1fr))}.economy-section-content .stat{font-size:14px}}
+@media(min-width:761px){.economy-quick-overview{grid-template-columns:repeat(4,minmax(0,1fr))}.economy-section-content .stat{font-size:14px}}
 
 
 /* Kompakte, einklappbare Produktionsdetails in der Planetenansicht */
