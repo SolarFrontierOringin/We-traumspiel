@@ -717,7 +717,7 @@ function renderResearch() {
       <button class="research-button" data-research="foodFactory" ${researchAvailable() && !running && !completed.foodFactory && Number(state.research.points || 0) >= researchTypes.foodFactory.cost ? '' : 'disabled'}>${completed.foodFactory ? 'Abgeschlossen' : active?.key === 'foodFactory' ? 'Läuft …' : 'Forschen'}</button>
     </div>
     <div class="research-card ${!!completed.iceProcessingPlant ? 'research-done' : ''}">
-      <div><strong>🧊 Forschung: Eisverarbeitungsanlage</strong><small>Schaltet die Eisverarbeitungsanlage auf Luna frei. Verbraucht 0,1 t Eis/s und erzeugt 0,2 Liter Wasser/s je Anlage. Kein Stromverbrauch.</small><small>🧪 500 Forschungspunkte · ⏱️ 2:00 Minuten</small></div>
+      <div><strong>🧊 Forschung: Eisverarbeitungsanlage</strong><small>Schaltet die Eisverarbeitungsanlage auf allen Planeten außer der Sonne frei. Verbraucht 0,1 t Eis/s und erzeugt 0,2 Liter Wasser/s je Anlage. Kein Stromverbrauch.</small><small>🧪 500 Forschungspunkte · ⏱️ 2:00 Minuten</small></div>
       <button class="research-button" data-research="iceProcessingPlant" ${researchAvailable() && !running && !completed.iceProcessingPlant && Number(state.research.points || 0) >= researchTypes.iceProcessingPlant.cost ? '' : 'disabled'}>${completed.iceProcessingPlant ? 'Abgeschlossen' : active?.key === 'iceProcessingPlant' ? 'Läuft …' : 'Forschen'}</button>
     </div>
     <div class="research-card ${!!completed.algaeFarm ? 'research-done' : ''}">
@@ -988,6 +988,12 @@ function loadGame(showMessage = true) {
         }
       });
     });
+    // Luna-Eisvorkommen für ältere Spielstände einmalig ergänzen, auch wenn dort 0 gespeichert war.
+    if (bodies.luna && !bodies.luna.lunaIceDepositUpgrade20261010) {
+      bodies.luna.resources = bodies.luna.resources || {};
+      if (Number(bodies.luna.resources.ice || 0) <= 0) bodies.luna.resources.ice = 1000000;
+      bodies.luna.lunaIceDepositUpgrade20261010 = true;
+    }
     // Erd-Rohstoffvorkommen auf neue Gesamtmengen migrieren und bereits abgebaute Mengen erhalten.
     if (bodies.earth?.resources && !bodies.earth.resourceDepositUpgrade20261010) {
       const earthDeposits = [
@@ -1424,6 +1430,9 @@ function renderSystem() {
       ${buildButton('hydroelectricPlant')}
       ${buildButton('greenhouse')}
       ${buildButton('foodFactory')}
+      ${buildButton('iceProcessingPlant')}
+      ${buildButton('algaeFarm')}
+      ${buildButton('algaeFoodProcessor')}
       ${buildButton('moonBase')}
       ${buildButton('crudeOilPump')}
       ${buildButton('uraniumMine')}
@@ -1747,7 +1756,7 @@ function isBuildingAllowed(key, planetId = state.selected) {
   if (key === 'moonBase' && ['sun', 'earth'].includes(planetId)) return false;
   if (planetId === 'sun') return false;
   if (key === 'landingPad') return planetId !== 'sun';
-  if (key !== 'nuclearReactor' && key !== 'orbitalCo2Extractor' && key !== 'researchSatellite' && key !== 'iceProcessingPlant' && planetId !== 'earth' && key !== 'outpost' && Number(getBuildingsOnPlanet(planetId).outpost || 0) < 1) return false;
+  if (key !== 'nuclearReactor' && key !== 'orbitalCo2Extractor' && key !== 'researchSatellite' && key !== 'iceProcessingPlant' && key !== 'algaeFoodProcessor' && planetId !== 'earth' && key !== 'outpost' && Number(getBuildingsOnPlanet(planetId).outpost || 0) < 1) return false;
   if (key === 'heliumExtractor' && !['luna','venus','jupiter'].includes(planetId)) return false;
    if (key === 'crudeOilPump' && planetId !== 'earth') return false;
   if (key === 'hydroelectricPlant' && planetId !== 'earth') return false;
