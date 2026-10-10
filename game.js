@@ -251,7 +251,7 @@ const bodies = {
   sun: { name: 'Sonne', type: 'Stern', className: 'sun', temperature: 'ca. 5.500 °C Oberfläche', resources: {}, storage: {}, buildings: { solarSatellite: 0 }, orbit: 0 },
   mercury: { name: 'Merkur', type: 'Planet', className: 'mercury', temperature: '430 °C', resources: { stone: 20000, iron: 10000000, silicon: 8000000, lithium: 2000000, copperOre: 30000, uranium: 30000000, titanOre: 5000000 }, storage: {}, orbit: 150 },
   venus: { name: 'Venus', type: 'Planet', className: 'venus', temperature: '490 °C', resources: { stone: 10000000, iron: 50000000, silicon: 30000000, lithium: 5000000, copperOre: 3000000, uranium: 20000000, helium3: 20000000, co2: 100000000000000 }, atmosphere: { co2Initial: 100000000000000, pressureInitial: 92 }, storage: {}, orbit: 235 },
-  earth: { name: 'Erde', type: 'Startplanet', className: 'earth', temperature: 'ca. 15 °C Durchschnitt', resources: { stone: 2000000, coal: 15000000, gas: 20000000, iron: 200000000, lithium: 30000, crudeOil: 6000000, copperOre: 10000000, uranium: 1000000, bauxite: 10000000, water: 1000000000 }, storage: null, orbit: 320 },
+  earth: { name: 'Erde', type: 'Startplanet', className: 'earth', temperature: 'ca. 15 °C Durchschnitt', resources: { stone: 20000000, coal: 15000000, gas: 20000000, iron: 200000000, lithium: 2000000, crudeOil: 6000000, copperOre: 10000000, uranium: 1000000, bauxite: 10000000, water: 1000000000 }, storage: null, orbit: 320 },
   luna: { name: 'Luna', type: 'Mond der Erde', className: 'luna', temperature: 'ca. -20 °C Durchschnitt', resources: { stone: 3000000, iron: 2000000, silicon: 4000000, lithium: 6000000, helium3: 10000000, uranium: 3000000, bauxite: 10000000 }, storage: {}, orbit: 0, moonOf: 'earth', moonOrbit: 55 },
   mars: { name: 'Mars', type: 'Planet', className: 'mars', temperature: 'ca. -63 °C Durchschnitt', resources: { stone: 20000, coal: 20000, gas: 40000, uranium: 10000000, bauxite: 10000000 }, storage: {}, orbit: 405 },
   jupiter: { name: 'Jupiter', type: 'Gasplanet', className: 'jupiter', temperature: 'ca. -110 °C Wolkenobergrenze', resources: { helium3: 500000000, hydrogen: 5000000000, co2: 100000000 }, storage: {}, orbit: 515 },
@@ -1312,7 +1312,7 @@ function renderSystem() {
     const menu = document.createElement('div');
     menu.className = 'planet-build-menu';
     menu.innerHTML = `<div class="planet-build-header"><div class="planet-build-title">🏗️ Gebäude auf ${bodies[state.selected].name}</div><button type="button" class="build-menu-close" id="close-build-menu" aria-label="Gebäudemenü schließen">✕</button></div>
-      <div class="build-card steelworks-card"><div><strong>🏭 Stahlwerk</strong><small>0,2 t Stahl/s · verbraucht 0,2 t Eisen/s · erstes kostenlos · weitere 20 t Stahl</small></div><button class="build-resource" id="build-steelworks-floating" ${(getBuildingsOnPlanet(state.selected).steelworks === 0 || getPlanetStorage(state.selected).steel >= 20) ? '' : 'disabled'}>Bauen (${getBuildingsOnPlanet(state.selected).steelworks})</button></div>
+      <div class="build-card steelworks-card"><div><strong>🏭 Stahlwerk</strong><small>0,2 t Stahl/s · verbraucht 0,2 t Eisen/s · ${state.selected === 'earth' ? '1. kostenlos · 2. und 3. je 4 t Stahl · ab dem 4. je 20 t Stahl' : 'erstes kostenlos · weitere 20 t Stahl'}</small></div><button class="build-resource" id="build-steelworks-floating" ${(Number(getPlanetStorage(state.selected).steel || 0) >= (state.selected === 'earth' ? (getBuildingsOnPlanet(state.selected).steelworks === 0 ? 0 : getBuildingsOnPlanet(state.selected).steelworks < 3 ? 4 : 20) : (getBuildingsOnPlanet(state.selected).steelworks === 0 ? 0 : 20))) ? '' : 'disabled'}>Bauen (${getBuildingsOnPlanet(state.selected).steelworks})</button></div>
       ${buildButton('stoneQuarry')}
       ${buildButton('buildingMaterialsFactory')}
       ${buildButton('coalMine')}
@@ -1611,9 +1611,9 @@ function resourceRows(body) {
 
 function buildingCost(key, planetId = state.selected) {
   const b = buildingTypes[key];
-  const count = getBuildingsOnPlanet(planetId)[key];
-  // Nur die erste Eisenmine ist kostenlos. Jede weitere kostet 20 t Stahl.
-  if (key === 'ironMine' && planetId === 'earth' && count === 0) return 0;
+  const count = Number(getBuildingsOnPlanet(planetId)[key] || 0);
+  // Erde: Eisenminen 1–5 kosten je 3 t Stahl, ab der 6. Mine je 20 t.
+  if (key === 'ironMine' && planetId === 'earth') return count < 5 ? 3 : 20;
   return b.cost;
 }
 
@@ -1948,8 +1948,8 @@ function demolishBuilding(key, planetId = state.selected) {
     landingPad: { steel: 2000, buildingMaterials: 3000, machines: 500, batteries: 300 },
     outpost: { steel: 100 },
     researchLab: {},
-    steelworks: { steel: count > 1 ? 20 : 0 },
-    ironMine: { steel: (planetId === 'earth' && count === 1) ? 0 : 20 }
+    steelworks: { steel: planetId === 'earth' ? (count <= 1 ? 0 : count <= 3 ? 4 : 20) : (count > 1 ? 20 : 0) },
+    ironMine: { steel: planetId === 'earth' ? (count <= 5 ? 3 : 20) : 20 }
   };
   if (costs[key]) {
     for (const [resource, amount] of Object.entries(costs[key])) addRefund(resource, amount);
@@ -2083,15 +2083,16 @@ function buildResourceBuilding(key) {
 }
 
 function buildSteelworks() {
-  const bld = getBuildingsOnPlanet(state.selected);
-  const storage = getPlanetStorage(state.selected);
-  if (bld.steelworks === 0) {
-    bld.steelworks = 1;
-  } else {
-    if (Number(storage.steel || 0) < 20) return;
-    storage.steel -= 20;
-    bld.steelworks++;
-  }
+  const planetId = state.selected;
+  const bld = getBuildingsOnPlanet(planetId);
+  const storage = getPlanetStorage(planetId);
+  const count = Number(bld.steelworks || 0);
+  const cost = planetId === 'earth'
+    ? (count === 0 ? 0 : count < 3 ? 4 : 20)
+    : (count === 0 ? 0 : 20);
+  if (Number(storage.steel || 0) < cost) return;
+  storage.steel -= cost;
+  bld.steelworks = count + 1;
   taskProgressUpdate();
   renderSystem(); renderInfo(); renderTopResources();
   saveAfterBuild();
