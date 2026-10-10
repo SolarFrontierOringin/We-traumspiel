@@ -100,6 +100,7 @@ const state = {
     gasPlant: 0,
     co2ProcessingPlant: 0,
     orbitalCo2Extractor: 0,
+    researchSatellite: 0,
     ironMine: 0,
     lithiumMine: 0,
     copperMine: 0,
@@ -155,6 +156,7 @@ const buildingTypes = {
   co2Extraction: { name: 'CO₂-Extraktionsanlage', icon: '🌫️', resource: 'co2', rate: 0.25, cost: 25, text: 'extrahiert 0,25 t CO₂/s aus der Atmosphäre · nur auf Venus' },
   co2ProcessingPlant: { name: 'CO₂-Verarbeitung', icon: '⚗️', resource: null, rate: 0, cost: 50, text: 'verarbeitet 0,2 t CO₂/s → 0,1 t Kohlenstoff + 0,1 t Sauerstoff · auf allen Planeten außer der Sonne' },
   orbitalCo2Extractor: { name: 'Orbitaler CO₂-Extraktor', icon: '🛰️', resource: null, rate: 0, cost: 0, text: 'Gewinnt 0,5 t CO₂/s aus der Atmosphäre und lagert es im Orbit-Lager ein · nur im Orbit' },
+  researchSatellite: { name: 'Forschungssatellit', icon: '🛰️', resource: null, rate: 0, cost: 800, text: 'Erzeugt 1 Forschungspunkt/s · kein Stromverbrauch · maximal 1 Forschungssatellit pro Orbit · Baukosten: 800 t Stahl, 120 t Elektronik, 80 t Chips, 100 t Glas' },
   ironMine: { name: 'Eisenmine', icon: '🧲', resource: 'iron', rate: 0.1, cost: 20, text: '0,1 t Eisen/s' },
   bauxiteMine: { name: 'Bauxitmine', icon: '⛏️', resource: 'bauxite', rate: 0.5, cost: 40, text: '0,5 t Bauxit/s · kein Verbrauch · nur Erde, Luna und Mars' },
   aluminiumOxideRefinery: { name: 'Aluminiumoxidraffinerie', icon: '⚗️', resource: null, rate: 0, cost: 100, text: 'verbraucht 0,5 t Bauxit/s · produziert 0,25 t Aluminiumoxid/s' },
@@ -268,9 +270,10 @@ function venusCo2ExtractionRate(id='venus') { return Number(getBuildingsOnPlanet
 function getBuildingsOnPlanet(id) {
   if (id === 'earth') return state.buildings;
   if (!bodies[id].buildings) {
-    bodies[id].buildings = { foodFactory: 0, steelworks: 0, stoneQuarry: 0, buildingMaterialsFactory: 0, coalMine: 0, gasPlant: 0, co2Extraction: 0, co2ProcessingPlant: 0, orbitalCo2Extractor: 0, ironMine: 0, siliconMine: 0, lithiumMine: 0, copperMine: 0, copperSmelter: 0, lithiumRefinery: 0, machineFactory: 0, glassFactory: 0, heliumExtractor: 0, fusionReactor: 0, outpost: 0, coalPowerPlant: 0, solarPlant: 0, researchLab: 0, moonBase: 0, crudeOilPump: 0, polymerFactory: 0, electronicsFactory: 0, uraniumMine: 0, uraniumProcessingPlant: 0, nuclearFuelPlant: 0, nuclearReactor: 0, chipFactory: 0, solarSail: 0, solarSatellite: 0, solarProbe: 0, bauxiteMine: 0, aluminiumOxideRefinery: 0, aluminiumSmelter: 0, hydroelectricPlant: 0, greenhouse: 0 }
+    bodies[id].buildings = { foodFactory: 0, steelworks: 0, stoneQuarry: 0, buildingMaterialsFactory: 0, coalMine: 0, gasPlant: 0, co2Extraction: 0, co2ProcessingPlant: 0, orbitalCo2Extractor: 0, researchSatellite: 0, ironMine: 0, siliconMine: 0, lithiumMine: 0, copperMine: 0, copperSmelter: 0, lithiumRefinery: 0, machineFactory: 0, glassFactory: 0, heliumExtractor: 0, fusionReactor: 0, outpost: 0, coalPowerPlant: 0, solarPlant: 0, researchLab: 0, moonBase: 0, crudeOilPump: 0, polymerFactory: 0, electronicsFactory: 0, uraniumMine: 0, uraniumProcessingPlant: 0, nuclearFuelPlant: 0, nuclearReactor: 0, chipFactory: 0, solarSail: 0, solarSatellite: 0, solarProbe: 0, bauxiteMine: 0, aluminiumOxideRefinery: 0, aluminiumSmelter: 0, hydroelectricPlant: 0, greenhouse: 0 }
   }
   if (bodies[id].buildings.electronicsFactory === undefined) bodies[id].buildings.electronicsFactory = 0;
+  if (bodies[id].buildings.researchSatellite === undefined) bodies[id].buildings.researchSatellite = 0;
   return bodies[id].buildings;
 }
 function getPlanetStorage(id) {
@@ -395,6 +398,10 @@ const researchTypes = {
   orbitalCo2Extractor: {
     name: 'Orbitaler CO₂-Extraktor', icon: '🛰️', category: 'Raumfahrt & Infrastruktur', cost: 5000, time: 600,
     text: 'Schaltet den orbitalen CO₂-Extraktor frei. Er gewinnt CO₂ aus der Atmosphäre und lagert es im Orbit-Lager ein.'
+  },
+  researchSatellite: {
+    name: 'Forschungssatellit', icon: '🛰️', category: 'Raumfahrt & Infrastruktur', cost: 3500, time: 420,
+    text: 'Schaltet den Forschungssatelliten frei. Er erzeugt 1 Forschungspunkt/s ohne Stromverbrauch; pro Orbit ist maximal ein Satellit erlaubt.'
   },
   solarSatellite: {
     name: 'Solar-Satellit', icon: '🛰️', category: 'Industrielle Grundlagen', cost: 30000, time: 1800, chipCost: 5000,
@@ -524,7 +531,8 @@ function taskProgressUpdate() {
 }
 
 function researchLabCount() { return Number(getBuildingsOnPlanet('earth').researchLab || 0); }
-function researchPointProduction() { return researchLabCount() * 1; }
+function researchSatelliteCount() { return Object.keys(bodies).reduce((sum, id) => sum + Number(getBuildingsOnPlanet(id).researchSatellite || 0), 0); }
+function researchPointProduction() { return researchLabCount() * 1 + researchSatelliteCount() * 1; }
 function researchAvailable() { return researchLabCount() > 0; }
 
 function formatResearchTime(seconds) {
@@ -574,10 +582,25 @@ function renderResearch() {
     ? Math.min(100, ((performance.now() - active.started) / (activeDef.time * 1000)) * 100)
     : 0;
 
-  panel.innerHTML = `<div class="research-overview">
+  const orbitRows = Object.entries(bodies).map(([id, body]) => {
+    const count = Number(getBuildingsOnPlanet(id).researchSatellite || 0);
+    const status = count > 0 ? 'Satellit vorhanden' : (completed.researchSatellite ? 'Orbit frei' : 'Forschung erforderlich');
+    return `<button type="button" class="orbit-research-row" data-orbit-target="${id}">
+      <span class="orbit-research-icon">🛰️</span><span class="orbit-research-name"><strong>${body.name}</strong><small>${status}</small></span>
+      <span class="orbit-research-rate ${count ? 'good' : ''}">${count ? '+1 FP/s' : '0 FP/s'}</span>
+    </button>`;
+  }).join('');
+  panel.innerHTML = `<section class="orbit-research-overview">
+    <h3>🛰️ Orbit-Forschungsübersicht</h3>
+    <div class="orbit-research-global"><small>Globales Forschungskonto</small><strong>${Number(state.research.points || 0).toLocaleString('de-DE', {maximumFractionDigits: 0})} FP</strong><span>+${researchPointProduction().toFixed(2)} FP/s insgesamt</span></div>
+    <p class="hint">Jeder Forschungssatellit erzeugt dauerhaft 1 Forschungspunkt/s. Pro Orbit ist maximal ein Forschungssatellit erlaubt. Wähle einen Orbit, um dessen Ansicht zu öffnen.</p>
+    <div class="orbit-research-list">${orbitRows}</div>
+  </section>
+  <div class="research-overview">
     <div class="stat"><span>🔬 Forschungslabor auf Erde</span><strong>${researchLabCount()}</strong></div>
     <div class="stat"><span>🧪 Forschungspunkte</span><strong>${Number(state.research.points || 0).toFixed(0)}</strong></div>
     <div class="stat"><span>📈 Forschungspunktproduktion</span><strong>${researchPointProduction().toFixed(2)} /s</strong></div>
+    <div class="stat"><span>🛰️ Forschungssatelliten in Orbits</span><strong>${researchSatelliteCount()}</strong></div>
   </div>
   ${active && activeDef ? `<div class="research-active"><strong>${activeDef.icon} ${activeDef.name}</strong><small>${formatResearchTime(remaining)} verbleiben</small><div class="research-progress"><i style="width:${progress}%"></i></div></div>` : ''}
 
@@ -623,6 +646,10 @@ function renderResearch() {
     <div class="research-card ${!!completed.orbitalCo2Extractor ? 'research-done' : ''}">
       <div><strong>🛰️ Forschung: Orbitaler CO₂-Extraktor</strong><small>Gewinnt 0,5 t CO₂/s aus der Atmosphäre und lagert es im Orbit-Lager ein.</small><small>🧪 5.000 Forschungspunkte · ⏱️ 10:00 Minuten</small></div>
       <button class="research-button" data-research="orbitalCo2Extractor" ${researchAvailable() && !running && !completed.orbitalCo2Extractor && Number(state.research.points || 0) >= researchTypes.orbitalCo2Extractor.cost ? '' : 'disabled'}>${completed.orbitalCo2Extractor ? 'Abgeschlossen' : active?.key === 'orbitalCo2Extractor' ? 'Läuft …' : 'Forschen'}</button>
+    </div>
+    <div class="research-card ${!!completed.researchSatellite ? 'research-done' : ''}">
+      <div><strong>🛰️ Forschung: Forschungssatellit</strong><small>Erzeugt dauerhaft 1 Forschungspunkt/s ohne Stromverbrauch. Pro Orbit ist maximal ein Forschungssatellit erlaubt.</small><small>🧪 3.500 Forschungspunkte · ⏱️ 7:00 Minuten</small></div>
+      <button class="research-button" data-research="researchSatellite" ${researchAvailable() && !running && !completed.researchSatellite && Number(state.research.points || 0) >= researchTypes.researchSatellite.cost ? '' : 'disabled'}>${completed.researchSatellite ? 'Abgeschlossen' : active?.key === 'researchSatellite' ? 'Läuft …' : 'Forschen'}</button>
     </div>
     <div class="research-card ${researchedSolarSatellite ? 'research-done' : ''}">
       <div>
@@ -688,6 +715,17 @@ function renderResearch() {
   panel.querySelectorAll('.research-button').forEach(btn =>
     btn.addEventListener('click', () => startResearch(btn.dataset.research))
   );
+  panel.querySelectorAll('[data-orbit-target]').forEach(btn => btn.addEventListener('click', () => {
+    const target = btn.dataset.orbitTarget;
+    if (!bodies[target]) return;
+    state.selected = target;
+    state.viewMode = 'orbit';
+    const researchPanel = document.querySelector('#research-panel');
+    if (researchPanel) researchPanel.hidden = true;
+    renderSystem();
+    renderInfo();
+    saveGame(false);
+  }));
 }
 
 function startResearch(key) {
@@ -881,6 +919,7 @@ function loadGame(showMessage = true) {
     state.buildings.chipFactory = Number(state.buildings.chipFactory || 0);
     state.buildings.solarSail = Number(state.buildings.solarSail || 0);
     state.buildings.solarSatellite = Number(state.buildings.solarSatellite || 0);
+    state.buildings.researchSatellite = Number(state.buildings.researchSatellite || 0);
     state.buildings.solarProbe = Number(state.buildings.solarProbe || 0);
     state.processedUranium = Number(state.processedUranium || 0);
     state.nuclearFuel = Number(state.nuclearFuel || 0);
@@ -912,6 +951,7 @@ function loadGame(showMessage = true) {
        body.buildings.chipFactory = Number(body.buildings.chipFactory || 0);
        body.buildings.solarSail = Number(body.buildings.solarSail || 0);
        body.buildings.solarSatellite = Number(body.buildings.solarSatellite || 0);
+       body.buildings.researchSatellite = Number(body.buildings.researchSatellite || 0);
        body.buildings.solarProbe = Number(body.buildings.solarProbe || 0);
        body.buildings.rocketFactory = Number(body.buildings.rocketFactory || 0);
        body.buildings.landingPad = Number(body.buildings.landingPad || 0);
@@ -1246,7 +1286,7 @@ function renderSystem() {
       { title: '🏭 Verarbeitung & Industrie', keys: ['steelworks','buildingMaterialsFactory','co2ProcessingPlant','aluminiumOxideRefinery','aluminiumSmelter','copperSmelter','lithiumRefinery','machineFactory','glassFactory','electronicsFactory','chipFactory','polymerFactory','foodFactory','uraniumProcessingPlant','nuclearFuelPlant'] },
       { title: '⚡ Energie & Forschung', keys: ['coalPowerPlant','solarPlant','fusionReactor','nuclearReactor','researchLab'] },
       { title: '🚀 Raumfahrt & Infrastruktur', keys: ['co2Extraction','moonBase','solarSail','outpost','rocketFactory','landingPad','solarSatellite','solarProbe'] },
-      { title: '🛰️ Orbit-Gebäude', keys: ['orbitalCo2Extractor'] }
+      { title: '🛰️ Orbit-Gebäude', keys: ['orbitalCo2Extractor','researchSatellite'] }
     ];
     const specialKeys = {
       'build-steelworks-floating':'steelworks', 'build-coal-power':'coalPowerPlant',
@@ -1513,6 +1553,11 @@ function isBuildingAllowed(key, planetId = state.selected) {
     if (state.viewMode !== 'orbit' && hasPlanetSurface(planetId)) return false;
     if (Number(bodies[planetId]?.resources?.co2 || 0) <= 0) return false;
   }
+  if (key === 'researchSatellite') {
+    if (state.viewMode !== 'orbit') return false;
+    if (Number(getBuildingsOnPlanet(planetId).researchSatellite || 0) >= 1) return false;
+    if (!state.research?.completed?.researchSatellite) return false;
+  }
   if (key === 'bauxiteMine' && !['earth','luna','mars'].includes(planetId)) return false;
   if (['aluminiumOxideRefinery','aluminiumSmelter'].includes(key) && planetId === 'sun') return false;
   // CO₂-Verarbeitung kann auf allen Planeten außer der Sonne gebaut werden.
@@ -1524,7 +1569,7 @@ function isBuildingAllowed(key, planetId = state.selected) {
   if (key === 'moonBase' && ['sun', 'earth'].includes(planetId)) return false;
   if (planetId === 'sun') return false;
   if (key === 'landingPad') return planetId !== 'sun';
-  if (key !== 'nuclearReactor' && key !== 'orbitalCo2Extractor' && planetId !== 'earth' && key !== 'outpost' && Number(getBuildingsOnPlanet(planetId).outpost || 0) < 1) return false;
+  if (key !== 'nuclearReactor' && key !== 'orbitalCo2Extractor' && key !== 'researchSatellite' && planetId !== 'earth' && key !== 'outpost' && Number(getBuildingsOnPlanet(planetId).outpost || 0) < 1) return false;
   if (key === 'heliumExtractor' && !['luna','venus','jupiter'].includes(planetId)) return false;
    if (key === 'crudeOilPump' && planetId !== 'earth') return false;
   if (key === 'hydroelectricPlant' && planetId !== 'earth') return false;
@@ -1639,6 +1684,15 @@ function buildButton(key) {
     return `<div class="build-card"><div><strong>${b.icon} ${b.name}</strong><small>${b.text} · Kosten: 50 t Aluminium, 40 t Polymere, 20 t Chips, 190 t Stahl${status}</small></div><button class="build-resource" data-building="${key}" ${affordable ? '' : 'disabled'}>Bauen (${count || 0})</button></div>`;
   }
 
+  if (key === 'researchSatellite') {
+    const researched = !!state.research?.completed?.researchSatellite;
+    const costs = { steel: 800, electronics: 120, chips: 80, glass: 100 };
+    const orbitHasSatellite = Number(getBuildingsOnPlanet(state.selected).researchSatellite || 0) >= 1;
+    const affordable = researched && isBuildingAllowed(key) && Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount);
+    const status = !researched ? ' · Voraussetzung: Forschung „Forschungssatellit“' : orbitHasSatellite ? ' · Dieser Orbit hat bereits einen Forschungssatelliten' : state.viewMode !== 'orbit' ? ' · Nur in der Orbit-Ansicht baubar' : '';
+    return `<div class="build-card"><div><strong>${b.icon} ${b.name}</strong><small>${b.text}${status}</small></div><button class="build-resource" data-building="${key}" ${affordable ? '' : 'disabled'}>Bauen (${count || 0}/1)</button></div>`;
+  }
+
   if (key === 'solarPlant') {
     const researched = !!state.research?.completed?.solarPlant;
     const affordable = Number(storage.steel || 0) >= 30 &&
@@ -1718,6 +1772,7 @@ function renderOrbitInfo(body) {
     <div class="stat"><span>Raketen im Orbit</span><strong>${orbitalLanded.length}</strong></div>
     <div class="stat"><span>Raketen auf Oberfläche</span><strong>${landed.length}</strong></div>
     <div class="stat"><span>Gesamt im Raumverkehr</span><strong>${orbitalRockets.length}</strong></div>
+    <div class="stat"><span>🛰️ Forschungssatellit</span><strong>${Number(getBuildingsOnPlanet(state.selected).researchSatellite || 0)}/1 · +${Number(getBuildingsOnPlanet(state.selected).researchSatellite || 0)} FP/s</strong></div>
     <hr><h3>🚀 Raumverkehr</h3>${rocketList}
     <hr>${renderRocketWindow(body)}`;
 }
@@ -1792,6 +1847,7 @@ function demolishBuilding(key, planetId = state.selected) {
   // Kosten werden anhand der tatsächlich verwendeten Bau-Logik zurückerstattet.
   const costs = {
     orbitalCo2Extractor: { aluminium: 50, polymers: 40, chips: 20, steel: 190 },
+    researchSatellite: { steel: 800, electronics: 120, chips: 80, glass: 100 },
     polymerFactory: { steel: 500, buildingMaterials: 500, electronics: 200 },
     moonBase: { steel: 300, buildingMaterials: 100 },
     uraniumMine: { steel: 300, buildingMaterials: 200 },
@@ -1847,6 +1903,10 @@ function buildResourceBuilding(key) {
     if (!Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount)) return;
     for (const [r, amount] of Object.entries(costs)) storage[r] -= amount;
     bld.orbitalCo2Extractor = Number(bld.orbitalCo2Extractor || 0) + 1;
+  } else if (key === 'researchSatellite') {
+    const costs = { steel: 800, electronics: 120, chips: 80, glass: 100 };
+    if (!state.research?.completed?.researchSatellite || !isBuildingAllowed(key, planetId) || Number(bld.researchSatellite || 0) >= 1 || !Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount)) return;
+    for (const [r, amount] of Object.entries(costs)) storage[r] -= amount;
   } else if (key === 'polymerFactory') {
     if (!state.research?.completed?.polymerFactory) return;
     if (Number(storage.steel || 0) < 500 || Number(storage.buildingMaterials || 0) < 500 || Number(storage.electronics || 0) < 200) return;

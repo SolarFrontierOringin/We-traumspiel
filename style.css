@@ -280,3 +280,19 @@ select{padding:7px;border-radius:8px;background:#eef2f7;color:#111}
 
 /* Neptun: blauer äußerer Gasplanet */
 .neptune{width:48px;height:48px;background:radial-gradient(circle at 32% 28%,#7de4ff 0%,#2588d8 35%,#06428f 72%,#021b4b 100%);box-shadow:0 0 18px rgba(36,139,255,.55)}
+
+
+/* Orbit-Forschungsübersicht */
+.orbit-research-overview{margin:10px 0 16px;padding:12px;border:1px solid #315273;border-radius:14px;background:#0a1424}
+.orbit-research-overview h3{margin:0 0 10px}
+.orbit-research-global{display:grid;gap:4px;padding:12px;border-radius:11px;background:#101e32;margin-bottom:8px}
+.orbit-research-global small,.orbit-research-global span{color:#aab8ce}
+.orbit-research-global strong{font-size:clamp(22px,5vw,30px)}
+.orbit-research-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:7px;margin-top:10px}
+.orbit-research-row{display:flex;align-items:center;gap:9px;width:100%;min-width:0;padding:10px;text-align:left;border:1px solid #263754;border-radius:10px;background:#0c1627}
+.orbit-research-row:hover{background:#14243d}
+.orbit-research-icon{font-size:22px}
+.orbit-research-name{display:grid;gap:3px;flex:1;min-width:0}
+.orbit-research-name small{font-size:11px;color:#aab8ce}
+.orbit-research-rate{white-space:nowrap;font-size:12px;color:#aab8ce}
+@media(max-width:430px){.orbit-research-list{grid-template-columns:1fr}}
