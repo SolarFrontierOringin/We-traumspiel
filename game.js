@@ -1486,6 +1486,8 @@ function renderSystem() {
     menu.style.left = '50%';
     menu.style.top = 'calc(50% - 150px)';
     solarSystem.appendChild(menu);
+    // Klasse nach dem Einfügen erneut setzen, damit CSS sicher greift.
+    solarSystem.classList.add('building-menu-open');
     // Nach dem Bauen vertikale und horizontale Scrollposition wiederherstellen.
     menu.scrollTop = previousBuildMenuScrollTop;
     menu.scrollLeft = previousBuildMenuScrollLeft;
