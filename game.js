@@ -251,7 +251,7 @@ const bodies = {
   sun: { name: 'Sonne', type: 'Stern', className: 'sun', temperature: 'ca. 5.500 °C Oberfläche', resources: {}, storage: {}, buildings: { solarSatellite: 0 }, orbit: 0 },
   mercury: { name: 'Merkur', type: 'Planet', className: 'mercury', temperature: '430 °C', resources: { stone: 20000, iron: 10000000, silicon: 8000000, lithium: 2000000, copperOre: 30000, uranium: 30000000, titanOre: 5000000 }, storage: {}, orbit: 150 },
   venus: { name: 'Venus', type: 'Planet', className: 'venus', temperature: '490 °C', resources: { stone: 10000000, iron: 50000000, silicon: 30000000, lithium: 5000000, copperOre: 3000000, uranium: 20000000, helium3: 20000000, co2: 100000000000000 }, atmosphere: { co2Initial: 100000000000000, pressureInitial: 92 }, storage: {}, orbit: 235 },
-  earth: { name: 'Erde', type: 'Startplanet', className: 'earth', temperature: 'ca. 15 °C Durchschnitt', resources: { stone: 20000, coal: 20000, gas: 40000, iron: 200000000, lithium: 30000, crudeOil: 6000000, copperOre: 30000, uranium: 1000000, bauxite: 10000000, water: 1000000000 }, storage: null, orbit: 320 },
+  earth: { name: 'Erde', type: 'Startplanet', className: 'earth', temperature: 'ca. 15 °C Durchschnitt', resources: { stone: 20000, coal: 15000000, gas: 20000000, iron: 200000000, lithium: 30000, crudeOil: 6000000, copperOre: 10000000, uranium: 1000000, bauxite: 10000000, water: 1000000000 }, storage: null, orbit: 320 },
   luna: { name: 'Luna', type: 'Mond der Erde', className: 'luna', temperature: 'ca. -20 °C Durchschnitt', resources: { stone: 3000000, iron: 2000000, silicon: 4000000, lithium: 6000000, helium3: 10000000, uranium: 3000000, bauxite: 10000000 }, storage: {}, orbit: 0, moonOf: 'earth', moonOrbit: 55 },
   mars: { name: 'Mars', type: 'Planet', className: 'mars', temperature: 'ca. -63 °C Durchschnitt', resources: { stone: 20000, coal: 20000, gas: 40000, uranium: 10000000, bauxite: 10000000 }, storage: {}, orbit: 405 },
   jupiter: { name: 'Jupiter', type: 'Gasplanet', className: 'jupiter', temperature: 'ca. -110 °C Wolkenobergrenze', resources: { helium3: 500000000, hydrogen: 5000000000, co2: 100000000 }, storage: {}, orbit: 515 },
@@ -405,19 +405,19 @@ const researchTypes = {
     text: 'Schaltet die CO₂-Verarbeitung frei. Sie kann auf allen Planeten außer der Sonne gebaut werden.'
   },
   orbitalCo2Extractor: {
-    name: 'Orbitaler CO₂-Extraktor', icon: '🛰️', category: 'Raumfahrt & Infrastruktur', cost: 5000, time: 600,
+    name: 'Orbitaler CO₂-Extraktor', icon: '🛰️', category: 'Weltraumforschung', cost: 5000, time: 600,
     text: 'Schaltet den orbitalen CO₂-Extraktor frei. Er gewinnt CO₂ aus der Atmosphäre und lagert es im Orbit-Lager ein.'
   },
   researchSatellite: {
-    name: 'Forschungssatellit', icon: '🛰️', category: 'Raumfahrt & Infrastruktur', cost: 3500, time: 420,
+    name: 'Forschungssatellit', icon: '🛰️', category: 'Weltraumforschung', cost: 3500, time: 420,
     text: 'Schaltet den Forschungssatelliten frei. Er erzeugt 1 Forschungspunkt/s ohne Stromverbrauch; pro Orbit ist maximal ein Satellit erlaubt.'
   },
   solarSatellite: {
-    name: 'Solar-Satellit', icon: '🛰️', category: 'Industrielle Grundlagen', cost: 30000, time: 1800, chipCost: 5000,
+    name: 'Solar-Satellit', icon: '🛰️', category: 'Weltraumforschung', cost: 30000, time: 1800, chipCost: 5000,
     text: 'Schaltet den Bau von Solar-Satelliten frei. Ein Solar-Satellit erzeugt im Sonnenorbit 10.000 MW/s.'
   },
   solarProbe: {
-    name: 'Sonnensonde', icon: '🚀', category: 'Raketentechnik', cost: 50000, time: 2700, chipCost: 10000,
+    name: 'Sonnensonde', icon: '🚀', category: 'Weltraumforschung', cost: 50000, time: 2700, chipCost: 10000,
     text: 'Schaltet die Sonnensonde frei. Sie transportiert einen Solar-Satelliten von der Erde in den Sonnenorbit.'
   }
 };
@@ -655,22 +655,9 @@ function renderResearch() {
       </div>
       <button class="research-button" data-research="moonBase" ${researchAvailable() && !running && !completed.moonBase && Number(state.research.points || 0) >= researchTypes.moonBase.cost ? '' : 'disabled'}>${completed.moonBase ? 'Abgeschlossen' : active?.key === 'moonBase' ? 'Läuft …' : 'Forschen'}</button>
     </div>
-    <div class="research-card ${!!completed.orbitalCo2Extractor ? 'research-done' : ''}">
-      <div><strong>🛰️ Forschung: Orbitaler CO₂-Extraktor</strong><small>Gewinnt 0,5 t CO₂/s aus der Atmosphäre und lagert es im Orbit-Lager ein.</small><small>🧪 5.000 Forschungspunkte · ⏱️ 10:00 Minuten</small></div>
-      <button class="research-button" data-research="orbitalCo2Extractor" ${researchAvailable() && !running && !completed.orbitalCo2Extractor && Number(state.research.points || 0) >= researchTypes.orbitalCo2Extractor.cost ? '' : 'disabled'}>${completed.orbitalCo2Extractor ? 'Abgeschlossen' : active?.key === 'orbitalCo2Extractor' ? 'Läuft …' : 'Forschen'}</button>
-    </div>
-    <div class="research-card ${!!completed.researchSatellite ? 'research-done' : ''}">
-      <div><strong>🛰️ Forschung: Forschungssatellit</strong><small>Erzeugt dauerhaft 1 Forschungspunkt/s ohne Stromverbrauch. Pro Orbit ist maximal ein Forschungssatellit erlaubt.</small><small>🧪 3.500 Forschungspunkte · ⏱️ 7:00 Minuten</small></div>
-      <button class="research-button" data-research="researchSatellite" ${researchAvailable() && !running && !completed.researchSatellite && Number(state.research.points || 0) >= researchTypes.researchSatellite.cost ? '' : 'disabled'}>${completed.researchSatellite ? 'Abgeschlossen' : active?.key === 'researchSatellite' ? 'Läuft …' : 'Forschen'}</button>
-    </div>
-    <div class="research-card ${researchedSolarSatellite ? 'research-done' : ''}">
-      <div>
-        <strong>🛰️ Forschung: Solar-Satellit</strong>
-        <small>Schaltet den Bau von Solar-Satelliten frei. Sie liefern im Sonnenorbit 10.000 MW/s.</small>
-        <small>🧪 30.000 Forschungspunkte · 💾 5.000 Chips · ⏱️ 30:00 Minuten</small>
-      </div>
-      <button class="research-button" data-research="solarSatellite" ${canResearchSolarSatellite ? '' : 'disabled'}>${researchedSolarSatellite ? 'Abgeschlossen' : active?.key === 'solarSatellite' ? 'Läuft …' : 'Forschen'}</button>
-    </div>
+
+
+
   </div>
 
   <h3>2️⃣ Raketentechnik</h3>
@@ -687,14 +674,7 @@ function renderResearch() {
       <div><strong>🚀 Forschung: Schwerlastraketen – Titan 1</strong><small>Schaltet Titan 1 frei: 1.500 t/L Kapazität, mehrere Frachtarten pro Mission, 120 Sekunden Bauzeit und 20 Sekunden Flugzeit zur Luna.</small><small>🧪 25.000 Forschungspunkte · ⏱️ 20:00 Minuten</small></div>
       <button class="research-button" data-research="titan1" ${canResearchTitan1 ? '' : 'disabled'}>${researchedTitan1 ? 'Abgeschlossen' : active?.key === 'titan1' ? 'Läuft …' : 'Forschen'}</button>
     </div>
-    <div class="research-card ${researchedSolarProbe ? 'research-done' : ''}">
-      <div>
-        <strong>🚀 Forschung: Sonnensonde</strong>
-        <small>Schaltet die Sonnensonde frei. Sie transportiert Solar-Satelliten von der Erde in den Sonnenorbit.</small>
-        <small>🧪 50.000 Forschungspunkte · 💾 10.000 Chips · ⏱️ 45:00 Minuten</small>
-      </div>
-      <button class="research-button" data-research="solarProbe" ${canResearchSolarProbe ? '' : 'disabled'}>${researchedSolarProbe ? 'Abgeschlossen' : active?.key === 'solarProbe' ? 'Läuft …' : 'Forschen'}</button>
-    </div>
+
   </div>
 
   <h3>3️⃣ Fortschrittliche Forschung</h3>
@@ -725,6 +705,34 @@ function renderResearch() {
         <small>Nach Abschluss kann die CO₂-Verarbeitung auf allen Planeten außer der Sonne gebaut werden.</small>
       </div>
       <button class="research-button" data-research="co2ProcessingPlant" ${canResearchCo2Processing ? '' : 'disabled'}>${researchedCo2Processing ? 'Abgeschlossen' : active?.key === 'co2ProcessingPlant' ? 'Läuft …' : 'Forschen'}</button>
+    </div>
+  </div>
+
+  <h3>4️⃣ Weltraumforschung</h3>
+  <div class="research-tree">
+    <div class="research-card ${!!completed.orbitalCo2Extractor ? 'research-done' : ''}">
+      <div><strong>🛰️ Forschung: Orbitaler CO₂-Extraktor</strong><small>Gewinnt 0,5 t CO₂/s aus der Atmosphäre und lagert es im Orbit-Lager ein.</small><small>🧪 5.000 Forschungspunkte · ⏱️ 10:00 Minuten</small></div>
+      <button class="research-button" data-research="orbitalCo2Extractor" ${researchAvailable() && !running && !completed.orbitalCo2Extractor && Number(state.research.points || 0) >= researchTypes.orbitalCo2Extractor.cost ? '' : 'disabled'}>${completed.orbitalCo2Extractor ? 'Abgeschlossen' : active?.key === 'orbitalCo2Extractor' ? 'Läuft …' : 'Forschen'}</button>
+    </div>
+    <div class="research-card ${!!completed.researchSatellite ? 'research-done' : ''}">
+      <div><strong>🛰️ Forschung: Forschungssatellit</strong><small>Erzeugt dauerhaft 1 Forschungspunkt/s ohne Stromverbrauch. Pro Orbit ist maximal ein Forschungssatellit erlaubt.</small><small>🧪 3.500 Forschungspunkte · ⏱️ 7:00 Minuten</small></div>
+      <button class="research-button" data-research="researchSatellite" ${researchAvailable() && !running && !completed.researchSatellite && Number(state.research.points || 0) >= researchTypes.researchSatellite.cost ? '' : 'disabled'}>${completed.researchSatellite ? 'Abgeschlossen' : active?.key === 'researchSatellite' ? 'Läuft …' : 'Forschen'}</button>
+    </div>
+    <div class="research-card ${researchedSolarSatellite ? 'research-done' : ''}">
+      <div>
+        <strong>🛰️ Forschung: Solar-Satellit</strong>
+        <small>Schaltet den Bau von Solar-Satelliten frei. Sie liefern im Sonnenorbit 10.000 MW/s.</small>
+        <small>🧪 30.000 Forschungspunkte · 💾 5.000 Chips · ⏱️ 30:00 Minuten</small>
+      </div>
+      <button class="research-button" data-research="solarSatellite" ${canResearchSolarSatellite ? '' : 'disabled'}>${researchedSolarSatellite ? 'Abgeschlossen' : active?.key === 'solarSatellite' ? 'Läuft …' : 'Forschen'}</button>
+    </div>
+    <div class="research-card ${researchedSolarProbe ? 'research-done' : ''}">
+      <div>
+        <strong>🚀 Forschung: Sonnensonde</strong>
+        <small>Schaltet die Sonnensonde frei. Sie transportiert Solar-Satelliten von der Erde in den Sonnenorbit.</small>
+        <small>🧪 50.000 Forschungspunkte · 💾 10.000 Chips · ⏱️ 45:00 Minuten</small>
+      </div>
+      <button class="research-button" data-research="solarProbe" ${canResearchSolarProbe ? '' : 'disabled'}>${researchedSolarProbe ? 'Abgeschlossen' : active?.key === 'solarProbe' ? 'Läuft …' : 'Forschen'}</button>
     </div>
   </div>`;
 
@@ -865,7 +873,7 @@ function loadGame(showMessage = true) {
     // Neue Rohstoffvorkommen aus späteren Spielversionen auch in alten Spielständen ergänzen.
     const defaultResources = {
       mercury: { stone: 20000, iron: 10000000, silicon: 8000000, lithium: 2000000, copperOre: 30000, uranium: 30000000 },
-      earth: { lithium: 30000, copperOre: 30000, crudeOil: 6000000, uranium: 1000000, bauxite: 10000000, water: 1000000000 },
+      earth: { coal: 15000000, gas: 20000000, lithium: 30000, copperOre: 10000000, crudeOil: 6000000, uranium: 1000000, bauxite: 10000000, water: 1000000000 },
       luna: { stone: 3000000, lithium: 6000000, helium3: 10000000, uranium: 3000000, bauxite: 10000000 },
       venus: { stone: 10000000, iron: 50000000, silicon: 30000000, lithium: 5000000, copperOre: 3000000, uranium: 20000000, helium3: 20000000, co2: 100000000000000 },
       jupiter: { helium3: 500000000, hydrogen: 5000000000, co2: 100000000 },
@@ -880,6 +888,24 @@ function loadGame(showMessage = true) {
         }
       });
     });
+    // Erd-Rohstoffvorkommen auf neue Gesamtmengen migrieren und bereits abgebaute Mengen erhalten.
+    if (bodies.earth?.resources && !bodies.earth.resourceDepositUpgrade20261010) {
+      const earthDeposits = [
+        ['coal', 20000, 15000000],
+        ['gas', 40000, 20000000],
+        ['copperOre', 30000, 10000000]
+      ];
+      earthDeposits.forEach(([resource, oldTotal, newTotal]) => {
+        const current = Number(bodies.earth.resources[resource]);
+        if (!Number.isFinite(current)) {
+          bodies.earth.resources[resource] = newTotal;
+        } else if (current <= oldTotal) {
+          const alreadyMined = Math.max(0, oldTotal - current);
+          bodies.earth.resources[resource] = Math.max(0, newTotal - alreadyMined);
+        }
+      });
+      bodies.earth.resourceDepositUpgrade20261010 = true;
+    }
     // Eisen-Vorkommen der Erde auf die neue Gesamtmenge von 200.000.000 t anheben.
     // Bei alten Spielständen wird bereits abgebaute Menge berücksichtigt.
     if (bodies.earth?.resources) {
