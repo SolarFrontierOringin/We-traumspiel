@@ -251,7 +251,7 @@ const bodies = {
   sun: { name: 'Sonne', type: 'Stern', className: 'sun', temperature: 'ca. 5.500 °C Oberfläche', resources: {}, storage: {}, buildings: { solarSatellite: 0 }, orbit: 0 },
   mercury: { name: 'Merkur', type: 'Planet', className: 'mercury', temperature: '430 °C', resources: { stone: 20000, iron: 10000000, silicon: 8000000, lithium: 2000000, copperOre: 30000, uranium: 30000000, titanOre: 5000000 }, storage: {}, orbit: 150 },
   venus: { name: 'Venus', type: 'Planet', className: 'venus', temperature: '490 °C', resources: { stone: 10000000, iron: 50000000, silicon: 30000000, lithium: 5000000, copperOre: 3000000, uranium: 20000000, helium3: 20000000, co2: 100000000000000 }, atmosphere: { co2Initial: 100000000000000, pressureInitial: 92 }, storage: {}, orbit: 235 },
-  earth: { name: 'Erde', type: 'Startplanet', className: 'earth', temperature: 'ca. 15 °C Durchschnitt', resources: { stone: 20000, coal: 15000000, gas: 20000000, iron: 200000000, lithium: 30000, crudeOil: 6000000, copperOre: 10000000, uranium: 1000000, bauxite: 10000000, water: 1000000000 }, storage: null, orbit: 320 },
+  earth: { name: 'Erde', type: 'Startplanet', className: 'earth', temperature: 'ca. 15 °C Durchschnitt', resources: { stone: 2000000, coal: 15000000, gas: 20000000, iron: 200000000, lithium: 30000, crudeOil: 6000000, copperOre: 10000000, uranium: 1000000, bauxite: 10000000, water: 1000000000 }, storage: null, orbit: 320 },
   luna: { name: 'Luna', type: 'Mond der Erde', className: 'luna', temperature: 'ca. -20 °C Durchschnitt', resources: { stone: 3000000, iron: 2000000, silicon: 4000000, lithium: 6000000, helium3: 10000000, uranium: 3000000, bauxite: 10000000 }, storage: {}, orbit: 0, moonOf: 'earth', moonOrbit: 55 },
   mars: { name: 'Mars', type: 'Planet', className: 'mars', temperature: 'ca. -63 °C Durchschnitt', resources: { stone: 20000, coal: 20000, gas: 40000, uranium: 10000000, bauxite: 10000000 }, storage: {}, orbit: 405 },
   jupiter: { name: 'Jupiter', type: 'Gasplanet', className: 'jupiter', temperature: 'ca. -110 °C Wolkenobergrenze', resources: { helium3: 500000000, hydrogen: 5000000000, co2: 100000000 }, storage: {}, orbit: 515 },
@@ -478,6 +478,24 @@ const taskTypes = {
     unit: 'Gebäude',
     reward: 5,
     getProgress: () => Object.keys(bodies).filter(id => id !== 'sun').reduce((sum, id) => sum + Number(getBuildingsOnPlanet(id).rocketFactory || 0), 0)
+  },
+  moon_flight_luna: {
+    group: 'moon',
+    name: 'Fliege zu Luna',
+    description: 'Schicke eine Rakete zum Mond oder in den Mondorbit.',
+    target: 1,
+    unit: 'Flug',
+    reward: 0,
+    getProgress: () => Number(state.tasks?.lunaFlights || 0)
+  },
+  moon_outpost: {
+    group: 'moon',
+    name: 'Ganz schön heimisch',
+    description: 'Baue 1 Außenposten auf Luna.',
+    target: 1,
+    unit: 'Gebäude',
+    reward: 0,
+    getProgress: () => Number(getBuildingsOnPlanet('luna').outpost || 0)
   }
 };
 
@@ -512,10 +530,17 @@ function renderTasks() {
   const panel = document.querySelector('#tasks-content');
   if (!panel) return;
   updateTasks();
-  const keys = Object.keys(taskTypes);
-  const completedCount = keys.filter(taskIsComplete).length;
+  const groups = [
+    { id: 'intro', label: '🎯 Einführung', keys: Object.keys(taskTypes).filter(key => !taskTypes[key].group) },
+    { id: 'moon', label: '🌙 Griff nach dem Mond', keys: Object.keys(taskTypes).filter(key => taskTypes[key].group === 'moon') }
+  ];
+  const activeGroup = panel.dataset.activeTaskGroup || 'intro';
+  const keys = groups.find(group => group.id === activeGroup)?.keys || groups[0].keys;
   panel.innerHTML = `
-    <div class="stat"><span>🎯 Einführung</span><strong>${completedCount} / ${keys.length}</strong></div>
+    <div class="task-tabs" role="tablist" aria-label="Aufgabengruppen">
+      ${groups.map(group => `<button type="button" class="task-tab ${group.id === activeGroup ? 'active' : ''}" data-task-group="${group.id}" role="tab" aria-selected="${group.id === activeGroup}">${group.label}</button>`).join('')}
+    </div>
+    ${groups.map(group => `<div class="stat task-group-summary" ${group.id === activeGroup ? '' : 'hidden'}><span>${group.label}</span><strong>${group.keys.filter(taskIsComplete).length} / ${group.keys.length}</strong></div>`).join('')}
     <div class="tasks-list">
       ${keys.map(key => {
         const t = taskTypes[key];
@@ -531,6 +556,10 @@ function renderTasks() {
         </div>`;
       }).join('')}
     </div>`;
+  panel.querySelectorAll('[data-task-group]').forEach(button => button.addEventListener('click', () => {
+    panel.dataset.activeTaskGroup = button.dataset.taskGroup;
+    renderTasks();
+  }));
 }
 function taskProgressUpdate() {
   const changed = updateTasks();
@@ -864,6 +893,7 @@ function loadGame(showMessage = true) {
     state.tasks.completed = state.tasks.completed || {};
     state.tasks.ironMined = Number(state.tasks.ironMined || 0);
     state.tasks.steelProduced = Number(state.tasks.steelProduced || 0);
+    state.tasks.lunaFlights = Number(state.tasks.lunaFlights || 0);
     state.lastUpdate = performance.now();
     Object.assign(bodies, data.bodies);
     orbitMissions.splice(0, orbitMissions.length, ...(Array.isArray(data.orbitMissions) ? data.orbitMissions : []));
@@ -2170,6 +2200,13 @@ function rocketLaunchError(message) {
   if (typeof showSaveStatus === 'function') showSaveStatus('🚀 ' + message, false);
 }
 
+function recordLunaFlight(destination) {
+  if (destination !== 'luna') return;
+  if (!state.tasks) state.tasks = { completed: {}, ironMined: 0, steelProduced: 0, lunaFlights: 0 };
+  state.tasks.lunaFlights = Number(state.tasks.lunaFlights || 0) + 1;
+  taskProgressUpdate();
+}
+
 function launchHercules1(source, destination, quantity) {
   ensureRocketData(source);
   quantity = Math.max(1, Math.min(Number(quantity) || 1, rocketStock[source] || 0));
@@ -2202,7 +2239,8 @@ function launchHercules1(source, destination, quantity) {
       cargo: { resource: rocketCargoResource, amount: amountPerRocket }
     });
   }
-  renderInfo(); renderTopResources();
+  recordLunaFlight(destination);
+  renderInfo(); renderTopResources(); saveGame(false);
 }
 
 function launchHercules2(source, destination) {
@@ -2243,7 +2281,8 @@ function launchHercules2(source, destination) {
     compartments: 3,
     cargo: cargo
   });
-  renderInfo(); renderTopResources();
+  recordLunaFlight(destination);
+  renderInfo(); renderTopResources(); saveGame(false);
 }
 
 function launchAtlas1(source, destination) {
@@ -2260,7 +2299,8 @@ function launchAtlas1(source, destination) {
   for (const slot of cargo) { sourceStorage[slot.resource] = Number(sourceStorage[slot.resource] || 0) - slot.amount; if (Math.abs(sourceStorage[slot.resource]) < 0.000001) sourceStorage[slot.resource] = 0; }
   rocketStockAtlas1[source]--;
   rockets.push({ id: Date.now() + Math.random(), name: rocketTypes.atlas1.name, type: 'atlas1', from: source, to: destination, started: performance.now(), duration: atlasFlightTime(destination) * 1000, status: 'outbound', capacity: 500, compartments: 3, cargo: cargo });
-  renderInfo(); renderTopResources();
+  recordLunaFlight(destination);
+  renderInfo(); renderTopResources(); saveGame(false);
 }
 
 function launchTitan1(source, destination) {
@@ -2278,6 +2318,7 @@ function launchTitan1(source, destination) {
   rocketStockTitan1[source]--;
   const duration = destination === 'luna' ? 20000 : (flightTimes[destination] || 20) * 1000;
   rockets.push({ id: Date.now() + Math.random(), name: rocketTypes.titan1.name, type: 'titan1', from: source, to: destination, started: performance.now(), duration, status: 'outbound', capacity: 1500, compartments: 3, cargo });
+  recordLunaFlight(destination);
   renderInfo(); renderTopResources(); saveGame(false);
 }
 
@@ -2483,6 +2524,7 @@ function createOrbitMission() {
   stocks[source]--;
   const now = Date.now();
   orbitMissions.push({ id: orbitMissionCounter++, source, destination, rocketType: type, resource, amount, waitSeconds, status: 'waiting', createdAt: now, nextLaunchAt: now, message: '' });
+  recordLunaFlight(destination);
   saveGame(false); renderInfo();
 }
 
