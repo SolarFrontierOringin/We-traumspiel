@@ -1191,6 +1191,9 @@ function updateRocketVisuals(now = performance.now()) {
 }
 
 function renderSystem() {
+  // Scrollposition des Gebäudemenüs sichern, da der DOM beim Bauen neu aufgebaut wird.
+  const previousBuildMenu = solarSystem.querySelector('.planet-build-menu');
+  const previousBuildMenuScrollTop = previousBuildMenu ? previousBuildMenu.scrollTop : 0;
   solarSystem.innerHTML = '';
   Object.values(bodies).forEach(body => {
     if (body.orbit > 0) {
@@ -1480,6 +1483,8 @@ function renderSystem() {
     menu.style.left = '50%';
     menu.style.top = 'calc(50% - 150px)';
     solarSystem.appendChild(menu);
+    // Nach dem Bauen bleibt das Menü an derselben Scrollposition statt nach oben zu springen.
+    menu.scrollTop = previousBuildMenuScrollTop;
 
     menu.querySelector('#close-build-menu').addEventListener('click', () => {
       state.buildMenuOpen = false;
