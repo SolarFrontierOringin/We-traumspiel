@@ -3524,6 +3524,17 @@ if(languageSelect){
   languageSelect.addEventListener('change', () => setLanguage(languageSelect.value));
 }
 
+
+// Updatefenster: erscheint bei jedem Seitenstart erneut und wird nur über X geschlossen.
+const updatePopup = document.querySelector('#update-popup');
+const updatePopupClose = document.querySelector('#update-popup-close');
+if (updatePopup && updatePopupClose) {
+  updatePopupClose.addEventListener('click', () => {
+    updatePopup.hidden = true;
+    updatePopup.setAttribute('aria-hidden', 'true');
+  });
+}
+
 setupMainMenu();
 setupSaveMenu();
 setupTopPanels();

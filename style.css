@@ -408,3 +408,33 @@ select{padding:7px;border-radius:8px;background:#eef2f7;color:#111}
   opacity: 1 !important;
   isolation: isolate !important;
 }
+
+
+/* Start-Updatefenster */
+.update-popup-overlay{
+  position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;
+  padding:14px;background:rgba(0,5,14,.86);backdrop-filter:blur(5px);
+}
+.update-popup-overlay[hidden]{display:none!important}
+.update-popup-card{
+  position:relative;width:min(100%,520px);max-height:88vh;overflow-y:auto;
+  padding:20px;border:1px solid #3c5c82;border-radius:20px;
+  background:linear-gradient(155deg,#101f35 0%,#07101e 72%);color:#eef4ff;
+  box-shadow:0 22px 70px rgba(0,0,0,.55);overscroll-behavior:contain;
+}
+.update-popup-close{
+  position:absolute;right:10px;top:10px;width:40px;height:40px;padding:0;
+  border:1px solid #49617f;border-radius:12px;background:#20334d;color:#fff;
+  font-size:20px;z-index:2;
+}
+.update-popup-art{height:104px;margin:-3px 36px 10px 0;overflow:hidden;border-radius:12px;background:radial-gradient(ellipse at 75% 50%,#152f56,#07101e 72%)}
+.update-popup-art svg{display:block;width:100%;height:104px}
+.update-popup-kicker{font-size:11px;letter-spacing:1.5px;font-weight:800;color:#82cfff}
+.update-popup-card h2{font-size:clamp(21px,5vw,27px);line-height:1.2;margin:8px 38px 14px 0}
+.update-popup-message{padding:12px;border-left:3px solid #69caff;border-radius:0 10px 10px 0;background:#0c1a2d;line-height:1.5;margin:0 0 8px}
+.update-popup-plea{font-weight:800;color:#ffd36a;margin:8px 0 18px}
+.update-popup-card h3{font-size:17px;margin:0 0 8px}
+.update-popup-card ul{padding-left:22px;margin:0;line-height:1.5}
+.update-popup-card li{margin:7px 0}
+.update-popup-footnote{margin:16px 0 0;padding-top:12px;border-top:1px solid #263754;color:#aab8ce;font-size:13px;line-height:1.45}
+@media(max-width:430px){.update-popup-overlay{padding:9px}.update-popup-card{padding:16px;border-radius:16px;max-height:90vh}.update-popup-art,.update-popup-art svg{height:86px}.update-popup-art{margin-right:34px}.update-popup-card h3{font-size:16px}}
