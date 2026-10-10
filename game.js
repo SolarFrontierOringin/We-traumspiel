@@ -1194,6 +1194,9 @@ function renderSystem() {
   // Scrollposition des Gebäudemenüs sichern, da der DOM beim Bauen neu aufgebaut wird.
   const previousBuildMenu = solarSystem.querySelector('.planet-build-menu');
   const previousBuildMenuScrollTop = previousBuildMenu ? previousBuildMenu.scrollTop : 0;
+  const previousBuildMenuScrollLeft = previousBuildMenu ? previousBuildMenu.scrollLeft : 0;
+  // Im Baumenü die Planeten, ihre Beschriftungen und Umlaufbahnen ausblenden.
+  solarSystem.classList.toggle('building-menu-open', state.selected !== 'sun' && state.buildMenuOpen);
   solarSystem.innerHTML = '';
   Object.values(bodies).forEach(body => {
     if (body.orbit > 0) {
@@ -1483,8 +1486,15 @@ function renderSystem() {
     menu.style.left = '50%';
     menu.style.top = 'calc(50% - 150px)';
     solarSystem.appendChild(menu);
-    // Nach dem Bauen bleibt das Menü an derselben Scrollposition statt nach oben zu springen.
+    // Nach dem Bauen vertikale und horizontale Scrollposition wiederherstellen.
     menu.scrollTop = previousBuildMenuScrollTop;
+    menu.scrollLeft = previousBuildMenuScrollLeft;
+    requestAnimationFrame(() => {
+      if (menu.isConnected) {
+        menu.scrollTop = previousBuildMenuScrollTop;
+        menu.scrollLeft = previousBuildMenuScrollLeft;
+      }
+    });
 
     menu.querySelector('#close-build-menu').addEventListener('click', () => {
       state.buildMenuOpen = false;

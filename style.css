@@ -367,3 +367,20 @@ select{padding:7px;border-radius:8px;background:#eef2f7;color:#111}
 .planet-economy-content .stat{gap:8px;flex-wrap:wrap;padding:6px 0;font-size:13px}
 .planet-economy-content .stat strong{font-size:13px;white-space:nowrap}
 @media(max-width:430px){.planet-economy-details>summary{padding:10px;font-size:13px}.planet-economy-content{padding:3px 9px 7px}.planet-economy-content .stat{font-size:12px}}
+
+
+/* Gebäudemenü: Planetenansicht ausblenden und Menü im Vordergrund halten */
+.solar-system.building-menu-open .body,
+.solar-system.building-menu-open .orbit,
+.solar-system.building-menu-open .moon-orbit,
+.solar-system.building-menu-open .moon-system,
+.solar-system.building-menu-open #rocket-layer {
+  display: none !important;
+}
+.solar-system .planet-build-menu {
+  z-index: 20;
+  background: #09111f;
+  border: 1px solid #263754;
+  border-radius: 14px;
+  box-shadow: 0 12px 32px rgba(0,0,0,.55);
+}
