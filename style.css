@@ -369,18 +369,22 @@ select{padding:7px;border-radius:8px;background:#eef2f7;color:#111}
 @media(max-width:430px){.planet-economy-details>summary{padding:10px;font-size:13px}.planet-economy-content{padding:3px 9px 7px}.planet-economy-content .stat{font-size:12px}}
 
 
-/* Gebäudemenü: Planetenansicht ausblenden und Menü im Vordergrund halten */
-.solar-system.building-menu-open .body,
-.solar-system.building-menu-open .orbit,
-.solar-system.building-menu-open .moon-orbit,
-.solar-system.building-menu-open .moon-system,
-.solar-system.building-menu-open #rocket-layer {
+/* Gebäudemenü: alle Elemente der Planetenansicht ausblenden.
+   Die Planeten liegen in .body-wrap; nur .body auszublenden lässt Labels
+   und Gebäude-Symbole sichtbar. Deshalb werden im Baumenü alle direkten
+   Kinder außer dem Menü selbst entfernt. */
+.solar-system.building-menu-open > :not(.planet-build-menu) {
   display: none !important;
 }
 .solar-system .planet-build-menu {
-  z-index: 20;
+  position: absolute;
+  left: 50%;
+  top: calc(50% - 150px);
+  transform: translateX(-50%);
+  z-index: 9999;
   background: #09111f;
   border: 1px solid #263754;
   border-radius: 14px;
-  box-shadow: 0 12px 32px rgba(0,0,0,.55);
+  box-shadow: 0 12px 32px rgba(0,0,0,.75);
+  isolation: isolate;
 }
