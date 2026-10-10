@@ -281,18 +281,40 @@ select{padding:7px;border-radius:8px;background:#eef2f7;color:#111}
 /* Neptun: blauer äußerer Gasplanet */
 .neptune{width:48px;height:48px;background:radial-gradient(circle at 32% 28%,#7de4ff 0%,#2588d8 35%,#06428f 72%,#021b4b 100%);box-shadow:0 0 18px rgba(36,139,255,.55)}
 
-
-/* Orbit-Forschungsübersicht */
-.orbit-research-overview{margin:10px 0 16px;padding:12px;border:1px solid #315273;border-radius:14px;background:#0a1424}
-.orbit-research-overview h3{margin:0 0 10px}
-.orbit-research-global{display:grid;gap:4px;padding:12px;border-radius:11px;background:#101e32;margin-bottom:8px}
-.orbit-research-global small,.orbit-research-global span{color:#aab8ce}
-.orbit-research-global strong{font-size:clamp(22px,5vw,30px)}
-.orbit-research-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:7px;margin-top:10px}
-.orbit-research-row{display:flex;align-items:center;gap:9px;width:100%;min-width:0;padding:10px;text-align:left;border:1px solid #263754;border-radius:10px;background:#0c1627}
+/* Forschung – Layout an die mobile Orbit-Forschungsübersicht angepasst */
+.research-panel{
+  border-radius:28px;
+  padding:26px;
+  background:#09111f;
+  border-color:#263754;
+}
+.research-head{align-items:center;gap:14px;margin-bottom:18px}
+.research-head h2{font-size:clamp(30px,5.8vw,42px);line-height:1.15;margin:0 0 14px;font-weight:800;letter-spacing:-.5px}
+.research-head .hint{font-size:clamp(16px,4vw,21px);line-height:1.55;max-width:520px}
+.research-head .icon-button{flex:0 0 66px;width:66px;height:66px;padding:0;border-radius:18px;font-size:30px;display:grid;place-items:center}
+.orbit-research-overview{margin-top:18px;padding:22px;border:1px solid #344b6b;border-radius:26px;background:#0b1525}
+.orbit-research-overview h3{font-size:clamp(21px,4.8vw,30px);line-height:1.25;margin:0 0 20px;font-weight:800}
+.orbit-research-global{display:grid;gap:7px;padding:22px;border-radius:22px;background:#112033;margin-bottom:30px}
+.orbit-research-global small{font-size:clamp(14px,3.6vw,19px);color:#aab8ce}
+.orbit-research-global strong{font-size:clamp(27px,5.5vw,40px);line-height:1.2;font-weight:800;letter-spacing:.2px}
+.orbit-research-global span{font-size:clamp(17px,4vw,23px);color:#aab8ce}
+.orbit-research-overview>p.hint{font-size:clamp(16px,4vw,21px);line-height:1.55;margin:0 0 28px}
+.orbit-research-list{display:grid;gap:12px}
+.orbit-research-row{width:100%;display:flex;align-items:center;gap:14px;min-height:98px;padding:18px 20px;border:1px solid #293a54;border-radius:20px;background:#0d1728;color:#eef4ff;text-align:left}
 .orbit-research-row:hover{background:#14243d}
-.orbit-research-icon{font-size:22px}
-.orbit-research-name{display:grid;gap:3px;flex:1;min-width:0}
-.orbit-research-name small{font-size:11px;color:#aab8ce}
-.orbit-research-rate{white-space:nowrap;font-size:12px;color:#aab8ce}
-@media(max-width:430px){.orbit-research-list{grid-template-columns:1fr}}
+.orbit-research-icon{flex:0 0 42px;font-size:34px;text-align:center}
+.orbit-research-name{display:grid;gap:4px;flex:1;min-width:0}
+.orbit-research-name strong{font-size:clamp(16px,3.8vw,22px);font-weight:800;line-height:1.25}
+.orbit-research-name small{font-size:clamp(13px,3.2vw,17px);font-weight:700;color:#aab8ce;line-height:1.3}
+.orbit-research-rate{flex:0 0 auto;font-size:clamp(13px,3.3vw,18px);font-weight:800;color:#aab8ce;white-space:nowrap}
+@media(max-width:430px){
+  .research-panel{padding:18px 14px;border-radius:24px}
+  .research-head{align-items:flex-start;gap:10px}
+  .research-head h2{margin-top:4px;margin-bottom:14px}
+  .research-head .icon-button{flex-basis:66px;width:66px;height:66px}
+  .orbit-research-overview{padding:18px 14px;border-radius:24px}
+  .orbit-research-global{padding:20px 22px;margin-bottom:30px}
+  .orbit-research-row{min-height:98px;padding:16px 12px;gap:10px;border-radius:19px}
+  .orbit-research-icon{flex-basis:34px;font-size:30px}
+  .orbit-research-rate{font-size:13px}
+}
