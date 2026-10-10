@@ -3213,12 +3213,36 @@ function renderEconomy() {
     if (key === 'grain' || key === 'vegetables') production = greenhouseCropProduction('earth') * newBuildingPowerFactor('earth');
     if (key === 'grain') consumption = foodFactoryGrainUse('earth') * newBuildingPowerFactor('earth');
     if (key === 'food') production = foodFactoryProduction('earth') * newBuildingPowerFactor('earth');
-    return `<div class="stat"><span>${icon} ${name}</span><strong>${['crudeOil','water'].includes(key) ? amount.toLocaleString('de-DE', {maximumFractionDigits:2}) + ' L' : key === 'co2' ? formatLargeTons(amount) : formatTons(amount)}</strong><small>${production.toFixed(2)} ${['crudeOil','water'].includes(key) ? 'L/s' : 't/s'} Produktion · ${consumption.toFixed(['crudeOil','water'].includes(key) ? 2 : 4)} ${['crudeOil','water'].includes(key) ? 'L/s' : 't/s'} Verbrauch</small></div>`;
+    return `<div class="stat economy-resource-row" data-economy-resource="${key}"><span>${icon} ${name}</span><strong>${['crudeOil','water'].includes(key) ? amount.toLocaleString('de-DE', {maximumFractionDigits:2}) + ' L' : key === 'co2' ? formatLargeTons(amount) : formatTons(amount)}</strong><small>${production.toFixed(2)} ${['crudeOil','water'].includes(key) ? 'L/s' : 't/s'} Produktion · ${consumption.toFixed(['crudeOil','water'].includes(key) ? 2 : 4)} ${['crudeOil','water'].includes(key) ? 'L/s' : 't/s'} Verbrauch</small></div>`;
   }).join('');
   const b = getBuildingsOnPlanet('earth');
   const total = Object.values(b).reduce((a,v)=>a+Number(v||0),0);
   const chain = batteryProductionChain('earth');
-  panel.innerHTML = `<div class="stat"><span>Gebäude gesamt</span><strong>${total}</strong></div><h3>📊 Produktionsübersicht</h3>${rows}<hr><h3>🔋 Produktionskette: Batterien</h3><div class="stat"><span>🔋 Lithium →</span><strong>${formatTons(chain.lithium)}/s</strong></div><div class="stat"><span>🟤 Kupfer →</span><strong>${formatTons(chain.copper)}/s</strong></div><div class="stat"><span>🔋 Batterien</span><strong>${formatTons(chain.batteries)}/s</strong></div><hr><h3>🏭 Gebäude</h3>${Object.entries(b).map(([key,count])=>`<div class="stat"><span>${buildingTypes[key]?.icon || '🏭'} ${buildingTypes[key]?.name || key}</span><strong>${count}</strong></div>`).join('')}`;
+  const resourceGroups = [
+    { id:'stocks', title:'📦 Rohstoffe & Lager', keys:['stone','coal','gas','co2','carbon','oxygen','crudeOil','polymers','iron','steel','silicon','lithium','copperOre','copper','batteries','buildingMaterials','machines','electronics','uranium','processedUranium','nuclearFuel','chips','helium3','bauxite','aluminiumOxide','aluminium','water','grain','vegetables','food'] },
+    { id:'production', title:'🏭 Produktion & Verbrauch', keys:['iron','steel','silicon','lithium','copperOre','copper','batteries','buildingMaterials','machines','electronics','uranium','processedUranium','nuclearFuel','chips','helium3','bauxite','aluminiumOxide','aluminium','water','grain','vegetables','food','crudeOil','polymers','coal','co2','carbon','oxygen'] }
+  ];
+  const rowByKey = Object.fromEntries([...rows.matchAll(/<div class="stat economy-resource-row" data-economy-resource="([^"]+)">[\s\S]*?<\/div>/g)].map(m=>[m[1],m[0]]));
+  const stockRows = resourceGroups[0].keys.map(k=>rowByKey[k]).filter(Boolean).join('');
+  const productionKeys = ['iron','steel','silicon','lithium','copperOre','copper','batteries','buildingMaterials','machines','electronics','uranium','processedUranium','nuclearFuel','chips','helium3','bauxite','aluminiumOxide','aluminium','water','grain','vegetables','food','crudeOil','polymers','coal','co2','carbon','oxygen'];
+  const productionRows = productionKeys.map(k=>rowByKey[k]).filter(Boolean).join('');
+  const buildingRows = Object.entries(b).map(([key,count])=>`<div class="stat economy-building-row"><span>${buildingTypes[key]?.icon || '🏭'} ${buildingTypes[key]?.name || key}</span><strong>${count}</strong></div>`).join('');
+  const energyProduction = electricityProduction('earth');
+  const energyConsumption = Number(b.hydroelectricPlant || 0) * 3 + Number(b.greenhouse || 0) * 2 + foodFactoryElectricityUse('earth') + crudeOilElectricityUse('earth');
+  const energyBalance = energyProduction - energyConsumption;
+  panel.innerHTML = `
+    <div class="economy-quick-overview">
+      <div class="economy-quick-card"><span>Gebäude gesamt</span><strong>${total}</strong></div>
+      <div class="economy-quick-card"><span>⛏️ Eisenproduktion</span><strong>${ironProduction('earth').toFixed(2)} t/s</strong></div>
+      <div class="economy-quick-card"><span>🔩 Stahlproduktion</span><strong>${steelProduction('earth').toFixed(2)} t/s</strong></div>
+    </div>
+    <details class="economy-section"><summary>📦 Rohstoffe & Lager <span>Bestände aller Rohstoffe</span></summary><div class="economy-section-content">${stockRows}</div></details>
+    <details class="economy-section"><summary>🏭 Produktion & Verbrauch <span>Förderung und Materialflüsse</span></summary><div class="economy-section-content">${productionRows}</div></details>
+    <details class="economy-section"><summary>🔋 Produktionskette: Batterien <span>Details anzeigen</span></summary><div class="economy-section-content"><div class="stat"><span>🔋 Lithium →</span><strong>${formatTons(chain.lithium)}/s</strong></div><div class="stat"><span>🟤 Kupfer →</span><strong>${formatTons(chain.copper)}/s</strong></div><div class="stat"><span>🔋 Batterien</span><strong>${formatTons(chain.batteries)}/s</strong></div></div></details>
+    <details class="economy-section"><summary>⚡ Energie <span>Strombilanz anzeigen</span></summary><div class="economy-section-content"><div class="stat"><span>Stromproduktion</span><strong>${energyProduction.toFixed(2)} MW</strong></div><div class="stat"><span>Stromverbrauch</span><strong>${energyConsumption.toFixed(2)} MW</strong></div><div class="stat"><span>Bilanz</span><strong class="${energyBalance < 0 ? 'bad' : 'good'}">${energyBalance.toFixed(2)} MW</strong></div></div></details>
+    <details class="economy-section"><summary>🏢 Gebäude auf Erde <span>${total} Gebäude</span></summary><div class="economy-section-content">${buildingRows}</div></details>
+    <details class="economy-section"><summary>🚀 Raketen & Transport <span>Transportübersicht</span></summary><div class="economy-section-content"><p class="hint">Öffne die Raketen- und Orbitansicht für Flüge, Fracht und Raketenbestände.</p></div></details>`;
+
 }
 
 // ==========================================

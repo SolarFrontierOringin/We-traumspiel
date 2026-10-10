@@ -326,3 +326,29 @@ select{padding:7px;border-radius:8px;background:#eef2f7;color:#111}
 .task-tab.active{background:#2776d2;border-color:#4c94e6;color:#fff}
 .task-group-summary[hidden]{display:none}
 @media(max-width:430px){.task-tabs{grid-template-columns:1fr}.task-tab{text-align:left}}
+
+
+/* Kompaktes, umklappbares Wirtschafts-Dashboard */
+.economy-quick-overview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:10px 0 12px}
+.economy-quick-card{min-width:0;padding:10px;border:1px solid #263754;border-radius:11px;background:#0c1627;display:grid;gap:5px}
+.economy-quick-card span{font-size:12px;line-height:1.25;color:#aab8ce}
+.economy-quick-card strong{font-size:clamp(14px,3.6vw,19px);overflow-wrap:anywhere}
+.economy-section{border:1px solid #263754;border-radius:12px;background:#0a1424;margin:8px 0;overflow:hidden}
+.economy-section summary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px;background:#101e32;cursor:pointer;font-weight:750;list-style:none}
+.economy-section summary::-webkit-details-marker{display:none}
+.economy-section summary::before{content:"▸";color:#aab8ce;margin-right:2px}
+.economy-section[open] summary::before{content:"▾"}
+.economy-section summary span{font-size:11px;font-weight:500;color:#aab8ce;text-align:right}
+.economy-section-content{padding:4px 10px 9px}
+.economy-section-content .stat{gap:8px;flex-wrap:wrap;padding:7px 0;font-size:13px}
+.economy-section-content .stat small{flex-basis:100%;font-size:11px;color:#aab8ce;line-height:1.35}
+.economy-section-content .stat strong{white-space:nowrap;font-size:13px}
+@media(max-width:430px){
+ .economy-quick-overview{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+ .economy-quick-card{padding:8px 6px}
+ .economy-quick-card span{font-size:10px}
+ .economy-quick-card strong{font-size:13px}
+ .economy-section summary{padding:10px;font-size:13px}
+ .economy-section summary span{max-width:42%;font-size:10px}
+}
+@media(min-width:761px){.economy-quick-overview{grid-template-columns:repeat(3,minmax(0,1fr))}.economy-section-content .stat{font-size:14px}}
