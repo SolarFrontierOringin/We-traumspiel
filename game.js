@@ -1190,10 +1190,19 @@ function loadGame(showMessage = true) {
   }
 }
 
+let restartingGame = false;
+
 function restartGame() {
-  localStorage.removeItem(SAVE_KEY);
-  localStorage.removeItem(LEGACY_SAVE_KEY);
-  localStorage.removeItem(BACKUP_SAVE_KEY);
+  // Verhindert, dass pagehide/visibilitychange beim Neuladen den alten Stand
+  // direkt wieder in localStorage schreibt.
+  restartingGame = true;
+  try {
+    localStorage.removeItem(SAVE_KEY);
+    localStorage.removeItem(LEGACY_SAVE_KEY);
+    localStorage.removeItem(BACKUP_SAVE_KEY);
+  } catch (error) {
+    console.error('Spielstand konnte nicht vollständig gelöscht werden:', error);
+  }
   location.reload();
 }
 
@@ -3667,7 +3676,7 @@ if (solarViewport) {
 }
 requestAnimationFrame(updateResources);
 // Zusätzlich zum 5-Sekunden-Autosave den aktuellen Stand beim Verlassen sichern.
-window.addEventListener('pagehide', () => saveGame(false));
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') saveGame(false); });
+window.addEventListener('pagehide', () => { if (!restartingGame) saveGame(false); });
+document.addEventListener('visibilitychange', () => { if (!restartingGame && document.visibilityState === 'hidden') saveGame(false); });
 
 ['pointerdown','touchstart','keydown'].forEach(evt=>document.addEventListener(evt, unlockAudio, {once:true, passive:true}));
