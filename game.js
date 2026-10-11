@@ -434,8 +434,8 @@ function processColonists(id, delta) {
     body.colonistGrowthAccumulator = 0;
     return;
   }
-  // Mittleres Wachstum: bei 100 % durchschnittlich ein neuer Kolonist je 10 Minuten.
-  body.colonistGrowthAccumulator += delta * (body.colonistGrowthPercent / 100) / 600;
+  // Bei 100 % Wachstum entsteht durchschnittlich alle 30 Sekunden ein neuer Kolonist.
+  body.colonistGrowthAccumulator += delta * (body.colonistGrowthPercent / 100) / 30;
   while (body.colonistGrowthAccumulator >= 1 && housingFree(id) > 0) {
     if (!addColonistToHousing(id)) break;
     body.colonistGrowthAccumulator -= 1;
@@ -697,6 +697,69 @@ const taskTypes = {
     unit: 't Lebensmittel',
     reward: 0,
     getProgress: () => Number(state.tasks?.foodProduced || 0)
+  },
+  colonists_water_300: {
+    group: 'colonists',
+    name: 'Ein bisschen Durst',
+    description: 'Baue ein Wasserkraftwerk auf der Erde und produziere insgesamt 300 L Wasser.',
+    target: 300,
+    unit: 'L Wasser',
+    reward: 0,
+    getProgress: () => Number(getBuildingsOnPlanet('earth').hydroelectricPlant || 0) > 0 ? Number(state.tasks?.waterProduced || 0) : 0
+  },
+  colonists_research_greenhouse: {
+    group: 'colonists',
+    name: 'Der Teller ist voll',
+    description: 'Schließe die Forschung „Gewächshaus“ ab.',
+    target: 1,
+    unit: 'Forschung',
+    reward: 0,
+    getProgress: () => state.research?.completed?.greenhouse ? 1 : 0
+  },
+  colonists_build_greenhouse: {
+    group: 'colonists',
+    name: 'Ein voller Teller und ein warmer Platz',
+    description: 'Baue ein Gewächshaus.',
+    target: 1,
+    unit: 'Gebäude',
+    reward: 0,
+    getProgress: () => Object.keys(bodies).filter(id => id !== 'sun').reduce((sum, id) => sum + Number(getBuildingsOnPlanet(id).greenhouse || 0), 0)
+  },
+  colonists_research_food_factory: {
+    group: 'colonists',
+    name: 'Fülle die leeren Bäuche',
+    description: 'Schließe die Forschung „Lebensmittelfabrik“ ab.',
+    target: 1,
+    unit: 'Forschung',
+    reward: 0,
+    getProgress: () => state.research?.completed?.foodFactory ? 1 : 0
+  },
+  colonists_food_50: {
+    group: 'colonists',
+    name: 'Etwas essen',
+    description: 'Produziere insgesamt 50 t Lebensmittel.',
+    target: 50,
+    unit: 't Lebensmittel',
+    reward: 0,
+    getProgress: () => Number(state.tasks?.foodProduced || 0)
+  },
+  colonists_residential_house: {
+    group: 'colonists',
+    name: 'Ein Platz unter der Sonne',
+    description: 'Baue ein Wohnhaus auf der Erde.',
+    target: 1,
+    unit: 'Gebäude',
+    reward: 0,
+    getProgress: () => Number(getBuildingsOnPlanet('earth').residentialHouse || 0)
+  },
+  colonists_arrival: {
+    group: 'colonists',
+    name: 'Wir sind da, 50 Kolonisten schließen sich dir an',
+    description: 'Erledige alle sechs Aufgaben im Reiter „Die Kolonisten“, damit 50 Kolonisten zu deiner Kolonie stoßen.',
+    target: 6,
+    unit: 'Aufgaben',
+    reward: 0,
+    getProgress: () => ['colonists_water_300','colonists_research_greenhouse','colonists_build_greenhouse','colonists_research_food_factory','colonists_food_50','colonists_residential_house'].filter(key => taskIsComplete(key)).length
   }
 };
 
@@ -715,14 +778,26 @@ function taskIsComplete(key) {
   return !!state.tasks?.completed?.[key] || taskProgress(key) >= taskTypes[key].target;
 }
 function updateTasks() {
-  if (!state.tasks) state.tasks = { completed: {}, ironMined: 0, steelProduced: 0, foodProduced: 0 };
+  if (!state.tasks) state.tasks = { completed: {}, ironMined: 0, steelProduced: 0, foodProduced: 0, waterProduced: 0 };
   if (state.tasks.foodProduced === undefined) state.tasks.foodProduced = 0;
+  if (state.tasks.waterProduced === undefined) state.tasks.waterProduced = 0;
   state.tasks.completed = state.tasks.completed || {};
   let changed = false;
   Object.keys(taskTypes).forEach(key => {
     if (!state.tasks.completed[key] && taskProgress(key) >= taskTypes[key].target) {
       state.tasks.completed[key] = true;
       if (taskTypes[key].reward) state.research.points = Number(state.research.points || 0) + taskTypes[key].reward;
+      if (key === 'colonists_arrival' && !state.tasks.colonistsArrivalRewarded) {
+        let remaining = 50;
+        const housingOrder = ['earth', ...Object.keys(bodies).filter(id => id !== 'sun' && id !== 'earth')];
+        for (const id of housingOrder) {
+          if (remaining <= 0) break;
+          remaining -= addColonistsToPlanet(id, remaining);
+        }
+        state.tasks.colonistsArrivalRewarded = true;
+        state.tasks.colonistsArrivalAdded = 50 - remaining;
+        saveGame(false);
+      }
       changed = true;
     }
   });
@@ -734,7 +809,8 @@ function renderTasks() {
   updateTasks();
   const groups = [
     { id: 'intro', label: '🎯 Einführung', keys: Object.keys(taskTypes).filter(key => !taskTypes[key].group) },
-    { id: 'moon', label: '🌙 Griff nach dem Mond', keys: Object.keys(taskTypes).filter(key => taskTypes[key].group === 'moon') }
+    { id: 'moon', label: '🌙 Griff nach dem Mond', keys: Object.keys(taskTypes).filter(key => taskTypes[key].group === 'moon') },
+    { id: 'colonists', label: '👥 Die Kolonisten', keys: Object.keys(taskTypes).filter(key => taskTypes[key].group === 'colonists') }
   ];
   const activeGroup = panel.dataset.activeTaskGroup || 'intro';
   const keys = groups.find(group => group.id === activeGroup)?.keys || groups[0].keys;
@@ -1114,10 +1190,12 @@ function loadGame(showMessage = true) {
     state.co2 = Number(data.state.co2 || 0);
     state.research = data.state.research || { points: 0, active: null, completed: {} };
     state.research.completed = state.research.completed || {};
-    state.tasks = data.state.tasks || { completed: {}, ironMined: 0, steelProduced: 0 };
+    state.tasks = data.state.tasks || { completed: {}, ironMined: 0, steelProduced: 0, foodProduced: 0, waterProduced: 0 };
     state.tasks.completed = state.tasks.completed || {};
     state.tasks.ironMined = Number(state.tasks.ironMined || 0);
     state.tasks.steelProduced = Number(state.tasks.steelProduced || 0);
+    state.tasks.foodProduced = Number(state.tasks.foodProduced || 0);
+    state.tasks.waterProduced = Number(state.tasks.waterProduced || 0);
     state.tasks.lunaFlights = Number(state.tasks.lunaFlights || 0);
     state.lastUpdate = performance.now();
     Object.assign(bodies, data.bodies);
@@ -3382,7 +3460,11 @@ function updateResources(now) {
       const powerFactor = newBuildingPowerFactor(id);
       const availableWater = Number(planet.resources.water || 0);
       const produced = Math.min(availableWater, hydroelectricWaterProduction(id) * delta * powerFactor);
-      if (produced > 0) { planet.resources.water = availableWater - produced; storage.water = Number(storage.water || 0) + produced; }
+      if (produced > 0) {
+        planet.resources.water = availableWater - produced;
+        storage.water = Number(storage.water || 0) + produced;
+        state.tasks.waterProduced = Number(state.tasks.waterProduced || 0) + produced;
+      }
     }
 
     // Gewächshaus: benötigt Strom und Wasser, um Getreide und Gemüse zu produzieren.
@@ -3752,7 +3834,7 @@ function renderColonistsPanel() {
       <div class="colonists-summary-card"><span>🍲 Lebensmittelbedarf</span><strong data-food-need>${foodNeed.toLocaleString('de-DE',{maximumFractionDigits:6})} t/s</strong></div>
       <div class="colonists-summary-card"><span>💧 Wasserbedarf</span><strong data-water-need>${waterNeed.toLocaleString('de-DE',{maximumFractionDigits:4})} L/s</strong></div>
     </div>
-    <p class="hint">Kolonisten starten bei 0. Die ersten ziehen nach Abschluss eines später festgelegten Auftrags ein. Wachstum ist vorläufig auf mittleres Tempo eingestellt: 1 Kolonist je 10 Minuten bei 100 %, sofern Wohnraum, Lebensmittel und Wasser vorhanden sind.</p>
+    <p class="hint">Kolonisten starten bei 0. Die ersten ziehen nach Abschluss eines später festgelegten Auftrags ein. Bei 100 % Wachstum entsteht durchschnittlich alle 30 Sekunden ein neuer Kolonist, sofern Wohnraum, Lebensmittel und Wasser vorhanden sind.</p>
     <div class="colonists-planet-list">
       ${ids.map(id => {
         const body = ensureColonistData(id);
