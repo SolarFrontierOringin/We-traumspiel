@@ -3814,37 +3814,58 @@ document.addEventListener('visibilitychange', () => {
 });
 
 
-// Sonnensystem auf Mobilgeräten mit zwei Fingern verschieben und per Pinch zoomen.
-// Ein-Finger-Gesten bleiben für normales Scrollen und Planetenauswahl verfügbar.
+// Sonnensystem: zwei Finger zum Verschieben/Zoomen; ein Finger zum normalen Schwenken.
 (function setupSolarSystemGestures(){
   const viewport = document.querySelector('#solar-system-viewport');
   const system = document.querySelector('#solar-system');
   if (!viewport || !system) return;
-  let gesture = null;
   let zoom = 1;
-  const distance = (a,b) => Math.hypot(b.clientX-a.clientX,b.clientY-a.clientY);
-  const midpoint = (a,b) => ({x:(a.clientX+b.clientX)/2,y:(a.clientY+b.clientY)/2});
-  viewport.addEventListener('touchstart', event => {
-    if (event.touches.length !== 2) { gesture = null; return; }
-    const a=event.touches[0], b=event.touches[1], mid=midpoint(a,b);
-    gesture={distance:Math.max(1,distance(a,b)),zoom,midX:mid.x,midY:mid.y,scrollLeft:viewport.scrollLeft,scrollTop:viewport.scrollTop};
+  let gesture = null;
+  let oneFingerMoved = false;
+  const dist = (a,b) => Math.hypot(b.clientX-a.clientX,b.clientY-a.clientY);
+  const mid = (a,b) => ({x:(a.clientX+b.clientX)/2,y:(a.clientY+b.clientY)/2});
+  const point = t => ({clientX:t.clientX,clientY:t.clientY});
+  viewport.addEventListener('touchstart', e => {
+    if (e.touches.length === 1) {
+      const t=e.touches[0];
+      gesture={kind:'pan',x:t.clientX,y:t.clientY,scrollLeft:viewport.scrollLeft,scrollTop:viewport.scrollTop};
+      oneFingerMoved=false;
+    } else if (e.touches.length >= 2) {
+      const a=point(e.touches[0]), b=point(e.touches[1]), m=mid(a,b);
+      gesture={kind:'pinch',distance:Math.max(1,dist(a,b)),zoom,midX:m.x,midY:m.y,
+        scrollLeft:viewport.scrollLeft,scrollTop:viewport.scrollTop};
+    }
   }, {passive:true});
-  viewport.addEventListener('touchmove', event => {
-    if (event.touches.length !== 2 || !gesture) return;
-    event.preventDefault();
-    const a=event.touches[0], b=event.touches[1], mid=midpoint(a,b);
-    const nextZoom=Math.max(0.6,Math.min(2.2,gesture.zoom*distance(a,b)/gesture.distance));
-    const ratio=nextZoom/zoom;
-    const beforeX=(viewport.scrollLeft+gesture.midX-viewport.getBoundingClientRect().left);
-    const beforeY=(viewport.scrollTop+gesture.midY-viewport.getBoundingClientRect().top);
-    zoom=nextZoom;
-    system.style.zoom=String(zoom);
-    viewport.scrollLeft=gesture.scrollLeft*ratio-(mid.x-gesture.midX);
-    viewport.scrollTop=gesture.scrollTop*ratio-(mid.y-gesture.midY);
+  viewport.addEventListener('touchmove', e => {
+    if (!gesture) return;
+    if (e.touches.length >= 2 && gesture.kind==='pinch') {
+      e.preventDefault();
+      const a=point(e.touches[0]), b=point(e.touches[1]), m=mid(a,b);
+      const nextZoom=Math.max(0.6,Math.min(2.2,gesture.zoom*dist(a,b)/gesture.distance));
+      const ratio=nextZoom/gesture.zoom;
+      zoom=nextZoom;
+      system.style.zoom=String(zoom);
+      viewport.scrollLeft=Math.max(0,(gesture.scrollLeft+gesture.midX-viewport.getBoundingClientRect().left)*ratio-(m.x-viewport.getBoundingClientRect().left));
+      viewport.scrollTop=Math.max(0,(gesture.scrollTop+gesture.midY-viewport.getBoundingClientRect().top)*ratio-(m.y-viewport.getBoundingClientRect().top));
+    } else if (e.touches.length===1 && gesture.kind==='pan') {
+      const t=e.touches[0], dx=t.clientX-gesture.x, dy=t.clientY-gesture.y;
+      if (Math.abs(dx)+Math.abs(dy)>6) oneFingerMoved=true;
+      if (oneFingerMoved) {
+        e.preventDefault();
+        viewport.scrollLeft=gesture.scrollLeft-dx;
+        viewport.scrollTop=gesture.scrollTop-dy;
+      }
+    }
   }, {passive:false});
-  viewport.addEventListener('touchend', event => { if (event.touches.length < 2) gesture=null; }, {passive:true});
-  viewport.addEventListener('touchcancel', () => { gesture=null; }, {passive:true});
-  viewport.setAttribute('aria-description','Mit einem Finger scrollen; mit zwei Fingern verschieben und zoomen.');
-})();
+  const reset=()=>{gesture=null;};
+  viewport.addEventListener('touchend', e => {
+    if (e.touches.length===1) {
+      const t=e.touches[0];
+      gesture={kind:'pan',x:t.clientX,y:t.clientY,scrollLeft:viewport.scrollLeft,scrollTop:viewport.scrollTop};
+    } else if (e.touches.length===0) reset();
+  }, {passive:true});
+  viewport.addEventListener('touchcancel', reset, {passive:true});
+  viewport.setAttribute('aria-description','Mit einem Finger verschieben oder Planeten auswählen; mit zwei Fingern verschieben und zoomen.');
+})(); 
 
 ['pointerdown','touchstart','keydown'].forEach(evt=>document.addEventListener(evt, unlockAudio, {once:true, passive:true}));

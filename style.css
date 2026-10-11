@@ -557,3 +557,6 @@ select{padding:7px;border-radius:8px;background:#eef2f7;color:#111}
 .solar-system-viewport{touch-action:pan-x pan-y;overscroll-behavior:contain}
 .solar-system{transform-origin:top left;will-change:zoom}
 @media(max-width:430px){.transport-route{padding:10px}.transport-route h3{font-size:17px}}
+
+/* Touch-Gesten im Sonnensystem werden durch game.js gesteuert. */
+.solar-system-viewport{touch-action:none;overscroll-behavior:contain;}
