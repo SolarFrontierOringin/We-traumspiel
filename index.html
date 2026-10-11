@@ -6,7 +6,7 @@
   <title>Solar Frontier: Origins</title>
   <meta name="theme-color" content="#02050b">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=pinch-gesture-fix-v11">
+  <link rel="stylesheet" href="style.css?v=game-clock-v1">
 </head>
 <body>
 
@@ -49,6 +49,19 @@
         <button id="main-menu-button" class="small-button menu-button" type="button" onclick="const m=document.getElementById('main-menu'); if(m) m.hidden=!m.hidden;">☰ Menü</button>
       </div>
     </header>
+
+    <section id="game-clock-panel" class="game-clock-panel" aria-label="Spielzeitsteuerung">
+      <div class="game-clock-readout"><span class="game-clock-caption">🕒 GALAKTISCHER STANDARDKALENDER</span><strong id="game-clock-value">01.01.2027 · 00:00:00</strong></div>
+      <div class="game-speed-controls" role="group" aria-label="Spielgeschwindigkeit">
+        <span>Geschwindigkeit</span>
+        <button type="button" data-game-speed="1" class="active" aria-pressed="true">x1</button>
+        <button type="button" data-game-speed="2" aria-pressed="false">x2</button>
+        <button type="button" data-game-speed="3" aria-pressed="false">x3</button>
+        <button type="button" data-game-speed="5" aria-pressed="false">x5</button>
+        <button type="button" data-game-speed="10" aria-pressed="false">x10</button>
+        <small id="game-clock-speed-label">x1</small>
+      </div>
+    </section>
 
     <section id="main-menu" class="main-menu" hidden>
       <div class="main-menu-head">
@@ -181,7 +194,7 @@
       <aside id="info-panel" class="panel"></aside>
     </section>
   </main>
-  <script src="game.js?v=pinch-gesture-fix-v11"></script>
+  <script src="game.js?v=game-clock-v1"></script>
   <script>if ("serviceWorker" in navigator) navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{});</script>
 </body>
 </html>

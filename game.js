@@ -63,6 +63,57 @@ function setupAudio(){
 }
 
 
+// ==========================================
+// ZENTRALE SPIELUHR – Galaktischer Standardkalender
+// Start: 01.01.2027, 00:00:00; Spielzeit wird durch die gewählte Geschwindigkeit skaliert.
+// ==========================================
+const GAME_EPOCH_UTC = Date.UTC(2027, 0, 1, 0, 0, 0);
+const GAME_SPEEDS = [1, 2, 3, 5, 10];
+let gameClockElapsedMs = 0;
+let gameClockLastReal = performance.now();
+let gameSpeed = 1;
+function gameNow() {
+  const realNow = performance.now();
+  const realDelta = Math.max(0, realNow - gameClockLastReal);
+  // Mobile-Browser pausieren die Spielwelt im Hintergrund, statt beim Zurückkehren
+  // einen großen Zeitsprung und einen unkontrollierten Verbrauchsschub auszulösen.
+  if (typeof document !== 'undefined' && !document.hidden) {
+    gameClockElapsedMs += realDelta * gameSpeed;
+  }
+  gameClockLastReal = realNow;
+  return gameClockElapsedMs;
+}
+function setGameSpeed(value) {
+  const now = gameNow();
+  const next = Number(value);
+  if (!GAME_SPEEDS.includes(next)) return;
+  gameSpeed = next;
+  gameClockLastReal = performance.now();
+  updateGameClockDisplay(now);
+  saveGame(false);
+}
+function updateGameClockDisplay(now = gameNow()) {
+  const clock = document.querySelector('#game-clock-value');
+  const speedLabel = document.querySelector('#game-clock-speed-label');
+  if (clock) {
+    const date = new Date(GAME_EPOCH_UTC + Math.max(0, now));
+    const pad = n => String(n).padStart(2, '0');
+    clock.textContent = `${pad(date.getUTCDate())}.${pad(date.getUTCMonth()+1)}.${date.getUTCFullYear()} · ${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}:${pad(date.getUTCSeconds())}`;
+  }
+  if (speedLabel) speedLabel.textContent = `x${gameSpeed}`;
+  document.querySelectorAll('[data-game-speed]').forEach(button => {
+    const active = Number(button.dataset.gameSpeed) === gameSpeed;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-pressed', active ? 'true' : 'false');
+  });
+}
+function setupGameClockControls() {
+  document.querySelectorAll('[data-game-speed]').forEach(button => {
+    button.addEventListener('click', () => setGameSpeed(button.dataset.gameSpeed));
+  });
+  updateGameClockDisplay();
+}
+
 const state = {
   selected: 'earth',
   viewMode: 'surface',
@@ -145,7 +196,7 @@ const state = {
     residentialComplex: 0,
     habitat: 0
   },
-  lastUpdate: performance.now(),
+  lastUpdate: gameNow(),
   buildMenuOpen: false,
   research: {
     points: 0,
@@ -895,10 +946,10 @@ function renderResearch() {
   const canResearchSolarSatellite = researchAvailable() && !running && !researchedSolarSatellite && enoughSolarSatellitePoints && enoughSolarSatelliteChips;
   const canResearchSolarProbe = researchAvailable() && !running && !researchedSolarProbe && enoughSolarProbePoints && enoughSolarProbeChips;
   const remaining = active && activeDef
-    ? Math.max(0, activeDef.time - (performance.now() - active.started) / 1000)
+    ? Math.max(0, activeDef.time - (gameNow() - active.started) / 1000)
     : 0;
   const progress = active && activeDef
-    ? Math.min(100, ((performance.now() - active.started) / (activeDef.time * 1000)) * 100)
+    ? Math.min(100, ((gameNow() - active.started) / (activeDef.time * 1000)) * 100)
     : 0;
 
   const orbitRows = Object.entries(bodies).map(([id, body]) => {
@@ -1078,7 +1129,7 @@ function startResearch(key) {
   if (r.chipCost && Number(state.chips || 0) < r.chipCost) return;
   state.research.points -= r.cost;
   if (r.chipCost) state.chips -= r.chipCost;
-  state.research.active = { key, started: performance.now() };
+  state.research.active = { key, started: gameNow() };
   renderResearch();
   saveGame(false);
 }
@@ -1116,6 +1167,7 @@ function getSaveData() {
   return {
     version: 2,
     savedAt: new Date().toISOString(),
+    gameClock: { elapsedMs: gameNow(), speed: gameSpeed },
     state: { ...state, lastUpdate: undefined, buildMenuOpen: false, buildings: { ...state.buildings } },
     bodies,
     rockets,
@@ -1179,6 +1231,16 @@ function loadGame(showMessage = true) {
     const data = JSON.parse(raw);
     if (!data || !data.state || !data.bodies) throw new Error('Ungültiger Spielstand');
 
+    if (data.gameClock && Number.isFinite(Number(data.gameClock.elapsedMs))) {
+      gameClockElapsedMs = Math.max(0, Number(data.gameClock.elapsedMs));
+      const savedSpeed = Number(data.gameClock.speed);
+      gameSpeed = GAME_SPEEDS.includes(savedSpeed) ? savedSpeed : 1;
+    } else {
+      gameClockElapsedMs = 0;
+      gameSpeed = 1;
+    }
+    gameClockLastReal = performance.now();
+
     Object.assign(state, data.state);
     state.buildings = { ...state.buildings, ...(data.state.buildings || {}) };
     state.bauxite = Math.max(0, Number(state.bauxite || 0));
@@ -1197,12 +1259,12 @@ function loadGame(showMessage = true) {
     state.tasks.foodProduced = Number(state.tasks.foodProduced || 0);
     state.tasks.waterProduced = Number(state.tasks.waterProduced || 0);
     state.tasks.lunaFlights = Number(state.tasks.lunaFlights || 0);
-    state.lastUpdate = performance.now();
+    state.lastUpdate = gameNow();
     Object.assign(bodies, data.bodies);
     orbitMissions.splice(0, orbitMissions.length, ...(Array.isArray(data.orbitMissions) ? data.orbitMissions : []));
     orbitMissionCounter = Math.max(1, Number(data.orbitMissionCounter) || 1);
     // Laufende Missionen werden aus gespeicherten Zeitstempeln rekonstruiert, nicht neu gestartet.
-    orbitMissions.forEach(m => { if (m.status === 'outbound' || m.status === 'returning') m.lastTick = Date.now(); });
+    orbitMissions.forEach(m => { if (m.status === 'outbound' || m.status === 'returning') m.lastTick = gameNow(); });
     // Neue Rohstoffvorkommen aus späteren Spielversionen auch in alten Spielständen ergänzen.
     const defaultResources = {
       mercury: { stone: 20000, iron: 10000000, silicon: 8000000, lithium: 2000000, copperOre: 30000, uranium: 30000000 },
@@ -1400,6 +1462,17 @@ function loadGame(showMessage = true) {
     rocketDestination = data.rocketDestination || 'mars';
     rocketDestinationMode = data.rocketDestinationMode === 'orbit' ? 'orbit' : 'surface';
 
+    // Alte Spielstände verwendeten verschiedene Echtzeit-Zeitstempel. Beim ersten
+    // Laden werden laufende Timer auf die neue zentrale Spieluhr umgestellt.
+    if (!data.gameClock) {
+      const clockNow = gameNow();
+      rockets.forEach(r => { if (r.status === 'outbound' || r.status === 'returning') r.started = clockNow; });
+      [rocketBuildStarted, rocketBuildStarted2, rocketBuildStartedAtlas1, rocketFactoryStarted, rocketFactoryBuildStarted, outpostBuildStarted].forEach(group => Object.keys(group).forEach(k => { if (group[k]) group[k] = clockNow; }));
+      if (state.research?.active) { state.research.active.started = clockNow; delete state.research.active.pausedAt; }
+      solarProbeFlights.forEach(f => { f.started = clockNow; });
+      orbitMissions.forEach(m => { if (m.status === 'outbound' || m.status === 'returning') m.startedAt = clockNow; if (m.status === 'waiting') m.nextLaunchAt = clockNow; });
+    }
+
     renderSystem();
     renderInfo();
     renderTopResources();
@@ -1474,7 +1547,7 @@ function rocketOrbitPoint(id) {
   return { x: p.x + Math.cos(a) * offset, y: p.y + Math.sin(a) * offset };
 }
 
-function updateRocketVisuals(now = performance.now()) {
+function updateRocketVisuals(now = gameNow()) {
   const layer = document.querySelector('#rocket-layer');
   if (!layer) return;
   layer.innerHTML = '';
@@ -1707,7 +1780,7 @@ function renderSystem() {
       ${state.selected === 'earth' ? buildButton('solarProbe') : ''}
       ${state.selected === 'earth' ? `<div class="build-card research-lab-card"><div><strong>🔬 Forschungslabor</strong><small>Nur auf der Erde · benötigt Baustoffe, Glas und Elektronik · Kostenmengen werden noch festgelegt</small></div><button class="build-resource" id="build-research-lab" ${getBuildingsOnPlanet('earth').researchLab ? 'disabled' : ''}>${getBuildingsOnPlanet('earth').researchLab ? 'Gebaut' : 'Bauen'}</button></div>` : ''}
       <div class="build-card"><div><strong>⚡ Kohlekraftwerk</strong><small>20 MW Strom/s · verbraucht 0,0002 t Kohle/s · 90 t Stahl</small></div><button class="build-resource" id="build-coal-power" ${Number(getPlanetStorage(state.selected).steel || 0) >= 90 ? '' : 'disabled'}>Bauen (${getBuildingsOnPlanet(state.selected).coalPowerPlant})</button></div>
-      <div class="build-card rocket-factory-card"><div><strong>🏭 Raketenfabrik</strong><small>1.000 t Stahl · 2.000 t Baustoffe · 60 Sekunden Bauzeit · Voraussetzung für alle Raketen · Produktionswarteschlange</small>${rocketFactoryBuildQueue[state.selected] ? `<div class="rocket-progress"><i style="width:${Math.min(100,(performance.now()-(rocketFactoryBuildStarted[state.selected]||performance.now()))/60000*100)}%"></i></div><small>Fertigstellung: ${Math.max(0,60-(performance.now()-(rocketFactoryBuildStarted[state.selected]||performance.now()))/1000).toFixed(1)} s</small>` : ''}</div><button class="build-resource" id="build-rocket-factory" ${getBuildingsOnPlanet(state.selected).rocketFactory || rocketFactoryBuildQueue[state.selected] || !isBuildingAllowed('rocketFactory', state.selected) || Number(getPlanetStorage(state.selected).steel || 0) < 1000 || Number(getPlanetStorage(state.selected).buildingMaterials || 0) < 2000 ? 'disabled' : ''}>${getBuildingsOnPlanet(state.selected).rocketFactory ? 'Gebaut' : rocketFactoryBuildQueue[state.selected] ? 'Im Bau' : 'Bauen'}</button></div>
+      <div class="build-card rocket-factory-card"><div><strong>🏭 Raketenfabrik</strong><small>1.000 t Stahl · 2.000 t Baustoffe · 60 Sekunden Bauzeit · Voraussetzung für alle Raketen · Produktionswarteschlange</small>${rocketFactoryBuildQueue[state.selected] ? `<div class="rocket-progress"><i style="width:${Math.min(100,(gameNow()-(rocketFactoryBuildStarted[state.selected]||gameNow()))/60000*100)}%"></i></div><small>Fertigstellung: ${Math.max(0,60-(gameNow()-(rocketFactoryBuildStarted[state.selected]||gameNow()))/1000).toFixed(1)} s</small>` : ''}</div><button class="build-resource" id="build-rocket-factory" ${getBuildingsOnPlanet(state.selected).rocketFactory || rocketFactoryBuildQueue[state.selected] || !isBuildingAllowed('rocketFactory', state.selected) || Number(getPlanetStorage(state.selected).steel || 0) < 1000 || Number(getPlanetStorage(state.selected).buildingMaterials || 0) < 2000 ? 'disabled' : ''}>${getBuildingsOnPlanet(state.selected).rocketFactory ? 'Gebaut' : rocketFactoryBuildQueue[state.selected] ? 'Im Bau' : 'Bauen'}</button></div>
       <div class="build-card landing-pad-card"><div><strong>🛬 Start- & Landerampe</strong><small>2.000 t Stahl · 3.000 t Baustoffe · 500 t Maschinen · 300 t Batterien · eine Rampe pro gleichzeitig möglichem Start/Landung · auf allen Planeten</small></div><button class="build-resource" id="build-landing-pad" ${!isBuildingAllowed('landingPad', state.selected) || Number(getPlanetStorage(state.selected).steel || 0) < 2000 || Number(getPlanetStorage(state.selected).buildingMaterials || 0) < 3000 || Number(getPlanetStorage(state.selected).machines || 0) < 500 || Number(getPlanetStorage(state.selected).batteries || 0) < 300 ? 'disabled' : ''}>Bauen (${getBuildingsOnPlanet(state.selected).landingPad || 0})</button></div>
       <div class="build-card outpost-card"><div><strong>🛰️ Außenposten</strong><small>100 t Stahl · 60 Sekunden Bauzeit · maximal 1 pro Planet · Voraussetzung für weitere Gebäude auf allen Außenplaneten</small></div><button class="build-resource" id="build-outpost" ${getBuildingsOnPlanet(state.selected).outpost || outpostBuildQueue[state.selected] || Number(getPlanetStorage(state.selected).steel || 0) < 100 ? 'disabled' : ''}>Bauen (${getBuildingsOnPlanet(state.selected).outpost ? 'Gebaut' : 'Bauen'})</button></div>
       `;
@@ -2321,13 +2394,13 @@ function launchSolarSatellite() {
   if (Number(earth.solarSatellite || 0) < 1 || Number(earth.solarProbe || 0) < 1) return;
   earth.solarSatellite--;
   earth.solarProbe--;
-  solarProbeFlights.push({ started: Date.now(), duration: 60 });
+  solarProbeFlights.push({ started: gameNow(), duration: 60 });
   playUiSound('build');
   renderInfo(); renderTopResources(); saveAfterBuild();
 }
 
 function updateSolarProbeFlights() {
-  const now = Date.now();
+  const now = gameNow();
   let changed = false;
   for (let i = solarProbeFlights.length - 1; i >= 0; i--) {
     const f = solarProbeFlights[i];
@@ -2713,7 +2786,7 @@ function buildRocketFactory() {
   storage.steel -= 1000;
   storage.buildingMaterials -= 2000;
   rocketFactoryBuildQueue[id] = 1;
-  rocketFactoryBuildStarted[id] = performance.now();
+  rocketFactoryBuildStarted[id] = gameNow();
   renderSystem(); renderInfo(); renderTopResources(); saveAfterBuild();
 }
 
@@ -2739,7 +2812,7 @@ function queueRocket(type, id = state.selected) {
   for(const [r,c] of Object.entries(costs)) if(Number(storage[r]||0)<c) return;
   for(const [r,c] of Object.entries(costs)) storage[r]-=c;
   rocketFactoryQueue[id].push(type);
-  if (!rocketFactoryStarted[id]) rocketFactoryStarted[id]=performance.now();
+  if (!rocketFactoryStarted[id]) rocketFactoryStarted[id]=gameNow();
   renderInfo(); renderTopResources(); saveAfterBuild();
 }
 
@@ -2763,7 +2836,7 @@ function buildOutpost() {
   if (Number(storage.steel || 0) < 100) return;
   storage.steel -= 100;
   outpostBuildQueue[source] = 1;
-  outpostBuildStarted[source] = performance.now();
+  outpostBuildStarted[source] = gameNow();
   renderSystem(); renderInfo(); renderTopResources();
   saveAfterBuild();
 }
@@ -2834,7 +2907,7 @@ function launchHercules1(source, destination, quantity) {
       to: destination,
       fromMode: sourceMode,
       targetMode,
-      started: performance.now(),
+      started: gameNow(),
       duration,
       status: 'outbound',
       capacity: 120,
@@ -2880,7 +2953,7 @@ function launchHercules2(source, destination) {
     to: destination,
     fromMode: sourceMode,
     targetMode,
-    started: performance.now(),
+    started: gameNow(),
     duration,
     status: 'outbound',
     capacity: 300,
@@ -2906,7 +2979,7 @@ function launchAtlas1(source, destination) {
   for (const slot of cargo) { sourceStorage[slot.resource] = Number(sourceStorage[slot.resource] || 0) - slot.amount; if (Math.abs(sourceStorage[slot.resource]) < 0.000001) sourceStorage[slot.resource] = 0; }
   rocketStockAtlas1[source]--;
   const targetMode = rocketDestinationMode;
-  rockets.push({ id: Date.now() + Math.random(), name: rocketTypes.atlas1.name, type: 'atlas1', from: source, to: destination, fromMode: sourceMode, targetMode, started: performance.now(), duration: flightDurationSeconds(destination, targetMode) * 1000, status: 'outbound', capacity: 500, compartments: 3, cargo: cargo });
+  rockets.push({ id: Date.now() + Math.random(), name: rocketTypes.atlas1.name, type: 'atlas1', from: source, to: destination, fromMode: sourceMode, targetMode, started: gameNow(), duration: flightDurationSeconds(destination, targetMode) * 1000, status: 'outbound', capacity: 500, compartments: 3, cargo: cargo });
   recordLunaFlight(destination);
   renderInfo(); renderTopResources(); saveGame(false);
 }
@@ -2927,7 +3000,7 @@ function launchTitan1(source, destination) {
   rocketStockTitan1[source]--;
   const targetMode = rocketDestinationMode;
   const duration = flightDurationSeconds(destination, targetMode) * 1000;
-  rockets.push({ id: Date.now() + Math.random(), name: rocketTypes.titan1.name, type: 'titan1', from: source, to: destination, fromMode: sourceMode, targetMode, started: performance.now(), duration, status: 'outbound', capacity: 1500, compartments: 3, cargo });
+  rockets.push({ id: Date.now() + Math.random(), name: rocketTypes.titan1.name, type: 'titan1', from: source, to: destination, fromMode: sourceMode, targetMode, started: gameNow(), duration, status: 'outbound', capacity: 1500, compartments: 3, cargo });
   recordLunaFlight(destination);
   renderInfo(); renderTopResources(); saveGame(false);
 }
@@ -2957,7 +3030,7 @@ function returnRocket(rocketId, cargoResource = null, cargoAmount = 0) {
   rocket.returnTo = destination;
   rocket.fromReturn = source;
   rocket.to = destination;
-  rocket.started = performance.now();
+  rocket.started = gameNow();
   rocket.duration = duration;
   renderInfo();
   renderTopResources();
@@ -2982,7 +3055,7 @@ function renderRocketWindow(body) {
   const stockTitan1 = rocketStockTitan1[source] || 0;
   const factoryQueue = Array.isArray(rocketFactoryQueue[source]) ? rocketFactoryQueue[source] : [];
   const activeBuildTime = factoryQueue.length && rocketFactoryQueue[source][0] === 'titan1' ? 120 : 60;
-  const factoryRemaining = factoryQueue.length && rocketFactoryStarted[source] ? Math.max(0, activeBuildTime - (performance.now()-rocketFactoryStarted[source])/1000) : 0;
+  const factoryRemaining = factoryQueue.length && rocketFactoryStarted[source] ? Math.max(0, activeBuildTime - (gameNow()-rocketFactoryStarted[source])/1000) : 0;
   const buildQueueAtlas1 = rocketBuildQueueAtlas1[source] || 0;
   const buildStartedAtlas1 = rocketBuildStartedAtlas1[source] || 0;
 
@@ -3003,7 +3076,7 @@ function renderRocketWindow(body) {
 
   const active = rockets.filter(r => r.status !== 'returned' && (r.from === source || r.to === source));
   const list = active.length ? active.map(r => {
-    const elapsed = performance.now() - r.started;
+    const elapsed = gameNow() - r.started;
     const remaining = Math.max(0, (r.duration - elapsed) / 1000);
     const pct = Math.min(100, elapsed / r.duration * 100);
     const isH2 = r.type === 'hercules2';
@@ -3028,12 +3101,12 @@ function renderRocketWindow(body) {
     return `<div class="rocket-flight"><strong>🚀 ${r.name}</strong><span>🚀 ${bodies[r.from].name} → ${bodies[r.to].name}</span><div class="rocket-cargo">📦 ${cargoText}</div><div class="rocket-progress"><i style="width:${pct}%"></i></div><small>${remaining.toFixed(1)} s bis Ankunft</small></div>`;
   }).join('') : '<p class="hint">Keine aktiven Transporte mit diesem Planeten.</p>';
 
-  const buildRemaining1 = buildQueue1 ? Math.max(0, 30 - (performance.now() - buildStarted1)/1000) : 0;
-  const buildPct1 = buildQueue1 ? Math.min(100, (performance.now()-buildStarted1)/30000*100) : 0;
-  const buildRemaining2 = buildQueue2 ? Math.max(0, 30 - (performance.now() - buildStarted2)/1000) : 0;
-  const buildPct2 = buildQueue2 ? Math.min(100, (performance.now()-buildStarted2)/30000*100) : 0;
-  const buildRemainingAtlas1 = buildQueueAtlas1 ? Math.max(0, 30 - (performance.now() - buildStartedAtlas1)/1000) : 0;
-  const buildPctAtlas1 = buildQueueAtlas1 ? Math.min(100, (performance.now()-buildStartedAtlas1)/30000*100) : 0;
+  const buildRemaining1 = buildQueue1 ? Math.max(0, 30 - (gameNow() - buildStarted1)/1000) : 0;
+  const buildPct1 = buildQueue1 ? Math.min(100, (gameNow()-buildStarted1)/30000*100) : 0;
+  const buildRemaining2 = buildQueue2 ? Math.max(0, 30 - (gameNow() - buildStarted2)/1000) : 0;
+  const buildPct2 = buildQueue2 ? Math.min(100, (gameNow()-buildStarted2)/30000*100) : 0;
+  const buildRemainingAtlas1 = buildQueueAtlas1 ? Math.max(0, 30 - (gameNow() - buildStartedAtlas1)/1000) : 0;
+  const buildPctAtlas1 = buildQueueAtlas1 ? Math.min(100, (gameNow()-buildStartedAtlas1)/30000*100) : 0;
   const localSteel = getPlayerResourceAmount('steel', source);
   const localBatteries = getPlayerResourceAmount('batteries', source);
   const localChips = getPlayerResourceAmount('chips', source);
@@ -3128,7 +3201,7 @@ function renderOrbitMissions(planetId = state.selected) {
   const missions = orbitMissions.filter(m => m.source === planetId || m.destination === planetId);
   if (!missions.length) return '<p class="hint">Noch keine zyklischen Missionen für diesen Planeten.</p>';
   return missions.map(m => {
-    const phase = m.status === 'paused' ? 'Pausiert – manuelle Fortsetzung erforderlich' : m.status === 'outbound' ? `Hinflug nach ${bodies[m.destination]?.name || m.destination}` : m.status === 'returning' ? 'Rückflug' : `Wartezeit: ${Math.max(0, Math.ceil((m.nextLaunchAt - Date.now()) / 1000))} s`;
+    const phase = m.status === 'paused' ? 'Pausiert – manuelle Fortsetzung erforderlich' : m.status === 'outbound' ? `Hinflug nach ${bodies[m.destination]?.name || m.destination}` : m.status === 'returning' ? 'Rückflug' : `Wartezeit: ${Math.max(0, Math.ceil((m.nextLaunchAt - gameNow()) / 1000))} s`;
     return `<div class="rocket-flight"><strong>🔁 Mission #${m.id} · ${rocketTypes[m.rocketType]?.name || m.rocketType}</strong><div>${bodies[m.source]?.name || m.source} (${m.sourceMode === 'orbit' ? 'Orbit' : 'Oberfläche'}) → ${bodies[m.destination]?.name || m.destination} (${m.destinationMode === 'orbit' ? 'Orbit' : 'Oberfläche'})</div><div>${resourceNames[m.resource] || m.resource}: ${m.amount} t/L · Wartezeit ${m.waitSeconds} s</div><div class="hint">Status: ${phase}${m.message ? ` · ${m.message}` : ''}</div><div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:7px">${m.status === 'paused' ? `<button class="mission-resume" data-mission-id="${m.id}">▶ Fortsetzen</button>` : (m.status === 'waiting' ? `<button class="mission-pause" data-mission-id="${m.id}">⏸ Pausieren</button>` : '<small>Pause erst nach Rückkehr möglich</small>')}<button class="mission-delete danger" data-mission-id="${m.id}">Mission löschen</button></div></div>`;
   }).join('');
 }
@@ -3154,7 +3227,7 @@ function createOrbitMission() {
   const stocks = type === 'hercules1' ? rocketStock : type === 'hercules2' ? rocketStock2 : type === 'atlas1' ? rocketStockAtlas1 : rocketStockTitan1;
   if (Number(stocks[source] || 0) < 1) return rocketLaunchError(`Keine ${rocketTypes[type].name}-Rakete am Startplaneten verfügbar.`);
   stocks[source]--;
-  const now = Date.now();
+  const now = gameNow();
   orbitMissions.push({ id: orbitMissionCounter++, source, sourceMode, destination, destinationMode, rocketType: type, resource, amount, waitSeconds, status: 'waiting', createdAt: now, nextLaunchAt: now, message: '' });
   recordLunaFlight(destination);
   saveGame(false); renderInfo();
@@ -3169,7 +3242,7 @@ function bindOrbitMissionControls() {
   }));
   infoPanel.querySelectorAll('.mission-resume').forEach(btn => btn.addEventListener('click', () => {
     const m = orbitMissions.find(x => String(x.id) === btn.dataset.missionId); if (!m) return;
-    m.status = 'waiting'; m.message = ''; m.nextLaunchAt = Date.now(); saveGame(false); renderInfo();
+    m.status = 'waiting'; m.message = ''; m.nextLaunchAt = gameNow(); saveGame(false); renderInfo();
   }));
   infoPanel.querySelectorAll('.mission-delete').forEach(btn => btn.addEventListener('click', () => {
     const i = orbitMissions.findIndex(x => String(x.id) === btn.dataset.missionId); if (i < 0) return;
@@ -3181,7 +3254,7 @@ function bindOrbitMissionControls() {
   }));
 }
 
-function updateOrbitMissions(now = Date.now()) {
+function updateOrbitMissions(now = gameNow()) {
   let changed = false;
   for (const m of [...orbitMissions]) {
     if (m.status === 'paused') continue;
@@ -3301,7 +3374,7 @@ function bindRocketControls() {
       targetStorage[r.cargo.resource]=Number(targetStorage[r.cargo.resource]||0)+r.cargo.amount;
       r.deliveredCargo={...r.cargo}; r.cargo.amount=0;
     }
-    r.status='landed'; r.landedAt=performance.now(); playUiSound('build'); renderInfo(); renderTopResources(); saveGame(false);
+    r.status='landed'; r.landedAt=gameNow(); playUiSound('build'); renderInfo(); renderTopResources(); saveGame(false);
   }));
   infoPanel.querySelectorAll('.rocket-return').forEach(x=>x.addEventListener('click',()=>{
     const id=x.dataset.rocketId;
@@ -3382,9 +3455,10 @@ function updateRockets(now) {
   }
 }
 
-function updateResources(now) {
+function updateResources() {
+  const now = gameNow();
   updateSolarProbeFlights();
-  const delta = Math.min((now - state.lastUpdate) / 1000, 0.25);
+  const delta = Math.max(0, (now - state.lastUpdate) / 1000);
   state.lastUpdate = now;
 
   Object.entries(bodies).forEach(([id, planet]) => {
@@ -3768,7 +3842,7 @@ function updateResources(now) {
   updateOutposts(now);
   updateRocketFactoryConstruction(now);
   updateRockets(now);
-  updateOrbitMissions(Date.now());
+  updateOrbitMissions(gameNow());
   // Forschungspunkte werden durch das Forschungslabor auf der Erde erzeugt.
   // 1 Forschungspunkt pro Sekunde je Forschungslabor.
   const researchPointsDelta = researchPointProduction() * delta;
@@ -3791,8 +3865,9 @@ function updateResources(now) {
   // Alle 5 Sekunden werden die aktuellen Lagerstände, Gebäude,
   // Forschungspunkte und laufenden Spielzustände automatisch gespeichert.
   // Die Produktion selbst läuft weiterhin kontinuierlich über requestAnimationFrame.
-  if (!updateResources.lastStorageSync || now - updateResources.lastStorageSync >= 5000) {
-    updateResources.lastStorageSync = now;
+  const realNowForSave = performance.now();
+  if (!updateResources.lastStorageSyncReal || realNowForSave - updateResources.lastStorageSyncReal >= 5000) {
+    updateResources.lastStorageSyncReal = realNowForSave;
     saveGame(false);
   }
 
@@ -3812,6 +3887,10 @@ function updateResources(now) {
   // zwischen Startplanet und Zielorbit auf dem Sonnensystem sichtbar bleibt.
   updateRocketVisuals(now);
   refreshColonistsPanelLive();
+  if (!updateResources.lastClockUiUpdate || now - updateResources.lastClockUiUpdate >= 200) {
+    updateResources.lastClockUiUpdate = now;
+    updateGameClockDisplay(now);
+  }
 
   requestAnimationFrame(updateResources);
 }
@@ -4176,6 +4255,7 @@ if (updatePopup && updatePopupClose) {
 }
 
 setupMainMenu();
+setupGameClockControls();
 setupSaveMenu();
 setupTopPanels();
 loadGame(false);
