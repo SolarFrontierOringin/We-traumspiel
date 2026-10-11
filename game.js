@@ -252,6 +252,7 @@ const state = {
     landingPad: 0,
     coalPowerPlant: 0,
     researchLab: 0,
+    observatory: 0,
     moonBase: 0,
     crudeOilPump: 0,
     polymerFactory: 0,
@@ -325,6 +326,7 @@ const buildingTypes = {
   rocketFactory: { name: 'Raketenfabrik', icon: '🏭', resource: null, rate: 0, cost: 1000, text: '1.000 t Stahl · 2.000 t Baustoffe · 60 Sekunden Bauzeit · Voraussetzung für den Bau aller Raketen' },
   landingPad: { name: 'Start- & Landerampe', icon: '🛬', resource: null, rate: 0, cost: 2000, text: '2.000 t Stahl · 3.000 t Baustoffe · 500 t Maschinen · 300 t Batterien · 1 Rampe je gleichzeitig möglichem Start/Landung' },
   researchLab: { name: 'Forschungslabor', icon: '🔬', resource: null, rate: 0, cost: 0, text: 'nur auf der Erde · benötigt Baustoffe, Glas und Elektronik' },
+  observatory: { name: 'Observatorium', icon: '🔭', resource: null, rate: 0, cost: 1000, text: 'Astronomische Beobachtungsanlage · nur auf der Erdoberfläche · Baukosten: 1.000 t Stahl, 800 t Baustoffe, 250 t Elektronik und 200 t Glas' },
   moonBase: { name: 'Mondbasis', icon: '🌙', resource: null, rate: 0, cost: 300, text: '300 t Stahl · 100 t Baustoffe · Forschung erforderlich' },
   solarPlant: { name: 'Solaranlage', icon: '☀️', resource: null, rate: 0, cost: 30, text: '20 MW Strom/s · 30 t Stahl · 10 t Baustoffe · 20 t Elektronik · Forschung erforderlich' },
   crudeOilPump: { name: 'Rohölpumpe', icon: '🛢️', resource: 'crudeOil', rate: 0.01, cost: 0, text: '0,01 Liter Rohöl/s · verbraucht 2 MW/s · nur auf der Erde' },
@@ -441,11 +443,13 @@ function getBuildingsOnPlanet(id) {
     if (state.buildings.iceProcessingPlant === undefined) state.buildings.iceProcessingPlant = 0;
     if (state.buildings.algaeFarm === undefined) state.buildings.algaeFarm = 0;
     if (state.buildings.algaeFoodProcessor === undefined) state.buildings.algaeFoodProcessor = 0;
+    if (state.buildings.observatory === undefined) state.buildings.observatory = 0;
     return state.buildings;
   }
   if (!bodies[id].buildings) {
-    bodies[id].buildings = { residentialHouse: 0, mediumResidentialHouse: 0, residentialComplex: 0, habitat: 0, foodFactory: 0, algaeFarm: 0, algaeFoodProcessor: 0, steelworks: 0, stoneQuarry: 0, buildingMaterialsFactory: 0, coalMine: 0, gasPlant: 0, co2Extraction: 0, co2ProcessingPlant: 0, orbitalCo2Extractor: 0, researchSatellite: 0, ironMine: 0, siliconMine: 0, lithiumMine: 0, copperMine: 0, copperSmelter: 0, lithiumRefinery: 0, machineFactory: 0, glassFactory: 0, heliumExtractor: 0, fusionReactor: 0, outpost: 0, coalPowerPlant: 0, solarPlant: 0, researchLab: 0, moonBase: 0, crudeOilPump: 0, polymerFactory: 0, electronicsFactory: 0, uraniumMine: 0, uraniumProcessingPlant: 0, nuclearFuelPlant: 0, nuclearReactor: 0, chipFactory: 0, solarSail: 0, solarSatellite: 0, solarProbe: 0, bauxiteMine: 0, titanMine: 0, titanProcessing: 0, titanRefinery: 0, aluminiumOxideRefinery: 0, aluminiumSmelter: 0, hydroelectricPlant: 0, greenhouse: 0 }
+    bodies[id].buildings = { residentialHouse: 0, mediumResidentialHouse: 0, residentialComplex: 0, habitat: 0, observatory: 0, foodFactory: 0, algaeFarm: 0, algaeFoodProcessor: 0, steelworks: 0, stoneQuarry: 0, buildingMaterialsFactory: 0, coalMine: 0, gasPlant: 0, co2Extraction: 0, co2ProcessingPlant: 0, orbitalCo2Extractor: 0, researchSatellite: 0, ironMine: 0, siliconMine: 0, lithiumMine: 0, copperMine: 0, copperSmelter: 0, lithiumRefinery: 0, machineFactory: 0, glassFactory: 0, heliumExtractor: 0, fusionReactor: 0, outpost: 0, coalPowerPlant: 0, solarPlant: 0, researchLab: 0, moonBase: 0, crudeOilPump: 0, polymerFactory: 0, electronicsFactory: 0, uraniumMine: 0, uraniumProcessingPlant: 0, nuclearFuelPlant: 0, nuclearReactor: 0, chipFactory: 0, solarSail: 0, solarSatellite: 0, solarProbe: 0, bauxiteMine: 0, titanMine: 0, titanProcessing: 0, titanRefinery: 0, aluminiumOxideRefinery: 0, aluminiumSmelter: 0, hydroelectricPlant: 0, greenhouse: 0 }
   }
+  if (bodies[id].buildings.observatory === undefined) bodies[id].buildings.observatory = 0;
   if (bodies[id].buildings.residentialHouse === undefined) bodies[id].buildings.residentialHouse = 0;
   if (bodies[id].buildings.mediumResidentialHouse === undefined) bodies[id].buildings.mediumResidentialHouse = 0;
   if (bodies[id].buildings.residentialComplex === undefined) bodies[id].buildings.residentialComplex = 0;
@@ -1224,9 +1228,10 @@ const RESEARCH_ORDER_DEFS = {
     name: 'Himmelsbeobachtung',
     icon: '🔭',
     description: 'Werte wissenschaftliche Beobachtungen aus, um die systematische Asteroidenbeobachtung freizuschalten.',
-    duration: 60 * 60,
+    duration: 2 * 60 * 60,
+    cost: 2000,
     rewardPoints: 500,
-    prerequisite: 'Mindestens ein Forschungslabor auf der Erde',
+    prerequisite: 'Mindestens ein Forschungslabor und ein Observatorium auf der Erde',
     unlock: 'Asteroidenbeobachtung'
   }
 };
@@ -1283,6 +1288,9 @@ function renderResearchOrders(panel) {
   const active = orders.active;
   const completed = !!orders.completed.skyObservation;
   const hasLab = researchLabCount() > 0;
+  const hasObservatory = Number(getBuildingsOnPlanet('earth').observatory || 0) > 0;
+  const hasPrerequisites = hasLab && hasObservatory;
+  const hasResearchPoints = completed || !!active || Number(state.research.points || 0) >= RESEARCH_ORDER_DEFS.skyObservation.cost;
   const elapsed = active ? Math.max(0, (gameNow() - active.started) / 1000) : 0;
   const remaining = active ? Math.max(0, RESEARCH_ORDER_DEFS.skyObservation.duration - elapsed) : 0;
   const progress = active ? Math.min(100, elapsed / RESEARCH_ORDER_DEFS.skyObservation.duration * 100) : 0;
@@ -1301,15 +1309,17 @@ function renderResearchOrders(panel) {
     <button type="button" class="research-tab active" data-research-tab="orders" role="tab" aria-selected="true">Forschungsaufträge</button>
   </div>
   <section class="research-order-card ${completed ? 'research-done' : ''}">
-    <div class="research-order-title"><strong>🔭 Himmelsbeobachtung</strong><span class="research-order-status">${completed ? 'Abgeschlossen' : active ? 'Läuft' : 'Verfügbar'}</span></div>
-    <p>Forschungsdauer: <strong>1 Ingame-Stunde</strong> · Belohnung: <strong>500 Forschungspunkte</strong></p>
+    <div class="research-order-title"><strong>🔭 Himmelsbeobachtung</strong><span class="research-order-status">${completed ? 'Abgeschlossen' : active ? 'Läuft' : hasPrerequisites && hasResearchPoints ? 'Verfügbar' : 'Gesperrt'}</span></div>
+    <p>Forschungsdauer: <strong>2 Ingame-Stunden</strong> · Forschungskosten: <strong>${RESEARCH_ORDER_DEFS.skyObservation.cost.toLocaleString('de-DE')} FP</strong> · Belohnung: <strong>500 Forschungspunkte</strong></p>
     <p class="hint">Freischaltung: Asteroidenbeobachtung. Nach Abschluss beginnt eine Beobachtungsphase. Nach jeweils 5 Ingame-Minuten wird eine weitere Entdeckung möglich, bis maximal fünf Asteroiden entdeckt wurden.</p>
-    <div class="research-order-prereq ${hasLab ? 'good' : 'warn'}">${hasLab ? '✓' : '🔒'} Voraussetzung: ${RESEARCH_ORDER_DEFS.skyObservation.prerequisite}</div>
+    <div class="research-order-prereq ${hasPrerequisites ? 'good' : 'warn'}">${hasLab ? '✓' : '🔒'} Forschungslabor auf Erde: ${hasLab ? 'vorhanden' : 'fehlt'}</div>
+    <div class="research-order-prereq ${hasObservatory ? 'good' : 'warn'}">${hasObservatory ? '✓' : '🔒'} Observatorium auf Erdoberfläche: ${hasObservatory ? 'vorhanden' : 'fehlt'}</div>
+    <div class="research-order-prereq ${hasResearchPoints ? 'good' : 'warn'}">${hasResearchPoints ? '✓' : '🔒'} ${completed ? 'Forschungskosten erfüllt' : active ? 'Forschungskosten bezahlt' : `Forschungspunkte: ${Number(state.research.points || 0).toLocaleString('de-DE')} / ${RESEARCH_ORDER_DEFS.skyObservation.cost.toLocaleString('de-DE')} FP`}</div>
     ${active ? `<div class="research-active"><strong>Forschung läuft</strong><small>${formatResearchTime(remaining)} verbleiben</small><div class="research-progress"><i style="width:${progress}%"></i></div><button type="button" class="research-cancel-order">Auftrag abbrechen (Startkosten zurückerstatten)</button></div>` : ''}
-    ${!completed && !active ? `<button type="button" class="research-start-order" ${hasLab && !state.research.active ? '' : 'disabled'}>Forschung starten</button>` : ''}
+    ${!completed && !active ? `<button type="button" class="research-start-order" ${hasPrerequisites && hasResearchPoints && !state.research.active ? '' : 'disabled'}>Forschung starten</button>` : ''}
     ${completed ? `<div class="research-unlock">✓ Freigeschaltet: Asteroidenbeobachtung</div><div class="research-observation"><strong>Asteroidenfeld</strong><p>${discovered} / ${ASTEROID_MAX_ACTIVE} aktive Asteroiden</p>${orders.asteroidObservationStarted == null ? '<span class="hint">Die Beobachtungsphase startet nach Abschluss der Forschung.</span>' : `<span class="hint">Nächste mögliche Entdeckung in ${formatResearchTime(nextDiscovery)} (Ingame-Zeit). Neue Asteroiden erscheinen, sobald weniger als fünf aktiv sind.</span>`}</div><div class="asteroid-list">${asteroidCards || '<p class="hint">Noch keine aktiven Asteroiden entdeckt.</p>'}</div>` : ''}
   </section>
-  <p class="hint">Es kann nur ein Forschungsprojekt gleichzeitig laufen – auch aus dem Forschungsbaum. Für diesen Auftrag fallen keine Startkosten an; beim Abbruch entstehen daher keine Verluste und es gibt keine Rohstoffe zurückzuerstatten.</p>`;
+  <p class="hint">Es kann nur ein Forschungsprojekt gleichzeitig laufen – auch aus dem Forschungsbaum. Bei einem Abbruch werden die eingesetzten Forschungspunkte vollständig zurückerstattet.</p>`;
   panel.querySelectorAll('[data-research-tab]').forEach(button => button.addEventListener('click', () => {
     panel.dataset.activeResearchTab = button.dataset.researchTab;
     renderResearch();
@@ -1320,7 +1330,10 @@ function renderResearchOrders(panel) {
 
 function startSkyObservationResearch() {
   const orders = ensureResearchOrders();
-  if (orders.active || orders.completed.skyObservation || state.research.active || !researchAvailable() || researchLabCount() < 1) return;
+  const def = RESEARCH_ORDER_DEFS.skyObservation;
+  const hasObservatory = Number(getBuildingsOnPlanet('earth').observatory || 0) > 0;
+  if (orders.active || orders.completed.skyObservation || state.research.active || !researchAvailable() || researchLabCount() < 1 || !hasObservatory || Number(state.research.points || 0) < def.cost) return;
+  state.research.points -= def.cost;
   orders.active = { key: 'skyObservation', started: gameNow() };
   playUiSound('research');
   renderResearch();
@@ -1330,7 +1343,9 @@ function startSkyObservationResearch() {
 function cancelSkyObservationResearch() {
   const orders = ensureResearchOrders();
   if (!orders.active) return;
-  // Dieser Auftrag hat keine Startkosten; die Abbruchregel erstattet daher alle Startkosten (0).
+  // Bei Abbruch werden die Forschungspunkte vollständig zurückerstattet.
+  const def = RESEARCH_ORDER_DEFS[orders.active.key];
+  if (def) state.research.points = Number(state.research.points || 0) + Number(def.cost || 0);
   orders.active = null;
   renderResearch();
   saveGame(false);
@@ -1622,6 +1637,7 @@ function loadGame(showMessage = true) {
     state.buildings.heliumExtractor = Number(state.buildings.heliumExtractor || 0);
     state.buildings.fusionReactor = Number(state.buildings.fusionReactor || 0);
     state.buildings.researchLab = Number(state.buildings.researchLab || 0);
+    state.buildings.observatory = Number(state.buildings.observatory || 0);
     state.buildings.solarPlant = Number(state.buildings.solarPlant || 0);
     state.buildings.hydroelectricPlant = Number(state.buildings.hydroelectricPlant || 0);
     state.buildings.greenhouse = Number(state.buildings.greenhouse || 0);
@@ -1659,6 +1675,7 @@ function loadGame(showMessage = true) {
        body.buildings.heliumExtractor = Number(body.buildings.heliumExtractor || 0);
        body.buildings.fusionReactor = Number(body.buildings.fusionReactor || 0);
        body.buildings.researchLab = Number(body.buildings.researchLab || 0);
+       body.buildings.observatory = Number(body.buildings.observatory || 0);
        body.buildings.solarPlant = Number(body.buildings.solarPlant || 0);
        body.buildings.outpost = Number(body.buildings.outpost || 0);
        body.buildings.moonBase = Number(body.buildings.moonBase || 0);
@@ -2045,6 +2062,7 @@ function renderSystem() {
       ${state.selected === 'earth' ? buildButton('solarSatellite') : ''}
       ${state.selected === 'earth' ? buildButton('solarProbe') : ''}
       ${state.selected === 'earth' ? `<div class="build-card research-lab-card"><div><strong>🔬 Forschungslabor</strong><small>Nur auf der Erde · benötigt Baustoffe, Glas und Elektronik · Kostenmengen werden noch festgelegt</small></div><button class="build-resource" id="build-research-lab" ${getBuildingsOnPlanet('earth').researchLab ? 'disabled' : ''}>${getBuildingsOnPlanet('earth').researchLab ? 'Gebaut' : 'Bauen'}</button></div>` : ''}
+      ${state.selected === 'earth' && state.viewMode === 'surface' ? buildButton('observatory') : ''}
       <div class="build-card"><div><strong>⚡ Kohlekraftwerk</strong><small>20 MW Strom/s · verbraucht 0,0002 t Kohle/s · 90 t Stahl</small></div><button class="build-resource" id="build-coal-power" ${Number(getPlanetStorage(state.selected).steel || 0) >= 90 ? '' : 'disabled'}>Bauen (${getBuildingsOnPlanet(state.selected).coalPowerPlant})</button></div>
       <div class="build-card rocket-factory-card"><div><strong>🏭 Raketenfabrik</strong><small>1.000 t Stahl · 2.000 t Baustoffe · 60 Sekunden Bauzeit · Voraussetzung für alle Raketen · Produktionswarteschlange</small>${rocketFactoryBuildQueue[state.selected] ? `<div class="rocket-progress"><i style="width:${Math.min(100,(gameNow()-(rocketFactoryBuildStarted[state.selected]||gameNow()))/60000*100)}%"></i></div><small>Fertigstellung: ${Math.max(0,60-(gameNow()-(rocketFactoryBuildStarted[state.selected]||gameNow()))/1000).toFixed(1)} s</small>` : ''}</div><button class="build-resource" id="build-rocket-factory" ${getBuildingsOnPlanet(state.selected).rocketFactory || rocketFactoryBuildQueue[state.selected] || !isBuildingAllowed('rocketFactory', state.selected) || Number(getPlanetStorage(state.selected).steel || 0) < 1000 || Number(getPlanetStorage(state.selected).buildingMaterials || 0) < 2000 ? 'disabled' : ''}>${getBuildingsOnPlanet(state.selected).rocketFactory ? 'Gebaut' : rocketFactoryBuildQueue[state.selected] ? 'Im Bau' : 'Bauen'}</button></div>
       <div class="build-card landing-pad-card"><div><strong>🛬 Start- & Landerampe</strong><small>2.000 t Stahl · 3.000 t Baustoffe · 500 t Maschinen · 300 t Batterien · eine Rampe pro gleichzeitig möglichem Start/Landung · auf allen Planeten</small></div><button class="build-resource" id="build-landing-pad" ${!isBuildingAllowed('landingPad', state.selected) || Number(getPlanetStorage(state.selected).steel || 0) < 2000 || Number(getPlanetStorage(state.selected).buildingMaterials || 0) < 3000 || Number(getPlanetStorage(state.selected).machines || 0) < 500 || Number(getPlanetStorage(state.selected).batteries || 0) < 300 ? 'disabled' : ''}>Bauen (${getBuildingsOnPlanet(state.selected).landingPad || 0})</button></div>
@@ -2057,7 +2075,7 @@ function renderSystem() {
       { title: '🏠 Wohnraum & Kolonisten', keys: ['residentialHouse','mediumResidentialHouse','residentialComplex','habitat'] },
       { title: '🌱 Landwirtschaft & Versorgung', keys: ['greenhouse','hydroelectricPlant'] },
       { title: '🏭 Verarbeitung & Industrie', keys: ['titanProcessing','titanRefinery','steelworks','buildingMaterialsFactory','co2ProcessingPlant','aluminiumOxideRefinery','aluminiumSmelter','copperSmelter','lithiumRefinery','machineFactory','glassFactory','electronicsFactory','chipFactory','polymerFactory','foodFactory','iceProcessingPlant','algaeFarm','algaeFoodProcessor','uraniumProcessingPlant','nuclearFuelPlant'] },
-      { title: '⚡ Energie & Forschung', keys: ['coalPowerPlant','solarPlant','fusionReactor','nuclearReactor','researchLab'] },
+      { title: '⚡ Energie & Forschung', keys: ['coalPowerPlant','solarPlant','fusionReactor','nuclearReactor','researchLab','observatory'] },
       { title: '🚀 Raumfahrt & Infrastruktur', keys: ['co2Extraction','moonBase','solarSail','outpost','rocketFactory','landingPad','solarSatellite','solarProbe'] },
       { title: '🛰️ Orbit-Gebäude', keys: ['orbitalCo2Extractor','researchSatellite'] }
     ];
@@ -2348,6 +2366,7 @@ function buildingCost(key, planetId = state.selected) {
 }
 
 function isBuildingAllowed(key, planetId = state.selected) {
+  if (key === 'observatory' && (planetId !== 'earth' || state.viewMode !== 'surface')) return false;
   if (housingBuildingKeys.includes(key)) {
     if (planetId === 'sun') return false;
     if (key === 'habitat') return planetId !== 'earth';
@@ -2404,6 +2423,12 @@ function buildButton(key) {
     const costText = Object.entries(costs).map(([r, amount]) => `${amount.toLocaleString('de-DE')} t ${({steel:'Stahl',buildingMaterials:'Baustoffe',glass:'Glas'})[r] || r}`).join(' · ');
     const allowedText = isBuildingAllowed(key) ? '' : (key === 'habitat' ? ' · nur außerhalb von Erde und Sonne' : ' · nur auf der Erde');
     return `<div class="build-card"><div><strong>${b.icon} ${b.name}</strong><small>${b.text} · Baukosten: ${costText}${allowedText}</small></div><button class="build-resource" data-building="${key}" ${affordable ? '' : 'disabled'}>Bauen (${count || 0})</button></div>`;
+  }
+
+  if (key === 'observatory') {
+    const costs = { steel: 1000, buildingMaterials: 800, electronics: 250, glass: 200 };
+    const affordable = Number(count || 0) < 1 && isBuildingAllowed(key) && Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount);
+    return `<div class="build-card"><div><strong>${b.icon} ${b.name}</strong><small>${b.text}</small></div><button class="build-resource" data-building="${key}" ${affordable ? '' : 'disabled'}>${Number(count || 0) ? 'Gebaut' : 'Bauen'}</button></div>`;
   }
 
   if (key === 'polymerFactory') {
@@ -2713,6 +2738,7 @@ function demolitionCostMap(key, planetId, currentCount) {
     landingPad: { steel: 2000, buildingMaterials: 3000, machines: 500, batteries: 300 },
     outpost: { steel: 100 },
     researchLab: {},
+    observatory: { steel: 1000, buildingMaterials: 800, electronics: 250, glass: 200 },
     solarSatellite: { steel: 20000, buildingMaterials: 20000, glass: 10000, electronics: 5000, batteries: 5000 },
     solarProbe: { steel: 15000, electronics: 5000, batteries: 2000 },
     steelworks: { steel: planetId === 'earth' ? (currentCount <= 1 ? 0 : currentCount <= 3 ? 4 : 20) : (currentCount > 1 ? 20 : 0) },
@@ -2884,6 +2910,16 @@ function buildResourceBuilding(key) {
   const bld = getBuildingsOnPlanet(planetId);
   const storage = key === 'orbitalCo2Extractor' ? getOrbitStorage(planetId) : getPlanetStorage(planetId);
   if (!isBuildingAllowed(key, planetId)) return;
+
+  if (key === 'observatory') {
+    const costs = { steel: 1000, buildingMaterials: 800, electronics: 250, glass: 200 };
+    if (Number(bld.observatory || 0) >= 1 || planetId !== 'earth' || state.viewMode !== 'surface' || !Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount)) return;
+    for (const [r, amount] of Object.entries(costs)) storage[r] = Number(storage[r] || 0) - amount;
+    bld.observatory = Number(bld.observatory || 0) + 1;
+    playUiSound('build');
+    renderSystem(); renderInfo(); renderTopResources(); renderResearch(); saveAfterBuild();
+    return;
+  }
 
   if (housingBuildingKeys.includes(key)) {
     const costs = housingCosts[key];
