@@ -352,7 +352,7 @@ const rocketTypes = {
   titan1: { name: 'Titan 1', icon: '🚀', costSteel: 2000, costAluminium: 300, costChips: 250, costBatteries: 200, costTitanium: 120, capacity: 1500, compartments: 3, buildTime: 120 }
 };
 
-// Flugzeiten in Sekunden für Oberflächenziele; Orbitziele sind 3 Sekunden schneller.
+// Flugzeiten in Sekunden für Oberflächenziele; Ceres ist ein reguläres Flugziel. Orbitziele sind 3 Sekunden schneller.
 const flightTimes = {
   mercury: 10,
   venus: 45,
@@ -360,6 +360,7 @@ const flightTimes = {
   mars: 60,
   jupiter: 120,
   neptune: 120,
+  ceres: 150,
   luna: 20
 };
 
@@ -416,7 +417,8 @@ const bodies = {
   luna: { name: 'Luna', type: 'Mond der Erde', className: 'luna', temperature: 'ca. -20 °C Durchschnitt', resources: { stone: 3000000, ice: 1000000, iron: 2000000, silicon: 4000000, lithium: 6000000, helium3: 10000000, uranium: 3000000, bauxite: 10000000 }, storage: {}, orbit: 0, moonOf: 'earth', moonOrbit: 55 },
   mars: { name: 'Mars', type: 'Planet', className: 'mars', temperature: 'ca. -63 °C Durchschnitt', resources: { stone: 20000, coal: 20000, gas: 40000, uranium: 10000000, bauxite: 10000000 }, storage: {}, orbit: 405 },
   jupiter: { name: 'Jupiter', type: 'Gasplanet', className: 'jupiter', temperature: 'ca. -110 °C Wolkenobergrenze', resources: { helium3: 500000000, hydrogen: 5000000000, co2: 100000000 }, storage: {}, orbit: 515 },
-  neptune: { name: 'Neptun', type: 'Reiner Gasplanet', className: 'neptune', temperature: 'ca. -200 °C Wolkenobergrenze', resources: { hydrogen: 0, helium: 0 }, atmosphere: { pressure: 108 }, storage: {}, orbit: 610 }
+  neptune: { name: 'Neptun', type: 'Reiner Gasplanet', className: 'neptune', temperature: 'ca. -200 °C Wolkenobergrenze', resources: { hydrogen: 0, helium: 0 }, atmosphere: { pressure: 108 }, storage: {}, orbit: 610 },
+  ceres: { name: 'Ceres', type: 'Zwergplanet', className: 'ceres', temperature: 'ca. -105 °C Durchschnitt', resources: { iron: 5000000, titanium: 4000000, stone: 6000000, water: 7000000 }, storage: {}, orbit: 660 }
 };
 
 const resourceNames = { ice: 'Eis', titanOre: 'Titanerz', processedTitan: 'Aufbereitetes Titan', titanium: 'Titan', bauxite: 'Bauxit', aluminiumOxide: 'Aluminiumoxid', aluminium: 'Aluminium', co2: 'CO₂', carbon: 'Kohlenstoff', oxygen: 'Sauerstoff', concrete: 'Beton', stone: 'Stein', coal: 'Kohle', gas: 'Gas', iron: 'Eisen', silicon: 'Silizium', lithium: 'Lithium', copperOre: 'Kupfererz', copper: 'Kupfer', batteries: 'Batterien', buildingMaterials: 'Baustoffe', machines: 'Maschinen', glass: 'Glas', electronics: 'Elektronik', steel: 'Stahl', hydrogen: 'Wasserstoff', helium: 'Helium', helium3: 'Helium-3', crudeOil: 'Rohöl', polymers: 'Polymere', uranium: 'Uran', processedUranium: 'Aufbereitetes Uran', nuclearFuel: 'Kernbrennstoff', chips: 'Chips', water: 'Wasser', grain: 'Getreide', vegetables: 'Gemüse', food: 'Lebensmittel', algaeBiomass: 'Algenbiomasse' };
@@ -1616,7 +1618,7 @@ function setupSaveMenu() {
 }
 
 function rocketBodyPoint(id) {
-  const angles = { sun: 0, mercury: 25, venus: 150, earth: 250, mars: 70, jupiter: 145, neptune: 210 };
+  const angles = { sun: 0, mercury: 25, venus: 150, earth: 250, mars: 70, jupiter: 145, neptune: 210, ceres: 90 };
   if (id === 'sun') return { x: 530, y: 530 };
   if (id === 'luna') {
     const earth = rocketBodyPoint('earth');
@@ -1634,7 +1636,7 @@ function rocketBodyPoint(id) {
 function rocketOrbitPoint(id) {
   const p = rocketBodyPoint(id);
   if (id === 'sun') return p;
-  const a = id === 'luna' ? 225 * Math.PI / 180 : (({ mercury:25, venus:150, earth:250, mars:70, jupiter:145 }[id] || 0) * Math.PI / 180);
+  const a = id === 'luna' ? 225 * Math.PI / 180 : (({ mercury:25, venus:150, earth:250, mars:70, jupiter:145, neptune:210, ceres:90 }[id] || 0) * Math.PI / 180);
   const offset = id === 'luna' ? 28 : Math.max(34, Number(bodies[id]?.className === 'jupiter' ? 42 : 30));
   return { x: p.x + Math.cos(a) * offset, y: p.y + Math.sin(a) * offset };
 }
@@ -1697,7 +1699,7 @@ function renderSystem() {
     }
   });
 
-  const angles = { sun: 0, mercury: 25, venus: 150, earth: 250, mars: 70, jupiter: 145, neptune: 210 };
+  const angles = { sun: 0, mercury: 25, venus: 150, earth: 250, mars: 70, jupiter: 145, neptune: 210, ceres: 90 };
 
   // Luna bekommt eine eigene Umlaufbahn um die Erde.
   const earthAngle = angles.earth * Math.PI / 180;
@@ -2161,7 +2163,7 @@ function refreshTopResourceValues() {
 function resourceRows(body) {
   const entries = Object.entries(body.resources);
   if (!entries.length) return '<p class="hint">Keine abbaubaren Rohstoffe.</p>';
-  return entries.map(([key, amount]) => `<div class="stat"><span>${resourceIcons[key] || ''} ${resourceNames[key] || key}</span><strong>${['crudeOil','water'].includes(key) ? amount.toLocaleString('de-DE', { maximumFractionDigits: 2 }) + ' L' : amount.toLocaleString('de-DE', { maximumFractionDigits: 2 }) + ' t'}</strong></div>`).join('');
+  return entries.map(([key, amount]) => `<div class="stat"><span>${resourceIcons[key] || ''} ${resourceNames[key] || key}</span><strong>${(key === 'crudeOil' || key === 'water') ? amount.toLocaleString('de-DE', { maximumFractionDigits: 2 }) + ' L' : amount.toLocaleString('de-DE', { maximumFractionDigits: 2 }) + ' t'}</strong></div>`).join('');
 }
 
 function buildingCost(key, planetId = state.selected) {
