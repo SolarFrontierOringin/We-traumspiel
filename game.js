@@ -1445,6 +1445,8 @@ function renderSystem() {
       ${buildButton('gasPlant')}
       ${buildButton('co2Extraction')}
       ${buildButton('co2ProcessingPlant')}
+      ${buildButton('orbitalCo2Extractor')}
+      ${buildButton('researchSatellite')}
       ${buildButton('ironMine')}
       ${buildButton('bauxiteMine')}
       ${buildButton('aluminiumOxideRefinery')}
