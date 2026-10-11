@@ -140,14 +140,14 @@ const MARKET_RESOURCES = {
  titanium:{base:180,capacity:4000,initial:2000,unit:'t'}
 };
 let market = {budget:MARKET_START_BUDGET,lastRestockSlot:0,lastPriceUpdateMs:0,
- resources:Object.fromEntries(Object.entries(MARKET_RESOURCES).map(([k,c])=>[k,{stock:c.initial,price:c.base,demand:0,supply:0}]))};
+ resources:Object.fromEntries(Object.entries(MARKET_RESOURCES).map(([k,c])=>[k,{stock:c.initial,soldStock:0,price:c.base,demand:0,supply:0}]))};
 function marketMoney(v){return `${Number(v||0).toLocaleString('de-DE',{maximumFractionDigits:2})} GünniDolla`;}
 function marketAmount(k,v){return `${Number(v||0).toLocaleString('de-DE',{maximumFractionDigits:2})} ${MARKET_RESOURCES[k]?.unit||'t'}`;}
 function marketPrice(k,side='buy'){const c=MARKET_RESOURCES[k],i=market.resources[k];return Math.max(c.base*.25,Math.min(c.base*4,Number(i.price||c.base)))*(side==='buy'?1.05:.95);}
 function updateMarket(now=gameNow()){
  const slot=Math.floor(Math.max(0,now)/(3*60*60*1000));
  if(slot>Number(market.lastRestockSlot||0)){
-  Object.entries(MARKET_RESOURCES).forEach(([k,c])=>{const i=market.resources[k];i.stock=c.capacity;i.demand*=.5;i.supply*=.5;});
+  Object.entries(MARKET_RESOURCES).forEach(([k,c])=>{const i=market.resources[k];i.stock=c.capacity;i.soldStock=0;i.demand*=.5;i.supply*=.5;});
   market.lastRestockSlot=slot; saveGame(false);
  }
  const ps=Math.floor(Math.max(0,now)/(10*60*1000));
@@ -165,14 +165,16 @@ function marketTrade(side,k,amount){
  if(!c||!i||!Number.isFinite(qty)||qty<=0)return marketNotice('Bitte eine gültige Menge eingeben.',false);
  const storage=getLocationStorage(state.selected,state.viewMode==='orbit'?'orbit':'surface'),p=marketPrice(k,side);
  if(side==='buy'){
-  const n=Math.min(qty,i.stock,Math.floor((Number(state.gunniDollar||0)/p)*100)/100);
-  if(n<=0)return marketNotice(i.stock<=0?'Der Marktbestand ist ausverkauft.':'Nicht genügend GünniDolla.',false);
-  const cost=n*p;i.stock-=n;market.budget+=cost;state.gunniDollar=Math.max(0,Number(state.gunniDollar||0)-cost);storage[k]=Number(storage[k]||0)+n;i.demand+=n/Math.max(1,c.capacity*.01);
+  // Einkauf ist durch den verfügbaren Marktbestand und das Spielerguthaben begrenzt.
+  const n=Math.min(qty,Math.max(0,Number(i.stock)||0),Math.floor((Number(state.gunniDollar||0)/p)*100)/100);
+  if(n<=0)return marketNotice(Number(i.stock||0)<=0?'Der Marktbestand ist ausverkauft.':'Nicht genügend GünniDolla.',false);
+  const cost=n*p;i.stock=Math.max(0,Number(i.stock||0)-n);market.budget+=cost;state.gunniDollar=Math.max(0,Number(state.gunniDollar||0)-cost);storage[k]=Number(storage[k]||0)+n;i.demand+=n/Math.max(1,c.capacity*.01);
   marketNotice(`Gekauft: ${marketAmount(k,n)} für ${marketMoney(cost)}.`);
  }else{
-  const avail=Math.max(0,Number(storage[k]||0)),n=Math.min(qty,avail,c.capacity-i.stock,Math.floor((Number(market.budget||0)/p)*100)/100);
-  if(n<=0)return marketNotice(i.stock>=c.capacity?'Das Marktlager ist voll.':'Nicht genug Vorrat oder Marktbudget.',false);
-  const revenue=n*p;storage[k]=avail-n;i.stock+=n;market.budget-=revenue;state.gunniDollar=Number(state.gunniDollar||0)+revenue;i.supply+=n/Math.max(1,c.capacity*.01);
+  // Der Markt nimmt beliebige Mengen an. Das imaginäre Lager zählt ausschließlich verkaufte Waren.
+  const avail=Math.max(0,Number(storage[k]||0)),n=Math.min(qty,avail);
+  if(n<=0)return marketNotice('Nicht genug Vorrat im ausgewählten Lager.',false);
+  const revenue=n*p;storage[k]=avail-n;i.soldStock=Number(i.soldStock||0)+n;market.budget=Math.max(0,Number(market.budget||0)-revenue);state.gunniDollar=Number(state.gunniDollar||0)+revenue;i.supply+=n/Math.max(1,c.capacity*.01);
   marketNotice(`Verkauft: ${marketAmount(k,n)} für ${marketMoney(revenue)}.`);
  }
  renderMarket();renderTopResources();saveGame(false);
@@ -182,10 +184,10 @@ function renderMarket(){
  const keys=Object.keys(MARKET_RESOURCES),selected=document.querySelector('#market-resource-select')?.value;
  const opts=keys.map(k=>`<option value="${k}" ${k===selected?'selected':''}>${resourceIcons[k]||'📦'} ${resourceNames[k]||k}</option>`).join('');
  const rows=keys.map(k=>{const c=MARKET_RESOURCES[k],i=market.resources[k],trend=i.price>c.base*1.03?'↑':i.price<c.base*.97?'↓':'↔';
- return `<div class="market-row"><span>${resourceIcons[k]||'📦'} ${resourceNames[k]||k}</span><strong>${marketMoney(i.price)}/${c.unit}</strong><span>${marketAmount(k,i.stock)} / ${marketAmount(k,c.capacity)}</span><small>${trend} Grundpreis: ${marketMoney(c.base)}/${c.unit}</small></div>`;}).join('');
+ return `<div class="market-row"><span>${resourceIcons[k]||'📦'} ${resourceNames[k]||k}</span><strong>${marketMoney(i.price)}/${c.unit}</strong><span>Kaufbestand: ${marketAmount(k,i.stock)} / ${marketAmount(k,c.capacity)}</span><small>${trend} Grundpreis: ${marketMoney(c.base)}/${c.unit} · Von dir verkauft: ${marketAmount(k,i.soldStock||0)}</small></div>`;}).join('');
  panel.innerHTML=`<div class="market-summary"><div><span>💰 Dein Guthaben</span><strong>${marketMoney(state.gunniDollar)}</strong></div><div><span>🏦 Marktbudget</span><strong>${marketMoney(market.budget)}</strong></div><div><span>🪐 Handelsort</span><strong>${bodies[state.selected]?.name||state.selected} · ${state.viewMode==='orbit'?'Orbitlager':'Oberflächenlager'}</strong></div></div>
  <div class="market-trade-box"><label for="market-resource-select">Rohstoff</label><select id="market-resource-select">${opts}</select><label for="market-amount">Menge</label><input id="market-amount" type="number" min=".01" step=".01" value="10"><div id="market-price-preview" class="market-price-preview"></div>
- <div class="market-actions"><button id="market-buy" type="button">🛒 Kaufen</button><button id="market-sell" type="button">💸 Verkaufen</button></div><p id="market-status" class="market-status" aria-live="polite">Handel wird im aktuell gewählten Lager verbucht.</p></div><h3>📈 Marktpreise und Lagerbestände</h3><div class="market-list">${rows}</div>`;
+ <div class="market-actions"><button id="market-buy" type="button">🛒 Kaufen</button><button id="market-sell" type="button">💸 Verkaufen</button></div><p id="market-status" class="market-status" aria-live="polite">Käufe kommen ins gewählte Lager. Das imaginäre Marktlager zählt nur verkaufte Waren.</p></div><h3>📈 Marktpreise und Lagerbestände</h3><div class="market-list">${rows}</div>`;
  const preview=()=>{const k=document.querySelector('#market-resource-select').value,a=Math.max(0,Number(document.querySelector('#market-amount').value)||0),c=MARKET_RESOURCES[k];
  document.querySelector('#market-price-preview').innerHTML=`Kauf: <strong>${marketMoney(marketPrice(k,'buy')*a)}</strong> (${marketMoney(marketPrice(k,'buy'))}/${c.unit}) · Verkauf: <strong>${marketMoney(marketPrice(k,'sell')*a)}</strong> (${marketMoney(marketPrice(k,'sell'))}/${c.unit})`;
  document.querySelector('label[for="market-amount"]').textContent=`Menge (${c.unit})`;};
