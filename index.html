@@ -6,7 +6,7 @@
   <title>Solar Frontier: Origins</title>
   <meta name="theme-color" content="#02050b">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=game-clock-v1">
+  <link rel="stylesheet" href="style.css?v=market-v1">
 </head>
 <body>
 
@@ -46,6 +46,7 @@
         <div class="hint">Sonnensystem · Rohstoffe · Aufbau · Transport</div>
       </div>
       <div class="header-actions">
+        <button id="market-button" class="market-header-button" type="button">🛒 Markt</button>
         <button id="main-menu-button" class="small-button menu-button" type="button" onclick="const m=document.getElementById('main-menu'); if(m) m.hidden=!m.hidden;">☰ Menü</button>
       </div>
     </header>
@@ -89,6 +90,14 @@
         <button id="save-menu-button" class="menu-item">💾 <span>Spiel</span></button>
         <button id="introduction-button" class="menu-item">📖 <span>Einführung</span></button>
       </div>
+    </section>
+
+    <section id="market-panel" class="market-panel" hidden>
+      <div class="market-head">
+        <div><h2>🛒 Dynamischer Marktplatz</h2><div class="hint">Gemeinsamer Markt · Einzelspieler · Auffüllung alle 3 Spielstunden</div></div>
+        <button id="market-close" class="icon-button" type="button" aria-label="Markt schließen">✕</button>
+      </div>
+      <div id="market-content"></div>
     </section>
 
     <section id="news-panel" class="news-panel" hidden>
@@ -198,7 +207,7 @@
       <aside id="info-panel" class="panel"></aside>
     </section>
   </main>
-  <script src="game.js?v=game-clock-v1"></script>
+  <script src="game.js?v=market-v1"></script>
   <script>if ("serviceWorker" in navigator) navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{});</script>
 </body>
 </html>

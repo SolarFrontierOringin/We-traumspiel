@@ -114,6 +114,86 @@ function setupGameClockControls() {
   updateGameClockDisplay();
 }
 
+
+const MARKET_START_BUDGET = 10000000;
+const MARKET_RESTOCK_INTERVAL_MS = 3 * 60 * 60 * 1000;
+const MARKET_RESOURCES = {
+ stone:{base:2,capacity:100000,initial:100000,unit:'t'}, ice:{base:8,capacity:30000,initial:20000,unit:'t'},
+ coal:{base:5,capacity:60000,initial:60000,unit:'t'}, gas:{base:7,capacity:60000,initial:50000,unit:'t'},
+ co2:{base:3,capacity:50000,initial:50000,unit:'t'}, carbon:{base:20,capacity:15000,initial:10000,unit:'t'},
+ oxygen:{base:15,capacity:20000,initial:20000,unit:'t'}, crudeOil:{base:18,capacity:30000,initial:25000,unit:'L'},
+ polymers:{base:40,capacity:15000,initial:12000,unit:'t'}, iron:{base:10,capacity:100000,initial:100000,unit:'t'},
+ steel:{base:25,capacity:50000,initial:40000,unit:'t'}, silicon:{base:12,capacity:50000,initial:45000,unit:'t'},
+ lithium:{base:45,capacity:20000,initial:15000,unit:'t'}, copperOre:{base:12,capacity:30000,initial:30000,unit:'t'},
+ copper:{base:24,capacity:20000,initial:15000,unit:'t'}, batteries:{base:70,capacity:12000,initial:8000,unit:'t'},
+ buildingMaterials:{base:8,capacity:60000,initial:60000,unit:'t'}, machines:{base:90,capacity:10000,initial:6000,unit:'t'},
+ glass:{base:20,capacity:20000,initial:16000,unit:'t'}, electronics:{base:100,capacity:10000,initial:6000,unit:'t'},
+ hydrogen:{base:12,capacity:20000,initial:16000,unit:'t'}, helium:{base:30,capacity:10000,initial:7000,unit:'t'},
+ helium3:{base:250,capacity:5000,initial:2500,unit:'t'}, uranium:{base:100,capacity:5000,initial:2500,unit:'t'},
+ processedUranium:{base:180,capacity:3000,initial:1500,unit:'t'}, nuclearFuel:{base:350,capacity:1500,initial:700,unit:'t'},
+ bauxite:{base:5,capacity:30000,initial:30000,unit:'t'}, aluminiumOxide:{base:16,capacity:12000,initial:9000,unit:'t'},
+ aluminium:{base:35,capacity:12000,initial:9000,unit:'t'}, water:{base:2,capacity:100000,initial:100000,unit:'L'},
+ grain:{base:6,capacity:20000,initial:15000,unit:'t'}, vegetables:{base:8,capacity:20000,initial:15000,unit:'t'},
+ food:{base:20,capacity:20000,initial:15000,unit:'t'}, algaeBiomass:{base:7,capacity:12000,initial:9000,unit:'t'},
+ concrete:{base:12,capacity:20000,initial:15000,unit:'t'}, chips:{base:180,capacity:6000,initial:3000,unit:'t'},
+ titanOre:{base:50,capacity:10000,initial:5000,unit:'t'}, processedTitan:{base:100,capacity:6000,initial:3000,unit:'t'},
+ titanium:{base:180,capacity:4000,initial:2000,unit:'t'}
+};
+let market = {budget:MARKET_START_BUDGET,lastRestockSlot:0,lastPriceUpdateMs:0,
+ resources:Object.fromEntries(Object.entries(MARKET_RESOURCES).map(([k,c])=>[k,{stock:c.initial,price:c.base,demand:0,supply:0}]))};
+function marketMoney(v){return `${Number(v||0).toLocaleString('de-DE',{maximumFractionDigits:2})} GünniDolla`;}
+function marketAmount(k,v){return `${Number(v||0).toLocaleString('de-DE',{maximumFractionDigits:2})} ${MARKET_RESOURCES[k]?.unit||'t'}`;}
+function marketPrice(k,side='buy'){const c=MARKET_RESOURCES[k],i=market.resources[k];return Math.max(c.base*.25,Math.min(c.base*4,Number(i.price||c.base)))*(side==='buy'?1.05:.95);}
+function updateMarket(now=gameNow()){
+ const slot=Math.floor(Math.max(0,now)/(3*60*60*1000));
+ if(slot>Number(market.lastRestockSlot||0)){
+  Object.entries(MARKET_RESOURCES).forEach(([k,c])=>{const i=market.resources[k];i.stock=c.capacity;i.demand*=.5;i.supply*=.5;});
+  market.lastRestockSlot=slot; saveGame(false);
+ }
+ const ps=Math.floor(Math.max(0,now)/(10*60*1000));
+ if(ps>Number(market.lastPriceUpdateMs||0)){
+  Object.entries(MARKET_RESOURCES).forEach(([k,c])=>{const i=market.resources[k],ratio=Math.max(0,Math.min(1,i.stock/c.capacity));
+   const target=Math.max(c.base*.25,Math.min(c.base*4,c.base*(1.65-ratio*1.3+Math.min(.5,i.demand*.01)-Math.min(.5,i.supply*.01))));
+   const current=Number(i.price||c.base),smoothed=current+(target-current)*.2;
+   i.price=Math.max(current*.9,Math.min(current*1.1,smoothed));i.demand*=.8;i.supply*=.8;
+  });market.lastPriceUpdateMs=ps;
+ }
+}
+function marketNotice(msg,good=true){const e=document.querySelector('#market-status');if(e){e.textContent=msg;e.className='market-status '+(good?'good':'warn');}}
+function marketTrade(side,k,amount){
+ const c=MARKET_RESOURCES[k],i=market.resources[k],qty=Number(amount);
+ if(!c||!i||!Number.isFinite(qty)||qty<=0)return marketNotice('Bitte eine gültige Menge eingeben.',false);
+ const storage=getLocationStorage(state.selected,state.viewMode==='orbit'?'orbit':'surface'),p=marketPrice(k,side);
+ if(side==='buy'){
+  const n=Math.min(qty,i.stock,Math.floor((Number(state.gunniDollar||0)/p)*100)/100);
+  if(n<=0)return marketNotice(i.stock<=0?'Der Marktbestand ist ausverkauft.':'Nicht genügend GünniDolla.',false);
+  const cost=n*p;i.stock-=n;market.budget+=cost;state.gunniDollar=Math.max(0,Number(state.gunniDollar||0)-cost);storage[k]=Number(storage[k]||0)+n;i.demand+=n/Math.max(1,c.capacity*.01);
+  marketNotice(`Gekauft: ${marketAmount(k,n)} für ${marketMoney(cost)}.`);
+ }else{
+  const avail=Math.max(0,Number(storage[k]||0)),n=Math.min(qty,avail,c.capacity-i.stock,Math.floor((Number(market.budget||0)/p)*100)/100);
+  if(n<=0)return marketNotice(i.stock>=c.capacity?'Das Marktlager ist voll.':'Nicht genug Vorrat oder Marktbudget.',false);
+  const revenue=n*p;storage[k]=avail-n;i.stock+=n;market.budget-=revenue;state.gunniDollar=Number(state.gunniDollar||0)+revenue;i.supply+=n/Math.max(1,c.capacity*.01);
+  marketNotice(`Verkauft: ${marketAmount(k,n)} für ${marketMoney(revenue)}.`);
+ }
+ renderMarket();renderTopResources();saveGame(false);
+}
+function renderMarket(){
+ const panel=document.querySelector('#market-content');if(!panel)return;updateMarket(gameNow());
+ const keys=Object.keys(MARKET_RESOURCES),selected=document.querySelector('#market-resource-select')?.value;
+ const opts=keys.map(k=>`<option value="${k}" ${k===selected?'selected':''}>${resourceIcons[k]||'📦'} ${resourceNames[k]||k}</option>`).join('');
+ const rows=keys.map(k=>{const c=MARKET_RESOURCES[k],i=market.resources[k],trend=i.price>c.base*1.03?'↑':i.price<c.base*.97?'↓':'↔';
+ return `<div class="market-row"><span>${resourceIcons[k]||'📦'} ${resourceNames[k]||k}</span><strong>${marketMoney(i.price)}/${c.unit}</strong><span>${marketAmount(k,i.stock)} / ${marketAmount(k,c.capacity)}</span><small>${trend} Grundpreis: ${marketMoney(c.base)}/${c.unit}</small></div>`;}).join('');
+ panel.innerHTML=`<div class="market-summary"><div><span>💰 Dein Guthaben</span><strong>${marketMoney(state.gunniDollar)}</strong></div><div><span>🏦 Marktbudget</span><strong>${marketMoney(market.budget)}</strong></div><div><span>🪐 Handelsort</span><strong>${bodies[state.selected]?.name||state.selected} · ${state.viewMode==='orbit'?'Orbitlager':'Oberflächenlager'}</strong></div></div>
+ <div class="market-trade-box"><label for="market-resource-select">Rohstoff</label><select id="market-resource-select">${opts}</select><label for="market-amount">Menge</label><input id="market-amount" type="number" min=".01" step=".01" value="10"><div id="market-price-preview" class="market-price-preview"></div>
+ <div class="market-actions"><button id="market-buy" type="button">🛒 Kaufen</button><button id="market-sell" type="button">💸 Verkaufen</button></div><p id="market-status" class="market-status" aria-live="polite">Handel wird im aktuell gewählten Lager verbucht.</p></div><h3>📈 Marktpreise und Lagerbestände</h3><div class="market-list">${rows}</div>`;
+ const preview=()=>{const k=document.querySelector('#market-resource-select').value,a=Math.max(0,Number(document.querySelector('#market-amount').value)||0),c=MARKET_RESOURCES[k];
+ document.querySelector('#market-price-preview').innerHTML=`Kauf: <strong>${marketMoney(marketPrice(k,'buy')*a)}</strong> (${marketMoney(marketPrice(k,'buy'))}/${c.unit}) · Verkauf: <strong>${marketMoney(marketPrice(k,'sell')*a)}</strong> (${marketMoney(marketPrice(k,'sell'))}/${c.unit})`;
+ document.querySelector('label[for="market-amount"]').textContent=`Menge (${c.unit})`;};
+ document.querySelector('#market-resource-select').addEventListener('change',preview);document.querySelector('#market-amount').addEventListener('input',preview);
+ document.querySelector('#market-buy').addEventListener('click',()=>marketTrade('buy',document.querySelector('#market-resource-select').value,document.querySelector('#market-amount').value));
+ document.querySelector('#market-sell').addEventListener('click',()=>marketTrade('sell',document.querySelector('#market-resource-select').value,document.querySelector('#market-amount').value));preview();
+}
+
 const state = {
   selected: 'earth',
   viewMode: 'surface',
@@ -1165,7 +1245,8 @@ function showSaveStatus(message, good = true) {
 
 function getSaveData() {
   return {
-    version: 2,
+    version: 3,
+    market,
     savedAt: new Date().toISOString(),
     gameClock: { elapsedMs: gameNow(), speed: gameSpeed },
     state: { ...state, lastUpdate: undefined, buildMenuOpen: false, buildings: { ...state.buildings } },
@@ -1242,6 +1323,15 @@ function loadGame(showMessage = true) {
     gameClockLastReal = performance.now();
 
     Object.assign(state, data.state);
+    if (data.market) {
+      market.budget = Math.max(0, Number(data.market.budget ?? MARKET_START_BUDGET));
+      market.lastRestockSlot = Math.max(0, Number(data.market.lastRestockSlot) || 0);
+      market.lastPriceUpdateMs = Math.max(0, Number(data.market.lastPriceUpdateMs) || 0);
+      Object.entries(MARKET_RESOURCES).forEach(([k,c]) => {
+        const saved = data.market.resources?.[k] || {};
+        market.resources[k] = {stock:Math.max(0,Math.min(c.capacity,Number(saved.stock ?? c.initial))),price:Math.max(c.base*.25,Math.min(c.base*4,Number(saved.price ?? c.base))),demand:Math.max(0,Number(saved.demand)||0),supply:Math.max(0,Number(saved.supply)||0)};
+      });
+    }
     state.buildings = { ...state.buildings, ...(data.state.buildings || {}) };
     state.bauxite = Math.max(0, Number(state.bauxite || 0));
     state.aluminiumOxide = Math.max(0, Number(state.aluminiumOxide || 0));
@@ -3457,6 +3547,7 @@ function updateRockets(now) {
 
 function updateResources() {
   const now = gameNow();
+  updateMarket(now);
   updateSolarProbeFlights();
   const delta = Math.max(0, (now - state.lastUpdate) / 1000);
   state.lastUpdate = now;
@@ -4015,6 +4106,19 @@ function setupTopPanels() {
   const newsPanel = document.querySelector('#news-panel');
   const newsClose = document.querySelector('#news-close');
   const economyButton = document.querySelector('#economy-button');
+  const marketButton = document.querySelector('#market-button');
+  const marketPanel = document.querySelector('#market-panel');
+  const marketClose = document.querySelector('#market-close');
+  if (marketButton && marketPanel) marketButton.addEventListener('click', () => {
+    marketPanel.hidden = !marketPanel.hidden;
+    if (!marketPanel.hidden) {
+      ['#news-panel','#economy-panel','#research-panel','#tasks-panel','#colonists-panel','#introduction-panel','#settings-panel'].forEach(sel=>{const el=document.querySelector(sel);if(el)el.hidden=true;});
+      const menu=document.querySelector('#main-menu');if(menu)menu.hidden=true;
+      renderMarket();
+    }
+  });
+  if (marketClose && marketPanel) marketClose.addEventListener('click',()=>{marketPanel.hidden=true;});
+
   const economyPanel = document.querySelector('#economy-panel');
   const economyClose = document.querySelector('#economy-close');
   const researchButton = document.querySelector('#research-button');
