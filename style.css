@@ -465,3 +465,20 @@ select{padding:7px;border-radius:8px;background:#eef2f7;color:#111}
 .demolition-actions .secondary-action{background:#34445b}
 .demolition-actions .danger{background:#8f3030}
 @media(max-width:430px){.demolition-dialog{padding:12px}.demolition-head h2{font-size:19px}.demolition-count-row{align-items:flex-start}.demolition-count-row input{max-width:100px}}
+
+
+/* Deutlich sichtbare Auswahl des Bauorts im Gebäudemenü */
+.build-view-switch{
+  position:sticky;top:0;z-index:12;margin:8px 0 12px;padding:12px;
+  border:2px solid #4b78b8;border-radius:14px;
+  background:linear-gradient(135deg,#101f35 0%,#0a1221 100%);
+  box-shadow:0 5px 18px rgba(0,0,0,.38);
+}
+.build-view-switch-label{font-size:13px;font-weight:900;letter-spacing:.06em;color:#e7f2ff;margin-bottom:9px}
+.build-view-switch-buttons{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.build-view-btn{min-height:52px;padding:10px 8px;border:2px solid #405675;border-radius:11px;background:#15243a;color:#eaf3ff;font-size:14px;font-weight:900;line-height:1.25}
+.build-view-btn[data-build-view="orbit"]{border-color:#8265c7;background:#282044}
+.build-view-btn.active[data-build-view="surface"]{background:#176a9f;border-color:#79d5ff;box-shadow:0 0 0 2px rgba(121,213,255,.18)}
+.build-view-btn.active[data-build-view="orbit"]{background:#6845b7;border-color:#d0bcff;box-shadow:0 0 0 3px rgba(176,145,255,.2)}
+.build-view-switch-hint{margin-top:8px;color:#c3d3e9;font-size:12px;line-height:1.4}
+@media(max-width:430px){.build-view-switch{padding:10px}.build-view-btn{font-size:12px;min-height:50px}}

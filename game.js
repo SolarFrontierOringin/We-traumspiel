@@ -1430,6 +1430,14 @@ function renderSystem() {
     const menu = document.createElement('div');
     menu.className = 'planet-build-menu';
     menu.innerHTML = `<div class="planet-build-header"><div class="planet-build-title">🏗️ Gebäude auf ${bodies[state.selected].name}</div><div class="planet-build-header-actions"><button type="button" class="demolition-admin-open">Abrissverwaltung</button><button type="button" class="build-menu-close" id="close-build-menu" aria-label="Gebäudemenü schließen">✕</button></div></div>
+      <div class="build-view-switch" role="group" aria-label="Bauort auswählen">
+        <div class="build-view-switch-label">📍 WO MÖCHTEST DU BAUEN?</div>
+        <div class="build-view-switch-buttons">
+          ${hasPlanetSurface(state.selected) ? `<button type="button" class="build-view-btn ${state.viewMode === 'surface' ? 'active' : ''}" data-build-view="surface">🌍 OBERFLÄCHE</button>` : ''}
+          <button type="button" class="build-view-btn ${state.viewMode === 'orbit' ? 'active' : ''}" data-build-view="orbit">🛰️ ORBIT</button>
+        </div>
+        <div class="build-view-switch-hint">${state.viewMode === 'orbit' ? 'Orbit-Gebäude werden unten angezeigt.' : 'Oberflächengebäude werden unten angezeigt. Für Satelliten und Orbit-Extraktoren auf ORBIT wechseln.'}</div>
+      </div>
       <div class="build-card steelworks-card"><div><strong>🏭 Stahlwerk</strong><small>0,2 t Stahl/s · verbraucht 0,2 t Eisen/s · ${state.selected === 'earth' ? '1. kostenlos · 2. und 3. je 4 t Stahl · ab dem 4. je 20 t Stahl' : 'erstes kostenlos · weitere 20 t Stahl'}</small></div><button class="build-resource" id="build-steelworks-floating" ${(Number(getPlanetStorage(state.selected).steel || 0) >= (state.selected === 'earth' ? (getBuildingsOnPlanet(state.selected).steelworks === 0 ? 0 : getBuildingsOnPlanet(state.selected).steelworks < 3 ? 4 : 20) : (getBuildingsOnPlanet(state.selected).steelworks === 0 ? 0 : 20))) ? '' : 'disabled'}>Bauen (${getBuildingsOnPlanet(state.selected).steelworks})</button></div>
       ${buildButton('stoneQuarry')}
       ${buildButton('buildingMaterialsFactory')}
@@ -1586,7 +1594,10 @@ function renderSystem() {
     [search, production, consumption, showUnavailable].forEach(el => el.addEventListener('input', updateBuildingFilters));
     [production, consumption, showUnavailable].forEach(el => el.addEventListener('change', updateBuildingFilters));
     updateBuildingFilters();
-    const categoryToRestore = groups.find(g => g.heading.querySelector('span')?.textContent === activeBuildingCategoryTitle) || groups[0];
+    const orbitCategoryTitle = '🛰️ Orbit-Gebäude';
+    const categoryToRestore = state.viewMode === 'orbit'
+      ? (groups.find(g => g.heading.querySelector('span')?.textContent === orbitCategoryTitle) || groups.find(g => g.heading.querySelector('span')?.textContent === activeBuildingCategoryTitle) || groups[0])
+      : (groups.find(g => g.heading.querySelector('span')?.textContent === activeBuildingCategoryTitle) || groups[0]);
     if (categoryToRestore) {
       categoryToRestore.content.hidden = false;
       categoryToRestore.heading.setAttribute('aria-expanded','true');
@@ -1609,6 +1620,15 @@ function renderSystem() {
       }
     });
 
+    menu.querySelectorAll('[data-build-view]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.viewMode = btn.dataset.buildView === 'orbit' ? 'orbit' : 'surface';
+        activeBuildingCategoryTitle = state.viewMode === 'orbit' ? '🛰️ Orbit-Gebäude' : '⛏️ Rohstoffgewinnung';
+        renderSystem();
+        renderInfo();
+        saveGame(false);
+      });
+    });
     menu.querySelector('.demolition-admin-open').addEventListener('click', () => demolishBuilding(null, state.selected));
     menu.querySelector('#close-build-menu').addEventListener('click', () => {
       state.buildMenuOpen = false;
