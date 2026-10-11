@@ -306,7 +306,7 @@ const buildingTypes = {
   orbitalCo2Extractor: { name: 'CO₂-Orbit-Extraktor', icon: '🛰️', resource: null, rate: 0, cost: 0, text: 'Fördert 0,2 t CO₂/s · kein Stromverbrauch · lagert CO₂ im jeweiligen Orbit-Lager ein · nur im Orbit' },
   researchSatellite: { name: 'Forschungssatellit', icon: '🛰️', resource: null, rate: 0, cost: 800, text: 'Erzeugt 1 Forschungspunkt/s · kein Stromverbrauch · maximal 1 Forschungssatellit pro Orbit · Baukosten: 800 t Stahl, 120 t Elektronik, 80 t Chips, 100 t Glas' },
   ironMine: { name: 'Eisenmine', icon: '🧲', resource: 'iron', rate: 0.1, cost: 20, text: '0,1 t Eisen/s' },
-  titanMine: { name: 'Titanmine', icon: '⛏️', resource: 'titanOre', rate: 0.2, cost: 150, text: '0,2 t Titanerz/s · 150 t Stahl, 50 t Maschinen, 30 t Elektronik · nur auf Merkur' },
+  titanMine: { name: 'Titanmine', icon: '⛏️', resource: 'titanOre', rate: 0.2, cost: 150, text: '0,2 t Titanerz/s · 150 t Stahl, 50 t Maschinen, 30 t Elektronik · auf allen Planetenoberflächen baubar; fördert lokales Titanerzvorkommen' },
   titanProcessing: { name: 'Titanaufbereitung', icon: '⚗️', resource: null, rate: 0, cost: 250, text: 'verbraucht 0,2 t Titanerz/s · produziert 0,1 t aufbereitetes Titan/s · 250 t Stahl, 100 t Maschinen, 50 t Elektronik' },
   titanRefinery: { name: 'Titanraffinerie', icon: '🏭', resource: null, rate: 0, cost: 400, text: 'verbraucht 0,1 t aufbereitetes Titan/s · produziert 0,05 t Titan/s · 400 t Stahl, 150 t Maschinen, 100 t Elektronik' },
   bauxiteMine: { name: 'Bauxitmine', icon: '⛏️', resource: 'bauxite', rate: 0.5, cost: 40, text: '0,5 t Bauxit/s · kein Verbrauch · nur Erde, Luna und Mars' },
@@ -2181,8 +2181,8 @@ function isBuildingAllowed(key, planetId = state.selected) {
     return planetId === 'earth';
   }
   // Merkur und Venus bleiben bis 50 °C vollständig gesperrt; nur Sonnensegel sind vorher erlaubt.
-  if (planetId === 'mercury' && mercuryTemperature() > 50 && key !== 'solarSail' && key !== 'co2ProcessingPlant' && key !== 'iceProcessingPlant' && key !== 'algaeFoodProcessor') return false;
-  if (planetId === 'venus' && venusTemperature() > 50 && key !== 'solarSail' && key !== 'co2Extraction' && key !== 'co2ProcessingPlant' && key !== 'iceProcessingPlant' && key !== 'algaeFoodProcessor') return false;
+  if (planetId === 'mercury' && mercuryTemperature() > 50 && key !== 'solarSail' && key !== 'co2ProcessingPlant' && key !== 'iceProcessingPlant' && key !== 'algaeFoodProcessor' && !['titanMine','titanProcessing','titanRefinery'].includes(key)) return false;
+  if (planetId === 'venus' && venusTemperature() > 50 && key !== 'solarSail' && key !== 'co2Extraction' && key !== 'co2ProcessingPlant' && key !== 'iceProcessingPlant' && key !== 'algaeFoodProcessor' && !['titanMine','titanProcessing','titanRefinery'].includes(key)) return false;
   // Sonnensegel gibt es auf Merkur und Venus.
   if (key === 'solarSail' && !['mercury','venus'].includes(planetId)) return false;
   if (key === 'co2Extraction' && planetId !== 'venus') return false;
@@ -2199,7 +2199,6 @@ function isBuildingAllowed(key, planetId = state.selected) {
     if (!state.research?.completed?.researchSatellite) return false;
   }
   if (key === 'bauxiteMine' && !['earth','luna','mars'].includes(planetId)) return false;
-  if (key === 'titanMine' && planetId !== 'mercury') return false;
   if (['aluminiumOxideRefinery','aluminiumSmelter'].includes(key) && planetId === 'sun') return false;
   // CO₂-Verarbeitung kann auf allen Planeten außer der Sonne gebaut werden.
   if (key === 'co2ProcessingPlant' && planetId === 'sun') return false;
@@ -2257,7 +2256,7 @@ function buildButton(key) {
 
   if (['titanMine','titanProcessing','titanRefinery'].includes(key)) {
     const costs = key === 'titanMine' ? {steel:150,machines:50,electronics:30} : key === 'titanProcessing' ? {steel:250,machines:100,electronics:50} : {steel:400,machines:150,electronics:100};
-    const affordable = Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount) && isBuildingAllowed(key) && (key !== 'titanMine' || Number(bodies[state.selected]?.resources?.titanOre || 0) > 0);
+    const affordable = Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount) && isBuildingAllowed(key);
     return `<div class="build-card"><div><strong>${b.icon} ${b.name}</strong><small>${b.text}</small></div><button class="build-resource" data-building="${key}" ${affordable ? '' : 'disabled'}>Bauen (${count})</button></div>`;
   }
 
@@ -2770,7 +2769,6 @@ function buildResourceBuilding(key) {
   } else if (['titanMine','titanProcessing','titanRefinery'].includes(key)) {
     const costs = key === 'titanMine' ? {steel:150, machines:50, electronics:30} : key === 'titanProcessing' ? {steel:250, machines:100, electronics:50} : {steel:400, machines:150, electronics:100};
     if (!Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount)) return;
-    if (key === 'titanMine' && Number(bodies[planetId]?.resources?.titanOre || 0) <= 0) return;
     for (const [r, amount] of Object.entries(costs)) storage[r] -= amount;
   } else if (key === 'uraniumMine') {
     if (Number(storage.steel || 0) < 300 || Number(storage.buildingMaterials || 0) < 200) return;
@@ -3560,6 +3558,17 @@ function updateResources() {
     if (id === 'sun') return;
     const bld = getBuildingsOnPlanet(id);
     const storage = getPlanetStorage(id);
+    // Titanmine: fördert Titanerz aus dem lokalen Vorkommen in das lokale Oberflächenlager.
+    // Die Mine ist auf allen Planetenoberflächen baubar; ohne lokales Vorkommen produziert sie nichts.
+    if (Number(bld.titanMine || 0) > 0) {
+      const availableTitanOre = Math.max(0, Number(planet.resources.titanOre || 0));
+      const minedTitanOre = Math.min(availableTitanOre, 0.2 * Number(bld.titanMine) * delta);
+      if (minedTitanOre > 0) {
+        planet.resources.titanOre = availableTitanOre - minedTitanOre;
+        storage.titanOre = Number(storage.titanOre || 0) + minedTitanOre;
+      }
+    }
+
     // Eisenabbau auf der Erde bewusst separat verarbeiten.
     // Dadurch wird das zentrale Erd-Lager `state.iron` direkt und eindeutig
     // erhöht und kann nicht durch eine andere Lager-Logik aus dem Takt geraten.
@@ -4233,9 +4242,9 @@ function renderEconomy() {
     if (key === 'electronics') { production = electronicsProduction('earth'); consumption = 0; }
     if (key === 'helium3') { production = helium3Production('earth'); consumption = fusionHelium3Use('earth'); }
     if (key === 'bauxite') production = Number(getBuildingsOnPlanet('earth').bauxiteMine || 0) * 0.5;
-    if (key === 'titanOre') { production = Number(getBuildingsOnPlanet('mercury').titanMine || 0) * 0.2; consumption = Number(getBuildingsOnPlanet('mercury').titanProcessing || 0) * 0.2; }
-    if (key === 'processedTitan') { production = Number(getBuildingsOnPlanet('mercury').titanProcessing || 0) * 0.1; consumption = Number(getBuildingsOnPlanet('mercury').titanRefinery || 0) * 0.1; }
-    if (key === 'titanium') production = Number(getBuildingsOnPlanet('mercury').titanRefinery || 0) * 0.05;
+    if (key === 'titanOre') { production = Object.keys(bodies).reduce((sum, id) => sum + Number(getBuildingsOnPlanet(id).titanMine || 0) * 0.2, 0); consumption = Object.keys(bodies).reduce((sum, id) => sum + Number(getBuildingsOnPlanet(id).titanProcessing || 0) * 0.2, 0); }
+    if (key === 'processedTitan') { production = Object.keys(bodies).reduce((sum, id) => sum + Number(getBuildingsOnPlanet(id).titanProcessing || 0) * 0.1, 0); consumption = Object.keys(bodies).reduce((sum, id) => sum + Number(getBuildingsOnPlanet(id).titanRefinery || 0) * 0.1, 0); }
+    if (key === 'titanium') production = Object.keys(bodies).reduce((sum, id) => sum + Number(getBuildingsOnPlanet(id).titanRefinery || 0) * 0.05, 0);
     if (key === 'aluminiumOxide') { production = Number(getBuildingsOnPlanet('earth').aluminiumOxideRefinery || 0) * 0.25; consumption = Number(getBuildingsOnPlanet('earth').aluminiumSmelter || 0) * 0.25; }
     if (key === 'aluminium') production = Number(getBuildingsOnPlanet('earth').aluminiumSmelter || 0) * 0.125;
     if (key === 'bauxite') consumption = Number(getBuildingsOnPlanet('earth').aluminiumOxideRefinery || 0) * 0.5;
