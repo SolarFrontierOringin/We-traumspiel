@@ -3696,7 +3696,16 @@ if (solarViewport) {
 }
 requestAnimationFrame(updateResources);
 // Zusätzlich zum 5-Sekunden-Autosave den aktuellen Stand beim Verlassen sichern.
-window.addEventListener('pagehide', () => { if (!restartingGame) saveGame(false); });
-document.addEventListener('visibilitychange', () => { if (!restartingGame && document.visibilityState === 'hidden') saveGame(false); });
+// pagehide funktioniert auch bei Navigation/Neuladen; visibilitychange sichert,
+// wenn der Browser-Tab in den Hintergrund wechselt. beforeunload ist ein zusätzlicher Fallback.
+function saveGameOnExit() {
+  if (restartingGame) return;
+  saveGame(false);
+}
+window.addEventListener('pagehide', saveGameOnExit);
+window.addEventListener('beforeunload', saveGameOnExit);
+document.addEventListener('visibilitychange', () => {
+  if (!restartingGame && document.visibilityState === 'hidden') saveGame(false);
+});
 
 ['pointerdown','touchstart','keydown'].forEach(evt=>document.addEventListener(evt, unlockAudio, {once:true, passive:true}));
