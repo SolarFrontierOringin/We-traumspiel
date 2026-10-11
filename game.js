@@ -1679,13 +1679,15 @@ function updateRocketVisuals(now = gameNow()) {
 
 function renderSystem() {
   // Scrollposition des Gebäudemenüs sichern, da der DOM beim Bauen neu aufgebaut wird.
-  const previousBuildMenu = solarSystem.querySelector('.planet-build-menu');
+  const previousBuildMenu = document.querySelector('.planet-build-menu');
   if (previousBuildMenu) {
     const openCategory = previousBuildMenu.querySelector('.building-category-toggle[aria-expanded="true"]');
     if (openCategory) activeBuildingCategoryTitle = openCategory.querySelector('span')?.textContent || activeBuildingCategoryTitle;
   }
   const previousBuildMenuScrollTop = previousBuildMenu ? previousBuildMenu.scrollTop : 0;
   const previousBuildMenuScrollLeft = previousBuildMenu ? previousBuildMenu.scrollLeft : 0;
+  // Das Menü aus dem gezoomten Sonnensystem herauslösen, damit es im Bildschirm zentriert bleibt.
+  if (previousBuildMenu) previousBuildMenu.remove();
   // Im Baumenü die Planeten, ihre Beschriftungen und Umlaufbahnen ausblenden.
   solarSystem.classList.toggle('building-menu-open', state.selected !== 'sun' && state.buildMenuOpen);
   solarSystem.innerHTML = '';
@@ -2004,7 +2006,8 @@ function renderSystem() {
 
     menu.style.left = '50%';
     menu.style.top = 'calc(50% - 150px)';
-    solarSystem.appendChild(menu);
+    document.body.appendChild(menu);
+    // Das Menü liegt direkt im Dokument, damit Zoom/Scrollen des Sonnensystems seine Position nicht verschiebt.
     // Klasse nach dem Einfügen erneut setzen, damit CSS sicher greift.
     solarSystem.classList.add('building-menu-open');
     // Nach dem Bauen vertikale und horizontale Scrollposition wiederherstellen.
