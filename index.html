@@ -50,8 +50,12 @@
       </div>
     </header>
 
-    <section id="game-clock-panel" class="game-clock-panel" aria-label="Spielzeitsteuerung">
-      <div class="game-clock-readout"><span class="game-clock-caption">🕒 GALAKTISCHER STANDARDKALENDER</span><strong id="game-clock-value">01.01.2027 · 00:00:00</strong></div>
+    <details id="game-clock-panel" class="game-clock-panel">
+      <summary class="game-clock-summary" aria-label="Kalender öffnen oder schließen">
+        <span class="game-clock-caption">🕒 KALENDER</span>
+        <strong id="game-clock-value">01.01.2027 · 00:00:00</strong>
+        <span class="game-clock-chevron" aria-hidden="true">▾</span>
+      </summary>
       <div class="game-speed-controls" role="group" aria-label="Spielgeschwindigkeit">
         <span>Geschwindigkeit</span>
         <button type="button" data-game-speed="1" class="active" aria-pressed="true">x1</button>
@@ -61,7 +65,7 @@
         <button type="button" data-game-speed="10" aria-pressed="false">x10</button>
         <small id="game-clock-speed-label">x1</small>
       </div>
-    </section>
+    </details>
 
     <section id="main-menu" class="main-menu" hidden>
       <div class="main-menu-head">
