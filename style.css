@@ -560,3 +560,25 @@ select{padding:7px;border-radius:8px;background:#eef2f7;color:#111}
 
 /* Touch-Gesten im Sonnensystem werden durch game.js gesteuert. */
 .solar-system-viewport{touch-action:none;overscroll-behavior:contain;}
+
+
+/* Kolonistenverwaltung */
+.colonists-panel{border:1px solid #263754;border-radius:16px;background:#09111f;padding:14px;margin-bottom:8px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.colonists-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px}
+.colonists-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0}
+.colonists-summary-card{display:grid;gap:5px;padding:11px;border:1px solid #263754;border-radius:12px;background:#0c1627}
+.colonists-summary-card span{color:#aab8ce;font-size:13px}
+.colonists-summary-card strong{font-size:18px;overflow-wrap:anywhere}
+.colonists-planet-list{display:grid;gap:10px;margin-top:12px}
+.colonists-planet-card{padding:12px;border:1px solid #263754;border-radius:12px;background:#0c1627}
+.colonists-planet-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.colonists-planet-head h3{margin:0}
+.colonists-growth-label{display:flex;justify-content:space-between;gap:8px;margin-top:12px}
+.colonist-growth-slider{width:100%;accent-color:#2776d2}
+.colonists-remove-row{display:grid;grid-template-columns:minmax(0,1fr) 80px auto;gap:7px;align-items:center;margin-top:12px}
+.colonists-remove-row input{width:100%;min-width:0;padding:8px;border:1px solid #344967;border-radius:8px;background:#eef2f7;color:#111}
+.colonists-remove-row button{white-space:nowrap}
+@media(max-width:430px){.colonists-summary{grid-template-columns:1fr}.colonists-remove-row{grid-template-columns:minmax(0,1fr) 70px}.colonists-remove-row button{grid-column:1/-1}}
+
+.demolition-colonist-choice{display:grid;gap:6px;margin:10px 0;padding:10px;border:1px solid #315273;border-radius:10px;background:#0b1728}
+.demolition-colonist-choice small{color:#aab8ce;line-height:1.4}

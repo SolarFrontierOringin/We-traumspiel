@@ -139,7 +139,11 @@ const state = {
     foodFactory: 0,
     iceProcessingPlant: 0,
     algaeFarm: 0,
-    algaeFoodProcessor: 0
+    algaeFoodProcessor: 0,
+    residentialHouse: 0,
+    mediumResidentialHouse: 0,
+    residentialComplex: 0,
+    habitat: 0
   },
   lastUpdate: performance.now(),
   buildMenuOpen: false,
@@ -156,6 +160,10 @@ const state = {
 };
 
 const buildingTypes = {
+  residentialHouse: { name: 'Wohnhaus', icon: '🏠', resource: null, rate: 0, cost: 1900, text: '100 Wohnplätze · 1.900 t Stahl · 900 t Baustoffe · nur auf der Erde' },
+  mediumResidentialHouse: { name: 'Mittleres Wohnhaus', icon: '🏘️', resource: null, rate: 0, cost: 180, text: '150 Wohnplätze · 180 t Stahl · 250 t Baustoffe · 40 t Glas · nur auf der Erde' },
+  residentialComplex: { name: 'Wohnkomplex', icon: '🏢', resource: null, rate: 0, cost: 600, text: '500 Wohnplätze · 600 t Stahl · 800 t Baustoffe · 150 t Glas · nur auf der Erde' },
+  habitat: { name: 'Habitat', icon: '🛖', resource: null, rate: 0, cost: 200, text: '150 Wohnplätze · 200 t Stahl · 250 t Baustoffe · auf allen Himmelskörpern außer Erde und Sonne' },
   stoneQuarry: { name: 'Steinbruch', icon: '🪨', resource: 'stone', rate: 0.1, cost: 30, text: '0,1 t Stein/s pro Gebäude' },
   buildingMaterialsFactory: { name: 'Baustofffabrik', icon: '🧱', resource: null, rate: 0, cost: 40, text: 'verbraucht 0,20 t Stein/s · produziert 0,15 t Baustoffe/s' },
   coalMine: { name: 'Kohlemine', icon: '⛏️', resource: 'coal', rate: 0.5, cost: 15, text: '0,5 t Kohle/s' },
@@ -300,8 +308,12 @@ function getBuildingsOnPlanet(id) {
     return state.buildings;
   }
   if (!bodies[id].buildings) {
-    bodies[id].buildings = { foodFactory: 0, algaeFarm: 0, algaeFoodProcessor: 0, steelworks: 0, stoneQuarry: 0, buildingMaterialsFactory: 0, coalMine: 0, gasPlant: 0, co2Extraction: 0, co2ProcessingPlant: 0, orbitalCo2Extractor: 0, researchSatellite: 0, ironMine: 0, siliconMine: 0, lithiumMine: 0, copperMine: 0, copperSmelter: 0, lithiumRefinery: 0, machineFactory: 0, glassFactory: 0, heliumExtractor: 0, fusionReactor: 0, outpost: 0, coalPowerPlant: 0, solarPlant: 0, researchLab: 0, moonBase: 0, crudeOilPump: 0, polymerFactory: 0, electronicsFactory: 0, uraniumMine: 0, uraniumProcessingPlant: 0, nuclearFuelPlant: 0, nuclearReactor: 0, chipFactory: 0, solarSail: 0, solarSatellite: 0, solarProbe: 0, bauxiteMine: 0, titanMine: 0, titanProcessing: 0, titanRefinery: 0, aluminiumOxideRefinery: 0, aluminiumSmelter: 0, hydroelectricPlant: 0, greenhouse: 0 }
+    bodies[id].buildings = { residentialHouse: 0, mediumResidentialHouse: 0, residentialComplex: 0, habitat: 0, foodFactory: 0, algaeFarm: 0, algaeFoodProcessor: 0, steelworks: 0, stoneQuarry: 0, buildingMaterialsFactory: 0, coalMine: 0, gasPlant: 0, co2Extraction: 0, co2ProcessingPlant: 0, orbitalCo2Extractor: 0, researchSatellite: 0, ironMine: 0, siliconMine: 0, lithiumMine: 0, copperMine: 0, copperSmelter: 0, lithiumRefinery: 0, machineFactory: 0, glassFactory: 0, heliumExtractor: 0, fusionReactor: 0, outpost: 0, coalPowerPlant: 0, solarPlant: 0, researchLab: 0, moonBase: 0, crudeOilPump: 0, polymerFactory: 0, electronicsFactory: 0, uraniumMine: 0, uraniumProcessingPlant: 0, nuclearFuelPlant: 0, nuclearReactor: 0, chipFactory: 0, solarSail: 0, solarSatellite: 0, solarProbe: 0, bauxiteMine: 0, titanMine: 0, titanProcessing: 0, titanRefinery: 0, aluminiumOxideRefinery: 0, aluminiumSmelter: 0, hydroelectricPlant: 0, greenhouse: 0 }
   }
+  if (bodies[id].buildings.residentialHouse === undefined) bodies[id].buildings.residentialHouse = 0;
+  if (bodies[id].buildings.mediumResidentialHouse === undefined) bodies[id].buildings.mediumResidentialHouse = 0;
+  if (bodies[id].buildings.residentialComplex === undefined) bodies[id].buildings.residentialComplex = 0;
+  if (bodies[id].buildings.habitat === undefined) bodies[id].buildings.habitat = 0;
   if (bodies[id].buildings.electronicsFactory === undefined) bodies[id].buildings.electronicsFactory = 0;
   if (bodies[id].buildings.algaeFarm === undefined) bodies[id].buildings.algaeFarm = 0;
   if (bodies[id].buildings.algaeFoodProcessor === undefined) bodies[id].buildings.algaeFoodProcessor = 0;
@@ -325,6 +337,129 @@ function formatStorage(id) {
   const keys = ['stone','ice','coal','gas','co2','carbon','oxygen','crudeOil','polymers','iron','silicon','lithium','copperOre','copper','batteries','buildingMaterials','machines','glass','electronics','steel','hydrogen','helium','helium3','uranium','processedUranium','nuclearFuel','chips','concrete','bauxite','aluminiumOxide','aluminium','titanOre','processedTitan','titanium','water','grain','vegetables','food','algaeBiomass'];
   const rows = keys.filter(k => Number(st[k] || 0) > 0.000001).map(k => `<div class="stat"><span>${resourceIcons[k] || ''} ${resourceNames[k] || k}</span><strong>${k === 'co2' ? formatLargeTons(st[k]) : k === 'water' ? Number(st[k]).toLocaleString('de-DE', { maximumFractionDigits: 2 }) + ' L' : formatTons(st[k])}</strong></div>`);
   return rows.length ? rows.join('') : '<p class="hint">Lager ist leer.</p>';
+}
+
+const housingBuildingKeys = ['residentialHouse', 'mediumResidentialHouse', 'residentialComplex', 'habitat'];
+const housingCapacities = { residentialHouse: 100, mediumResidentialHouse: 150, residentialComplex: 500, habitat: 150 };
+const housingCosts = {
+  residentialHouse: { steel: 1900, buildingMaterials: 900 },
+  mediumResidentialHouse: { steel: 180, buildingMaterials: 250, glass: 40 },
+  residentialComplex: { steel: 600, buildingMaterials: 800, glass: 150 },
+  habitat: { steel: 200, buildingMaterials: 250 }
+};
+
+function ensureColonistData(id) {
+  if (!bodies[id] || id === 'sun') return null;
+  const body = bodies[id];
+  body.colonists = Math.max(0, Math.floor(Number(body.colonists) || 0));
+  body.colonistGrowthPercent = Math.max(0, Math.min(100, Number.isFinite(Number(body.colonistGrowthPercent)) ? Number(body.colonistGrowthPercent) : 100));
+  body.colonistGrowthAccumulator = Math.max(0, Number(body.colonistGrowthAccumulator) || 0);
+  body.colonistHousing ||= {};
+  const bld = getBuildingsOnPlanet(id);
+  for (const key of housingBuildingKeys) {
+    const count = Math.max(0, Math.floor(Number(bld[key]) || 0));
+    if (!Array.isArray(body.colonistHousing[key])) body.colonistHousing[key] = [];
+    body.colonistHousing[key] = body.colonistHousing[key].slice(0, count);
+    while (body.colonistHousing[key].length < count) body.colonistHousing[key].push(0);
+    body.colonistHousing[key] = body.colonistHousing[key].map(v => Math.max(0, Math.min(housingCapacities[key], Math.floor(Number(v) || 0))));
+  }
+  let assigned = housingBuildingKeys.reduce((sum, key) => sum + body.colonistHousing[key].reduce((a, n) => a + n, 0), 0);
+  // Migration of older saves or a future arrival event: assign any unallocated residents to available housing.
+  let unassigned = Math.max(0, body.colonists - assigned);
+  for (const key of housingBuildingKeys) {
+    for (let i = 0; i < body.colonistHousing[key].length && unassigned > 0; i++) {
+      const room = housingCapacities[key] - body.colonistHousing[key][i];
+      const moved = Math.min(room, unassigned);
+      body.colonistHousing[key][i] += moved;
+      unassigned -= moved;
+    }
+  }
+  assigned = housingBuildingKeys.reduce((sum, key) => sum + body.colonistHousing[key].reduce((a, n) => a + n, 0), 0);
+  if (assigned < body.colonists) body.colonists = assigned;
+  return body;
+}
+function colonistsOnPlanet(id) { return Number(ensureColonistData(id)?.colonists || 0); }
+function totalColonists() { return Object.keys(bodies).filter(id => id !== 'sun').reduce((sum, id) => sum + colonistsOnPlanet(id), 0); }
+function colonistIncomeRate() { return totalColonists() * 0.1; }
+function housingCapacity(id) {
+  const bld = getBuildingsOnPlanet(id);
+  return housingBuildingKeys.reduce((sum, key) => sum + Math.max(0, Number(bld[key]) || 0) * housingCapacities[key], 0);
+}
+function housingOccupied(id) { return colonistsOnPlanet(id); }
+function housingFree(id) { return Math.max(0, housingCapacity(id) - housingOccupied(id)); }
+function addColonistToHousing(id) {
+  const body = ensureColonistData(id);
+  if (!body || housingFree(id) < 1) return false;
+  for (const key of housingBuildingKeys) {
+    const slots = body.colonistHousing[key];
+    for (let i = 0; i < slots.length; i++) {
+      if (slots[i] < housingCapacities[key]) {
+        slots[i]++;
+        body.colonists++;
+        return true;
+      }
+    }
+  }
+  return false;
+}
+function removeColonistsFromHousing(id, amount) {
+  const body = ensureColonistData(id);
+  if (!body) return 0;
+  let remaining = Math.min(body.colonists, Math.max(0, Math.floor(Number(amount) || 0)));
+  const requested = remaining;
+  for (const key of [...housingBuildingKeys].reverse()) {
+    const slots = body.colonistHousing[key];
+    for (let i = slots.length - 1; i >= 0 && remaining > 0; i--) {
+      const removed = Math.min(slots[i], remaining);
+      slots[i] -= removed;
+      remaining -= removed;
+    }
+  }
+  body.colonists = Math.max(0, body.colonists - (requested - remaining));
+  return requested - remaining;
+}
+function processColonists(id, delta) {
+  const body = ensureColonistData(id);
+  if (!body || body.colonists <= 0 || delta <= 0) return;
+  const storage = getPlanetStorage(id);
+  state.gunniDollar = Math.max(0, Number(state.gunniDollar) || 0) + body.colonists * 0.1 * delta;
+  const foodNeed = body.colonists * 0.00001 * delta; // t Lebensmittel/s je Kolonist
+  const waterNeedLitres = body.colonists * 0.01 * delta; // 0,00001 t Wasser = 0,01 Liter
+  const foodAvailable = Math.max(0, Number(storage.food) || 0);
+  const waterAvailable = Math.max(0, Number(storage.water) || 0);
+  storage.food = Math.max(0, foodAvailable - Math.min(foodAvailable, foodNeed));
+  storage.water = Math.max(0, waterAvailable - Math.min(waterAvailable, waterNeedLitres));
+  const supplied = foodAvailable + 1e-12 >= foodNeed && waterAvailable + 1e-12 >= waterNeedLitres && Number(storage.food || 0) > 1e-12 && Number(storage.water || 0) > 1e-12;
+  if (!supplied || body.colonistGrowthPercent <= 0 || housingFree(id) <= 0) {
+    body.colonistGrowthAccumulator = 0;
+    return;
+  }
+  // Mittleres Wachstum: bei 100 % durchschnittlich ein neuer Kolonist je 10 Minuten.
+  body.colonistGrowthAccumulator += delta * (body.colonistGrowthPercent / 100) / 600;
+  while (body.colonistGrowthAccumulator >= 1 && housingFree(id) > 0) {
+    if (!addColonistToHousing(id)) break;
+    body.colonistGrowthAccumulator -= 1;
+  }
+  if (housingFree(id) <= 0) body.colonistGrowthAccumulator = 0;
+}
+
+function housingResidentsInDemolishedBuildings(id, key, amount) {
+  const body = ensureColonistData(id);
+  if (!body || !housingBuildingKeys.includes(key)) return 0;
+  const slots = body.colonistHousing[key] || [];
+  return slots.slice(Math.max(0, slots.length - amount)).reduce((sum, n) => sum + Number(n || 0), 0);
+}
+function addColonistsToPlanet(id, amount) {
+  const body = ensureColonistData(id);
+  if (!body) return 0;
+  let added = 0;
+  const requested = Math.max(0, Math.floor(Number(amount) || 0));
+  while (added < requested && housingFree(id) > 0) {
+    if (!addColonistToHousing(id)) break;
+    added++;
+  }
+  if (added) { saveGame(false); renderTopResources(); if (!document.querySelector('#colonists-panel')?.hidden) renderColonistsPanel(); }
+  return added;
 }
 
 function ironProduction(id = state.selected) {
@@ -1449,6 +1584,10 @@ function renderSystem() {
         <div class="build-view-switch-hint">${state.viewMode === 'orbit' ? 'Orbit-Gebäude werden unten angezeigt.' : 'Oberflächengebäude werden unten angezeigt. Für Satelliten und Orbit-Extraktoren auf ORBIT wechseln.'}</div>
       </div>
       <div class="build-card steelworks-card"><div><strong>🏭 Stahlwerk</strong><small>0,2 t Stahl/s · verbraucht 0,2 t Eisen/s · ${state.selected === 'earth' ? '1. kostenlos · 2. und 3. je 4 t Stahl · ab dem 4. je 20 t Stahl' : 'erstes kostenlos · weitere 20 t Stahl'}</small></div><button class="build-resource" id="build-steelworks-floating" ${(Number(getPlanetStorage(state.selected).steel || 0) >= (state.selected === 'earth' ? (getBuildingsOnPlanet(state.selected).steelworks === 0 ? 0 : getBuildingsOnPlanet(state.selected).steelworks < 3 ? 4 : 20) : (getBuildingsOnPlanet(state.selected).steelworks === 0 ? 0 : 20))) ? '' : 'disabled'}>Bauen (${getBuildingsOnPlanet(state.selected).steelworks})</button></div>
+      ${buildButton('residentialHouse')}
+      ${buildButton('mediumResidentialHouse')}
+      ${buildButton('residentialComplex')}
+      ${buildButton('habitat')}
       ${buildButton('stoneQuarry')}
       ${buildButton('buildingMaterialsFactory')}
       ${buildButton('coalMine')}
@@ -1498,6 +1637,7 @@ function renderSystem() {
     // Gebäudeübersicht Konzept 1.1: planetenabhängige, durchsuchbare Kategorien.
     const buildCategories = [
       { title: '⛏️ Rohstoffgewinnung', keys: ['titanMine','ironMine','stoneQuarry','coalMine','gasPlant','siliconMine','lithiumMine','copperMine','heliumExtractor','crudeOilPump','uraniumMine','bauxiteMine'] },
+      { title: '🏠 Wohnraum & Kolonisten', keys: ['residentialHouse','mediumResidentialHouse','residentialComplex','habitat'] },
       { title: '🌱 Landwirtschaft & Versorgung', keys: ['greenhouse','hydroelectricPlant'] },
       { title: '🏭 Verarbeitung & Industrie', keys: ['titanProcessing','titanRefinery','steelworks','buildingMaterialsFactory','co2ProcessingPlant','aluminiumOxideRefinery','aluminiumSmelter','copperSmelter','lithiumRefinery','machineFactory','glassFactory','electronicsFactory','chipFactory','polymerFactory','foodFactory','iceProcessingPlant','algaeFarm','algaeFoodProcessor','uraniumProcessingPlant','nuclearFuelPlant'] },
       { title: '⚡ Energie & Forschung', keys: ['coalPowerPlant','solarPlant','fusionReactor','nuclearReactor','researchLab'] },
@@ -1790,6 +1930,11 @@ function buildingCost(key, planetId = state.selected) {
 }
 
 function isBuildingAllowed(key, planetId = state.selected) {
+  if (housingBuildingKeys.includes(key)) {
+    if (planetId === 'sun') return false;
+    if (key === 'habitat') return planetId !== 'earth';
+    return planetId === 'earth';
+  }
   // Merkur und Venus bleiben bis 50 °C vollständig gesperrt; nur Sonnensegel sind vorher erlaubt.
   if (planetId === 'mercury' && mercuryTemperature() > 50 && key !== 'solarSail' && key !== 'co2ProcessingPlant' && key !== 'iceProcessingPlant' && key !== 'algaeFoodProcessor') return false;
   if (planetId === 'venus' && venusTemperature() > 50 && key !== 'solarSail' && key !== 'co2Extraction' && key !== 'co2ProcessingPlant' && key !== 'iceProcessingPlant' && key !== 'algaeFoodProcessor') return false;
@@ -1835,6 +1980,14 @@ function buildButton(key) {
   const b = buildingTypes[key];
   const count = getBuildingsOnPlanet(state.selected)[key];
   const storage = getPlanetStorage(state.selected);
+
+  if (housingBuildingKeys.includes(key)) {
+    const costs = housingCosts[key];
+    const affordable = isBuildingAllowed(key) && Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount);
+    const costText = Object.entries(costs).map(([r, amount]) => `${amount.toLocaleString('de-DE')} t ${({steel:'Stahl',buildingMaterials:'Baustoffe',glass:'Glas'})[r] || r}`).join(' · ');
+    const allowedText = isBuildingAllowed(key) ? '' : (key === 'habitat' ? ' · nur außerhalb von Erde und Sonne' : ' · nur auf der Erde');
+    return `<div class="build-card"><div><strong>${b.icon} ${b.name}</strong><small>${b.text} · Baukosten: ${costText}${allowedText}</small></div><button class="build-resource" data-building="${key}" ${affordable ? '' : 'disabled'}>Bauen (${count || 0})</button></div>`;
+  }
 
   if (key === 'polymerFactory') {
     const researched = !!state.research?.completed?.polymerFactory;
@@ -2116,6 +2269,10 @@ function saveAfterBuild() {
 
 function demolitionCostMap(key, planetId, currentCount) {
   const costs = {
+    residentialHouse: { steel: 1900, buildingMaterials: 900 },
+    mediumResidentialHouse: { steel: 180, buildingMaterials: 250, glass: 40 },
+    residentialComplex: { steel: 600, buildingMaterials: 800, glass: 150 },
+    habitat: { steel: 200, buildingMaterials: 250 },
     orbitalCo2Extractor: { aluminium: 50, polymers: 40, chips: 20, steel: 190 },
     iceProcessingPlant: { steel: 100, buildingMaterials: 50, electronics: 20 },
     algaeFarm: { steel: 300, buildingMaterials: 150, electronics: 50 },
@@ -2197,6 +2354,7 @@ function demolishBuilding(key = null, planetId = state.selected) {
       <input id="demolition-slider" type="range" min="1" max="1" value="1" step="1" aria-label="Abrissmenge">
       <div class="demolition-count-row"><span>Vorhanden: <strong id="demolition-owned">0</strong></span><span>Danach: <strong id="demolition-remaining">0</strong></span></div>
       <div class="demolition-refund"><strong>Voraussichtliche Rückerstattung (50 %)</strong><div id="demolition-refund-list"></div><small>Materialien werden ins Lager dieses Planeten gelegt. Mengen werden je Material abgerundet.</small></div>
+      <div id="demolition-colonist-choice" class="demolition-colonist-choice" hidden><label for="demolition-colonist-action">Bewohner der Wohngebäude</label><select id="demolition-colonist-action" class="demolition-select"><option value="relocate">Umsiedeln in übrigen Wohnraum</option><option value="remove">Kolonisten entfernen</option></select><small id="demolition-colonist-note"></small></div>
       <p id="demolition-warning" class="demolition-warning" hidden></p>
       <div class="demolition-actions"><button type="button" data-demolition-close class="secondary-action">Abbrechen</button><button type="button" id="demolition-confirm" class="danger">Abriss bestätigen</button></div>
     </section>`;
@@ -2209,6 +2367,9 @@ function demolishBuilding(key = null, planetId = state.selected) {
   const remainingLabel = overlay.querySelector('#demolition-remaining');
   const refundList = overlay.querySelector('#demolition-refund-list');
   const warning = overlay.querySelector('#demolition-warning');
+  const colonistChoice = overlay.querySelector('#demolition-colonist-choice');
+  const colonistAction = overlay.querySelector('#demolition-colonist-action');
+  const colonistNote = overlay.querySelector('#demolition-colonist-note');
   const confirmButton = overlay.querySelector('#demolition-confirm');
 
   const refresh = (fromSlider = false) => {
@@ -2227,12 +2388,25 @@ function demolishBuilding(key = null, planetId = state.selected) {
     const resourceLabels = {steel:'Stahl',buildingMaterials:'Baustoffe',electronics:'Elektronik',chips:'Chips',glass:'Glas',machines:'Maschinen',batteries:'Batterien',concrete:'Beton',polymers:'Polymere',aluminium:'Aluminium'};
     const rows = Object.entries(refunds).filter(([,v]) => v > 0).map(([r,v]) => `<div><span>${resourceLabels[r] || resourceNames[r] || r}</span><strong>${v.toLocaleString('de-DE')} t</strong></div>`);
     refundList.innerHTML = rows.length ? rows.join('') : '<span>Keine Materialrückerstattung für dieses Gebäude hinterlegt.</span>';
+    const isHousing = housingBuildingKeys.includes(selectedKey);
+    colonistChoice.hidden = !isHousing;
+    if (isHousing) {
+      const pop = colonistsOnPlanet(planetId);
+      const capacityAfter = Math.max(0, housingCapacity(planetId) - amount * housingCapacities[selectedKey]);
+      const residentsInRemoved = housingResidentsInDemolishedBuildings(planetId, selectedKey, amount);
+      const relocateOption = colonistAction.querySelector('option[value="relocate"]');
+      relocateOption.disabled = capacityAfter < pop;
+      if (relocateOption.disabled && colonistAction.value === 'relocate') colonistAction.value = 'remove';
+      const effectiveRemoval = Math.max(residentsInRemoved, Math.max(0, pop - capacityAfter));
+      colonistNote.textContent = `Im ausgewählten Gebäudeteil wohnen derzeit ${residentsInRemoved} Kolonisten. ${capacityAfter < pop ? `Bei „Kolonisten entfernen“ werden mindestens ${effectiveRemoval} Kolonisten entfernt; eine vollständige Umsiedlung ist nicht möglich.` : `Verbleibender Wohnraum: ${capacityAfter} Plätze.`}`;
+    }
     warning.hidden = true;
     confirmButton.disabled = owned < 1 || amount < 1;
   };
   select.addEventListener('change', () => { quantity.value = '1'; slider.value = '1'; refresh(); });
   quantity.addEventListener('input', () => refresh(false));
   slider.addEventListener('input', () => refresh(true));
+  colonistAction.addEventListener('change', () => refresh());
   overlay.querySelectorAll('[data-demolition-close]').forEach(btn => btn.addEventListener('click', () => overlay.remove()));
   overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
   overlay.querySelector('#demolition-confirm').addEventListener('click', () => {
@@ -2248,10 +2422,29 @@ function demolishBuilding(key = null, planetId = state.selected) {
     const name = buildingTypes[selectedKey]?.name || selectedKey;
     const refunds = demolitionRefundFor(selectedKey, planetId, amount);
     const refundText = Object.entries(refunds).map(([r,v]) => `${v} ${resourceNames[r] || r}`).join(', ') || 'keine Materialien';
-    if (!confirm(`${amount} × ${name} auf ${bodies[planetId].name} sofort abreißen?\nRückerstattung: ${refundText}.\nLaufende Raketenbau-Warteschlangen dieser Fabrik werden abgebrochen.`)) return;
+    const isHousing = housingBuildingKeys.includes(selectedKey);
+    const colonistActionValue = isHousing ? colonistAction.value : null;
+    const affectedResidents = isHousing ? housingResidentsInDemolishedBuildings(planetId, selectedKey, amount) : 0;
+    const capacityAfter = isHousing ? Math.max(0, housingCapacity(planetId) - amount * housingCapacities[selectedKey]) : 0;
+    if (isHousing && colonistActionValue === 'relocate' && capacityAfter < colonistsOnPlanet(planetId)) {
+      warning.textContent = 'Nicht genügend freie Wohnplätze für die Umsiedlung. Wähle „Kolonisten entfernen“ oder brich den Abriss ab.';
+      warning.hidden = false;
+      return;
+    }
+    const effectiveRemoval = isHousing ? Math.max(affectedResidents, Math.max(0, colonistsOnPlanet(planetId) - capacityAfter)) : 0;
+    const residentDecision = isHousing
+      ? `\nKolonisten in den ausgewählten Gebäuden: ${affectedResidents}.\nVoraussichtlich entfernt: ${colonistActionValue === 'remove' ? effectiveRemoval : 0}.\nAktion: ${colonistActionValue === 'relocate' ? 'Umsiedeln' : 'Kolonisten entfernen'}.`
+      : '';
+    if (!confirm(`${amount} × ${name} auf ${bodies[planetId].name} sofort abreißen?${residentDecision}\nRückerstattung: ${refundText}.\nLaufende Raketenbau-Warteschlangen dieser Fabrik werden abgebrochen.`)) return;
     const storage = getPlanetStorage(planetId);
+    if (isHousing) {
+      const body = ensureColonistData(planetId);
+      if (colonistActionValue === 'remove') body.colonists = Math.max(0, body.colonists - affectedResidents);
+      body.colonistHousing[selectedKey] = (body.colonistHousing[selectedKey] || []).slice(0, Math.max(0, owned - amount));
+    }
     for (const [resource, value] of Object.entries(refunds)) storage[resource] = Number(storage[resource] || 0) + value;
     current[selectedKey] = Math.max(0, owned - amount);
+    if (isHousing) ensureColonistData(planetId);
     if (selectedKey === 'rocketFactory') {
       delete rocketFactoryQueue[planetId]; delete rocketFactoryStarted[planetId];
       delete rocketFactoryBuildQueue[planetId]; delete rocketFactoryBuildStarted[planetId];
@@ -2264,6 +2457,7 @@ function demolishBuilding(key = null, planetId = state.selected) {
     overlay.remove();
     playUiSound('build');
     renderSystem(); renderInfo(); renderTopResources(); saveAfterBuild();
+    if (!document.querySelector('#colonists-panel')?.hidden) renderColonistsPanel();
   });
   refresh();
 }
@@ -2273,6 +2467,18 @@ function buildResourceBuilding(key) {
   const bld = getBuildingsOnPlanet(planetId);
   const storage = key === 'orbitalCo2Extractor' ? getOrbitStorage(planetId) : getPlanetStorage(planetId);
   if (!isBuildingAllowed(key, planetId)) return;
+
+  if (housingBuildingKeys.includes(key)) {
+    const costs = housingCosts[key];
+    if (!isBuildingAllowed(key, planetId) || !Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount)) return;
+    for (const [r, amount] of Object.entries(costs)) storage[r] = Number(storage[r] || 0) - amount;
+    bld[key] = Number(bld[key] || 0) + 1;
+    ensureColonistData(planetId);
+    playUiSound('build');
+    renderSystem(); renderInfo(); renderTopResources(); saveAfterBuild();
+    if (!document.querySelector('#colonists-panel')?.hidden) renderColonistsPanel();
+    return;
+  }
 
   if (key === 'iceProcessingPlant') {
     if (!state.research?.completed?.iceProcessingPlant || planetId === 'sun') return;
@@ -3523,6 +3729,7 @@ function updateResources(now) {
   // Raketen werden unabhängig vom restlichen UI animiert, damit der Flugweg
   // zwischen Startplanet und Zielorbit auf dem Sonnensystem sichtbar bleibt.
   updateRocketVisuals(now);
+  refreshColonistsPanelLive();
 
   requestAnimationFrame(updateResources);
 }
@@ -3531,6 +3738,96 @@ function updateResources(now) {
 // ==========================================
 // NEUIGKEITEN & WIRTSCHAFT – Buttons
 // ==========================================
+function renderColonistsPanel() {
+  const panel = document.querySelector('#colonists-content');
+  if (!panel) return;
+  const ids = Object.keys(bodies).filter(id => id !== 'sun');
+  const allColonists = ids.reduce((sum, id) => sum + colonistsOnPlanet(id), 0);
+  const foodNeed = allColonists * 0.00001;
+  const waterNeed = allColonists * 0.01;
+  panel.innerHTML = `
+    <div class="colonists-summary">
+      <div class="colonists-summary-card"><span>👥 Kolonisten gesamt</span><strong data-colonists-total>${allColonists.toLocaleString('de-DE')}</strong></div>
+      <div class="colonists-summary-card"><span>💵 GünniDollar-Einnahmen</span><strong data-colonists-income>${(allColonists * 0.1).toLocaleString('de-DE', {maximumFractionDigits:2})}/s</strong></div>
+      <div class="colonists-summary-card"><span>🍲 Lebensmittelbedarf</span><strong data-food-need>${foodNeed.toLocaleString('de-DE',{maximumFractionDigits:6})} t/s</strong></div>
+      <div class="colonists-summary-card"><span>💧 Wasserbedarf</span><strong data-water-need>${waterNeed.toLocaleString('de-DE',{maximumFractionDigits:4})} L/s</strong></div>
+    </div>
+    <p class="hint">Kolonisten starten bei 0. Die ersten ziehen nach Abschluss eines später festgelegten Auftrags ein. Wachstum ist vorläufig auf mittleres Tempo eingestellt: 1 Kolonist je 10 Minuten bei 100 %, sofern Wohnraum, Lebensmittel und Wasser vorhanden sind.</p>
+    <div class="colonists-planet-list">
+      ${ids.map(id => {
+        const body = ensureColonistData(id);
+        const storage = getPlanetStorage(id);
+        const pop = Number(body?.colonists || 0);
+        const capacity = housingCapacity(id);
+        const free = Math.max(0, capacity - pop);
+        const supplied = pop <= 0 || (Number(storage.food || 0) > 0 && Number(storage.water || 0) > 0);
+        const housingText = housingBuildingKeys.filter(key => Number(getBuildingsOnPlanet(id)[key] || 0) > 0).map(key => `${buildingTypes[key].name}: ${getBuildingsOnPlanet(id)[key]}`).join(' · ') || 'Keine Wohngebäude';
+        return `<article class="colonists-planet-card">
+          <div class="colonists-planet-head"><h3>${body.name}</h3><strong data-pop="${id}">${pop.toLocaleString('de-DE')} Kolonisten</strong></div>
+          <div class="stat"><span>Wohnraum</span><strong data-housing="${id}">${pop} / ${capacity} · ${free} frei</strong></div>
+          <div class="stat"><span>Lebensmittel im Oberflächenlager</span><strong data-food="${id}">${Number(storage.food || 0).toLocaleString('de-DE',{maximumFractionDigits:4})} t</strong></div>
+          <div class="stat"><span>Wasser im Oberflächenlager</span><strong data-water="${id}">${Number(storage.water || 0).toLocaleString('de-DE',{maximumFractionDigits:2})} L</strong></div>
+          <div class="stat"><span>Versorgungsstatus</span><strong data-supply="${id}" class="${supplied ? 'good' : 'warn'}">${pop === 0 ? 'Noch keine Kolonisten' : supplied ? 'Versorgung vorhanden' : 'Wachstum gestoppt: Nahrung oder Wasser fehlt'}</strong></div>
+          <div class="stat"><span>Wohngebäude</span><strong>${housingText}</strong></div>
+          <label class="colonists-growth-label" for="colonist-growth-${id}">Bevölkerungswachstum: <strong data-growth-value="${id}">${body.colonistGrowthPercent}%</strong></label>
+          <input id="colonist-growth-${id}" class="colonist-growth-slider" type="range" min="0" max="100" step="1" value="${body.colonistGrowthPercent}" data-growth-planet="${id}">
+          <div class="colonists-remove-row"><label for="colonist-remove-${id}">Kolonisten entfernen</label><input id="colonist-remove-${id}" type="number" min="1" max="${pop}" step="1" value="1" data-remove-amount="${id}" ${pop > 0 ? '' : 'disabled'}><button type="button" data-remove-colonists="${id}" ${pop > 0 ? '' : 'disabled'}>Entfernen</button></div>
+        </article>`;
+      }).join('')}
+    </div>`;
+  panel.querySelectorAll('[data-growth-planet]').forEach(input => {
+    input.addEventListener('input', () => {
+      const id = input.dataset.growthPlanet;
+      ensureColonistData(id).colonistGrowthPercent = Math.max(0, Math.min(100, Number(input.value) || 0));
+      const output = panel.querySelector(`[data-growth-value="${id}"]`);
+      if (output) output.textContent = `${input.value}%`;
+    });
+    input.addEventListener('change', () => saveGame(false));
+  });
+  panel.querySelectorAll('[data-remove-colonists]').forEach(button => button.addEventListener('click', () => {
+    const id = button.dataset.removeColonists;
+    const input = panel.querySelector(`[data-remove-amount="${id}"]`);
+    const amount = Math.floor(Number(input?.value) || 0);
+    const current = colonistsOnPlanet(id);
+    if (amount < 1 || amount > current) { alert(`Bitte eine Zahl zwischen 1 und ${current} eingeben.`); return; }
+    if (!confirm(`${amount} Kolonisten auf ${bodies[id].name} wirklich entfernen?`)) return;
+    removeColonistsFromHousing(id, amount);
+    saveGame(false);
+    renderColonistsPanel();
+    renderInfo();
+  }));
+}
+
+function refreshColonistsPanelLive() {
+  const panel = document.querySelector('#colonists-panel');
+  if (!panel || panel.hidden) return;
+  const ids = Object.keys(bodies).filter(id => id !== 'sun');
+  const total = ids.reduce((sum, id) => sum + colonistsOnPlanet(id), 0);
+  const setText = (selector, value) => { const el = panel.querySelector(selector); if (el) el.textContent = value; };
+  setText('[data-colonists-total]', total.toLocaleString('de-DE'));
+  setText('[data-colonists-income]', `${(total * 0.1).toLocaleString('de-DE',{maximumFractionDigits:2})}/s`);
+  setText('[data-food-need]', `${(total * 0.00001).toLocaleString('de-DE',{maximumFractionDigits:6})} t/s`);
+  setText('[data-water-need]', `${(total * 0.01).toLocaleString('de-DE',{maximumFractionDigits:4})} L/s`);
+  for (const id of ids) {
+    const pop = colonistsOnPlanet(id), capacity = housingCapacity(id), storage = getPlanetStorage(id);
+    const supplied = pop <= 0 || (Number(storage.food || 0) > 0 && Number(storage.water || 0) > 0);
+    setText(`[data-pop="${id}"]`, `${pop.toLocaleString('de-DE')} Kolonisten`);
+    setText(`[data-housing="${id}"]`, `${pop} / ${capacity} · ${Math.max(0,capacity-pop)} frei`);
+    setText(`[data-food="${id}"]`, `${Number(storage.food || 0).toLocaleString('de-DE',{maximumFractionDigits:4})} t`);
+    setText(`[data-water="${id}"]`, `${Number(storage.water || 0).toLocaleString('de-DE',{maximumFractionDigits:2})} L`);
+    const status = panel.querySelector(`[data-supply="${id}"]`);
+    if (status) {
+      status.textContent = pop === 0 ? 'Noch keine Kolonisten' : supplied ? 'Versorgung vorhanden' : 'Wachstum gestoppt: Nahrung oder Wasser fehlt';
+      status.classList.toggle('good', supplied);
+      status.classList.toggle('warn', !supplied);
+    }
+    const removeInput = panel.querySelector(`[data-remove-amount="${id}"]`);
+    const removeButton = panel.querySelector(`[data-remove-colonists="${id}"]`);
+    if (removeInput) { removeInput.max = String(pop); if (Number(removeInput.value) > pop) removeInput.value = String(Math.max(1,pop)); removeInput.disabled = pop <= 0; }
+    if (removeButton) removeButton.disabled = pop <= 0;
+  }
+}
+
 function setupMainMenu() {
   const menuButton = document.querySelector('#main-menu-button');
   const menu = document.querySelector('#main-menu');
@@ -3541,7 +3838,7 @@ function setupMainMenu() {
   if (menuButton && menu) menuButton.onclick = () => { unlockAudio(); menu.hidden = !menu.hidden; if(!menu.hidden) applyLanguage(menu); };
   if (menuClose && menu) menuClose.onclick = () => { menu.hidden = true; };
   const settingsButton=document.querySelector('#settings-button'); const settingsPanel=document.querySelector('#settings-panel'); const settingsClose=document.querySelector('#settings-close');
-  if(settingsButton && settingsPanel) settingsButton.addEventListener('click',()=>{ unlockAudio(); settingsPanel.hidden=!settingsPanel.hidden; if(!settingsPanel.hidden && menu) menu.hidden=true; const panels=['#news-panel','#economy-panel','#research-panel','#tasks-panel','#introduction-panel']; panels.forEach(sel=>{const el=document.querySelector(sel); if(el) el.hidden=true;}); applyLanguage(settingsPanel); });
+  if(settingsButton && settingsPanel) settingsButton.addEventListener('click',()=>{ unlockAudio(); settingsPanel.hidden=!settingsPanel.hidden; if(!settingsPanel.hidden && menu) menu.hidden=true; const panels=['#news-panel','#economy-panel','#research-panel','#tasks-panel','#introduction-panel','#colonists-panel']; panels.forEach(sel=>{const el=document.querySelector(sel); if(el) el.hidden=true;}); applyLanguage(settingsPanel); });
   if(settingsClose && settingsPanel) settingsClose.addEventListener('click',()=>{settingsPanel.hidden=true;});
   setupAudio();
   if (introButton && introPanel) introButton.addEventListener('click', () => {
@@ -3566,6 +3863,18 @@ function setupTopPanels() {
   const tasksPanel = document.querySelector('#tasks-panel');
   const tasksClose = document.querySelector('#tasks-close');
   const settingsPanel = document.querySelector('#settings-panel');
+  const colonistsButton = document.querySelector('#colonists-button');
+  const colonistsPanel = document.querySelector('#colonists-panel');
+  const colonistsClose = document.querySelector('#colonists-close');
+  if (colonistsButton && colonistsPanel) colonistsButton.addEventListener('click', () => {
+    colonistsPanel.hidden = !colonistsPanel.hidden;
+    if (!colonistsPanel.hidden) {
+      [newsPanel, economyPanel, researchPanel, tasksPanel, document.querySelector('#introduction-panel'), settingsPanel].forEach(el => { if (el) el.hidden = true; });
+      const mainMenu = document.querySelector('#main-menu'); if (mainMenu) mainMenu.hidden = true;
+      renderColonistsPanel();
+    }
+  });
+  if (colonistsClose && colonistsPanel) colonistsClose.addEventListener('click', () => { colonistsPanel.hidden = true; });
 
   if (newsButton && newsPanel) newsButton.addEventListener('click', () => {
     newsPanel.hidden = !newsPanel.hidden;
