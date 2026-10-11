@@ -482,3 +482,32 @@ select{padding:7px;border-radius:8px;background:#eef2f7;color:#111}
 .build-view-btn.active[data-build-view="orbit"]{background:#6845b7;border-color:#d0bcff;box-shadow:0 0 0 3px rgba(176,145,255,.2)}
 .build-view-switch-hint{margin-top:8px;color:#c3d3e9;font-size:12px;line-height:1.4}
 @media(max-width:430px){.build-view-switch{padding:10px}.build-view-btn{font-size:12px;min-height:50px}}
+
+
+/* Transportzentrale 2.0: kompakte Raketen-Karten und dynamische Frachtzeilen */
+.rocket-type-card{border:1px solid #263754;border-radius:12px;background:#0b1525;margin:8px 0;overflow:hidden}
+.rocket-type-card>summary{display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;list-style:none;padding:12px;font-weight:800;background:#101e32}
+.rocket-type-card>summary::-webkit-details-marker{display:none}
+.rocket-type-card>summary:after{content:"＋";color:#aab8ce}
+.rocket-type-card[open]>summary:after{content:"−"}
+.rocket-type-card>summary span{font-size:12px;color:#aab8ce;text-align:right;font-weight:600}
+.rocket-type-content{padding:8px}
+.rocket-type-content .rocket-build-box{margin:4px 0}
+.dynamic-cargo-row{min-width:0;grid-template-columns:minmax(0,1fr);gap:8px}
+.cargo-row-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.cargo-row-heading strong{grid-column:auto}
+.cargo-row-heading .cargo-remove{background:#713333;padding:5px 9px;min-width:32px}
+.dynamic-cargo-row select,.dynamic-cargo-row input{width:100%;min-width:0;padding:9px;border-radius:8px}
+.cargo-amount-label{display:grid;gap:5px;font-size:12px;color:#aab8ce}
+.cargo-add{width:100%;margin-top:8px;background:#174d3b}
+.rocket-window .rocket-h2-launch,.rocket-window .rocket-h1-launch{padding:12px}
+@media(max-width:430px){
+ .rocket-type-card>summary{align-items:flex-start;flex-wrap:wrap}
+ .rocket-type-card>summary span{width:100%;text-align:left}
+ .dynamic-cargo-row{padding:9px}
+}
+
+/* Flugzeiten-Konzept: Zielort und Orbitlager */
+.transport-route{display:grid;gap:7px;margin:10px 0;padding:10px;border:1px solid #263754;border-radius:12px;background:#0b1728}
+.transport-route label{display:grid;gap:5px}
+.transport-route select{width:100%;padding:9px;border:1px solid #344967;border-radius:8px;background:#eef2f7;color:#111}
