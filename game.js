@@ -283,7 +283,8 @@ const state = {
   research: {
     points: 0,
     active: null,
-    completed: {}
+    completed: {},
+    orders: { active: null, completed: {}, asteroidObservationStarted: null, discoveredAsteroids: [] }
   },
   tasks: {
     completed: {},
@@ -996,10 +997,15 @@ function formatResearchTime(seconds) {
 function renderResearch() {
   const panel = document.querySelector('#research-content');
   if (!panel) return;
+  const activeTab = panel.dataset.activeResearchTab || 'tree';
+  if (activeTab === 'orders') {
+    renderResearchOrders(panel);
+    return;
+  }
   const completed = state.research?.completed || {};
   const active = state.research?.active;
   const activeDef = active ? researchTypes[active.key] : null;
-  const running = !!active;
+  const running = !!active || !!ensureResearchOrders().active;
   const researchedSolar = !!completed.solarPlant;
   const researchedHydroelectric = !!completed.hydroelectricPlant;
   const researchedGreenhouse = !!completed.greenhouse;
@@ -1044,7 +1050,10 @@ function renderResearch() {
       <span class="orbit-research-rate ${count ? 'good' : ''}">${count ? '+1 FP/s' : '0 FP/s'}</span>
     </button>`;
   }).join('');
-  panel.innerHTML = `<section class="orbit-research-overview">
+  panel.innerHTML = `<div class="research-tabs" role="tablist" aria-label="Forschungsansicht">
+    <button type="button" class="research-tab" data-research-tab="tree" role="tab" aria-selected="true">Forschungsbaum</button>
+    <button type="button" class="research-tab" data-research-tab="orders" role="tab" aria-selected="false">Forschungsaufträge</button>
+  </div><section class="orbit-research-overview">
     <h3>🛰️ Orbit-Forschungsübersicht</h3>
     <div class="orbit-research-global"><small>Globales Forschungskonto</small><strong>${Number(state.research.points || 0).toLocaleString('de-DE', {maximumFractionDigits: 0})} FP</strong><span>+${researchPointProduction().toFixed(2)} FP/s insgesamt</span></div>
     <p class="hint">Jeder Forschungssatellit erzeugt dauerhaft 1 Forschungspunkt/s. Pro Orbit ist maximal ein Forschungssatellit erlaubt. Wähle einen Orbit, um dessen Ansicht zu öffnen.</p>
@@ -1190,6 +1199,10 @@ function renderResearch() {
     </div>
   </div>`;
 
+  panel.querySelectorAll('[data-research-tab]').forEach(button => button.addEventListener('click', () => {
+    panel.dataset.activeResearchTab = button.dataset.researchTab;
+    renderResearch();
+  }));
   panel.querySelectorAll('.research-button').forEach(btn =>
     btn.addEventListener('click', () => startResearch(btn.dataset.research))
   );
@@ -1206,8 +1219,107 @@ function renderResearch() {
   }));
 }
 
+const RESEARCH_ORDER_DEFS = {
+  skyObservation: {
+    name: 'Himmelsbeobachtung',
+    icon: '🔭',
+    description: 'Werte wissenschaftliche Beobachtungen aus, um die systematische Asteroidenbeobachtung freizuschalten.',
+    duration: 60 * 60,
+    rewardPoints: 500,
+    prerequisite: 'Mindestens ein Forschungslabor auf der Erde',
+    unlock: 'Asteroidenbeobachtung'
+  }
+};
+
+function ensureResearchOrders() {
+  if (!state.research) state.research = { points: 0, active: null, completed: {} };
+  if (!state.research.orders) state.research.orders = { active: null, completed: {}, asteroidObservationStarted: null, discoveredAsteroids: [] };
+  const o = state.research.orders;
+  o.completed ||= {};
+  o.discoveredAsteroids ||= [];
+  if (o.asteroidObservationStarted === undefined) o.asteroidObservationStarted = null;
+  return o;
+}
+
+function renderResearchOrders(panel) {
+  const orders = ensureResearchOrders();
+  const active = orders.active;
+  const completed = !!orders.completed.skyObservation;
+  const hasLab = researchLabCount() > 0;
+  const elapsed = active ? Math.max(0, (gameNow() - active.started) / 1000) : 0;
+  const remaining = active ? Math.max(0, RESEARCH_ORDER_DEFS.skyObservation.duration - elapsed) : 0;
+  const progress = active ? Math.min(100, elapsed / RESEARCH_ORDER_DEFS.skyObservation.duration * 100) : 0;
+  const observationElapsed = orders.asteroidObservationStarted == null ? 0 : Math.max(0, (gameNow() - orders.asteroidObservationStarted) / 1000);
+  const nextDiscovery = Math.max(0, 300 - observationElapsed);
+  const discovered = orders.discoveredAsteroids.length;
+  panel.innerHTML = `<div class="research-tabs" role="tablist" aria-label="Forschungsansicht">
+    <button type="button" class="research-tab" data-research-tab="tree" role="tab" aria-selected="false">Forschungsbaum</button>
+    <button type="button" class="research-tab active" data-research-tab="orders" role="tab" aria-selected="true">Forschungsaufträge</button>
+  </div>
+  <section class="research-order-card ${completed ? 'research-done' : ''}">
+    <div class="research-order-title"><strong>🔭 Himmelsbeobachtung</strong><span class="research-order-status">${completed ? 'Abgeschlossen' : active ? 'Läuft' : 'Verfügbar'}</span></div>
+    <p>Forschungsdauer: <strong>1 Ingame-Stunde</strong> · Belohnung: <strong>500 Forschungspunkte</strong></p>
+    <p class="hint">Freischaltung: Asteroidenbeobachtung. Nach Abschluss beginnt eine Beobachtungsphase. Nach jeweils 5 Ingame-Minuten wird eine weitere Entdeckung möglich, bis maximal fünf Asteroiden entdeckt wurden.</p>
+    <div class="research-order-prereq ${hasLab ? 'good' : 'warn'}">${hasLab ? '✓' : '🔒'} Voraussetzung: ${RESEARCH_ORDER_DEFS.skyObservation.prerequisite}</div>
+    ${active ? `<div class="research-active"><strong>Forschung läuft</strong><small>${formatResearchTime(remaining)} verbleiben</small><div class="research-progress"><i style="width:${progress}%"></i></div><button type="button" class="research-cancel-order">Auftrag abbrechen (Startkosten zurückerstatten)</button></div>` : ''}
+    ${!completed && !active ? `<button type="button" class="research-start-order" ${hasLab && !state.research.active ? '' : 'disabled'}>Forschung starten</button>` : ''}
+    ${completed ? `<div class="research-unlock">✓ Freigeschaltet: Asteroidenbeobachtung</div><div class="research-observation"><strong>Beobachtungsstatus</strong><p>${discovered} / 5 Asteroiden entdeckt</p>${orders.asteroidObservationStarted == null ? '<span class="hint">Die Beobachtungsphase startet nach Abschluss der Forschung.</span>' : discovered >= 5 ? '<span class="good">Alle fünf möglichen Asteroiden entdeckt.</span>' : `<span class="hint">Nächste mögliche Entdeckung in ${formatResearchTime(nextDiscovery)} (Ingame-Zeit).</span>`}</div>` : ''}
+  </section>
+  <p class="hint">Es kann nur ein Forschungsprojekt gleichzeitig laufen – auch aus dem Forschungsbaum. Für diesen Auftrag fallen keine Startkosten an; beim Abbruch entstehen daher keine Verluste und es gibt keine Rohstoffe zurückzuerstatten.</p>`;
+  panel.querySelectorAll('[data-research-tab]').forEach(button => button.addEventListener('click', () => {
+    panel.dataset.activeResearchTab = button.dataset.researchTab;
+    renderResearch();
+  }));
+  panel.querySelector('.research-start-order')?.addEventListener('click', startSkyObservationResearch);
+  panel.querySelector('.research-cancel-order')?.addEventListener('click', cancelSkyObservationResearch);
+}
+
+function startSkyObservationResearch() {
+  const orders = ensureResearchOrders();
+  if (orders.active || orders.completed.skyObservation || state.research.active || !researchAvailable() || researchLabCount() < 1) return;
+  orders.active = { key: 'skyObservation', started: gameNow() };
+  playUiSound('research');
+  renderResearch();
+  saveGame(false);
+}
+
+function cancelSkyObservationResearch() {
+  const orders = ensureResearchOrders();
+  if (!orders.active) return;
+  // Dieser Auftrag hat keine Startkosten; die Abbruchregel erstattet daher alle Startkosten (0).
+  orders.active = null;
+  renderResearch();
+  saveGame(false);
+}
+
+function updateResearchOrders(now) {
+  const orders = ensureResearchOrders();
+  if (orders.active) {
+    const def = RESEARCH_ORDER_DEFS[orders.active.key];
+    if (def && now - orders.active.started >= def.duration * 1000) {
+      orders.active = null;
+      if (!orders.completed.skyObservation) {
+        orders.completed.skyObservation = true;
+        state.research.points = Number(state.research.points || 0) + def.rewardPoints;
+        orders.asteroidObservationStarted = now;
+        playUiSound('research');
+        saveGame(false);
+      }
+    }
+  }
+  if (orders.completed.skyObservation && orders.asteroidObservationStarted != null && orders.discoveredAsteroids.length < 5) {
+    const elapsed = Math.max(0, now - orders.asteroidObservationStarted);
+    const possible = Math.min(5, Math.floor(elapsed / (300 * 1000)));
+    while (orders.discoveredAsteroids.length < possible) {
+      const number = orders.discoveredAsteroids.length + 1;
+      orders.discoveredAsteroids.push({ id: `asteroid-${number}`, name: `Asteroid ${String(number).padStart(3, '0')}`, discoveredAt: now });
+      saveGame(false);
+    }
+  }
+}
+
 function startResearch(key) {
-  if (!researchAvailable() || !researchTypes[key] || state.research.active || state.research.completed[key]) return;
+  if (!researchAvailable() || !researchTypes[key] || state.research.active || ensureResearchOrders().active || state.research.completed[key]) return;
   const r = researchTypes[key];
   if (Number(state.research.points || 0) < r.cost) return;
   if (r.chipCost && Number(state.chips || 0) < r.chipCost) return;
@@ -1219,6 +1331,7 @@ function startResearch(key) {
 }
 
 function updateResearch(now) {
+  updateResearchOrders(now);
   if (!state.research?.active) return;
   const active = state.research.active;
   const r = researchTypes[active.key];
@@ -1346,6 +1459,7 @@ function loadGame(showMessage = true) {
     state.co2 = Number(data.state.co2 || 0);
     state.research = data.state.research || { points: 0, active: null, completed: {} };
     state.research.completed = state.research.completed || {};
+    ensureResearchOrders();
     state.tasks = data.state.tasks || { completed: {}, ironMined: 0, steelProduced: 0, foodProduced: 0, waterProduced: 0 };
     state.tasks.completed = state.tasks.completed || {};
     state.tasks.ironMined = Number(state.tasks.ironMined || 0);
@@ -3963,7 +4077,7 @@ function updateResources() {
   // Forschungs-Timer sichtbar und synchron im Sekundenrhythmus aktualisieren.
   if (!updateResources.lastResearchUiUpdate || now - updateResources.lastResearchUiUpdate >= 250) {
     const researchPanel = document.querySelector('#research-panel');
-    if (researchPanel && !researchPanel.hidden && state.research?.active) {
+    if (researchPanel && !researchPanel.hidden && (state.research?.active || state.research?.orders?.active || state.research?.orders?.completed?.skyObservation)) {
       updateResources.lastResearchUiUpdate = now;
       renderResearch();
     }
