@@ -1231,14 +1231,51 @@ const RESEARCH_ORDER_DEFS = {
   }
 };
 
+// Die fünf Asteroiden-Archetypen verwenden ausschließlich bereits vorhandene Rohstoffe.
+// Pro Archetyp wird die Rohstoffmenge beim Entdecken einmal ausgewürfelt und gespeichert.
+const ASTEROID_TYPES = [
+  { key: 'iron', name: 'Eisen-Nickel-Asteroid', icon: '🪨', resources: [{ key: 'iron', min: 50000, max: 200000 }] },
+  { key: 'silicon', name: 'Silikat-Asteroid', icon: '💎', resources: [{ key: 'silicon', min: 20000, max: 100000 }] },
+  { key: 'lithium', name: 'Lithium-Asteroid', icon: '🔋', resources: [{ key: 'lithium', min: 5000, max: 25000 }] },
+  { key: 'ice', name: 'Eis-Asteroid', icon: '🧊', resources: [{ key: 'ice', min: 30000, max: 150000 }] },
+  { key: 'rare-metals', name: 'Asteroid seltener Metalle', icon: '☄️', resources: [{ key: 'titanOre', min: 5000, max: 30000 }, { key: 'copperOre', min: 5000, max: 25000 }] }
+];
+const ASTEROID_LIFETIME_MS = 6 * 60 * 60 * 1000;
+const ASTEROID_DISCOVERY_INTERVAL_MS = 5 * 60 * 1000;
+const ASTEROID_MAX_ACTIVE = 5;
+function asteroidTypeByKey(key) { return ASTEROID_TYPES.find(type => type.key === key) || ASTEROID_TYPES[0]; }
+function randomAsteroidAmount(min, max) { return Math.round(min + Math.random() * (max - min)); }
+function makeAsteroid(number, now, type) {
+  const selectedType = type || ASTEROID_TYPES.find(candidate => !ensureResearchOrders().discoveredAsteroids.some(a => a.typeKey === candidate.key && Number(a.expiresAt || 0) > now)) || ASTEROID_TYPES[Math.floor(Math.random() * ASTEROID_TYPES.length)];
+  const resources = Object.fromEntries(selectedType.resources.map(resource => [resource.key, randomAsteroidAmount(resource.min, resource.max)]));
+  return { id: `asteroid-${Date.now()}-${number}-${Math.floor(Math.random()*100000)}`, number, name: `Asteroid ${String(number).padStart(3, '0')}`, typeKey: selectedType.key, discoveredAt: now, expiresAt: now + ASTEROID_LIFETIME_MS, resources };
+}
 function ensureResearchOrders() {
   if (!state.research) state.research = { points: 0, active: null, completed: {} };
-  if (!state.research.orders) state.research.orders = { active: null, completed: {}, asteroidObservationStarted: null, discoveredAsteroids: [] };
+  if (!state.research.orders) state.research.orders = { active: null, completed: {}, asteroidObservationStarted: null, lastAsteroidDiscoveryAt: null, nextAsteroidNumber: 1, discoveredAsteroids: [] };
   const o = state.research.orders;
   o.completed ||= {};
-  o.discoveredAsteroids ||= [];
+  if (!Array.isArray(o.discoveredAsteroids)) o.discoveredAsteroids = [];
   if (o.asteroidObservationStarted === undefined) o.asteroidObservationStarted = null;
+  if (o.lastAsteroidDiscoveryAt === undefined) o.lastAsteroidDiscoveryAt = null;
+  o.nextAsteroidNumber = Math.max(1, Number(o.nextAsteroidNumber) || (o.discoveredAsteroids.reduce((max, a) => Math.max(max, Number(a.number) || 0), 0) + 1));
+  // Alte Spielstände bekommen für bereits entdeckte Asteroiden einen festen Typ,
+  // gespeicherte Rohstoffmengen und eine Ablaufzeit, ohne andere Spielwerte zu ändern.
+  o.discoveredAsteroids.forEach((asteroid, index) => {
+    if (!asteroid.typeKey) asteroid.typeKey = ASTEROID_TYPES[index % ASTEROID_TYPES.length].key;
+    const type = asteroidTypeByKey(asteroid.typeKey);
+    if (!asteroid.resources || typeof asteroid.resources !== 'object') asteroid.resources = Object.fromEntries(type.resources.map(resource => [resource.key, randomAsteroidAmount(resource.min, resource.max)]));
+    if (!Number.isFinite(Number(asteroid.discoveredAt))) asteroid.discoveredAt = gameNow();
+    if (!Number.isFinite(Number(asteroid.expiresAt))) asteroid.expiresAt = Number(asteroid.discoveredAt) + ASTEROID_LIFETIME_MS;
+    if (!asteroid.number) asteroid.number = index + 1;
+    if (!asteroid.name) asteroid.name = `Asteroid ${String(asteroid.number).padStart(3, '0')}`;
+  });
+  if (o.lastAsteroidDiscoveryAt == null && o.discoveredAsteroids.length) o.lastAsteroidDiscoveryAt = Number(o.discoveredAsteroids[o.discoveredAsteroids.length - 1].discoveredAt) || gameNow();
   return o;
+}
+function formatAsteroidResources(asteroid) {
+  const type = asteroidTypeByKey(asteroid.typeKey);
+  return type.resources.map(resource => `${resourceIcons[resource.key] || '📦'} ${resourceNames[resource.key] || resource.key}: <strong>${Number(asteroid.resources?.[resource.key] || 0).toLocaleString('de-DE')} t</strong>`).join(' · ');
 }
 
 function renderResearchOrders(panel) {
@@ -1249,9 +1286,16 @@ function renderResearchOrders(panel) {
   const elapsed = active ? Math.max(0, (gameNow() - active.started) / 1000) : 0;
   const remaining = active ? Math.max(0, RESEARCH_ORDER_DEFS.skyObservation.duration - elapsed) : 0;
   const progress = active ? Math.min(100, elapsed / RESEARCH_ORDER_DEFS.skyObservation.duration * 100) : 0;
-  const observationElapsed = orders.asteroidObservationStarted == null ? 0 : Math.max(0, (gameNow() - orders.asteroidObservationStarted) / 1000);
-  const nextDiscovery = Math.max(0, 300 - observationElapsed);
-  const discovered = orders.discoveredAsteroids.length;
+  const now = gameNow();
+  const nextDiscovery = orders.lastAsteroidDiscoveryAt == null
+    ? Math.max(0, (ASTEROID_DISCOVERY_INTERVAL_MS - Math.max(0, now - Number(orders.asteroidObservationStarted || now))) / 1000)
+    : Math.max(0, (ASTEROID_DISCOVERY_INTERVAL_MS - (now - Number(orders.lastAsteroidDiscoveryAt))) / 1000);
+  const discovered = orders.discoveredAsteroids.filter(asteroid => Number(asteroid.expiresAt) > now).length;
+  const asteroidCards = orders.discoveredAsteroids.filter(asteroid => Number(asteroid.expiresAt) > now).map(asteroid => {
+    const type = asteroidTypeByKey(asteroid.typeKey);
+    const remaining = Math.max(0, Math.ceil((Number(asteroid.expiresAt) - now) / 1000));
+    return `<div class="asteroid-card"><div class="asteroid-card-head"><strong>${type.icon} ${asteroid.name} · ${type.name}</strong><span class="asteroid-time">⏳ ${formatResearchTime(remaining)}</span></div><div class="asteroid-resources">${formatAsteroidResources(asteroid)}</div><small class="hint">Verschwindet nach 6 Ingame-Stunden; nicht geborgene Rohstoffe gehen verloren.</small></div>`;
+  }).join('');
   panel.innerHTML = `<div class="research-tabs" role="tablist" aria-label="Forschungsansicht">
     <button type="button" class="research-tab" data-research-tab="tree" role="tab" aria-selected="false">Forschungsbaum</button>
     <button type="button" class="research-tab active" data-research-tab="orders" role="tab" aria-selected="true">Forschungsaufträge</button>
@@ -1263,7 +1307,7 @@ function renderResearchOrders(panel) {
     <div class="research-order-prereq ${hasLab ? 'good' : 'warn'}">${hasLab ? '✓' : '🔒'} Voraussetzung: ${RESEARCH_ORDER_DEFS.skyObservation.prerequisite}</div>
     ${active ? `<div class="research-active"><strong>Forschung läuft</strong><small>${formatResearchTime(remaining)} verbleiben</small><div class="research-progress"><i style="width:${progress}%"></i></div><button type="button" class="research-cancel-order">Auftrag abbrechen (Startkosten zurückerstatten)</button></div>` : ''}
     ${!completed && !active ? `<button type="button" class="research-start-order" ${hasLab && !state.research.active ? '' : 'disabled'}>Forschung starten</button>` : ''}
-    ${completed ? `<div class="research-unlock">✓ Freigeschaltet: Asteroidenbeobachtung</div><div class="research-observation"><strong>Beobachtungsstatus</strong><p>${discovered} / 5 Asteroiden entdeckt</p>${orders.asteroidObservationStarted == null ? '<span class="hint">Die Beobachtungsphase startet nach Abschluss der Forschung.</span>' : discovered >= 5 ? '<span class="good">Alle fünf möglichen Asteroiden entdeckt.</span>' : `<span class="hint">Nächste mögliche Entdeckung in ${formatResearchTime(nextDiscovery)} (Ingame-Zeit).</span>`}</div>` : ''}
+    ${completed ? `<div class="research-unlock">✓ Freigeschaltet: Asteroidenbeobachtung</div><div class="research-observation"><strong>Asteroidenfeld</strong><p>${discovered} / ${ASTEROID_MAX_ACTIVE} aktive Asteroiden</p>${orders.asteroidObservationStarted == null ? '<span class="hint">Die Beobachtungsphase startet nach Abschluss der Forschung.</span>' : `<span class="hint">Nächste mögliche Entdeckung in ${formatResearchTime(nextDiscovery)} (Ingame-Zeit). Neue Asteroiden erscheinen, sobald weniger als fünf aktiv sind.</span>`}</div><div class="asteroid-list">${asteroidCards || '<p class="hint">Noch keine aktiven Asteroiden entdeckt.</p>'}</div>` : ''}
   </section>
   <p class="hint">Es kann nur ein Forschungsprojekt gleichzeitig laufen – auch aus dem Forschungsbaum. Für diesen Auftrag fallen keine Startkosten an; beim Abbruch entstehen daher keine Verluste und es gibt keine Rohstoffe zurückzuerstatten.</p>`;
   panel.querySelectorAll('[data-research-tab]').forEach(button => button.addEventListener('click', () => {
@@ -1302,20 +1346,32 @@ function updateResearchOrders(now) {
         orders.completed.skyObservation = true;
         state.research.points = Number(state.research.points || 0) + def.rewardPoints;
         orders.asteroidObservationStarted = now;
+        orders.lastAsteroidDiscoveryAt = null;
         playUiSound('research');
         saveGame(false);
       }
     }
   }
-  if (orders.completed.skyObservation && orders.asteroidObservationStarted != null && orders.discoveredAsteroids.length < 5) {
-    const elapsed = Math.max(0, now - orders.asteroidObservationStarted);
-    const possible = Math.min(5, Math.floor(elapsed / (300 * 1000)));
-    while (orders.discoveredAsteroids.length < possible) {
-      const number = orders.discoveredAsteroids.length + 1;
-      orders.discoveredAsteroids.push({ id: `asteroid-${number}`, name: `Asteroid ${String(number).padStart(3, '0')}`, discoveredAt: now });
-      saveGame(false);
-    }
+  if (!orders.completed.skyObservation || orders.asteroidObservationStarted == null) return;
+
+  let changed = false;
+  // Ablauf nach sechs Ingame-Stunden; entfernte Asteroiden geben verbleibende Rohstoffe nicht frei.
+  const before = orders.discoveredAsteroids.length;
+  orders.discoveredAsteroids = orders.discoveredAsteroids.filter(asteroid => Number(asteroid.expiresAt) > now);
+  if (orders.discoveredAsteroids.length !== before) changed = true;
+
+  const lastDiscovery = orders.lastAsteroidDiscoveryAt == null ? Number(orders.asteroidObservationStarted) : Number(orders.lastAsteroidDiscoveryAt);
+  if (orders.discoveredAsteroids.length < ASTEROID_MAX_ACTIVE && now - lastDiscovery >= ASTEROID_DISCOVERY_INTERVAL_MS) {
+    const number = orders.nextAsteroidNumber++;
+    const activeTypes = new Set(orders.discoveredAsteroids.map(asteroid => asteroid.typeKey));
+    const availableTypes = ASTEROID_TYPES.filter(type => !activeTypes.has(type.key));
+    const type = availableTypes[Math.floor(Math.random() * availableTypes.length)] || ASTEROID_TYPES[Math.floor(Math.random() * ASTEROID_TYPES.length)];
+    orders.discoveredAsteroids.push(makeAsteroid(number, now, type));
+    orders.lastAsteroidDiscoveryAt = now;
+    changed = true;
+    playUiSound('research');
   }
+  if (changed) saveGame(false);
 }
 
 function startResearch(key) {
