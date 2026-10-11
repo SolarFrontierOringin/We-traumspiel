@@ -1743,8 +1743,8 @@ function resourceRows(body) {
 function buildingCost(key, planetId = state.selected) {
   const b = buildingTypes[key];
   const count = Number(getBuildingsOnPlanet(planetId)[key] || 0);
-  // Erde: Eisenminen 1–5 kosten je 3 t Stahl, ab der 6. Mine je 20 t.
-  if (key === 'ironMine' && planetId === 'earth') return count < 5 ? 3 : 20;
+  // Erde: Die ersten zwei Eisenminen sind kostenlos; ab der dritten kostet jede 20 t Stahl.
+  if (key === 'ironMine' && planetId === 'earth') return count < 2 ? 0 : 20;
   return b.cost;
 }
 
@@ -2100,7 +2100,7 @@ function demolitionCostMap(key, planetId, currentCount) {
     solarSatellite: { steel: 20000, buildingMaterials: 20000, glass: 10000, electronics: 5000, batteries: 5000 },
     solarProbe: { steel: 15000, electronics: 5000, batteries: 2000 },
     steelworks: { steel: planetId === 'earth' ? (currentCount <= 1 ? 0 : currentCount <= 3 ? 4 : 20) : (currentCount > 1 ? 20 : 0) },
-    ironMine: { steel: planetId === 'earth' ? (currentCount <= 5 ? 3 : 20) : 20 },
+    ironMine: { steel: planetId === 'earth' ? (currentCount <= 2 ? 0 : 20) : 20 },
     stoneQuarry: { steel: 30 }, coalMine: { steel: 15 }, gasPlant: { steel: 25 },
     co2Extraction: { steel: 25 }, co2ProcessingPlant: { steel: 50 },
     siliconMine: { steel: 30 }, lithiumMine: { steel: 30 }, copperMine: { steel: 30 },
