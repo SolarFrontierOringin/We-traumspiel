@@ -162,7 +162,7 @@ const buildingTypes = {
   gasPlant: { name: 'Gasförderanlage', icon: '🔥', resource: 'gas', rate: 0.25, cost: 25, text: '0,25 t Gas/s' },
   co2Extraction: { name: 'CO₂-Extraktionsanlage', icon: '🌫️', resource: 'co2', rate: 0.25, cost: 25, text: 'extrahiert 0,25 t CO₂/s aus der Atmosphäre · nur auf Venus' },
   co2ProcessingPlant: { name: 'CO₂-Verarbeitung', icon: '⚗️', resource: null, rate: 0, cost: 50, text: 'verarbeitet 0,2 t CO₂/s → 0,1 t Kohlenstoff + 0,1 t Sauerstoff · auf allen Planeten außer der Sonne' },
-  orbitalCo2Extractor: { name: 'Orbitaler CO₂-Extraktor', icon: '🛰️', resource: null, rate: 0, cost: 0, text: 'Gewinnt 0,5 t CO₂/s aus der Atmosphäre und lagert es im Orbit-Lager ein · nur im Orbit' },
+  orbitalCo2Extractor: { name: 'CO₂-Orbit-Extraktor', icon: '🛰️', resource: null, rate: 0, cost: 0, text: 'Fördert 0,2 t CO₂/s · kein Stromverbrauch · lagert CO₂ im jeweiligen Orbit-Lager ein · nur im Orbit' },
   researchSatellite: { name: 'Forschungssatellit', icon: '🛰️', resource: null, rate: 0, cost: 800, text: 'Erzeugt 1 Forschungspunkt/s · kein Stromverbrauch · maximal 1 Forschungssatellit pro Orbit · Baukosten: 800 t Stahl, 120 t Elektronik, 80 t Chips, 100 t Glas' },
   ironMine: { name: 'Eisenmine', icon: '🧲', resource: 'iron', rate: 0.1, cost: 20, text: '0,1 t Eisen/s' },
   titanMine: { name: 'Titanmine', icon: '⛏️', resource: 'titanOre', rate: 0.2, cost: 150, text: '0,2 t Titanerz/s · 150 t Stahl, 50 t Maschinen, 30 t Elektronik · nur auf Merkur' },
@@ -313,7 +313,7 @@ function getOrbitStorage(id) {
 }
 function storageAmount(id, resource) { return Number(getPlanetStorage(id)[resource] || 0); }
 function formatStorage(id) {
-  const st = getPlanetStorage(id);
+  const st = state.viewMode === 'orbit' ? getOrbitStorage(id) : getPlanetStorage(id);
   const keys = ['stone','ice','coal','gas','co2','carbon','oxygen','crudeOil','polymers','iron','silicon','lithium','copperOre','copper','batteries','buildingMaterials','machines','glass','electronics','steel','hydrogen','helium','helium3','uranium','processedUranium','nuclearFuel','chips','concrete','bauxite','aluminiumOxide','aluminium','titanOre','processedTitan','titanium','water','grain','vegetables','food','algaeBiomass'];
   const rows = keys.filter(k => Number(st[k] || 0) > 0.000001).map(k => `<div class="stat"><span>${resourceIcons[k] || ''} ${resourceNames[k] || k}</span><strong>${k === 'co2' ? formatLargeTons(st[k]) : k === 'water' ? Number(st[k]).toLocaleString('de-DE', { maximumFractionDigits: 2 }) + ' L' : formatTons(st[k])}</strong></div>`);
   return rows.length ? rows.join('') : '<p class="hint">Lager ist leer.</p>';
@@ -428,8 +428,8 @@ const researchTypes = {
     text: 'Schaltet die CO₂-Verarbeitung frei. Sie kann auf allen Planeten außer der Sonne gebaut werden.'
   },
   orbitalCo2Extractor: {
-    name: 'Orbitaler CO₂-Extraktor', icon: '🛰️', category: 'Weltraumforschung', cost: 5000, time: 600,
-    text: 'Schaltet den orbitalen CO₂-Extraktor frei. Er gewinnt CO₂ aus der Atmosphäre und lagert es im Orbit-Lager ein.'
+    name: 'CO₂-Orbit-Extraktor', icon: '🛰️', category: 'Weltraumforschung', cost: 5000, time: 600,
+    text: 'Schaltet den CO₂-Orbit-Extraktor frei. Er fördert 0,2 t CO₂/s ohne Stromverbrauch und lagert es im jeweiligen Orbit-Lager ein.'
   },
   researchSatellite: {
     name: 'Forschungssatellit', icon: '🛰️', category: 'Weltraumforschung', cost: 3500, time: 420,
@@ -811,7 +811,7 @@ function renderResearch() {
   <h3>4️⃣ Weltraumforschung</h3>
   <div class="research-tree">
     <div class="research-card ${!!completed.orbitalCo2Extractor ? 'research-done' : ''}">
-      <div><strong>🛰️ Forschung: Orbitaler CO₂-Extraktor</strong><small>Gewinnt 0,5 t CO₂/s aus der Atmosphäre und lagert es im Orbit-Lager ein.</small><small>🧪 5.000 Forschungspunkte · ⏱️ 10:00 Minuten</small></div>
+      <div><strong>🛰️ Forschung: CO₂-Orbit-Extraktor</strong><small>Fördert 0,2 t CO₂/s in jedem Planetenorbit ohne Stromverbrauch. Das CO₂ landet im jeweiligen Orbit-Lager und kann dort verarbeitet werden.</small><small>🧪 5.000 Forschungspunkte · ⏱️ 10:00 Minuten</small></div>
       <button class="research-button" data-research="orbitalCo2Extractor" ${researchAvailable() && !running && !completed.orbitalCo2Extractor && Number(state.research.points || 0) >= researchTypes.orbitalCo2Extractor.cost ? '' : 'disabled'}>${completed.orbitalCo2Extractor ? 'Abgeschlossen' : active?.key === 'orbitalCo2Extractor' ? 'Läuft …' : 'Forschen'}</button>
     </div>
     <div class="research-card ${!!completed.researchSatellite ? 'research-done' : ''}">
@@ -1768,8 +1768,8 @@ function isBuildingAllowed(key, planetId = state.selected) {
   if (key === 'algaeFarm' && (planetId === 'sun' || !state.research?.completed?.algaeFarm)) return false;
   if (key === 'algaeFoodProcessor' && (planetId === 'sun' || !state.research?.completed?.algaeFoodProcessor)) return false;
   if (key === 'orbitalCo2Extractor') {
-    if (state.viewMode !== 'orbit' && hasPlanetSurface(planetId)) return false;
-    if (Number(bodies[planetId]?.resources?.co2 || 0) <= 0) return false;
+    if (state.viewMode !== 'orbit' || planetId === 'sun') return false;
+    if (!state.research?.completed?.orbitalCo2Extractor) return false;
   }
   if (key === 'researchSatellite') {
     if (state.viewMode !== 'orbit') return false;
@@ -1926,7 +1926,7 @@ function buildButton(key) {
 
   if (key === 'orbitalCo2Extractor') {
     const researched = !!state.research?.completed?.orbitalCo2Extractor;
-    const storage = getPlanetStorage(state.selected);
+    const storage = getOrbitStorage(state.selected);
     const costs = { aluminium: 50, polymers: 40, chips: 20, steel: 190 };
     const affordable = researched && isBuildingAllowed(key) && Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount);
     const status = researched ? '' : ' · Voraussetzung: Forschung „Orbitaler CO₂-Extraktor“';
@@ -2238,7 +2238,7 @@ function demolishBuilding(key = null, planetId = state.selected) {
 function buildResourceBuilding(key) {
   const planetId = state.selected;
   const bld = getBuildingsOnPlanet(planetId);
-  const storage = getPlanetStorage(planetId);
+  const storage = key === 'orbitalCo2Extractor' ? getOrbitStorage(planetId) : getPlanetStorage(planetId);
   if (!isBuildingAllowed(key, planetId)) return;
 
   if (key === 'iceProcessingPlant') {
@@ -3037,10 +3037,8 @@ function updateResources(now) {
 
     // Orbitaler CO₂-Extraktor: zieht CO₂ aus der Atmosphäre und lagert es separat im Orbit.
     if (Number(bld.orbitalCo2Extractor || 0) > 0) {
-      const atmosphericCO2 = Math.max(0, Number(planet.resources.co2 || 0));
-      const extracted = Math.min(atmosphericCO2, 0.5 * Number(bld.orbitalCo2Extractor) * delta);
+      const extracted = 0.2 * Number(bld.orbitalCo2Extractor) * delta;
       if (extracted > 0) {
-        planet.resources.co2 = atmosphericCO2 - extracted;
         const orbitStorage = getOrbitStorage(id);
         orbitStorage.co2 = Number(orbitStorage.co2 || 0) + extracted;
       }
@@ -3505,7 +3503,7 @@ function renderEconomy() {
     const amount = key === 'co2' ? Object.keys(bodies).reduce((sum, id) => sum + storageAmount(id, 'co2') + Number(getOrbitStorage(id).co2 || 0), 0) : getPlayerResourceAmount(key, 'earth');
     let production = 0, consumption = 0;
     if (key === 'co2') {
-      production = venusCo2ExtractionRate('venus') + Object.keys(bodies).reduce((sum, id) => sum + Number(getBuildingsOnPlanet(id).orbitalCo2Extractor || 0) * 0.5, 0);
+      production = venusCo2ExtractionRate('venus') + Object.keys(bodies).reduce((sum, id) => sum + Number(getBuildingsOnPlanet(id).orbitalCo2Extractor || 0) * 0.2, 0);
     }
     if (key === 'carbon') { production = co2ProcessingProduction('earth', 'carbon'); consumption = 0; }
     if (key === 'oxygen') { production = co2ProcessingProduction('earth', 'oxygen'); consumption = 0; }
