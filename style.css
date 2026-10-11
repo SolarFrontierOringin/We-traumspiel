@@ -612,3 +612,16 @@ select{padding:7px;border-radius:8px;background:#eef2f7;color:#111}
 
 /* Ceres – Zwergplanet */
 .ceres{width:25px;height:25px;background:radial-gradient(circle at 32% 28%,#d9d1b8 0%,#8e897e 48%,#494a4b 100%);box-shadow:0 0 12px rgba(190,184,164,.35)}
+
+
+/* FIX: Gebäudeübersicht auf Touch-Geräten zuverlässig vertikal scrollen */
+#solar-system .planet-build-menu {
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y !important;
+  overscroll-behavior-y: contain;
+  scrollbar-width: thin;
+}
+#solar-system .planet-build-menu * {
+  touch-action: pan-y;
+}

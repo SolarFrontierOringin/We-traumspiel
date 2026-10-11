@@ -4414,6 +4414,13 @@ document.addEventListener('visibilitychange', () => {
   const mid = (a,b) => ({x:(a.clientX+b.clientX)/2,y:(a.clientY+b.clientY)/2});
   const point = t => ({clientX:t.clientX,clientY:t.clientY});
   viewport.addEventListener('touchstart', e => {
+    // Das Gebäudemenü besitzt eigenes natives Touch-Scrolling. Diese Gesten
+    // dürfen nicht vom Pan-/Zoom-System des Sonnensystems abgefangen werden.
+    if (e.target.closest('.planet-build-menu')) {
+      gesture = null;
+      oneFingerMoved = false;
+      return;
+    }
     if (e.touches.length === 1) {
       const t=e.touches[0];
       gesture={kind:'pan',x:t.clientX,y:t.clientY,scrollLeft:viewport.scrollLeft,scrollTop:viewport.scrollTop};
