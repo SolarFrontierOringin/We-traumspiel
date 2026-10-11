@@ -256,6 +256,8 @@ let rocketCargoSlots = [
   { resource: 'steel', amount: 0 }
 ];
 let planetResourcesOpen = false;
+// Merkt sich die zuletzt geöffnete Gebäudekategorie über Neubauten hinweg.
+let activeBuildingCategoryTitle = null;
 
 const bodies = {
   sun: { name: 'Sonne', type: 'Stern', className: 'sun', temperature: 'ca. 5.500 °C Oberfläche', resources: {}, storage: {}, buildings: { solarSatellite: 0 }, orbit: 0 },
@@ -867,6 +869,15 @@ function updateResearch(now) {
   const active = state.research.active;
   const r = researchTypes[active.key];
   if (!r) { state.research.active = null; return; }
+  // Forschung läuft nur, solange mindestens ein geeignetes Labor vorhanden ist.
+  if (!researchAvailable()) {
+    if (active.pausedAt == null) active.pausedAt = now;
+    return;
+  }
+  if (active.pausedAt != null) {
+    active.started += Math.max(0, now - active.pausedAt);
+    delete active.pausedAt;
+  }
   if (now - active.started >= r.time * 1000) {
     state.research.completed[active.key] = true;
     playUiSound('research');
@@ -1270,6 +1281,10 @@ function updateRocketVisuals(now = performance.now()) {
 function renderSystem() {
   // Scrollposition des Gebäudemenüs sichern, da der DOM beim Bauen neu aufgebaut wird.
   const previousBuildMenu = solarSystem.querySelector('.planet-build-menu');
+  if (previousBuildMenu) {
+    const openCategory = previousBuildMenu.querySelector('.building-category-toggle[aria-expanded="true"]');
+    if (openCategory) activeBuildingCategoryTitle = openCategory.querySelector('span')?.textContent || activeBuildingCategoryTitle;
+  }
   const previousBuildMenuScrollTop = previousBuildMenu ? previousBuildMenu.scrollTop : 0;
   const previousBuildMenuScrollLeft = previousBuildMenu ? previousBuildMenu.scrollLeft : 0;
   // Im Baumenü die Planeten, ihre Beschriftungen und Umlaufbahnen ausblenden.
@@ -1405,7 +1420,7 @@ function renderSystem() {
   if (state.selected !== 'sun' && state.buildMenuOpen) {
     const menu = document.createElement('div');
     menu.className = 'planet-build-menu';
-    menu.innerHTML = `<div class="planet-build-header"><div class="planet-build-title">🏗️ Gebäude auf ${bodies[state.selected].name}</div><button type="button" class="build-menu-close" id="close-build-menu" aria-label="Gebäudemenü schließen">✕</button></div>
+    menu.innerHTML = `<div class="planet-build-header"><div class="planet-build-title">🏗️ Gebäude auf ${bodies[state.selected].name}</div><div class="planet-build-header-actions"><button type="button" class="demolition-admin-open">Abrissverwaltung</button><button type="button" class="build-menu-close" id="close-build-menu" aria-label="Gebäudemenü schließen">✕</button></div></div>
       <div class="build-card steelworks-card"><div><strong>🏭 Stahlwerk</strong><small>0,2 t Stahl/s · verbraucht 0,2 t Eisen/s · ${state.selected === 'earth' ? '1. kostenlos · 2. und 3. je 4 t Stahl · ab dem 4. je 20 t Stahl' : 'erstes kostenlos · weitere 20 t Stahl'}</small></div><button class="build-resource" id="build-steelworks-floating" ${(Number(getPlanetStorage(state.selected).steel || 0) >= (state.selected === 'earth' ? (getBuildingsOnPlanet(state.selected).steelworks === 0 ? 0 : getBuildingsOnPlanet(state.selected).steelworks < 3 ? 4 : 20) : (getBuildingsOnPlanet(state.selected).steelworks === 0 ? 0 : 20))) ? '' : 'disabled'}>Bauen (${getBuildingsOnPlanet(state.selected).steelworks})</button></div>
       ${buildButton('stoneQuarry')}
       ${buildButton('buildingMaterialsFactory')}
@@ -1532,6 +1547,7 @@ function renderSystem() {
         const opening = content.hidden;
         groups.forEach(g => { g.content.hidden = true; g.heading.setAttribute('aria-expanded','false'); g.heading.querySelector('.building-category-arrow').textContent = '▸'; });
         content.hidden = !opening; heading.setAttribute('aria-expanded', String(opening)); heading.querySelector('.building-category-arrow').textContent = opening ? '▾' : '▸';
+        activeBuildingCategoryTitle = opening ? category.title : null;
       });
       section.append(heading, content); menu.appendChild(section); groups.push({section,heading,content});
     }
@@ -1561,7 +1577,13 @@ function renderSystem() {
     [search, production, consumption, showUnavailable].forEach(el => el.addEventListener('input', updateBuildingFilters));
     [production, consumption, showUnavailable].forEach(el => el.addEventListener('change', updateBuildingFilters));
     updateBuildingFilters();
-    if (groups.length) { groups[0].content.hidden = false; groups[0].heading.setAttribute('aria-expanded','true'); groups[0].heading.querySelector('.building-category-arrow').textContent = '▾'; }
+    const categoryToRestore = groups.find(g => g.heading.querySelector('span')?.textContent === activeBuildingCategoryTitle) || groups[0];
+    if (categoryToRestore) {
+      categoryToRestore.content.hidden = false;
+      categoryToRestore.heading.setAttribute('aria-expanded','true');
+      categoryToRestore.heading.querySelector('.building-category-arrow').textContent = '▾';
+      activeBuildingCategoryTitle = categoryToRestore.heading.querySelector('span')?.textContent || null;
+    }
 
     menu.style.left = '50%';
     menu.style.top = 'calc(50% - 150px)';
@@ -1578,6 +1600,7 @@ function renderSystem() {
       }
     });
 
+    menu.querySelector('.demolition-admin-open').addEventListener('click', () => demolishBuilding(null, state.selected));
     menu.querySelector('#close-build-menu').addEventListener('click', () => {
       state.buildMenuOpen = false;
       renderSystem();
@@ -2049,19 +2072,7 @@ function saveAfterBuild() {
   saveGame(false);
 }
 
-function demolishBuilding(key, planetId = state.selected) {
-  const buildings = getBuildingsOnPlanet(planetId);
-  const count = Number(buildings[key] || 0);
-  if (!count) return;
-  const name = buildingTypes[key]?.name || key;
-  if (!confirm(`${name} auf ${bodies[planetId].name} abreißen?\n50 % der hinterlegten Baukosten werden in das Lager dieses Planeten zurückgezahlt.`)) return;
-
-  const storage = getPlanetStorage(planetId);
-  const refunds = {};
-  const addRefund = (resource, amount) => {
-    if (amount > 0) refunds[resource] = (refunds[resource] || 0) + amount * 0.5;
-  };
-  // Kosten werden anhand der tatsächlich verwendeten Bau-Logik zurückerstattet.
+function demolitionCostMap(key, planetId, currentCount) {
   const costs = {
     orbitalCo2Extractor: { aluminium: 50, polymers: 40, chips: 20, steel: 190 },
     iceProcessingPlant: { steel: 100, buildingMaterials: 50, electronics: 20 },
@@ -2086,29 +2097,133 @@ function demolishBuilding(key, planetId = state.selected) {
     landingPad: { steel: 2000, buildingMaterials: 3000, machines: 500, batteries: 300 },
     outpost: { steel: 100 },
     researchLab: {},
-    steelworks: { steel: planetId === 'earth' ? (count <= 1 ? 0 : count <= 3 ? 4 : 20) : (count > 1 ? 20 : 0) },
-    ironMine: { steel: planetId === 'earth' ? (count <= 5 ? 3 : 20) : 20 }
+    solarSatellite: { steel: 20000, buildingMaterials: 20000, glass: 10000, electronics: 5000, batteries: 5000 },
+    solarProbe: { steel: 15000, electronics: 5000, batteries: 2000 },
+    steelworks: { steel: planetId === 'earth' ? (currentCount <= 1 ? 0 : currentCount <= 3 ? 4 : 20) : (currentCount > 1 ? 20 : 0) },
+    ironMine: { steel: planetId === 'earth' ? (currentCount <= 5 ? 3 : 20) : 20 },
+    stoneQuarry: { steel: 30 }, coalMine: { steel: 15 }, gasPlant: { steel: 25 },
+    co2Extraction: { steel: 25 }, co2ProcessingPlant: { steel: 50 },
+    siliconMine: { steel: 30 }, lithiumMine: { steel: 30 }, copperMine: { steel: 30 },
+    copperSmelter: { steel: 50 }, lithiumRefinery: { steel: 80 }, machineFactory: { steel: 100 },
+    glassFactory: { steel: 60 }, heliumExtractor: { steel: 120 }, fusionReactor: { steel: 250 },
+    crudeOilPump: {}, bauxiteMine: { steel: 40 }, aluminiumOxideRefinery: { steel: 100 },
+    aluminiumSmelter: { steel: 200 }, titanMine: { steel: 150, machines: 50, electronics: 30 },
+    titanProcessing: { steel: 250, machines: 100, electronics: 50 }, titanRefinery: { steel: 400, machines: 150, electronics: 100 }
   };
-  if (costs[key]) {
-    for (const [resource, amount] of Object.entries(costs[key])) addRefund(resource, amount);
-  } else {
-    const cost = Number(buildingTypes[key]?.cost || 0);
-    addRefund('steel', cost);
+  return costs[key] || (buildingTypes[key]?.cost ? { steel: Number(buildingTypes[key].cost) } : {});
+}
+
+function demolitionRefundFor(key, planetId, amount) {
+  const buildings = getBuildingsOnPlanet(planetId);
+  const perBuildingCosts = demolitionCostMap(key, planetId, Number(buildings[key] || 0));
+  const refunds = {};
+  for (const [resource, cost] of Object.entries(perBuildingCosts)) {
+    // Gesamtkosten der gewählten Menge berechnen, danach einmal 50 % und abrunden.
+    const refund = Math.floor((Number(cost) * amount) / 2);
+    if (refund > 0) refunds[resource] = refund;
   }
-  for (const [resource, amount] of Object.entries(refunds)) {
-    storage[resource] = Number(storage[resource] || 0) + amount;
-  }
-  buildings[key] = Math.max(0, count - 1);
-  if (key === 'rocketFactory') {
-    delete rocketFactoryBuildQueue[planetId];
-    delete rocketFactoryBuildStarted[planetId];
-  }
-  if (key === 'outpost') {
-    delete outpostBuildQueue[planetId];
-    delete outpostBuildStarted[planetId];
-  }
-  playUiSound('build');
-  renderSystem(); renderInfo(); renderTopResources(); saveAfterBuild();
+  return refunds;
+}
+
+function demolishBuilding(key = null, planetId = state.selected) {
+  if (!bodies[planetId] || planetId === 'sun') return;
+  const modalId = 'demolition-dialog';
+  document.getElementById(modalId)?.remove();
+  const overlay = document.createElement('div');
+  overlay.id = modalId;
+  overlay.className = 'demolition-overlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-labelledby', 'demolition-title');
+
+  const buildings = getBuildingsOnPlanet(planetId);
+  const available = Object.keys(buildingTypes)
+    .filter(k => Number(buildings[k] || 0) > 0)
+    .sort((a,b) => (buildingTypes[a]?.name || a).localeCompare(buildingTypes[b]?.name || b, 'de'));
+  if (!available.length) { alert('Auf diesem Planeten gibt es keine Gebäude zum Abriss.'); return; }
+  if (key && !available.includes(key)) key = available[0];
+
+  overlay.innerHTML = `
+    <section class="demolition-dialog">
+      <div class="demolition-head">
+        <div><h2 id="demolition-title">🏗️ Gebäudeabriss</h2><p>Planet: ${bodies[planetId].name}</p></div>
+        <button type="button" class="icon-button" data-demolition-close aria-label="Schließen">✕</button>
+      </div>
+      <label for="demolition-building">Gebäude auswählen</label>
+      <select id="demolition-building" class="demolition-select">${available.map(k => `<option value="${k}" ${k===key?'selected':''}>${buildingTypes[k]?.icon || '🏭'} ${buildingTypes[k]?.name || k} (${Number(buildings[k] || 0)})</option>`).join('')}</select>
+      <div class="demolition-count-row"><label for="demolition-quantity">Anzahl zum Abriss</label><input id="demolition-quantity" type="number" min="1" step="1" value="1" inputmode="numeric"></div>
+      <input id="demolition-slider" type="range" min="1" max="1" value="1" step="1" aria-label="Abrissmenge">
+      <div class="demolition-count-row"><span>Vorhanden: <strong id="demolition-owned">0</strong></span><span>Danach: <strong id="demolition-remaining">0</strong></span></div>
+      <div class="demolition-refund"><strong>Voraussichtliche Rückerstattung (50 %)</strong><div id="demolition-refund-list"></div><small>Materialien werden ins Lager dieses Planeten gelegt. Mengen werden je Material abgerundet.</small></div>
+      <p id="demolition-warning" class="demolition-warning" hidden></p>
+      <div class="demolition-actions"><button type="button" data-demolition-close class="secondary-action">Abbrechen</button><button type="button" id="demolition-confirm" class="danger">Abriss bestätigen</button></div>
+    </section>`;
+  document.body.appendChild(overlay);
+
+  const select = overlay.querySelector('#demolition-building');
+  const quantity = overlay.querySelector('#demolition-quantity');
+  const slider = overlay.querySelector('#demolition-slider');
+  const ownedLabel = overlay.querySelector('#demolition-owned');
+  const remainingLabel = overlay.querySelector('#demolition-remaining');
+  const refundList = overlay.querySelector('#demolition-refund-list');
+  const warning = overlay.querySelector('#demolition-warning');
+  const confirmButton = overlay.querySelector('#demolition-confirm');
+
+  const refresh = (fromSlider = false) => {
+    const selectedKey = select.value;
+    const owned = Number(getBuildingsOnPlanet(planetId)[selectedKey] || 0);
+    slider.max = String(Math.max(1, owned));
+    quantity.max = String(Math.max(1, owned));
+    let amount = Number(fromSlider ? slider.value : quantity.value);
+    if (!Number.isFinite(amount)) amount = 1;
+    amount = Math.max(1, Math.min(owned, Math.floor(amount)));
+    quantity.value = String(amount);
+    slider.value = String(amount);
+    ownedLabel.textContent = String(owned);
+    remainingLabel.textContent = String(owned - amount);
+    const refunds = demolitionRefundFor(selectedKey, planetId, amount);
+    const resourceLabels = {steel:'Stahl',buildingMaterials:'Baustoffe',electronics:'Elektronik',chips:'Chips',glass:'Glas',machines:'Maschinen',batteries:'Batterien',concrete:'Beton',polymers:'Polymere',aluminium:'Aluminium'};
+    const rows = Object.entries(refunds).filter(([,v]) => v > 0).map(([r,v]) => `<div><span>${resourceLabels[r] || resourceNames[r] || r}</span><strong>${v.toLocaleString('de-DE')} t</strong></div>`);
+    refundList.innerHTML = rows.length ? rows.join('') : '<span>Keine Materialrückerstattung für dieses Gebäude hinterlegt.</span>';
+    warning.hidden = true;
+    confirmButton.disabled = owned < 1 || amount < 1;
+  };
+  select.addEventListener('change', () => { quantity.value = '1'; slider.value = '1'; refresh(); });
+  quantity.addEventListener('input', () => refresh(false));
+  slider.addEventListener('input', () => refresh(true));
+  overlay.querySelectorAll('[data-demolition-close]').forEach(btn => btn.addEventListener('click', () => overlay.remove()));
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  overlay.querySelector('#demolition-confirm').addEventListener('click', () => {
+    const selectedKey = select.value;
+    const current = getBuildingsOnPlanet(planetId);
+    const owned = Number(current[selectedKey] || 0);
+    const amount = Math.floor(Number(quantity.value));
+    if (!Number.isFinite(amount) || amount < 1 || amount > owned) {
+      warning.textContent = 'Bitte eine gültige Abrissmenge auswählen.';
+      warning.hidden = false;
+      return;
+    }
+    const name = buildingTypes[selectedKey]?.name || selectedKey;
+    const refunds = demolitionRefundFor(selectedKey, planetId, amount);
+    const refundText = Object.entries(refunds).map(([r,v]) => `${v} ${resourceNames[r] || r}`).join(', ') || 'keine Materialien';
+    if (!confirm(`${amount} × ${name} auf ${bodies[planetId].name} sofort abreißen?\nRückerstattung: ${refundText}.\nLaufende Raketenbau-Warteschlangen dieser Fabrik werden abgebrochen.`)) return;
+    const storage = getPlanetStorage(planetId);
+    for (const [resource, value] of Object.entries(refunds)) storage[resource] = Number(storage[resource] || 0) + value;
+    current[selectedKey] = Math.max(0, owned - amount);
+    if (selectedKey === 'rocketFactory') {
+      delete rocketFactoryQueue[planetId]; delete rocketFactoryStarted[planetId];
+      delete rocketFactoryBuildQueue[planetId]; delete rocketFactoryBuildStarted[planetId];
+      delete rocketBuildQueue[planetId]; delete rocketBuildStarted[planetId];
+      delete rocketBuildQueue2[planetId]; delete rocketBuildStarted2[planetId];
+      delete rocketBuildQueueAtlas1[planetId]; delete rocketBuildStartedAtlas1[planetId];
+      delete rocketFactoryQueue[planetId];
+    }
+    if (selectedKey === 'outpost') { delete outpostBuildQueue[planetId]; delete outpostBuildStarted[planetId]; }
+    overlay.remove();
+    playUiSound('build');
+    renderSystem(); renderInfo(); renderTopResources(); saveAfterBuild();
+  });
+  refresh();
 }
 
 function buildResourceBuilding(key) {
