@@ -2708,6 +2708,11 @@ function renderRocketWindow(body) {
 
   const qty = Math.max(1, Math.min(rocketQuantity, Math.max(1, stock1)));
   rocketQuantity = qty;
+  // Zielplanet und Zielort bleiben zentrale Einstellungen für alle Raketen.
+  // Falls ein alter Spielstand ein ungültiges Ziel enthält, auf das erste gültige Ziel zurückfallen.
+  if (!Object.prototype.hasOwnProperty.call(bodies, rocketDestination) || rocketDestination === 'sun' || !flightTimes[rocketDestination]) {
+    rocketDestination = Object.keys(bodies).find(id => id !== 'sun' && id !== source && flightTimes[id] !== undefined) || 'mercury';
+  }
   const target = rocketDestination;
   if (!hasPlanetSurface(target)) rocketDestinationMode = 'orbit';
   const sec = flightDurationSeconds(target, rocketDestinationMode);
@@ -2782,9 +2787,9 @@ function renderRocketWindow(body) {
     <details class="rocket-type-card"><summary>🏗️ Titan 1 · Bau <span>1.500 t/L · Bestand: ${stockTitan1}</span></summary><div class="rocket-type-content"><div class="rocket-build-box titan1-box"><strong>🚀 Titan 1</strong><small>2.000 t Stahl + 300 t Aluminium + 250 t Chips + 200 t Batterien + 120 t Titan · 120 Sekunden Bauzeit · 1.500 t/L Kapazität · Forschung Schwerlastraketen erforderlich</small><button id="build-titan1" ${!rocketFactoryHasCapacity(source) || localSteel < 2000 || localAluminium < 300 || localChips < 250 || localBatteries < 200 || getPlayerResourceAmount('titanium',source) < 120 || !state.research?.completed?.titan1 ? 'disabled' : ''}>🚀 Titan 1 bauen</button></div>
     <div class="rocket-stock">Titan 1 verfügbar: <strong>${stockTitan1}</strong></div></div></details>
 
-    <div class="transport-route"><label for="rocket-destination"><strong>🎯 Zielplanet</strong></label><select id="rocket-destination">${destinations}</select>
+    <section class="transport-route"><h3>🎯 Flugziel für alle Raketen</h3><label for="rocket-destination"><strong>Zielplanet</strong></label><select id="rocket-destination">${destinations}</select>
     <label for="rocket-destination-mode"><strong>📍 Zielort</strong></label><select id="rocket-destination-mode"><option value="surface" ${rocketDestinationMode === 'surface' ? 'selected' : ''}>🌍 Oberfläche</option><option value="orbit" ${rocketDestinationMode === 'orbit' ? 'selected' : ''}>🛰️ Orbit</option></select>
-    <small class="hint">Oberfläche: ${flightDurationSeconds(target, 'surface')} s · Orbit: ${flightDurationSeconds(target, 'orbit')} s</small></div>
+    <small class="hint">Oberfläche: ${flightDurationSeconds(target, 'surface')} s · Orbit: ${flightDurationSeconds(target, 'orbit')} s</small></section>
 
         <details class="rocket-type-card rocket-cargo-card"><summary>📦 Titan 1 · Fracht <span>1.500 t/L · Beladung: ${h2Total.toFixed(0)} t/L</span></summary><div class="rocket-type-content"><div class="rocket-h2-launch titan1-launch"><strong>🚀 Titan 1 · Mehrere Frachtarten</strong><div class="rocket-capacity">Gesamtkapazität: <strong>1.500 t/L</strong> · Belegung: <strong>${h2Total.toFixed(2)} t/L</strong></div><div class="rocket-compartments">${h2SlotsHtml}</div><button type="button" class="cargo-add" ${rocketCargoSlots.length>=20 || h2Total>=1500 ? "disabled" : ""}>＋ Fracht hinzufügen</button>${h2Total > 1500 ? '<small class="bad">Maximal 1.500 t/L pro Titan 1.</small>' : ''}<label class="rocket-count-label">Anzahl Raketen <input type="number" class="rocket-count" id="rocket-count-titan1" min="1" max="${stockTitan1}" value="1" inputmode="numeric"></label><button class="rocket-launch" id="launch-titan1" ${stockTitan1 < 1 || h2Total <= 0 || h2Total > 1500.000001 || !state.research?.completed?.titan1 ? 'disabled' : ''}>🚀 Titan 1 nach ${bodies[target].name} starten</button><p class="hint">Flugzeit zum Zielort: ${sec} Sekunden · mehrere Frachtarten pro Mission.</p></div></div></details>
 
@@ -3807,5 +3812,39 @@ window.addEventListener('beforeunload', saveGameOnExit);
 document.addEventListener('visibilitychange', () => {
   if (!restartingGame && document.visibilityState === 'hidden') saveGame(false);
 });
+
+
+// Sonnensystem auf Mobilgeräten mit zwei Fingern verschieben und per Pinch zoomen.
+// Ein-Finger-Gesten bleiben für normales Scrollen und Planetenauswahl verfügbar.
+(function setupSolarSystemGestures(){
+  const viewport = document.querySelector('#solar-system-viewport');
+  const system = document.querySelector('#solar-system');
+  if (!viewport || !system) return;
+  let gesture = null;
+  let zoom = 1;
+  const distance = (a,b) => Math.hypot(b.clientX-a.clientX,b.clientY-a.clientY);
+  const midpoint = (a,b) => ({x:(a.clientX+b.clientX)/2,y:(a.clientY+b.clientY)/2});
+  viewport.addEventListener('touchstart', event => {
+    if (event.touches.length !== 2) { gesture = null; return; }
+    const a=event.touches[0], b=event.touches[1], mid=midpoint(a,b);
+    gesture={distance:Math.max(1,distance(a,b)),zoom,midX:mid.x,midY:mid.y,scrollLeft:viewport.scrollLeft,scrollTop:viewport.scrollTop};
+  }, {passive:true});
+  viewport.addEventListener('touchmove', event => {
+    if (event.touches.length !== 2 || !gesture) return;
+    event.preventDefault();
+    const a=event.touches[0], b=event.touches[1], mid=midpoint(a,b);
+    const nextZoom=Math.max(0.6,Math.min(2.2,gesture.zoom*distance(a,b)/gesture.distance));
+    const ratio=nextZoom/zoom;
+    const beforeX=(viewport.scrollLeft+gesture.midX-viewport.getBoundingClientRect().left);
+    const beforeY=(viewport.scrollTop+gesture.midY-viewport.getBoundingClientRect().top);
+    zoom=nextZoom;
+    system.style.zoom=String(zoom);
+    viewport.scrollLeft=gesture.scrollLeft*ratio-(mid.x-gesture.midX);
+    viewport.scrollTop=gesture.scrollTop*ratio-(mid.y-gesture.midY);
+  }, {passive:false});
+  viewport.addEventListener('touchend', event => { if (event.touches.length < 2) gesture=null; }, {passive:true});
+  viewport.addEventListener('touchcancel', () => { gesture=null; }, {passive:true});
+  viewport.setAttribute('aria-description','Mit einem Finger scrollen; mit zwei Fingern verschieben und zoomen.');
+})();
 
 ['pointerdown','touchstart','keydown'].forEach(evt=>document.addEventListener(evt, unlockAudio, {once:true, passive:true}));

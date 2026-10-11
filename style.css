@@ -547,3 +547,13 @@ select{padding:7px;border-radius:8px;background:#eef2f7;color:#111}
 .rocket-cargo-card .rocket-h1-launch,.rocket-cargo-card .rocket-h2-launch{margin:0;padding:10px;border:0;border-top:1px solid #263754;border-radius:0;background:transparent}
 .rocket-cargo-card .rocket-compartments{display:grid;gap:7px}
 @media(max-width:430px){.rocket-cargo-card>summary{padding:10px;font-size:14px}.rocket-cargo-card>summary span{max-width:48%;font-size:11px}}
+
+
+/* Flugziel bleibt eine eigene, klar erkennbare Einstellung vor allen Frachtmodulen. */
+.transport-route{display:grid;gap:8px;margin:10px 0;padding:12px;border:1px solid #263754;border-radius:14px;background:#0b1728}
+.transport-route h3{margin:0 0 2px}
+.transport-route label{display:grid;gap:5px}
+.transport-route select{width:100%;min-height:44px;padding:9px 12px}
+.solar-system-viewport{touch-action:pan-x pan-y;overscroll-behavior:contain}
+.solar-system{transform-origin:top left;will-change:zoom}
+@media(max-width:430px){.transport-route{padding:10px}.transport-route h3{font-size:17px}}
