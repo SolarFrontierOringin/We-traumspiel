@@ -2763,7 +2763,7 @@ function renderRocketWindow(body) {
   const h2Possible = h2Total > 0 && h2Total <= 300.000001;
   const h2SlotsHtml = rocketCargoSlots.map((slot, i) => {
     const available = Number(getLocationStorage(source, state.viewMode === 'orbit' ? 'orbit' : 'surface')[slot.resource] || 0);
-    return `<div class="rocket-compartment dynamic-cargo-row"><div class="cargo-row-heading"><strong>Fracht ${i+1}</strong><button type="button" class="cargo-remove" data-slot="${i}" aria-label="Frachtzeile ${i+1} entfernen">✕</button></div><select class="rocket-h2-resource" data-slot="${i}">${cargoOptions.replace(`value="${slot.resource}"`, `value="${slot.resource}" selected`)}</select><label class="cargo-amount-label">Menge (${['crudeOil','water'].includes(slot.resource) ? 'L' : 't'})<input class="rocket-h2-amount" data-slot="${i}" type="number" min="0" max="${Math.min(1500, available)}" step="0.01" value="${Number(slot.amount || 0).toFixed(2)}"></label><small>Verfügbar: ${formatTons(available)}</small></div>`;
+    return `<div class="rocket-compartment dynamic-cargo-row"><div class="cargo-row-heading"><strong>Fracht ${i+1}</strong><button type="button" class="cargo-remove" data-slot="${i}" aria-label="Frachtzeile ${i+1} entfernen">✕</button></div><select class="rocket-h2-resource" data-slot="${i}">${cargoOptions.replace(`value="${slot.resource}"`, `value="${slot.resource}" selected`)}</select><label class="cargo-amount-label">Menge (${['crudeOil','water'].includes(slot.resource) ? 'L' : 't'})<input class="rocket-h2-amount" data-slot="${i}" type="number" min="0" max="${Math.min(1500, available)}" step="0.01" value="${Number(slot.amount || 0).toFixed(2)}"><input class="rocket-h2-range" data-slot="${i}" type="range" min="0" max="${Math.max(0, Math.min(1500, available))}" step="0.01" value="${Math.min(Number(slot.amount || 0), available, 1500)}" aria-label="Frachtmenge ${i+1}"></label><small>Verfügbar: ${formatTons(available)}</small></div>`;
   }).join('');
 
   return `<section class="rocket-window"><h3>🚀 Transportzentrale</h3>
@@ -2782,14 +2782,14 @@ function renderRocketWindow(body) {
     <details class="rocket-type-card"><summary>🚀 Titan 1 <span>1.500 t/L · Bestand: ${stockTitan1}</span></summary><div class="rocket-type-content"><div class="rocket-build-box titan1-box"><strong>🚀 Titan 1</strong><small>2.000 t Stahl + 300 t Aluminium + 250 t Chips + 200 t Batterien + 120 t Titan · 120 Sekunden Bauzeit · 1.500 t/L Kapazität · Forschung Schwerlastraketen erforderlich</small><button id="build-titan1" ${!rocketFactoryHasCapacity(source) || localSteel < 2000 || localAluminium < 300 || localChips < 250 || localBatteries < 200 || getPlayerResourceAmount('titanium',source) < 120 || !state.research?.completed?.titan1 ? 'disabled' : ''}>🚀 Titan 1 bauen</button></div>
     <div class="rocket-stock">Titan 1 verfügbar: <strong>${stockTitan1}</strong></div></div></details>
 
-    <div class="rocket-h2-launch titan1-launch"><strong>🚀 Titan 1 · Mehrere Frachtarten</strong><div class="rocket-capacity">Gesamtkapazität: <strong>1.500 t/L</strong> · Belegung: <strong>${h2Total.toFixed(2)} t/L</strong></div><div class="rocket-compartments">${h2SlotsHtml}</div><button type="button" class="cargo-add" ${rocketCargoSlots.length>=20 || h2Total>=1500 ? "disabled" : ""}>＋ Fracht hinzufügen</button>${h2Total > 1500 ? '<small class="bad">Maximal 1.500 t/L pro Titan 1.</small>' : ''}<button class="rocket-launch" id="launch-titan1" ${stockTitan1 < 1 || h2Total <= 0 || h2Total > 1500.000001 || !state.research?.completed?.titan1 ? 'disabled' : ''}>🚀 Titan 1 nach ${bodies[target].name} starten</button><p class="hint">Flugzeit zur Luna: 20 Sekunden · mehrere Frachtarten pro Mission.</p></div>
+    <details class="rocket-type-card rocket-cargo-card"><summary>🚀 Titan 1 · Fracht <span>1.500 t/L · Beladung: ${h2Total.toFixed(0)} t/L</span></summary><div class="rocket-type-content"><div class="rocket-h2-launch titan1-launch"><strong>🚀 Titan 1 · Mehrere Frachtarten</strong><div class="rocket-capacity">Gesamtkapazität: <strong>1.500 t/L</strong> · Belegung: <strong>${h2Total.toFixed(2)} t/L</strong></div><div class="rocket-compartments">${h2SlotsHtml}</div><button type="button" class="cargo-add" ${rocketCargoSlots.length>=20 || h2Total>=1500 ? "disabled" : ""}>＋ Fracht hinzufügen</button>${h2Total > 1500 ? '<small class="bad">Maximal 1.500 t/L pro Titan 1.</small>' : ''}<label class="rocket-count-label">Anzahl Raketen <input type="number" class="rocket-count" id="rocket-count-titan1" min="1" max="${stockTitan1}" value="1" inputmode="numeric"></label><button class="rocket-launch" id="launch-titan1" ${stockTitan1 < 1 || h2Total <= 0 || h2Total > 1500.000001 || !state.research?.completed?.titan1 ? 'disabled' : ''}>🚀 Titan 1 nach ${bodies[target].name} starten</button><p class="hint">Flugzeit zum Zielort: ${sec} Sekunden · mehrere Frachtarten pro Mission.</p></div></div></details>
 
     <div class="rocket-h2-launch atlas1-launch">
       <strong>🚀 Atlas 1 · Mehrere Frachtabteilungen</strong>
       <div class="rocket-capacity">Gesamtkapazität: <strong>500 t/L</strong> · Belegung: <strong>${h2Total.toFixed(2)} t/L</strong></div>
       <div class="rocket-compartments">${h2SlotsHtml}</div><button type="button" class="cargo-add" ${rocketCargoSlots.length>=20 || h2Total>=500 ? "disabled" : ""}>＋ Fracht hinzufügen</button>
       ${h2Total > 500 ? '<small class="bad">Maximal 500 t/L pro Atlas 1.</small>' : ''}
-      <button class="rocket-launch" id="launch-atlas1" ${stockAtlas1 < 1 || h2Total <= 0 || h2Total > 500.000001 || !state.research?.completed?.atlas1 ? 'disabled' : ''}>🚀 Atlas 1 nach ${bodies[target].name} starten</button>
+      <label class="rocket-count-label">Anzahl Raketen <input type="number" class="rocket-count" id="rocket-count-atlas1" min="1" max="${stockAtlas1}" value="1" inputmode="numeric"></label><button class="rocket-launch" id="launch-atlas1" ${stockAtlas1 < 1 || h2Total <= 0 || h2Total > 500.000001 || !state.research?.completed?.atlas1 ? 'disabled' : ''}>🚀 Atlas 1 nach ${bodies[target].name} starten</button>
       <p class="hint">Alle Planeten erreichbar · 1 Sekunde schneller als Herkules · 3 Frachtabteilungen.</p>
     </div>
 
@@ -2810,7 +2810,7 @@ function renderRocketWindow(body) {
       <div class="rocket-capacity">Gesamtkapazität: <strong>300 t/L</strong> · Belegung: <strong>${h2Total.toFixed(2)} t/L</strong></div>
       <div class="rocket-compartments">${h2SlotsHtml}</div><button type="button" class="cargo-add" ${rocketCargoSlots.length>=20 || h2Total>=300 ? "disabled" : ""}>＋ Fracht hinzufügen</button>
       ${h2Total > 300 ? '<small class="bad">Maximal 300 t/L pro Herkules 2.</small>' : ''}
-      <button class="rocket-launch" id="launch-hercules2" ${stock2 < 1 || !h2Possible ? 'disabled' : ''}>🚀 Herkules 2 nach ${bodies[target].name} starten</button>
+      <label class="rocket-count-label">Anzahl Raketen <input type="number" class="rocket-count" id="rocket-count-hercules2" min="1" max="${stock2}" value="1" inputmode="numeric"></label><button class="rocket-launch" id="launch-hercules2" ${stock2 < 1 || !h2Possible ? 'disabled' : ''}>🚀 Herkules 2 nach ${bodies[target].name} starten</button>
       <p class="hint">Gleiche Flugzeit wie Herkules 1 · kann alle erreichbaren Planeten anfliegen.</p>
     </div>
 
@@ -2952,12 +2952,47 @@ function bindRocketControls() {
   }));
   infoPanel.querySelectorAll('.rocket-h2-amount').forEach(el=>el.addEventListener('input',()=>{
     const i=Number(el.dataset.slot);
-    rocketCargoSlots[i].amount=Math.max(0,Math.min(1500,Number(el.value)||0));
+    const available=Number(getLocationStorage(state.selected, state.viewMode === 'orbit' ? 'orbit' : 'surface')[rocketCargoSlots[i]?.resource] || 0);
+    rocketCargoSlots[i].amount=Math.max(0,Math.min(1500,available,Number(el.value)||0));
+    const range=infoPanel.querySelector(`.rocket-h2-range[data-slot="${i}"]`);
+    if(range) range.value=rocketCargoSlots[i].amount;
+    const row=el.closest('.dynamic-cargo-row');
+    const amountLabel=row?.querySelector('.cargo-amount-label');
+    if(amountLabel) amountLabel.firstChild.textContent=`Menge (${['crudeOil','water'].includes(rocketCargoSlots[i].resource) ? 'L' : 't'})`;
+  }));
+  infoPanel.querySelectorAll('.rocket-h2-range').forEach(el=>el.addEventListener('input',()=>{
+    const i=Number(el.dataset.slot);
+    if(!rocketCargoSlots[i]) return;
+    rocketCargoSlots[i].amount=Math.max(0,Math.min(1500,Number(el.max)||1500,Number(el.value)||0));
+    const number=infoPanel.querySelector(`.rocket-h2-amount[data-slot="${i}"]`);
+    if(number) number.value=rocketCargoSlots[i].amount.toFixed(2);
   }));
   const l=infoPanel.querySelector('#launch-hercules'); if(l)l.addEventListener('click',()=>launchHercules1(state.selected,rocketDestination,rocketQuantity));
-  const l2=infoPanel.querySelector('#launch-hercules2'); if(l2)l2.addEventListener('click',()=>launchHercules2(state.selected,rocketDestination));
-  const la=infoPanel.querySelector('#launch-atlas1'); if(la)la.addEventListener('click',()=>launchAtlas1(state.selected,rocketDestination));
-  const lt=infoPanel.querySelector('#launch-titan1'); if(lt)lt.addEventListener('click',()=>launchTitan1(state.selected,rocketDestination));
+  const launchFleet=(type, countId, launchFn)=>{
+    const button=infoPanel.querySelector(`#launch-${type}`);
+    if(!button) return;
+    button.addEventListener('click',()=>{
+      const countInput=infoPanel.querySelector(`#${countId}`);
+      const count=Math.max(1,Math.min(99,Number(countInput?.value)||1));
+      const stock=type==='hercules2'?(rocketStock2[state.selected]||0):type==='atlas1'?(rocketStockAtlas1[state.selected]||0):(rocketStockTitan1[state.selected]||0);
+      if(count>stock){rocketLaunchError(`Du hast nur ${stock} Rakete(n) dieses Typs verfügbar.`);return;}
+      const original=rocketCargoSlots.map(slot=>({...slot}));
+      const capacity=type==='hercules2'?300:type==='atlas1'?500:1500;
+      const total=original.reduce((sum,slot)=>sum+Math.max(0,Number(slot.amount)||0),0);
+      if(total>capacity*count+0.000001){rocketLaunchError(`Die Gesamtfracht überschreitet die Kapazität von ${count} Rakete(n).`);return;}
+      rocketCargoSlots=original.map(slot=>({...slot,amount:(Number(slot.amount)||0)/count}));
+      for(let n=0;n<count;n++){
+        const before=type==='hercules2'?(rocketStock2[state.selected]||0):type==='atlas1'?(rocketStockAtlas1[state.selected]||0):(rocketStockTitan1[state.selected]||0);
+        if(before<=0) break;
+        launchFn(state.selected,rocketDestination);
+      }
+      rocketCargoSlots=original;
+      renderInfo(); saveGame(false);
+    });
+  };
+  launchFleet('hercules2','rocket-count-hercules2',launchHercules2);
+  launchFleet('atlas1','rocket-count-atlas1',launchAtlas1);
+  launchFleet('titan1','rocket-count-titan1',launchTitan1);
   infoPanel.querySelectorAll('.rocket-land').forEach(x=>x.addEventListener('click',()=>{
     const r=rockets.find(r=>String(r.id)===String(x.dataset.rocketId));
     if(!r || r.status!=='orbit' || !rocketCanLand(r.to) || Number(getBuildingsOnPlanet(r.to).landingPad || 0) < 1) return;

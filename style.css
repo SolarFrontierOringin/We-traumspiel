@@ -511,3 +511,26 @@ select{padding:7px;border-radius:8px;background:#eef2f7;color:#111}
 .transport-route{display:grid;gap:7px;margin:10px 0;padding:10px;border:1px solid #263754;border-radius:12px;background:#0b1728}
 .transport-route label{display:grid;gap:5px}
 .transport-route select{width:100%;padding:9px;border:1px solid #344967;border-radius:8px;background:#eef2f7;color:#111}
+
+
+/* Transportzentrale: kompakte Raketenmodule und fingerfreundliche Frachtregler */
+.rocket-type-card{margin:8px 0;border:1px solid #315273;border-radius:13px;background:#0a1424;overflow:hidden}
+.rocket-type-card>summary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px;cursor:pointer;font-weight:750;list-style:none}
+.rocket-type-card>summary::-webkit-details-marker{display:none}
+.rocket-type-card>summary:after{content:'＋';color:#aab8ce;font-size:18px}
+.rocket-type-card[open]>summary:after{content:'−'}
+.rocket-type-card>summary span{font-size:12px;color:#b8c8df;text-align:right;font-weight:600}
+.rocket-type-content{padding:0 10px 10px}
+.rocket-cargo-card .rocket-h2-launch{margin:0;padding:10px;border:0;border-top:1px solid #263754;border-radius:0;background:transparent}
+.dynamic-cargo-row{min-width:0!important;grid-template-columns:minmax(0,1fr)!important}
+.dynamic-cargo-row select{width:100%;min-height:44px}
+.cargo-row-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.cargo-remove{width:40px;min-width:40px;min-height:40px;background:#823838}
+.cargo-amount-label{display:grid;gap:8px;color:#aab8ce;font-size:13px}
+.cargo-amount-label input[type=number]{width:100%;min-height:48px;padding:10px 12px;border:1px solid #435570;border-radius:10px;background:#f2f5fa;color:#111;font-size:17px}
+.cargo-amount-label input[type=range]{width:100%;min-height:34px;accent-color:#299764;touch-action:pan-x}
+.cargo-add{width:100%;min-height:46px;margin:7px 0;background:#18523e}
+.rocket-count-label{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:8px 0;color:#c7d4e8}
+.rocket-count{width:90px;min-height:42px;padding:8px;border-radius:8px;background:#eef2f7;color:#111}
+.rocket-capacity{line-height:1.4}
+@media(max-width:430px){.rocket-type-card>summary{padding:10px;font-size:14px}.rocket-type-card>summary span{max-width:48%;font-size:11px}.cargo-amount-label input[type=number]{font-size:16px}.rocket-count-label{align-items:flex-start;flex-direction:column}.rocket-count{width:100%}}
