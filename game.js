@@ -3335,6 +3335,7 @@ function returnRocket(rocketId, cargoResource = null, cargoAmount = 0) {
   rocket.duration = duration;
   renderInfo();
   renderTopResources();
+  saveGame(false);
 }
 
 function renderRocketWindow(body) {
@@ -3564,7 +3565,12 @@ function updateOrbitMissions(now = gameNow()) {
       const available = Math.max(0, Number(storage[m.resource] || 0));
       const capacity = m.rocketType === 'titan1' ? 1500 : m.rocketType === 'atlas1' ? 500 : m.rocketType === 'hercules2' ? 300 : 120;
       const loaded = Math.min(m.amount, capacity, available);
-      if (loaded <= 0.000001) { m.status = 'paused'; m.message = `Kein ${resourceNames[m.resource] || m.resource} verfügbar – bitte manuell fortsetzen`; changed = true; continue; }
+      // Bei vorübergehend leerem Lager bleibt die Mission aktiv und versucht
+      // es beim nächsten Tick erneut, statt sich dauerhaft selbst zu pausieren.
+      if (loaded <= 0.000001) {
+        m.message = `Wartet auf ${resourceNames[m.resource] || m.resource} im ${m.sourceMode === 'orbit' ? 'Orbitlager' : 'Oberflächenlager'}`;
+        continue;
+      }
       storage[m.resource] = available - loaded;
       m.loadedAmount = loaded;
       m.message = loaded + 0.000001 < m.amount ? `Fracht unvollständig: ${loaded.toFixed(2)} von ${m.amount} geladen` : '';
@@ -3734,24 +3740,40 @@ function updateRockets(now) {
         rocket.status = 'orbit';
         rocket.arrivedAt = now;
         if (rocket.targetMode === 'orbit') {
-          const targetStorage = getOrbitStorage(rocket.to);
-          if (Array.isArray(rocket.cargo)) {
-            rocket.deliveredCargo = rocket.cargo.map(c => ({...c}));
-            rocket.cargo.forEach(c => { if (c.amount > 0) targetStorage[c.resource] = Number(targetStorage[c.resource] || 0) + c.amount; c.amount = 0; });
-          } else if (rocket.cargo && rocket.cargo.amount > 0) {
-            targetStorage[rocket.cargo.resource] = Number(targetStorage[rocket.cargo.resource] || 0) + rocket.cargo.amount;
-            rocket.deliveredCargo = {...rocket.cargo}; rocket.cargo.amount = 0;
+          const targetStorage = getLocationStorage(rocket.to, 'orbit');
+          if (!rocket.cargoDelivered) {
+            if (Array.isArray(rocket.cargo)) {
+              rocket.deliveredCargo = rocket.cargo.map(c => ({...c}));
+              rocket.cargo.forEach(c => { if (c.amount > 0) targetStorage[c.resource] = Number(targetStorage[c.resource] || 0) + c.amount; c.amount = 0; });
+            } else if (rocket.cargo && rocket.cargo.amount > 0) {
+              targetStorage[rocket.cargo.resource] = Number(targetStorage[rocket.cargo.resource] || 0) + rocket.cargo.amount;
+              rocket.deliveredCargo = {...rocket.cargo}; rocket.cargo.amount = 0;
+            }
+            rocket.cargoDelivered = true;
           }
         }
       } else if (rocket.status === 'returning') {
+        // Rückkehr immer vollständig abschließen: Rückfracht verbuchen UND Rakete
+        // wieder dem Bestand ihres ursprünglichen Startortes gutschreiben.
         rocket.status = 'returned';
         rocket.returnedAt = now;
         if (rocket.returnCargo && rocket.returnCargo.resource && rocket.returnCargo.amount > 0) {
           const targetStorage = getLocationStorage(rocket.to, rocket.returnMode === 'orbit' ? 'orbit' : 'surface');
           targetStorage[rocket.returnCargo.resource] = Number(targetStorage[rocket.returnCargo.resource] || 0) + rocket.returnCargo.amount;
         }
+        ensureRocketData(rocket.from);
+        const stockByType = {
+          hercules1: rocketStock,
+          hercules2: rocketStock2,
+          atlas1: rocketStockAtlas1,
+          titan1: rocketStockTitan1
+        };
+        const stock = stockByType[rocket.type];
+        if (stock) stock[rocket.from] = Number(stock[rocket.from] || 0) + 1;
       }
+      saveGame(false);
       renderInfo();
+      renderTopResources();
     }
   }
 }
