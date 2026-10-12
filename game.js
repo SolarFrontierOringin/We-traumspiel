@@ -1895,7 +1895,10 @@ function updateRocketVisuals(now = gameNow()) {
 }
 
 function renderSystem() {
-  // Scrollposition des Gebäudemenüs sichern, da der DOM beim Bauen neu aufgebaut wird.
+  // Scrollpositionen vor dem DOM-Neuaufbau sichern. Auf Mobilgeräten kann
+  // sonst beim Bauen sowohl das Gebäudemenü als auch die Seite nach oben springen.
+  const previousPageScrollX = window.scrollX || 0;
+  const previousPageScrollY = window.scrollY || 0;
   const previousBuildMenu = document.querySelector('.planet-build-menu');
   if (previousBuildMenu) {
     const openCategory = previousBuildMenu.querySelector('.building-category-toggle[aria-expanded="true"]');
@@ -2231,11 +2234,19 @@ function renderSystem() {
     // Nach dem Bauen vertikale und horizontale Scrollposition wiederherstellen.
     menu.scrollTop = previousBuildMenuScrollTop;
     menu.scrollLeft = previousBuildMenuScrollLeft;
-    requestAnimationFrame(() => {
+    const restoreBuildMenuScroll = () => {
       if (menu.isConnected) {
         menu.scrollTop = previousBuildMenuScrollTop;
         menu.scrollLeft = previousBuildMenuScrollLeft;
       }
+      // Der Browser darf beim erneuten Einfügen des Menüs nicht die Seite
+      // oder den sichtbaren Bereich zum Dokumentanfang verschieben.
+      window.scrollTo(previousPageScrollX, previousPageScrollY);
+    };
+    restoreBuildMenuScroll();
+    requestAnimationFrame(() => {
+      restoreBuildMenuScroll();
+      requestAnimationFrame(restoreBuildMenuScroll);
     });
 
     menu.querySelectorAll('[data-build-view]').forEach(btn => {
