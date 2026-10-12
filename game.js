@@ -3842,17 +3842,15 @@ function updateResources() {
       }
     }
 
-    // Eisenabbau auf der Erde bewusst separat verarbeiten.
-    // Dadurch wird das zentrale Erd-Lager `state.iron` direkt und eindeutig
-    // erhöht und kann nicht durch eine andere Lager-Logik aus dem Takt geraten.
-    if (id === 'earth') {
-      const ironMines = Math.max(0, Number(bld.ironMine || 0));
+    // Eisenabbau auf allen Planetenoberflächen:
+    // Das abgebaute Eisen landet immer im lokalen Oberflächenlager des jeweiligen Körpers.
+    // Auf der Erde ist dieses Lager `state`; auf allen anderen Körpern `bodies[id].storage`.
+    if (Number(bld.ironMine || 0) > 0) {
       const availableIron = Math.max(0, Number(planet.resources.iron || 0));
-      const ironRate = 0.1 * ironMines;
-      const minedIron = Math.min(availableIron, ironRate * delta);
+      const minedIron = Math.min(availableIron, 0.1 * Number(bld.ironMine) * delta);
       if (minedIron > 0) {
         planet.resources.iron = availableIron - minedIron;
-        state.iron = Math.max(0, Number(state.iron || 0)) + minedIron;
+        storage.iron = Number(storage.iron || 0) + minedIron;
         state.tasks.ironMined = Number(state.tasks.ironMined || 0) + minedIron;
       }
     }
