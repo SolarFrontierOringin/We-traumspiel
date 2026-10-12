@@ -752,3 +752,7 @@ body > .planet-build-menu * {
 .asteroid-time{font-size:12px;color:#ffd36a;white-space:nowrap}
 .asteroid-resources{margin:8px 0;color:#dceaff;line-height:1.5;font-size:13px}
 .asteroid-card small{display:block;line-height:1.4}
+
+/* Systemweites Raketenlimit */
+.rocket-limit-status{margin:8px 0;padding:9px 11px;border:1px solid #315273;border-radius:10px;background:#0b1728;color:#c7d4e8;line-height:1.45}
+.rocket-limit-status strong{color:#eef4ff}

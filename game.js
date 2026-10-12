@@ -377,6 +377,36 @@ function getLocationStorage(id, mode = 'surface') {
 function hasPlanetSurface(id) { return id !== 'jupiter' && id !== 'neptune' && id !== 'sun'; }
 function rocketCanLand(id) { return hasPlanetSurface(id); }
 
+// Jede Start- & Landerampe auf einem Körper mit Oberfläche erhöht das systemweite Limit um 1.
+function getRocketPlatformLimit() {
+  return Object.keys(bodies).filter(id => hasPlanetSurface(id))
+    .reduce((sum, id) => sum + Math.max(0, Number(getBuildingsOnPlanet(id).landingPad) || 0), 0);
+}
+function getActiveRocketCount() {
+  const manualFlights = rockets.filter(rocket => rocket.status !== 'returned').length;
+  // Eine zyklische Mission belegt dauerhaft einen Platz – auch während Wartezeit oder Pause.
+  return manualFlights + orbitMissions.length;
+}
+function checkRocketLimit(additional = 1) {
+  const limit = getRocketPlatformLimit();
+  const active = getActiveRocketCount();
+  if (active + additional <= limit) return true;
+  rocketLaunchError(`Raketenlimit erreicht: ${active} von ${limit} Raketenplätzen belegt. Baue weitere Start- & Landeplattformen oder beende eine Mission.`);
+  return false;
+}
+function getRocketStockHome(preferredId) {
+  if (hasPlanetSurface(preferredId) && Number(getBuildingsOnPlanet(preferredId).landingPad || 0) > 0) return preferredId;
+  return Object.keys(bodies).find(id => hasPlanetSurface(id) && Number(getBuildingsOnPlanet(id).landingPad || 0) > 0) || preferredId;
+}
+function addRocketToStock(type, preferredId) {
+  const stockByType = { hercules1: rocketStock, hercules2: rocketStock2, atlas1: rocketStockAtlas1, titan1: rocketStockTitan1 };
+  const stock = stockByType[type];
+  if (!stock) return;
+  const home = getRocketStockHome(preferredId);
+  ensureRocketData(home);
+  stock[home] = Number(stock[home] || 0) + 1;
+}
+
 const rockets = [];
 // Dauerhafte, zyklische Orbitmissionen; Zeitstempel in Echtzeit ermöglichen Fortsetzung nach Neustart.
 const orbitMissions = [];
@@ -2400,7 +2430,7 @@ function isBuildingAllowed(key, planetId = state.selected) {
   // Die Mondbasis darf auf allen Planeten außer Sonne und Erde gebaut werden.
   if (key === 'moonBase' && ['sun', 'earth'].includes(planetId)) return false;
   if (planetId === 'sun') return false;
-  if (key === 'landingPad') return planetId !== 'sun';
+  if (key === 'landingPad') return state.viewMode !== 'orbit' && planetId !== 'sun';
   if (key !== 'nuclearReactor' && key !== 'orbitalCo2Extractor' && key !== 'researchSatellite' && key !== 'iceProcessingPlant' && key !== 'algaeFoodProcessor' && planetId !== 'earth' && key !== 'outpost' && Number(getBuildingsOnPlanet(planetId).outpost || 0) < 1) return false;
   if (key === 'heliumExtractor' && !['luna','venus','jupiter'].includes(planetId)) return false;
    if (key === 'crudeOilPump' && planetId !== 'earth') return false;
@@ -3095,7 +3125,7 @@ function buildLandingPad() {
   const id = state.selected;
   const bld = getBuildingsOnPlanet(id);
   const storage = getPlanetStorage(id);
-  if (!isBuildingAllowed('landingPad', id)) return;
+  if (state.viewMode === 'orbit' || !isBuildingAllowed('landingPad', id)) return;
   if (Number(storage.steel || 0) < 2000 || Number(storage.buildingMaterials || 0) < 3000 || Number(storage.machines || 0) < 500 || Number(storage.batteries || 0) < 300) return;
   storage.steel -= 2000; storage.buildingMaterials -= 3000; storage.machines -= 500; storage.batteries -= 300;
   bld.landingPad = Number(bld.landingPad || 0) + 1;
@@ -3185,7 +3215,8 @@ function launchHercules1(source, destination, quantity) {
   if (!bodies[destination] || destination === source || destination === 'sun') { rocketLaunchError('Bitte einen anderen Zielplaneten auswählen.'); return; }
   if (!rocketStock[source]) { rocketLaunchError('Keine Herkules-1-Rakete am Startplanet verfügbar.'); return; }
   const sourceMode = state.viewMode === 'orbit' ? 'orbit' : 'surface';
-  if (sourceMode === 'surface' && Number(getBuildingsOnPlanet(source).landingPad || 0) < quantity) { rocketLaunchError('Nicht genug Start- & Landerrampen für diesen Start.'); return; }
+  if (sourceMode === 'surface' && Number(getBuildingsOnPlanet(source).landingPad || 0) < 1) { rocketLaunchError('Für den Start wird eine Start- & Landerampe am Startplaneten benötigt.'); return; }
+  if (!checkRocketLimit(quantity)) return;
 
   const amountPerRocket = Math.max(0, Math.min(120, Number(rocketCargoAmount) || 0));
   const available = Number(getLocationStorage(source, sourceMode)[rocketCargoResource] || 0);
@@ -3225,6 +3256,7 @@ function launchHercules2(source, destination) {
   if (!rocketStock2[source]) { rocketLaunchError('Keine Herkules-2-Rakete am Startplanet verfügbar.'); return; }
   const sourceMode = state.viewMode === 'orbit' ? 'orbit' : 'surface';
   if (sourceMode === 'surface' && Number(getBuildingsOnPlanet(source).landingPad || 0) < 1) { rocketLaunchError('Für den Start wird eine Start- & Landerrampe benötigt.'); return; }
+  if (!checkRocketLimit(1)) return;
 
   const cargo = (rocketCargoSlots || []).map(slot => ({
     resource: slot.resource,
@@ -3271,6 +3303,7 @@ function launchAtlas1(source, destination) {
   if (!rocketStockAtlas1[source]) { rocketLaunchError('Keine Atlas-1-Rakete am Startplanet verfügbar.'); return; }
   const sourceMode = state.viewMode === 'orbit' ? 'orbit' : 'surface';
   if (sourceMode === 'surface' && Number(getBuildingsOnPlanet(source).landingPad || 0) < 1) { rocketLaunchError('Für den Start wird eine Start- & Landerrampe benötigt.'); return; }
+  if (!checkRocketLimit(1)) return;
   if (!state.research?.completed?.atlas1) { rocketLaunchError('Atlas 1 ist noch nicht erforscht.'); return; }
   const cargo = (rocketCargoSlots || []).map(slot => ({ resource: slot.resource, amount: Math.max(0, Number(slot.amount) || 0) })).filter(slot => slot.resource && slot.amount > 0);
   const total = cargo.reduce((sum, slot) => sum + slot.amount, 0);
@@ -3291,6 +3324,7 @@ function launchTitan1(source, destination) {
   if (!rocketStockTitan1[source]) return rocketLaunchError('Keine Titan-1-Rakete am Startplaneten verfügbar.');
   const sourceMode = state.viewMode === 'orbit' ? 'orbit' : 'surface';
   if (sourceMode === 'surface' && Number(getBuildingsOnPlanet(source).landingPad || 0) < 1) return rocketLaunchError('Für den Start wird eine Start- & Landerampe benötigt.');
+  if (!checkRocketLimit(1)) return;
   if (!state.research?.completed?.titan1) return rocketLaunchError('Schwerlastraketen (Titan 1) sind noch nicht erforscht.');
   const cargo = (rocketCargoSlots || []).map(slot => ({ resource: slot.resource, amount: Math.max(0, Number(slot.amount) || 0) })).filter(slot => slot.resource && slot.amount > 0);
   const total = cargo.reduce((sum, slot) => sum + slot.amount, 0);
@@ -3313,7 +3347,7 @@ function returnRocket(rocketId, cargoResource = null, cargoAmount = 0) {
   const destination = rocket.from;
   const sourceMode = rocket.status === 'landed' ? 'surface' : 'orbit';
   const returnMode = rocket.fromMode === 'orbit' ? 'orbit' : 'surface';
-  if (sourceMode === 'surface' && Number(getBuildingsOnPlanet(source).landingPad || 0) < 1) return;
+  // Erstlandungs-Fracht darf auch von einer noch unerschlossenen Oberfläche zurückkehren.
   const duration = flightDurationSeconds(destination, returnMode) * 1000;
   const storage = getLocationStorage(source, sourceMode);
   const returnCapacity = rocket.type === 'titan1' ? 1500 : rocket.type === 'atlas1' ? 500 : rocket.type === 'hercules2' ? 300 : 120;
@@ -3395,7 +3429,7 @@ function renderRocketWindow(body) {
         .filter(k => Number(getLocationStorage(r.to, r.status === 'landed' ? 'surface' : 'orbit')[k] || 0) > 0.000001)
         .map(k => `<option value="${k}">${resourceIcons[k] || ''} ${resourceNames[k] || k}</option>`).join('');
       const phase = r.status === 'orbit' ? '🛰️ im Orbit' : '🛬 auf der Oberfläche';
-      const landButton = r.status === 'orbit' && r.targetMode !== 'orbit' && rocketCanLand(r.to) && getBuildingsOnPlanet(r.to).landingPad ? `<button class="rocket-land" data-rocket-id="${r.id}">🛬 Auf ${bodies[r.to].name} landen</button>` : '';
+      const landButton = r.status === 'orbit' && r.targetMode !== 'orbit' && rocketCanLand(r.to) ? `<button class="rocket-land" data-rocket-id="${r.id}">🛬 Auf ${bodies[r.to].name} landen</button>` : '';
       const cargoState = r.status === 'orbit' && r.targetMode !== 'orbit' ? '📦 Fracht an Bord' : '📦 Fracht entladen';
       return `<div class="rocket-flight arrived"><strong>🚀 ${r.name}</strong><span>📍 ${bodies[r.to].name} (${r.targetMode === 'orbit' ? 'Orbit' : 'Oberfläche erreichbar'}) · ${phase}</span><div class="rocket-cargo">${cargoState}: ${cargoText}</div>${landButton}<div class="rocket-return-box"><select class="rocket-return-resource" data-rocket-id="${r.id}"><option value="">Keine Rückfracht</option>${returnOptions}</select><input class="rocket-return-amount" data-rocket-id="${r.id}" type="number" min="0" max="${maxCapacity}" step="0.01" value="0"><button class="rocket-return" data-rocket-id="${r.id}">↩️ Zurück nach ${bodies[r.from].name}</button></div><small>Rückflug ${bodies[r.to].name} → ${bodies[r.from].name}: ${flightDurationSeconds(r.from, r.fromMode === 'orbit' ? 'orbit' : 'surface')} Sekunden · max. ${maxCapacity} t/L</small></div>`;
     }
@@ -3430,8 +3464,11 @@ function renderRocketWindow(body) {
     return `<div class="rocket-compartment dynamic-cargo-row"><div class="cargo-row-heading"><strong>Fracht ${i+1}</strong><button type="button" class="cargo-remove" data-slot="${i}" aria-label="Frachtzeile ${i+1} entfernen">✕</button></div><select class="rocket-h2-resource" data-slot="${i}">${cargoOptions.replace(`value="${slot.resource}"`, `value="${slot.resource}" selected`)}</select><label class="cargo-amount-label">Menge (${['crudeOil','water'].includes(slot.resource) ? 'L' : 't'})<input class="rocket-h2-amount" data-slot="${i}" type="number" min="0" max="${Math.min(1500, available)}" step="0.01" value="${Number(slot.amount || 0).toFixed(2)}"><input class="rocket-h2-range" data-slot="${i}" type="range" min="0" max="${Math.max(0, Math.min(1500, available))}" step="0.01" value="${Math.min(Number(slot.amount || 0), available, 1500)}" aria-label="Frachtmenge ${i+1}"></label><small>Verfügbar: ${formatTons(available)}</small></div>`;
   }).join('');
 
+  const activeRocketCount = getActiveRocketCount();
+  const rocketPlatformLimit = getRocketPlatformLimit();
   return `<section class="rocket-window"><h3>🚀 Transportzentrale</h3>
-    <p class="hint"><strong>Startort:</strong> ${body.name} (${state.viewMode === 'orbit' ? 'Orbit' : 'Oberfläche'}) · Die Raketenfabrik produziert alle Raketentypen nacheinander. Start und Landung benötigen eine Start- & Landerampe.</p>
+    <p class="hint"><strong>Startort:</strong> ${body.name} (${state.viewMode === 'orbit' ? 'Orbit' : 'Oberfläche'}) · Die Raketenfabrik produziert alle Raketentypen nacheinander.</p>
+    <p class="rocket-limit-status"><strong>Systemweites Raketenlimit:</strong> ${activeRocketCount} / ${rocketPlatformLimit} aktiv · Jede Start- & Landeplattform auf einem Planeten mit Oberfläche zählt +1. Zyklische Missionen belegen ebenfalls einen Platz.</p>
     <div class="rocket-factory-queue"><strong>🏭 Produktionswarteschlange:</strong> ${factoryQueue.length ? factoryQueue.map((t,i)=>`${i===0 && factoryRemaining>0?'⚙️ ':''}${rocketTypes[t]?.name || t}`).join(' → ') : 'leer'}${factoryRemaining>0 ? ` · nächste Fertigstellung in ${factoryRemaining.toFixed(1)} s` : ''}</div>
 
     <details class="rocket-type-card"><summary>🏗️ Herkules 1 · Bau <span>120 t/L · Bestand: ${stock1}</span></summary><div class="rocket-type-content"><div class="rocket-build-box"><strong>🏗️ Herkules 1</strong><small>45 t Stahl · 30 Sekunden Bauzeit · 120 t/L Kapazität</small>${factoryQueue.length && factoryQueue[0]==='hercules1' ? `<div class="rocket-progress"><i style="width:${Math.min(100,(activeBuildTime-factoryRemaining)/activeBuildTime*100)}%"></i></div>` : ''}<button id="build-hercules" ${!rocketFactoryHasCapacity(source) || localSteel < 45 ? 'disabled' : ''}>🚀 Herkules 1 bauen – 45 t Stahl</button></div>
@@ -3522,7 +3559,8 @@ function createOrbitMission() {
   if (!destination || destination === source || destination === 'sun') return rocketLaunchError('Bitte einen anderen Zielplaneten auswählen.');
   if (amount <= 0 || amount > capacity) return rocketLaunchError(`Frachtmenge muss zwischen 0 und ${capacity} t/L liegen.`);
   if (sourceMode === 'surface' && Number(getBuildingsOnPlanet(source).landingPad || 0) < 1) return rocketLaunchError('Am Startplaneten wird eine Start- & Landerampe benötigt.');
-  if (destinationMode === 'surface' && Number(getBuildingsOnPlanet(destination).landingPad || 0) < 1) return rocketLaunchError('Für eine Oberflächenlieferung wird auch am Ziel eine Start- & Landerampe benötigt.');
+  if (destinationMode === 'surface' && Number(getBuildingsOnPlanet(destination).landingPad || 0) < 1) return rocketLaunchError('Für zyklische Oberflächenlieferungen wird am Ziel eine Start- & Landerampe benötigt.');
+  if (!checkRocketLimit(1)) return;
   if (type === 'atlas1' && !state.research?.completed?.atlas1) return rocketLaunchError('Atlas 1 ist noch nicht erforscht.');
   if (type === 'titan1' && !state.research?.completed?.titan1) return rocketLaunchError('Schwerlastraketen (Titan 1) sind noch nicht erforscht.');
   ensureRocketData(source);
@@ -3551,7 +3589,7 @@ function bindOrbitMissionControls() {
     const m = orbitMissions[i];
     // Wenn die Rakete gerade fliegt, lässt die Mission den Flug sicher zu Ende laufen.
     if (m.status === 'outbound' || m.status === 'returning') { m.deleteAfterReturn = true; m.message = 'Wird nach Rückkehr gelöscht'; }
-    else { const stocks = m.rocketType === 'hercules1' ? rocketStock : m.rocketType === 'hercules2' ? rocketStock2 : m.rocketType === 'atlas1' ? rocketStockAtlas1 : rocketStockTitan1; stocks[m.source] = Number(stocks[m.source] || 0) + 1; orbitMissions.splice(i,1); }
+    else { addRocketToStock(m.rocketType, m.source); orbitMissions.splice(i,1); }
     saveGame(false); renderInfo();
   }));
 }
@@ -3585,7 +3623,7 @@ function updateOrbitMissions(now = gameNow()) {
       changed = true;
     } else if (m.status === 'returning' && now - m.startedAt >= m.durationMs) {
       m.status = 'waiting'; m.returnedAt = now; m.nextLaunchAt = now + m.waitSeconds * 1000; m.loadedAmount = 0;
-      if (m.deleteAfterReturn) { orbitMissions.splice(orbitMissions.findIndex(x => x.id === m.id), 1); const stocks = m.rocketType === 'hercules1' ? rocketStock : m.rocketType === 'hercules2' ? rocketStock2 : m.rocketType === 'atlas1' ? rocketStockAtlas1 : rocketStockTitan1; stocks[m.source] = Number(stocks[m.source] || 0) + 1; }
+      if (m.deleteAfterReturn) { orbitMissions.splice(orbitMissions.findIndex(x => x.id === m.id), 1); addRocketToStock(m.rocketType, m.source); }
       changed = true;
     }
   }
@@ -3653,6 +3691,7 @@ function bindRocketControls() {
       const count=Math.max(1,Math.min(99,Number(countInput?.value)||1));
       const stock=type==='hercules2'?(rocketStock2[state.selected]||0):type==='atlas1'?(rocketStockAtlas1[state.selected]||0):(rocketStockTitan1[state.selected]||0);
       if(count>stock){rocketLaunchError(`Du hast nur ${stock} Rakete(n) dieses Typs verfügbar.`);return;}
+      if(!checkRocketLimit(count)) return;
       const original=rocketCargoSlots.map(slot=>({...slot}));
       const capacity=type==='hercules2'?300:type==='atlas1'?500:1500;
       const total=original.reduce((sum,slot)=>sum+Math.max(0,Number(slot.amount)||0),0);
@@ -3672,7 +3711,7 @@ function bindRocketControls() {
   launchFleet('titan1','rocket-count-titan1',launchTitan1);
   infoPanel.querySelectorAll('.rocket-land').forEach(x=>x.addEventListener('click',()=>{
     const r=rockets.find(r=>String(r.id)===String(x.dataset.rocketId));
-    if(!r || r.status!=='orbit' || !rocketCanLand(r.to) || Number(getBuildingsOnPlanet(r.to).landingPad || 0) < 1) return;
+    if(!r || r.status!=='orbit' || !rocketCanLand(r.to)) return;
     const targetStorage=getPlanetStorage(r.to);
     if(Array.isArray(r.cargo)){
       r.deliveredCargo=r.cargo.map(c=>({...c}));
@@ -3761,15 +3800,7 @@ function updateRockets(now) {
           const targetStorage = getLocationStorage(rocket.to, rocket.returnMode === 'orbit' ? 'orbit' : 'surface');
           targetStorage[rocket.returnCargo.resource] = Number(targetStorage[rocket.returnCargo.resource] || 0) + rocket.returnCargo.amount;
         }
-        ensureRocketData(rocket.from);
-        const stockByType = {
-          hercules1: rocketStock,
-          hercules2: rocketStock2,
-          atlas1: rocketStockAtlas1,
-          titan1: rocketStockTitan1
-        };
-        const stock = stockByType[rocket.type];
-        if (stock) stock[rocket.from] = Number(stock[rocket.from] || 0) + 1;
+        addRocketToStock(rocket.type, rocket.from);
       }
       saveGame(false);
       renderInfo();
