@@ -756,3 +756,26 @@ body > .planet-build-menu * {
 /* Systemweites Raketenlimit */
 .rocket-limit-status{margin:8px 0;padding:9px 11px;border:1px solid #315273;border-radius:10px;background:#0b1728;color:#c7d4e8;line-height:1.45}
 .rocket-limit-status strong{color:#eef4ff}
+
+
+/* Fahrzeugfabrik und Luxusgüter */
+.vehicle-factory-queue{display:block;margin-top:6px;padding:7px 9px;border:1px solid #315273;border-radius:9px;background:#0b1728;color:#c7d4e8;font-size:12px}
+.luxury-storage-section{margin:8px 0;padding:0 8px;background:#0c1627}
+.luxury-storage-section summary{font-weight:700}
+.luxury-storage-section .planet-resource-list{padding-bottom:8px}
+.colonists-planet-card [data-toggle-vehicle-luxury]{width:100%;margin:6px 0 10px}
+
+.planet-resource-line{display:block;padding:9px 0;border-bottom:1px solid #263754}
+.planet-resource-name{display:block;margin-bottom:6px;color:#dceaff}
+.planet-resource-values{display:flex;flex-wrap:wrap;gap:7px}
+.planet-resource-value{padding:5px 8px;border:1px solid #263754;border-radius:9px;background:#0a1120;font-size:12px}
+.luxury-storage-section .planet-resource-value{display:flex;gap:6px;align-items:center}
+
+.luxury-storage-title{padding:9px 11px;font-weight:700;color:#dceaff;border-bottom:1px solid #263754}
+
+
+/* Baumenü öffnen: eigener Button unter der Sonnensystemansicht, nicht auf Planeten */
+.solar-system-column{min-width:0;display:flex;flex-direction:column;gap:8px;align-self:start}
+.open-build-menu-button{width:100%;min-height:44px;border:1px solid #3a6797;border-radius:12px;background:#10243c;color:#eef4ff}
+.open-build-menu-button:hover:not(:disabled){background:#17365a}
+.open-build-menu-button:disabled{opacity:.7}
