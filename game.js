@@ -2103,6 +2103,8 @@ function renderSystem() {
       ${buildButton('nuclearReactor')}
       ${buildButton('chipFactory')}
       ${buildButton('electronicsFactory')}
+      ${buildButton('rubberFactory')}
+      ${buildButton('plasticFactory')}
       ${buildButton('vehicleFactory')}
       ${buildButton('solarSail')}
       ${state.selected === 'earth' ? buildButton('solarSatellite') : ''}
@@ -2172,10 +2174,11 @@ function renderSystem() {
         const key = keyForCard(card);
         const small = card.querySelector('small');
         const desc = small ? small.textContent : '';
+        const fullDesc = key === 'vehicleFactory' ? `${buildingTypes.vehicleFactory.text} · Baukosten: 500 t Stahl, 250 t Baustoffe, 100 t Elektronik und 200 t Chips` : desc;
         const detail = document.createElement('div'); detail.className = 'building-details'; detail.hidden = true;
         const timeMatch = desc.match(/(?:Bauzeit|Bauzeit:?)\s*([^·]+)/i);
         const reqMatch = desc.match(/(?:Voraussetzung|benötigt|nur auf|nur Erde|nur Venus|nur Merkur|nur auf der Erde)[^·]*/i);
-        detail.innerHTML = `<div><strong>Bauzeit:</strong> ${timeMatch ? timeMatch[1].trim() : 'Keine separate Bauzeit in den Gebäudedaten hinterlegt.'}</div><div><strong>Voraussetzungen:</strong> ${reqMatch ? reqMatch[0].trim() : (card.dataset.unavailable ? 'Auf diesem Planeten nicht verfügbar.' : 'Keine zusätzliche Voraussetzung in der Gebäudebeschreibung angegeben.')}</div><div><strong>Beschreibung:</strong> ${desc || 'Keine Beschreibung hinterlegt.'}</div><div><strong>Ausbau & Skalierung:</strong> Bestehende Produktions- und Verbrauchsregeln bleiben unverändert; weitere Angaben werden nur angezeigt, wenn sie in den vorhandenen Gebäudedaten hinterlegt sind.</div>`;
+        detail.innerHTML = `<div><strong>Bauzeit:</strong> ${timeMatch ? timeMatch[1].trim() : 'Keine separate Bauzeit in den Gebäudedaten hinterlegt.'}</div><div><strong>Voraussetzungen:</strong> ${reqMatch ? reqMatch[0].trim() : (card.dataset.unavailable ? 'Auf diesem Planeten nicht verfügbar.' : 'Keine zusätzliche Voraussetzung in der Gebäudebeschreibung angegeben.')}</div><div><strong>Beschreibung:</strong> ${fullDesc || 'Keine Beschreibung hinterlegt.'}</div><div><strong>Ausbau & Skalierung:</strong> Bestehende Produktions- und Verbrauchsregeln bleiben unverändert; weitere Angaben werden nur angezeigt, wenn sie in den vorhandenen Gebäudedaten hinterlegt sind.</div>`;
         const actions = document.createElement('div'); actions.className = 'building-card-actions';
         const buildBtn = card.querySelector('.build-resource');
         const detailsBtn = document.createElement('button'); detailsBtn.type = 'button'; detailsBtn.className = 'building-details-toggle'; detailsBtn.textContent = 'Details';
@@ -2529,7 +2532,7 @@ function buildButton(key) {
     const affordable = researched && isBuildingAllowed(key, state.selected) && Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount);
     const queueText = queue.length ? `<small class="vehicle-factory-queue">${queue.length} Fahrzeugfabrik(en) im Bau · Bauzeit je Fabrik: 120 Sekunden</small>` : '';
     const status = researched ? '' : ' · Voraussetzung: Forschung Fahrzeugfabrik (1.500 FP, 5 Minuten)';
-    return `<div class="build-card vehicle-factory-card"><div><strong>${b.icon} ${b.name}</strong><small>${b.text}${status}</small>${queueText}</div><button class="build-resource" data-building="vehicleFactory" ${affordable ? '' : 'disabled'}>Bauen (${Number(count || 0)})</button></div>`;
+    return `<div class="build-card vehicle-factory-card"><div><strong>${b.icon} ${b.name}</strong><small>Produziert Fahrzeuge · benötigt 4 MW Strom · Bauzeit: 120 Sekunden${status}</small>${queueText}</div><button class="build-resource" data-building="vehicleFactory" ${affordable ? '' : 'disabled'}>Bauen (${Number(count || 0)})</button></div>`;
   }
 
   if (key === 'solarSatellite' || key === 'solarProbe') {
