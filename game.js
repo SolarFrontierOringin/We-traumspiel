@@ -897,6 +897,33 @@ const taskTypes = {
     reward: 0,
     getProgress: () => Number(getBuildingsOnPlanet('luna').outpost || 0)
   },
+  luna_habitat: {
+    group: 'lunaExpansion',
+    name: 'Baue ein Habitat auf dem Mond',
+    description: 'Errichte mindestens ein Habitat auf Luna.',
+    target: 1,
+    unit: 'Gebäude',
+    reward: 0,
+    getProgress: () => Number(getBuildingsOnPlanet('luna').habitat || 0)
+  },
+  luna_colonists_1000: {
+    group: 'lunaExpansion',
+    name: '1.000 Kolonisten auf dem Mond',
+    description: 'Sorge dafür, dass mindestens 1.000 Kolonisten auf Luna leben.',
+    target: 1000,
+    unit: 'Kolonisten',
+    reward: 0,
+    getProgress: () => Number(bodies.luna?.colonists || 0)
+  },
+  luna_colonists_10000: {
+    group: 'lunaExpansion',
+    name: '10.000 Kolonisten auf dem Mond',
+    description: 'Baue die Mondkolonie auf mindestens 10.000 Kolonisten aus.',
+    target: 10000,
+    unit: 'Kolonisten',
+    reward: 0,
+    getProgress: () => Number(bodies.luna?.colonists || 0)
+  },
   moon_water_processing: {
     group: 'moon',
     name: 'Ein Platz auf Dauer',
@@ -1036,6 +1063,7 @@ function renderTasks() {
   const groups = [
     { id: 'intro', label: '🎯 Einführung', keys: Object.keys(taskTypes).filter(key => !taskTypes[key].group) },
     { id: 'moon', label: '🌙 Griff nach dem Mond', keys: Object.keys(taskTypes).filter(key => taskTypes[key].group === 'moon') },
+    { id: 'lunaExpansion', label: '🌕 Die Welt ist nicht genug', keys: Object.keys(taskTypes).filter(key => taskTypes[key].group === 'lunaExpansion') },
     { id: 'colonists', label: '👥 Die Kolonisten', keys: Object.keys(taskTypes).filter(key => taskTypes[key].group === 'colonists') }
   ];
   const activeGroup = panel.dataset.activeTaskGroup || 'intro';
