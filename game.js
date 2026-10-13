@@ -151,13 +151,28 @@ function updateMarket(now=gameNow()){
   Object.entries(MARKET_RESOURCES).forEach(([k,c])=>{const i=market.resources[k];i.stock=c.capacity;i.soldStock=0;i.demand*=.5;i.supply*=.5;});
   market.lastRestockSlot=slot; saveGame(false);
  }
+ // Jeder Rohstoff erhält bei jeder Preisrunde eine eigene Marktbewegung.
+ // Angebot und Nachfrage geben eine Tendenz vor; unabhängige Zufallsschwankungen
+ // verhindern, dass alle Preise gleichzeitig steigen oder fallen.
  const ps=Math.floor(Math.max(0,now)/(10*60*1000));
  if(ps>Number(market.lastPriceUpdateMs||0)){
-  Object.entries(MARKET_RESOURCES).forEach(([k,c])=>{const i=market.resources[k],ratio=Math.max(0,Math.min(1,i.stock/c.capacity));
-   const target=Math.max(c.base*.25,Math.min(c.base*4,c.base*(1.65-ratio*1.3+Math.min(.5,i.demand*.01)-Math.min(.5,i.supply*.01))));
-   const current=Number(i.price||c.base),smoothed=current+(target-current)*.2;
-   i.price=Math.max(current*.9,Math.min(current*1.1,smoothed));i.demand*=.8;i.supply*=.8;
-  });market.lastPriceUpdateMs=ps;
+  Object.entries(MARKET_RESOURCES).forEach(([k,c])=>{
+   const i=market.resources[k];
+   const ratio=Math.max(0,Math.min(1,Number(i.stock||0)/c.capacity));
+   const target=Math.max(c.base*.25,Math.min(c.base*4,
+    c.base*(1.65-ratio*1.3+Math.min(.5,Number(i.demand||0)*.01)-Math.min(.5,Number(i.supply||0)*.01))));
+   const current=Math.max(c.base*.25,Math.min(c.base*4,Number(i.price||c.base)));
+   const marketPressure=Math.max(-.06,Math.min(.06,(target-current)/Math.max(c.base,current)*.35));
+   // Meist 2–8 % Zufallsschwankung; gelegentlich sind 10–20 % möglich.
+   const randomMove=Math.random()<.12
+    ? (Math.random()<.5?-1:1)*(.10+Math.random()*.10)
+    : (Math.random()*2-1)*(.02+Math.random()*.06);
+   const change=Math.max(-.20,Math.min(.20,marketPressure+randomMove));
+   i.price=Math.max(c.base*.25,Math.min(c.base*4,current*(1+change)));
+   i.demand=Math.max(0,Number(i.demand||0)*.8);
+   i.supply=Math.max(0,Number(i.supply||0)*.8);
+  });
+  market.lastPriceUpdateMs=ps;
  }
 }
 function marketNotice(msg,good=true){const e=document.querySelector('#market-status');if(e){e.textContent=msg;e.className='market-status '+(good?'good':'warn');}}
