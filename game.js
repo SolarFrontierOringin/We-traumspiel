@@ -1948,6 +1948,13 @@ function updateRocketVisuals(now = gameNow()) {
   }
 }
 
+function hasSurfaceBuildings(bodyId) {
+  // Erde: state.buildings; andere Himmelskörper: bodies[id].buildings.
+  const buildings = bodyId === 'earth' ? state.buildings : bodies[bodyId]?.buildings;
+  if (!buildings || typeof buildings !== 'object') return false;
+  return Object.values(buildings).some(count => Number(count) > 0);
+}
+
 function renderSystem() {
   // Scrollpositionen vor dem DOM-Neuaufbau sichern. Auf Mobilgeräten kann
   // sonst beim Bauen sowohl das Gebäudemenü als auch die Seite nach oben springen.
@@ -2003,6 +2010,14 @@ function renderSystem() {
   moon.style.left = `${Math.cos(moonAngle) * bodies.luna.moonOrbit}px`;
   moon.style.top = `${Math.sin(moonAngle) * bodies.luna.moonOrbit}px`;
   moon.innerHTML = '<span class="body-label">Luna</span>';
+  if (hasSurfaceBuildings('luna')) {
+    const badge = document.createElement('span');
+    badge.className = 'colonized-indicator';
+    badge.textContent = '✓';
+    badge.setAttribute('aria-label', 'Oberfläche bebaut');
+    badge.title = 'Oberfläche bebaut';
+    moon.appendChild(badge);
+  }
   moon.addEventListener('click', (event) => {
     event.stopPropagation();
     state.selected = 'luna';
@@ -2033,6 +2048,14 @@ function renderSystem() {
     label.className = 'body-label';
     label.textContent = body.name;
     element.appendChild(label);
+    if (id !== 'sun' && hasSurfaceBuildings(id)) {
+      const badge = document.createElement('span');
+      badge.className = 'colonized-indicator';
+      badge.textContent = '✓';
+      badge.setAttribute('aria-label', 'Oberfläche bebaut');
+      badge.title = 'Oberfläche bebaut';
+      element.appendChild(badge);
+    }
 
     element.addEventListener('click', () => {
       state.selected = id;
