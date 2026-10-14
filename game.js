@@ -2680,7 +2680,9 @@ function buildingCost(key, planetId = state.selected) {
 }
 
 function isBuildingAllowed(key, planetId = state.selected) {
-  // Kakao-Plantage und Schokoladenfabrik nur auf festen Oberflächen, niemals auf Sonne oder im Orbit.
+  // Gebäude mit Produktionsketten werden auf Oberflächen gebaut, niemals direkt im Orbit.
+  // Kakao-Plantage und Schokoladenfabrik sind zusätzlich auf feste Oberflächen begrenzt.
+  if (key === 'chipFactory' && state.viewMode === 'orbit') return false;
   if (['cocoaPlantation','chocolateFactory'].includes(key) && (!['mercury','venus','earth','luna','mars','ceres'].includes(planetId) || state.viewMode === 'orbit')) return false;
   if (key === 'vehicleFactory') return planetId !== 'sun' && state.viewMode !== 'orbit' && !!state.research?.completed?.vehicleFactory;
   if (key === 'observatory' && (planetId !== 'earth' || state.viewMode !== 'surface')) return false;
@@ -2848,11 +2850,17 @@ function buildButton(key) {
   }
 
   if (key === 'chipFactory') {
-    const affordable = Number(storage.concrete || 0) >= 1000 &&
-      Number(storage.buildingMaterials || 0) >= 2000 &&
-      Number(storage.electronics || 0) >= 600 &&
-      isBuildingAllowed(key);
-    return `<div class="build-card"><div><strong>${b.icon} ${b.name}</strong><small>${b.text}</small></div><button class="build-resource" data-building="${key}" ${affordable ? '' : 'disabled'}>Bauen (${count})</button></div>`;
+    const costs = { concrete: 1000, buildingMaterials: 2000, electronics: 600 };
+    const allowed = isBuildingAllowed(key, state.selected);
+    const affordable = allowed && Object.entries(costs).every(([resource, amount]) => Number(storage[resource] || 0) >= amount);
+    const missing = Object.entries(costs)
+      .filter(([resource, amount]) => Number(storage[resource] || 0) < amount)
+      .map(([resource, amount]) => `${Math.max(0, amount - Number(storage[resource] || 0)).toLocaleString('de-DE')} t ${({ concrete: 'Beton', buildingMaterials: 'Baustoffe', electronics: 'Elektronik' })[resource]}`)
+      .join(', ');
+    const status = !allowed
+      ? (state.viewMode === 'orbit' ? ' · Bau nur auf der Planetenoberfläche möglich' : ' · Auf diesem Planeten derzeit nicht baubar')
+      : (missing ? ` · Es fehlen: ${missing}` : '');
+    return `<div class="build-card"><div><strong>${b.icon} ${b.name}</strong><small>${b.text}${status}</small></div><button class="build-resource" data-building="${key}" ${affordable ? '' : 'disabled'}>Bauen (${count || 0})</button></div>`;
   }
 
   if (key === 'solarSail') {
@@ -3377,10 +3385,9 @@ function buildResourceBuilding(key) {
     storage.steel -= 500;
     storage.buildingMaterials -= 300;
   } else if (key === 'chipFactory') {
-    if (Number(storage.concrete || 0) < 1000 || Number(storage.buildingMaterials || 0) < 2000 || Number(storage.electronics || 0) < 600) return;
-    storage.concrete -= 1000;
-    storage.buildingMaterials -= 2000;
-    storage.electronics -= 600;
+    const costs = { concrete: 1000, buildingMaterials: 2000, electronics: 600 };
+    if (!isBuildingAllowed(key, planetId) || !Object.entries(costs).every(([resource, amount]) => Number(storage[resource] || 0) >= amount)) return;
+    for (const [resource, amount] of Object.entries(costs)) storage[resource] = Number(storage[resource] || 0) - amount;
   } else if (key === 'solarSail') {
     if (!['mercury','venus'].includes(planetId)) return;
     if ((planetId === 'mercury' ? mercuryTemperature() : venusTemperature()) <= 50) return;
