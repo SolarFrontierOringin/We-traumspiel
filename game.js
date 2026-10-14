@@ -177,6 +177,74 @@ function updateMarket(now=gameNow()){
  }
 }
 function marketNotice(msg,good=true){const e=document.querySelector('#market-status');if(e){e.textContent=msg;e.className='market-status '+(good?'good':'warn');}}
+function ensureCompanyFinance() {
+  if (!state.companyFinance || typeof state.companyFinance !== 'object') {
+    state.companyFinance = { incomeTotal: 0, expenseTotal: 0, history: [], periods: { days: {}, months: {}, years: {} } };
+  }
+  const finance = state.companyFinance;
+  finance.incomeTotal = Math.max(0, Number(finance.incomeTotal) || 0);
+  finance.expenseTotal = Math.max(0, Number(finance.expenseTotal) || 0);
+  if (!Array.isArray(finance.history)) finance.history = [];
+  if (!finance.periods || typeof finance.periods !== 'object') finance.periods = {};
+  for (const periodType of ['days', 'months', 'years']) {
+    if (!finance.periods[periodType] || typeof finance.periods[periodType] !== 'object') finance.periods[periodType] = {};
+  }
+  return finance;
+}
+function getCompanyFinancePeriodKeys() {
+  const date = new Date(GAME_EPOCH_UTC + Math.max(0, gameNow()));
+  const year = String(date.getUTCFullYear());
+  const month = `${year}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
+  const day = `${month}-${String(date.getUTCDate()).padStart(2, '0')}`;
+  return { year, month, day, date: `${day} ${String(date.getUTCHours()).padStart(2, '0')}:${String(date.getUTCMinutes()).padStart(2, '0')}` };
+}
+function addCompanyFinancePeriodValue(period, type, amount) {
+  if (!period || !Number.isFinite(amount) || amount <= 0) return;
+  if (!Number.isFinite(Number(period.income))) period.income = 0;
+  if (!Number.isFinite(Number(period.expense))) period.expense = 0;
+  if (type === 'income') period.income += amount;
+  else period.expense += amount;
+}
+function recordCompanyFinance(type, amount, description, addHistory = true) {
+  const value = Math.max(0, Number(amount) || 0);
+  if (!value) return;
+  const finance = ensureCompanyFinance();
+  if (type === 'income') finance.incomeTotal += value;
+  else finance.expenseTotal += value;
+  const label = String(description || (type === 'income' ? 'Einnahme' : 'Ausgabe')).slice(0, 100);
+  const periodKeys = getCompanyFinancePeriodKeys();
+  for (const [periodType, key] of [['days', periodKeys.day], ['months', periodKeys.month], ['years', periodKeys.year]]) {
+    const period = finance.periods[periodType][key] ||= { income: 0, expense: 0 };
+    addCompanyFinancePeriodValue(period, type, value);
+  }
+  if (addHistory) {
+    finance.history.unshift({
+      type,
+      amount: value,
+      description: label,
+      date: new Date().toISOString(),
+      gameDate: periodKeys.date,
+      gameDay: periodKeys.day,
+      gameMonth: periodKeys.month,
+      gameYear: periodKeys.year
+    });
+    finance.history = finance.history.slice(0, 30);
+  } else if (type === 'income' && label === 'Kolonisten-Einnahmen') {
+    // Laufende Einnahmen werden gesammelt statt pro Spieltick protokolliert.
+    let entry = finance.history.find(item => item.type === 'income' && item.description === label);
+    if (!entry) {
+      entry = { type: 'income', amount: 0, description: label, date: new Date().toISOString() };
+      finance.history.unshift(entry);
+    }
+    entry.amount = Math.max(0, Number(entry.amount) || 0) + value;
+    entry.date = new Date().toISOString();
+    entry.gameDate = periodKeys.date;
+    entry.gameDay = periodKeys.day;
+    entry.gameMonth = periodKeys.month;
+    entry.gameYear = periodKeys.year;
+    finance.history = finance.history.slice(0, 30);
+  }
+}
 function marketTrade(side,k,amount){
  const c=MARKET_RESOURCES[k],i=market.resources[k],qty=Number(amount);
  if(!c||!i||!Number.isFinite(qty)||qty<=0)return marketNotice('Bitte eine gültige Menge eingeben.',false);
@@ -185,13 +253,13 @@ function marketTrade(side,k,amount){
   // Einkauf ist durch den verfügbaren Marktbestand und das Spielerguthaben begrenzt.
   const n=Math.min(qty,Math.max(0,Number(i.stock)||0),Math.floor((Number(state.gunniDollar||0)/p)*100)/100);
   if(n<=0)return marketNotice(Number(i.stock||0)<=0?'Der Marktbestand ist ausverkauft.':'Nicht genügend GünniDolla.',false);
-  const cost=n*p;i.stock=Math.max(0,Number(i.stock||0)-n);market.budget+=cost;state.gunniDollar=Math.max(0,Number(state.gunniDollar||0)-cost);storage[k]=Number(storage[k]||0)+n;i.demand+=n/Math.max(1,c.capacity*.01);
+  const cost=n*p;i.stock=Math.max(0,Number(i.stock||0)-n);market.budget+=cost;state.gunniDollar=Math.max(0,Number(state.gunniDollar||0)-cost);recordCompanyFinance('expense',cost,`Markteinkauf: ${resourceNames[k]||k} (${marketAmount(k,n)})`);storage[k]=Number(storage[k]||0)+n;i.demand+=n/Math.max(1,c.capacity*.01);
   marketNotice(`Gekauft: ${marketAmount(k,n)} für ${marketMoney(cost)}.`);
  }else{
   // Der Markt nimmt beliebige Mengen an. Das imaginäre Lager zählt ausschließlich verkaufte Waren.
   const avail=Math.max(0,Number(storage[k]||0)),n=Math.min(qty,avail);
   if(n<=0)return marketNotice('Nicht genug Vorrat im ausgewählten Lager.',false);
-  const revenue=n*p;storage[k]=avail-n;i.soldStock=Number(i.soldStock||0)+n;market.budget=Math.max(0,Number(market.budget||0)-revenue);state.gunniDollar=Number(state.gunniDollar||0)+revenue;i.supply+=n/Math.max(1,c.capacity*.01);
+  const revenue=n*p;storage[k]=avail-n;i.soldStock=Number(i.soldStock||0)+n;market.budget=Math.max(0,Number(market.budget||0)-revenue);state.gunniDollar=Number(state.gunniDollar||0)+revenue;recordCompanyFinance('income',revenue,`Marktverkauf: ${resourceNames[k]||k} (${marketAmount(k,n)})`);i.supply+=n/Math.max(1,c.capacity*.01);
   marketNotice(`Verkauft: ${marketAmount(k,n)} für ${marketMoney(revenue)}.`);
  }
  renderMarket();renderTopResources();saveGame(false);
@@ -252,6 +320,8 @@ const state = {
   chocolate: 0,
   // GünniDollar bleibt bis zur späteren Einführung der Kolonisten bei 0.
   gunniDollar: 0,
+  companyName: '',
+  companyOrders: { reputation: 0, offers: [], active: [], completed: [], failed: [], lastCycleSlot: null, nextId: 1, unlockedLevel: 1 },
   buildings: {
     steelworks: 0,
     stoneQuarry: 0,
@@ -641,7 +711,9 @@ function processColonists(id, delta) {
   const body = ensureColonistData(id);
   if (!body || body.colonists <= 0 || delta <= 0) return;
   const storage = getPlanetStorage(id);
-  state.gunniDollar = Math.max(0, Number(state.gunniDollar) || 0) + body.colonists * 0.1 * delta;
+  const colonistIncome = body.colonists * 0.1 * delta;
+  state.gunniDollar = Math.max(0, Number(state.gunniDollar) || 0) + colonistIncome;
+  recordCompanyFinance('income', colonistIncome, 'Kolonisten-Einnahmen', false);
   const foodNeed = body.colonists * 0.00001 * delta; // t Lebensmittel/s je Kolonist
   const waterNeedLitres = body.colonists * 0.01 * delta; // 0,00001 t Wasser = 0,01 Liter
   const foodAvailable = Math.max(0, Number(storage.food) || 0);
@@ -2484,7 +2556,7 @@ function renderTopResources() {
       const resourceKeys = [
         'stone','ice','coal','gas','crudeOil','polymers','rubber','plastics','co2','carbon','oxygen','iron','steel','silicon','lithium',
         'copperOre','copper','batteries','buildingMaterials','machines',
-        'glass','electronics','hydrogen','helium','helium3','uranium','processedUranium','nuclearFuel','bauxite','aluminiumOxide','aluminium','titanOre','processedTitan','titanium','water','grain','vegetables','food','algaeBiomass','cocoaBeans','chocolate'
+        'glass','electronics','hydrogen','helium','helium3','uranium','processedUranium','nuclearFuel','bauxite','aluminiumOxide','aluminium','titanOre','processedTitan','titanium','water','grain','vegetables','food','algaeBiomass','cocoaBeans'
       ];
       const makeEntries = (store, isOrbit) => resourceKeys
         .filter(key => Number(store[key] || 0) > 0.000001)
@@ -2574,7 +2646,7 @@ function refreshTopResourceValues() {
     line.querySelectorAll('[data-resource-key]').forEach(el => {
       const key = el.dataset.resourceKey;
       const amount = Number(storage[key] || 0);
-      if (key !== 'vehicles' && amount <= 0.000001) {
+      if (key !== 'vehicles' && key !== 'chocolate' && amount <= 0.000001) {
         el.hidden = true;
         return;
       }
@@ -4165,6 +4237,7 @@ function updateVehicleFactoryConstruction(now = gameNow()) {
 function updateResources() {
   const now = gameNow();
   updateMarket(now);
+  updateCompanyOrders(now);
   updateSolarProbeFlights();
   const delta = Math.max(0, (now - state.lastUpdate) / 1000);
   state.lastUpdate = now;
@@ -4929,6 +5002,447 @@ function co2ProcessingProduction(id='earth', output='carbon') {
   return count * 0.1;
 }
 
+
+// ==========================================
+// UNTERNEHMEN – fester Vermögenswert
+// ==========================================
+const COMPANY_RESOURCE_VALUES = {
+  stone:1, iron:3, coal:2, gas:4, bauxite:4, titanOre:12,
+  steel:8, silicon:6, copper:8, aluminiumOxide:7, aluminium:12, titanium:25,
+  buildingMaterials:4, concrete:3, glass:8, polymers:15, rubber:18, plastics:20,
+  electronics:35, chips:60, batteries:25, machines:30, vehicles:500,
+  water:0.002, food:15, grain:5, vegetables:7, algaeBiomass:4, oxygen:8,
+  hydrogen:10, helium:20, helium3:100, uranium:50, processedUranium:90,
+  nuclearFuel:150, chocolate:50, ice:2, lithium:30, copperOre:5, crudeOil:1,
+  co2:1, carbon:5, processedTitan:35, cocoaBeans:10
+};
+const COMPANY_RESOURCE_NAMES = {
+  stone:'Stein', iron:'Eisen', coal:'Kohle', gas:'Gas', bauxite:'Bauxit', titanOre:'Titanerz',
+  steel:'Stahl', silicon:'Silizium', copper:'Kupfer', aluminiumOxide:'Aluminiumoxid', aluminium:'Aluminium',
+  titanium:'Titan', buildingMaterials:'Baustoffe', concrete:'Beton', glass:'Glas', polymers:'Polymere',
+  rubber:'Gummi', plastics:'Kunststoff', electronics:'Elektronik', chips:'Chips', batteries:'Batterien',
+  machines:'Maschinen', vehicles:'Fahrzeuge', water:'Wasser', food:'Lebensmittel', grain:'Getreide',
+  vegetables:'Gemüse', algaeBiomass:'Algenbiomasse', oxygen:'Sauerstoff', hydrogen:'Wasserstoff',
+  helium:'Helium', helium3:'Helium-3', uranium:'Uran', processedUranium:'Aufbereitetes Uran',
+  nuclearFuel:'Kernbrennstoff', chocolate:'Schokolade', ice:'Eis', lithium:'Lithium',
+  copperOre:'Kupfererz', crudeOil:'Rohöl', co2:'CO₂', carbon:'Kohlenstoff',
+  processedTitan:'Aufbereitetes Titan', cocoaBeans:'Kakaobohnen'
+};
+function companyFormat(value) {
+  return `${Number(value || 0).toLocaleString('de-DE',{maximumFractionDigits:2})} GünniDollar`;
+}
+function calculateCompanyValue() {
+  let buildingsValue = 0, stockValue = 0, rocketValue = 0;
+  const buildingBreakdown = [];
+  for (const id of Object.keys(bodies)) {
+    if (id === 'sun') continue;
+    const buildingCounts = getBuildingsOnPlanet(id) || {};
+    let planetBuildingCount = 0, planetBuildingValue = 0;
+    const planetBuildings = [];
+    for (const [key, countValue] of Object.entries(buildingCounts)) {
+      const count = Math.min(100000, Math.max(0, Math.floor(Number(countValue) || 0)));
+      if (!count) continue;
+      planetBuildingCount += count;
+      planetBuildings.push({ key, count, name: buildingTypes[key]?.name || key });
+      for (let n = 1; n <= count; n++) {
+        const costs = demolitionCostMap(key, id, n) || {};
+        // Rohstoffmengen mit dem festen Unternehmenswert des jeweiligen
+        // Materials bewerten, statt Materialmengen als GünniDollar zu addieren.
+        for (const [resource, amountValue] of Object.entries(costs)) {
+          const amount = Math.max(0, Number(amountValue) || 0);
+          const unitValue = COMPANY_RESOURCE_VALUES[resource];
+          if (unitValue !== undefined) planetBuildingValue += amount * unitValue;
+        }
+      }
+    }
+    buildingsValue += planetBuildingValue;
+    if (planetBuildings.length) buildingBreakdown.push({
+      id, name: bodies[id]?.name || id, count: planetBuildingCount,
+      value: planetBuildingValue, buildings: planetBuildings.sort((a,b) => a.name.localeCompare(b.name, 'de'))
+    });
+    for (const storage of [getPlanetStorage(id), getOrbitStorage(id)]) {
+      for (const [key, amountValue] of Object.entries(storage || {})) {
+        const amount = Math.max(0, Number(amountValue) || 0);
+        const rate = COMPANY_RESOURCE_VALUES[key];
+        if (rate !== undefined) stockValue += amount * rate;
+      }
+    }
+  }
+  // Feste Unternehmenswerte je fertiger Rakete (keine Materialkosten-Bewertung).
+  const rocketUnitValues = { hercules1: 1300, hercules2: 2100, atlas1: 3000, titan1: 4300 };
+  const rocketNames = { hercules1: 'Herkules 1', hercules2: 'Herkules 2', atlas1: 'Atlas 1', titan1: 'Titan 1' };
+  const rocketStocks = [
+    ['hercules1', rocketStock], ['hercules2', rocketStock2],
+    ['atlas1', rocketStockAtlas1], ['titan1', rocketStockTitan1]
+  ];
+  const rocketBreakdown = [];
+  for (const [type, stock] of rocketStocks) {
+    let count = 0;
+    for (const amount of Object.values(stock || {})) count += Math.max(0, Number(amount) || 0);
+    rocketValue += count * rocketUnitValues[type];
+    rocketBreakdown.push({ type, name: rocketNames[type], count, unitValue: rocketUnitValues[type], value: count * rocketUnitValues[type] });
+  }
+  const cash = Math.max(0, Number(state.gunniDollar) || 0);
+  const finance = ensureCompanyFinance();
+  const debts = 0;
+  return {
+    buildingsValue, stockValue, rocketValue, cash, debts,
+    total: buildingsValue + stockValue + rocketValue + cash - debts,
+    buildingBreakdown, rocketBreakdown,
+    incomeTotal: finance.incomeTotal, expenseTotal: finance.expenseTotal,
+    profit: finance.incomeTotal - finance.expenseTotal,
+    financeHistory: finance.history
+  };
+}
+
+// ==========================================
+// UNTERNEHMENSAUFTRÄGE – STUFE 1: LOKALE LIEFERUNGEN
+// Drei Angebote pro 6 Ingame-Stunden, maximal zwei aktive Aufträge.
+// Lieferung ausschließlich aus dem Oberflächenlager des Zielplaneten.
+// ==========================================
+const COMPANY_ORDER_CYCLE_MS = 6 * 60 * 60 * 1000;
+const COMPANY_ORDER_MAX_ACTIVE = 2;
+const COMPANY_ORDER_OFFER_COUNT = 3;
+const COMPANY_ORDER_HISTORY_LIMIT = 30;
+const COMPANY_ORDER_DEADLINE_OPTIONS_HOURS = [24, 48, 72];
+
+function ensureCompanyOrders(now = gameNow()) {
+  let changed = false;
+  if (!state.companyOrders || typeof state.companyOrders !== 'object') {
+    state.companyOrders = { reputation: 0, offers: [], active: [], completed: [], failed: [], lastCycleSlot: null, nextId: 1, unlockedLevel: 1 };
+    changed = true;
+  }
+  const orders = state.companyOrders;
+  orders.reputation = Math.max(0, Number(orders.reputation) || 0);
+  for (const key of ['offers', 'active', 'completed', 'failed']) {
+    if (!Array.isArray(orders[key])) { orders[key] = []; changed = true; }
+  }
+  orders.nextId = Math.max(1, Math.floor(Number(orders.nextId) || 1));
+  orders.unlockedLevel = orders.reputation >= 100 ? 2 : 1;
+  if (orders.lastCycleSlot == null || !Number.isFinite(Number(orders.lastCycleSlot))) {
+    orders.lastCycleSlot = Math.floor(Math.max(0, now) / COMPANY_ORDER_CYCLE_MS);
+    orders.offers = createCompanyOrderOffers(COMPANY_ORDER_OFFER_COUNT);
+    changed = true;
+  }
+  return { orders, changed };
+}
+
+function companyOrderPlanetIds() {
+  return Object.keys(bodies).filter(id => id !== 'sun' && hasPlanetSurface(id));
+}
+
+function createCompanyOrderOffers(count = COMPANY_ORDER_OFFER_COUNT) {
+  const planets = companyOrderPlanetIds();
+  const resources = Object.keys(MARKET_RESOURCES).filter(key => resourceNames[key] && MARKET_RESOURCES[key]);
+  const combinations = [];
+  for (const planetId of planets) {
+    for (const resourceKey of resources) combinations.push({ planetId, resourceKey });
+  }
+  for (let i = combinations.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [combinations[i], combinations[j]] = [combinations[j], combinations[i]];
+  }
+  const offers = [];
+  const orders = state.companyOrders;
+  for (const combo of combinations.slice(0, count)) {
+    const config = MARKET_RESOURCES[combo.resourceKey];
+    const unitPrice = Math.max(0.01, marketPrice(combo.resourceKey, 'buy'));
+    const targetValues = [1000, 2500, 5000, 10000, 25000, 50000];
+    const targetValue = targetValues[Math.floor(Math.random() * targetValues.length)] * (0.85 + Math.random() * 0.3);
+    const quantity = Math.max(0.01, Math.round((targetValue / unitPrice) * 100) / 100);
+    const reward = Math.round(quantity * unitPrice * 1.10 * 100) / 100;
+    const deadlineHours = Math.random() < 0.5
+      ? null
+      : COMPANY_ORDER_DEADLINE_OPTIONS_HOURS[Math.floor(Math.random() * COMPANY_ORDER_DEADLINE_OPTIONS_HOURS.length)];
+    let reputationReward = 5;
+    if (reward >= 250000) reputationReward = 10;
+    else if (reward >= 100000) reputationReward = 9;
+    else if (reward >= 50000) reputationReward = 8;
+    else if (reward >= 20000) reputationReward = 7;
+    else if (reward >= 5000) reputationReward = 6;
+    offers.push({
+      id: orders.nextId++,
+      planetId: combo.planetId,
+      resourceKey: combo.resourceKey,
+      quantity,
+      unit: config.unit || 't',
+      unitPriceAtCreation: unitPrice,
+      reward,
+      reputationReward,
+      deadlineHours,
+      createdAt: gameNow()
+    });
+  }
+  return offers;
+}
+
+function companyOrderQuantity(value, unit) {
+  return `${Number(value || 0).toLocaleString('de-DE', { maximumFractionDigits: 2 })} ${unit || 't'}`;
+}
+
+function companyOrderTimeLeft(deadlineAt, now = gameNow()) {
+  const remaining = Math.max(0, Number(deadlineAt || 0) - now);
+  const hours = Math.ceil(remaining / (60 * 60 * 1000));
+  if (hours >= 24) {
+    const days = Math.floor(hours / 24);
+    const extraHours = hours % 24;
+    return extraHours ? `${days} T. ${extraHours} Std.` : `${days} Ingame-Tage`;
+  }
+  return `${hours} Ingame-Std.`;
+}
+
+function updateCompanyOrders(now = gameNow()) {
+  const result = ensureCompanyOrders(now);
+  const orders = result.orders;
+  let changed = result.changed;
+  const cycleSlot = Math.floor(Math.max(0, now) / COMPANY_ORDER_CYCLE_MS);
+  if (cycleSlot > Number(orders.lastCycleSlot)) {
+    orders.lastCycleSlot = cycleSlot;
+    orders.offers = createCompanyOrderOffers(COMPANY_ORDER_OFFER_COUNT);
+    changed = true;
+  }
+  const stillActive = [];
+  for (const order of orders.active) {
+    if (order.deadlineAt != null && Number(order.deadlineAt) <= now) {
+      orders.failed.unshift({ ...order, status: 'failed', finishedAt: now, reason: 'Lieferfrist abgelaufen' });
+      changed = true;
+    } else {
+      stillActive.push(order);
+    }
+  }
+  orders.active = stillActive;
+  if (orders.failed.length > COMPANY_ORDER_HISTORY_LIMIT) orders.failed.length = COMPANY_ORDER_HISTORY_LIMIT;
+  if (changed) {
+    saveGame(false);
+    if (!document.querySelector('#company-panel')?.hidden) renderCompanyPanel();
+  }
+}
+
+function acceptCompanyOrder(id) {
+  const { orders } = ensureCompanyOrders();
+  if (orders.active.length >= COMPANY_ORDER_MAX_ACTIVE) return;
+  const index = orders.offers.findIndex(order => Number(order.id) === Number(id));
+  if (index < 0) return;
+  const offer = orders.offers.splice(index, 1)[0];
+  const now = gameNow();
+  orders.active.push({
+    ...offer,
+    acceptedAt: now,
+    deadlineAt: offer.deadlineHours == null ? null : now + Number(offer.deadlineHours) * 60 * 60 * 1000
+  });
+  playUiSound('click');
+  saveGame(false);
+  renderCompanyPanel();
+}
+
+function completeCompanyOrder(id) {
+  const { orders } = ensureCompanyOrders();
+  const index = orders.active.findIndex(order => Number(order.id) === Number(id));
+  if (index < 0) return;
+  const order = orders.active[index];
+  const storage = getPlanetStorage(order.planetId);
+  const available = Math.max(0, Number(storage[order.resourceKey]) || 0);
+  if (available + 1e-9 < Number(order.quantity)) {
+    alert(`Nicht genügend ${resourceNames[order.resourceKey] || order.resourceKey} im Oberflächenlager von ${bodies[order.planetId]?.name || order.planetId}. Benötigt: ${companyOrderQuantity(order.quantity, order.unit)} · Vorhanden: ${companyOrderQuantity(available, order.unit)}.`);
+    return;
+  }
+  storage[order.resourceKey] = Math.max(0, available - Number(order.quantity));
+  state.gunniDollar = Math.max(0, Number(state.gunniDollar) || 0) + Number(order.reward || 0);
+  orders.reputation = Math.max(0, Number(orders.reputation) || 0) + Number(order.reputationReward || 5);
+  orders.unlockedLevel = orders.reputation >= 100 ? 2 : 1;
+  orders.active.splice(index, 1);
+  orders.completed.unshift({ ...order, status: 'completed', finishedAt: gameNow() });
+  if (orders.completed.length > COMPANY_ORDER_HISTORY_LIMIT) orders.completed.length = COMPANY_ORDER_HISTORY_LIMIT;
+  recordCompanyFinance('income', Number(order.reward || 0), `Unternehmensauftrag #${order.id}: ${resourceNames[order.resourceKey] || order.resourceKey}`);
+  playUiSound('research');
+  saveGame(false);
+  renderCompanyPanel();
+  renderTopResources();
+  if (state.selected === order.planetId && state.viewMode !== 'orbit') renderInfo();
+}
+
+function cancelCompanyOrder(id) {
+  const { orders } = ensureCompanyOrders();
+  const index = orders.active.findIndex(order => Number(order.id) === Number(id));
+  if (index < 0) return;
+  const order = orders.active.splice(index, 1)[0];
+  orders.failed.unshift({ ...order, status: 'cancelled', finishedAt: gameNow(), reason: 'Vom Spieler abgebrochen' });
+  if (orders.failed.length > COMPANY_ORDER_HISTORY_LIMIT) orders.failed.length = COMPANY_ORDER_HISTORY_LIMIT;
+  saveGame(false);
+  renderCompanyPanel();
+}
+
+function renderCompanyOrders() {
+  const { orders } = ensureCompanyOrders();
+  const now = gameNow();
+  const nextCycleIn = Math.max(0, (Number(orders.lastCycleSlot) + 1) * COMPANY_ORDER_CYCLE_MS - now);
+  const cycleHours = Math.ceil(nextCycleIn / (60 * 60 * 1000));
+  const offerRows = orders.offers.map(order => {
+    const planetName = bodies[order.planetId]?.name || order.planetId;
+    const deadline = order.deadlineHours == null ? 'Keine Lieferfrist' : `${order.deadlineHours / 24} Ingame-Tage nach Annahme`;
+    const activeFull = orders.active.length >= COMPANY_ORDER_MAX_ACTIVE;
+    return `<article class="company-order-card">
+      <div class="company-order-title"><strong>Auftrag #${order.id} · ${escapeCompanyText(resourceNames[order.resourceKey] || order.resourceKey)}</strong><span>${order.reputationReward} Ruf</span></div>
+      <div class="company-order-details">Lieferung: <strong>${companyOrderQuantity(order.quantity, order.unit)}</strong><br>Planet: <strong>${escapeCompanyText(planetName)}</strong><br>Frist: <strong>${escapeCompanyText(deadline)}</strong></div>
+      <div class="company-order-reward">Belohnung: <strong>${companyFormat(order.reward)}</strong></div>
+      <button type="button" data-company-order-accept="${order.id}" ${activeFull ? 'disabled' : ''}>${activeFull ? '2 Aufträge aktiv' : 'Auftrag annehmen'}</button>
+    </article>`;
+  }).join('');
+  const activeRows = orders.active.map(order => {
+    const planetName = bodies[order.planetId]?.name || order.planetId;
+    const storage = getPlanetStorage(order.planetId);
+    const available = Math.max(0, Number(storage[order.resourceKey]) || 0);
+    const enough = available + 1e-9 >= Number(order.quantity);
+    const deadlineText = order.deadlineAt == null ? 'Keine Lieferfrist' : `Verbleibend: ${companyOrderTimeLeft(order.deadlineAt, now)}`;
+    return `<article class="company-order-card company-order-active">
+      <div class="company-order-title"><strong>Auftrag #${order.id} · ${escapeCompanyText(resourceNames[order.resourceKey] || order.resourceKey)}</strong><span>${order.reputationReward} Ruf</span></div>
+      <div class="company-order-details">Zielplanet: <strong>${escapeCompanyText(planetName)}</strong><br>Benötigt: <strong>${companyOrderQuantity(order.quantity, order.unit)}</strong><br>Im Oberflächenlager: <strong class="${enough ? 'good' : 'warn'}">${companyOrderQuantity(available, order.unit)}</strong><br>${escapeCompanyText(deadlineText)}</div>
+      <div class="company-order-reward">Belohnung: <strong>${companyFormat(order.reward)}</strong></div>
+      <div class="company-order-actions"><button type="button" data-company-order-complete="${order.id}" ${enough ? '' : 'disabled'}>Liefern & abschließen</button><button type="button" class="danger" data-company-order-cancel="${order.id}">Abbrechen</button></div>
+    </article>`;
+  }).join('');
+  const completedRows = orders.completed.slice(0, 10).map(order => `<div class="company-line"><span>✓ Auftrag #${order.id} · ${escapeCompanyText(resourceNames[order.resourceKey] || order.resourceKey)}<small>${escapeCompanyText(bodies[order.planetId]?.name || order.planetId)} · ${order.reputationReward} Ruf</small></span><strong class="good">+${companyFormat(order.reward)}</strong></div>`).join('');
+  const failedRows = orders.failed.slice(0, 10).map(order => `<div class="company-line"><span>✕ Auftrag #${order.id} · ${escapeCompanyText(resourceNames[order.resourceKey] || order.resourceKey)}<small>${escapeCompanyText(order.reason || (order.status === 'cancelled' ? 'Abgebrochen' : 'Gescheitert'))}</small></span><strong>Keine Belohnung</strong></div>`).join('');
+  const progress = Math.min(100, (orders.reputation / 100) * 100);
+  const levelText = orders.reputation >= 100 ? 'Stufe 2 freigeschaltet' : `${Math.max(0, 100 - orders.reputation)} Ruf bis Stufe 2`;
+  return `<section class="company-orders-section">
+    <div class="company-orders-heading"><h3>📋 Unternehmensaufträge · Stufe 1</h3><span>${orders.active.length} / ${COMPANY_ORDER_MAX_ACTIVE} aktiv</span></div>
+    <div class="company-reputation-card">
+      <div class="company-order-title"><strong>🏅 Unternehmensruf</strong><strong>${orders.reputation} / 100</strong></div>
+      <div class="company-reputation-track"><i style="width:${progress}%"></i></div>
+      <div class="company-order-details">${escapeCompanyText(levelText)} · Stufe 2 bringt später planetenübergreifende Aufträge.</div>
+    </div>
+    <div class="company-order-section-title"><strong>Verfügbare Angebote (${orders.offers.length} / ${COMPANY_ORDER_OFFER_COUNT})</strong><small>Nächster Zyklus in ca. ${cycleHours} Ingame-Std.</small></div>
+    ${orders.offers.length ? `<div class="company-order-list">${offerRows}</div>` : '<p class="hint">Keine Angebote verfügbar. Beim nächsten 6-Stunden-Zyklus kommen neue Angebote.</p>'}
+    <div class="company-order-section-title"><strong>Aktive Aufträge (${orders.active.length} / ${COMPANY_ORDER_MAX_ACTIVE})</strong><small>Nur Oberflächenlager zählen.</small></div>
+    ${orders.active.length ? `<div class="company-order-list">${activeRows}</div>` : '<p class="hint">Noch keine aktiven Aufträge. Nimm ein Angebot an, um zu beginnen.</p>'}
+    <details class="company-subsection"><summary>✓ Erfolgreich abgeschlossen (${orders.completed.length})</summary><div class="company-stock-list">${completedRows || '<p class="hint">Noch keine abgeschlossenen Aufträge.</p>'}</div></details>
+    <details class="company-subsection"><summary>✕ Gescheitert oder abgebrochen (${orders.failed.length})</summary><div class="company-stock-list">${failedRows || '<p class="hint">Keine gescheiterten oder abgebrochenen Aufträge.</p>'}</div></details>
+    <p class="hint">Die Belohnung beträgt 110 % des beim Erstellen des Angebots geltenden Markt-Kaufpreises. Erfolgreiche Aufträge bringen 5–10 Rufpunkte. Lieferfristen beginnen erst mit der Annahme. Es werden nur Waren im Oberflächenlager des angegebenen Planeten angerechnet.</p>
+  </section>`;
+}
+
+function setupCompanyOrderActions() {
+  const panel = document.querySelector('#company-content');
+  panel?.querySelectorAll('[data-company-order-accept]').forEach(button => button.addEventListener('click', () => acceptCompanyOrder(button.dataset.companyOrderAccept)));
+  panel?.querySelectorAll('[data-company-order-complete]').forEach(button => button.addEventListener('click', () => completeCompanyOrder(button.dataset.companyOrderComplete)));
+  panel?.querySelectorAll('[data-company-order-cancel]').forEach(button => button.addEventListener('click', () => cancelCompanyOrder(button.dataset.companyOrderCancel)));
+}
+
+function renderCompanyPanel() {
+  const panel = document.querySelector('#company-content');
+  if (!panel) return;
+  const v = calculateCompanyValue();
+  const resourceRows = Object.entries(COMPANY_RESOURCE_VALUES).map(([key, rate]) => {
+    let amount = 0;
+    for (const id of Object.keys(bodies)) {
+      if (id === 'sun') continue;
+      amount += Number(getPlanetStorage(id)[key] || 0) + Number(getOrbitStorage(id)[key] || 0);
+    }
+    if (amount <= 0) return '';
+    const unit = key === 'water' || key === 'crudeOil' ? 'L' : 't';
+    return `<div class="company-line"><span>${COMPANY_RESOURCE_NAMES[key] || key} <small>${amount.toLocaleString('de-DE',{maximumFractionDigits:2})} ${unit}</small></span><strong>${companyFormat(amount * rate)}</strong></div>`;
+  }).join('');
+  const buildingRows = v.buildingBreakdown.map(planet => `
+    <details class="company-subsection">
+      <summary>🪐 ${escapeCompanyText(planet.name)} · ${planet.count} Gebäude <span>${companyFormat(planet.value)}</span></summary>
+      <div class="company-stock-list">${planet.buildings.map(b => `<div class="company-line"><span>${escapeCompanyText(b.name)}</span><strong>${b.count}×</strong></div>`).join('')}</div>
+    </details>`).join('');
+  const rocketRows = v.rocketBreakdown.map(r => `<div class="company-line"><span>🚀 ${r.name}<small>${companyFormat(r.unitValue)} pro fertiger Rakete</small></span><strong>${r.count}× · ${companyFormat(r.value)}</strong></div>`).join('');
+  const financeRows = v.financeHistory.map(entry => {
+    const date = entry.gameDate ? `Ingame ${entry.gameDate}` : (entry.date ? new Date(entry.date).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }) : '');
+    return `<div class="company-line"><span>${entry.type === 'income' ? '↗️' : '↘️'} ${escapeCompanyText(entry.description)}<small>${date}</small></span><strong class="${entry.type === 'income' ? 'good' : 'bad'}">${entry.type === 'income' ? '+' : '−'}${companyFormat(entry.amount)}</strong></div>`;
+  }).join('');
+  const financePeriods = ensureCompanyFinance().periods;
+  const currentPeriodKeys = getCompanyFinancePeriodKeys();
+  const financePeriodValue = period => {
+    const income = Math.max(0, Number(period?.income) || 0);
+    const expense = Math.max(0, Number(period?.expense) || 0);
+    const balance = income - expense;
+    return { income, expense, balance };
+  };
+  const financePeriodRows = (periods, currentKey, limit = Infinity, labelForKey = key => key) => {
+    const keys = [...new Set([...Object.keys(periods || {}), currentKey])].sort().reverse().slice(0, limit);
+    return keys.map(key => {
+      const totals = financePeriodValue(periods?.[key]);
+      const label = labelForKey(key);
+      return `<div class="company-finance-period-row"><strong>${escapeCompanyText(label)}</strong><span class="good">+${companyFormat(totals.income)}</span><span class="bad">−${companyFormat(totals.expense)}</span><strong class="${totals.balance >= 0 ? 'good' : 'bad'}">${totals.balance >= 0 ? '+' : '−'}${companyFormat(Math.abs(totals.balance))}</strong></div>`;
+    }).join('');
+  };
+  const dayRows = financePeriodRows(financePeriods.days, currentPeriodKeys.day, 30, key => key.split('-').reverse().join('.'));
+  const monthRows = financePeriodRows(financePeriods.months, currentPeriodKeys.month, 24, key => {
+    const [year, month] = key.split('-');
+    return `${month}.${year}`;
+  });
+  const yearRows = financePeriodRows(financePeriods.years, currentPeriodKeys.year, Infinity, key => key);
+  const companyOrdersHtml = renderCompanyOrders();
+  panel.innerHTML = `<div class="company-summary">
+    ${companyOrdersHtml}
+    <div class="company-hero"><span>Unternehmen</span><strong>${escapeCompanyText(state.companyName || 'Unbenanntes Unternehmen')}</strong><button id="company-rename" type="button" class="small-button">Name ändern</button></div>
+    <div class="company-total"><span>Geschätzter Unternehmenswert</span><strong>${companyFormat(v.total)}</strong></div>
+    <div class="company-line"><span>Gebäudewerte <small>nach Rohstoffwerten der Baukosten</small></span><strong>${companyFormat(v.buildingsValue)}</strong></div>
+    <div class="company-line"><span>Rohstoff- und Warenbestände</span><strong>${companyFormat(v.stockValue)}</strong></div>
+    <div class="company-line"><span>Fertige Raketen</span><strong>${companyFormat(v.rocketValue)}</strong></div>
+    <div class="company-line"><span>Geldbestand</span><strong>${companyFormat(v.cash)}</strong></div>
+    <div class="company-line"><span>Schulden</span><strong>${companyFormat(v.debts)}</strong></div>
+    <p class="hint">Raketen haben feste Unternehmenswerte. Lagerwerte nutzen feste Rohstoffwerte; Oberflächen- und Orbitlager werden berücksichtigt. Kredite sind derzeit nicht aktiviert.</p>
+    <details class="company-subsection"><summary>🏭 Gebäude nach Planet</summary><div class="company-stock-list">${buildingRows || '<p class="hint">Noch keine Gebäude vorhanden.</p>'}</div></details>
+    <details class="company-subsection"><summary>🚀 Raketenbestand und Einzelwerte</summary><div class="company-stock-list">${rocketRows}</div></details>
+    <details class="company-subsection"><summary>💰 Finanzen und Ergebnis</summary>
+      <div class="company-line"><span>Erfasste Einnahmen</span><strong class="good">${companyFormat(v.incomeTotal)}</strong></div>
+      <div class="company-line"><span>Erfasste Ausgaben</span><strong class="bad">${companyFormat(v.expenseTotal)}</strong></div>
+      <div class="company-line"><span>Saldo seit Erfassung</span><strong class="${v.profit >= 0 ? 'good' : 'bad'}">${v.profit >= 0 ? '+' : '−'}${companyFormat(Math.abs(v.profit))}</strong></div>
+      <p class="hint">Die Periodenübersichten verwenden den Ingame-Kalender ab 01.01.2027. Einnahmen und Ausgaben werden je Ingame-Tag, -Monat und -Jahr dauerhaft zusammengefasst. Ältere Gesamtwerte aus Spielständen ohne Periodendaten lassen sich nicht zuverlässig einem früheren Ingame-Jahr zuordnen; sie werden deshalb nicht erfunden oder rückdatiert.</p>
+      <details class="company-finance-periods" open><summary>📅 Ingame-Tagesübersicht · letzte 30 Tage</summary>
+        <div class="company-finance-period-head"><span>Ingame-Tag</span><span>Einnahmen</span><span>Ausgaben</span><span>Saldo</span></div>
+        <div class="company-finance-period-list">${dayRows}</div>
+      </details>
+      <details class="company-finance-periods"><summary>🗓️ Ingame-Monatsübersicht · letzte 24 Monate</summary>
+        <div class="company-finance-period-head"><span>Ingame-Monat</span><span>Einnahmen</span><span>Ausgaben</span><span>Saldo</span></div>
+        <div class="company-finance-period-list">${monthRows}</div>
+      </details>
+      <details class="company-finance-periods"><summary>📈 Ingame-Jahresübersicht · alle erfassten Jahre</summary>
+        <div class="company-finance-period-head"><span>Ingame-Jahr</span><span>Einnahmen</span><span>Ausgaben</span><span>Saldo</span></div>
+        <div class="company-finance-period-list">${yearRows}</div>
+      </details>
+      <details><summary>Letzte Transaktionen (max. 30)</summary><div class="company-stock-list">${financeRows || '<p class="hint">Noch keine einzelnen Transaktionen erfasst.</p>'}</div></details>
+    </details>
+    <details class="company-subsection"><summary>📦 Vorhandene Lagerbestände mit Bewertungswert</summary><div class="company-stock-list">${resourceRows || '<p class="hint">Noch keine bewerteten Lagerbestände vorhanden.</p>'}</div></details>
+  </div>`;
+  setupCompanyOrderActions();
+  document.querySelector('#company-rename')?.addEventListener('click', () => {
+    const name = prompt('Neuen Firmennamen eingeben:', state.companyName || '');
+    if (name !== null && name.trim()) { state.companyName = name.trim().slice(0,60); saveGame(false); renderCompanyPanel(); }
+  });
+}
+function escapeCompanyText(value) {
+  return String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+function setupCompany() {
+  const button = document.querySelector('#company-button');
+  const panel = document.querySelector('#company-panel');
+  const close = document.querySelector('#company-close');
+  button?.addEventListener('click', () => {
+    if (!panel) return;
+    panel.hidden = !panel.hidden;
+    if (!panel.hidden) {
+      ['#news-panel','#economy-panel','#research-panel','#tasks-panel','#introduction-panel','#colonists-panel','#settings-panel','#market-panel'].forEach(sel => { const el=document.querySelector(sel); if(el) el.hidden=true; });
+      const menu=document.querySelector('#main-menu'); if(menu) menu.hidden=true;
+      renderCompanyPanel();
+    }
+  });
+  close?.addEventListener('click', () => { if(panel) panel.hidden=true; });
+  ['market-button','news-button','economy-button','colonists-button','research-button','tasks-button','introduction-button','settings-button','save-menu-button'].forEach(id => {
+    document.getElementById(id)?.addEventListener('click', () => { if (panel) panel.hidden = true; });
+  });
+  if (!String(state.companyName || '').trim()) {
+    const name = prompt('Willkommen als Unternehmer! Wie soll deine Firma heißen?');
+    if (name !== null && name.trim()) state.companyName = name.trim().slice(0,60);
+    else state.companyName = 'Mein Unternehmen';
+    saveGame(false);
+  }
+}
+
 function renderEconomy() {
   const panel = document.querySelector('#economy-content');
   if (!panel) return;
@@ -5121,6 +5635,23 @@ if(languageSelect){
 }
 
 
+// Story-Einführung nur beim ersten Spielstart anzeigen; die Chronik bleibt im Menü erreichbar.
+const STORY_INTRO_SEEN_KEY = 'solarFrontierOriginsStoryIntroSeen_v1';
+const storyIntroPopup = document.querySelector('#story-intro-popup');
+const storyIntroClose = document.querySelector('#story-intro-close');
+const storyIntroStart = document.querySelector('#story-intro-start');
+function closeStoryIntro() {
+  if (storyIntroPopup) storyIntroPopup.hidden = true;
+  try { localStorage.setItem(STORY_INTRO_SEEN_KEY, '1'); } catch {}
+}
+if (storyIntroPopup) {
+  let storyIntroSeen = false;
+  try { storyIntroSeen = localStorage.getItem(STORY_INTRO_SEEN_KEY) === '1'; } catch {}
+  if (!storyIntroSeen) storyIntroPopup.hidden = false;
+  storyIntroClose?.addEventListener('click', closeStoryIntro);
+  storyIntroStart?.addEventListener('click', closeStoryIntro);
+}
+
 // Updatefenster: erscheint bei jedem Seitenstart erneut und wird nur über X geschlossen.
 const updatePopup = document.querySelector('#update-popup');
 const updatePopupClose = document.querySelector('#update-popup-close');
@@ -5137,6 +5668,7 @@ document.querySelector('#construction-queue-refresh')?.addEventListener('click',
 setupSaveMenu();
 setupTopPanels();
 loadGame(false);
+setupCompany();
 renderSystem();
 renderInfo();
 renderTopResources();

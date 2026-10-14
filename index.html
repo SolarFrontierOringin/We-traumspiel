@@ -6,7 +6,7 @@
   <title>Solar Frontier: Origins</title>
   <meta name="theme-color" content="#02050b">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=chocolate-factory-surface-fix-20261014-5">
+  <link rel="stylesheet" href="style.css?v=company-orders-20261014-1">
 </head>
 <body>
 
@@ -40,6 +40,26 @@
         <p><strong>📈 Markt:</strong> Preise verändern sich durch Angebot, Nachfrage und Zufall.</p>
         <p><strong>📦 Lager:</strong> Korrektur für die Anzeige von Schokolade in Planet- und Orbitlagern.</p>
       </div>
+    </article>
+  </section>
+
+  <!-- Einmalige Story-Einführung beim ersten Spielstart -->
+  <section id="story-intro-popup" class="update-popup-overlay" role="dialog" aria-modal="true" aria-labelledby="story-intro-title" hidden>
+    <article class="update-popup-card story-intro-card">
+      <button id="story-intro-close" class="update-popup-close" type="button" aria-label="Chronik schließen">✕</button>
+      <div class="update-popup-art" aria-hidden="true">
+        <svg viewBox="0 0 320 104"><circle cx="246" cy="58" r="34" fill="#2776d2"/><path d="M216 49 Q232 41 247 51 T276 49 M220 68 Q236 59 253 68 T274 67" fill="none" stroke="#6ee7a8" stroke-width="7" stroke-linecap="round"/><g fill="#dceaff"><circle cx="36" cy="21" r="2"/><circle cx="181" cy="20" r="2"/><circle cx="202" cy="78" r="1.7"/><circle cx="48" cy="82" r="1.5"/></g></svg>
+      </div>
+      <div class="update-popup-kicker">📖 DIE CHRONIK BEGINNT</div>
+      <h2 id="story-intro-title">Solar Frontier: Origins · Kapitel 1 – Der Beginn einer neuen Ära</h2>
+      <div class="story-text">
+        <p>🌍 <strong>01.01.2027 – Eine neue Ära beginnt.</strong></p>
+        <p>Die Rohstoffe der Erde werden immer weniger. Die Menschheit muss neue Wege finden, um ihre Zukunft zu sichern – und richtet den Blick ins Weltall.</p>
+        <p>🚀 Du möchtest das größte Raumfahrtunternehmen der Welt gründen. Mit eigenen Produktionsketten, moderner Technologie und vielen Arbeitsplätzen willst du den Aufbruch zu den Sternen möglich machen.</p>
+        <p>🏭 Baue dein Unternehmen auf, erschließe Rohstoffe, errichte Produktionsanlagen und entwickle die Infrastruktur für den interplanetaren Handel.</p>
+        <p>🌙 Der Mond ist erst der Anfang. Mit jeder neuen Kolonie und jeder erschlossenen Welt wächst dein Unternehmen – und mit ihm die Chance, die Zukunft des Sonnensystems zu gestalten.</p>
+      </div>
+      <button id="story-intro-start" class="story-start-button" type="button">🚀 Abenteuer beginnen</button>
     </article>
   </section>
 
@@ -80,6 +100,7 @@
       <div class="main-menu-items">
         <button id="news-button" class="menu-item">📰 <span>Neuigkeiten</span></button>
         <button id="economy-button" class="menu-item">📊 <span>Wirtschaft</span></button>
+        <button id="company-button" class="menu-item">🏢 <span>Unternehmen</span></button>
         <button id="colonists-button" class="menu-item">👥 <span>Kolonisten</span></button>
         <button id="research-button" class="menu-item">🔬 <span>Forschung</span></button>
         <button id="tasks-button" class="menu-item">📋 <span>Aufgaben</span></button>
@@ -92,7 +113,7 @@
           </select>
         </div>
         <button id="save-menu-button" class="menu-item">💾 <span>Spiel</span></button>
-        <button id="introduction-button" class="menu-item">📖 <span>Einführung</span></button>
+        <button id="introduction-button" class="menu-item">📖 <span>Chronik</span></button>
       </div>
     </section>
 
@@ -156,28 +177,31 @@
     <section id="introduction-panel" class="introduction-panel" hidden>
       <div class="introduction-head">
         <div>
-          <h2>📖 Einführung</h2>
-          <div class="hint">Willkommen bei Solar Frontier: Origins</div>
+          <h2>📖 Chronik</h2>
+          <div class="hint">Die Geschichte deines Raumfahrtunternehmens</div>
         </div>
         <button id="introduction-close" class="icon-button">✕</button>
       </div>
-      <article class="introduction-content">
-        <h3>🚀 Dein Ziel</h3>
-        <p>Baue deine Kolonie auf, gewinne Rohstoffe und entwickle den interplanetaren Transport.</p>
-        <h3>🪐 Planeten</h3>
-        <p>Tippe auf einen Planeten, um seine Informationen, Rohstoffe und sein Lager zu sehen. Über das 🏗️-Symbol öffnest du das Gebäudemenü.</p>
-        <h3>🏭 Gebäude</h3>
-        <p>Baue Produktionsgebäude und achte auf Produktion und Verbrauch. Die ersten zwei Eisenminen auf der Erde sind kostenlos.</p>
-        <h3>🚀 Raketen</h3>
-        <p>Baue eine Raketenfabrik, produziere Herkules-1-, Herkules-2- und Atlas-1-Raketen und transportiere Fracht zwischen allen erreichbaren Planeten. Herkules 2 fasst 300 t/L in mehreren Frachtabteilungen.</p>
-        <h3>💾 Spielstand</h3>
-        <p>Über <strong>☰ Menü → 💾 Spiel</strong> kannst du deinen Spielstand speichern, laden oder neu starten.</p>
+      <article class="introduction-content story-text">
+        <h3>🌩️ 01.01.2027 – Der Beginn einer neuen Ära</h3>
+        <p>Die Rohstoffe der Erde werden immer weniger. Die Menschheit muss neue Wege finden, um ihre Zukunft zu sichern – und richtet den Blick ins Weltall.</p>
+        <h3>🚀 Ein Unternehmen mit großen Zielen</h3>
+        <p>Du möchtest das größte Raumfahrtunternehmen der Welt gründen. Mit eigenen Produktionsketten, moderner Technologie und vielen Arbeitsplätzen willst du den Aufbruch zu den Sternen möglich machen.</p>
+        <h3>🏭 Der Weg ins Sonnensystem</h3>
+        <p>Baue dein Unternehmen auf, erschließe Rohstoffe, errichte Produktionsanlagen und entwickle die Infrastruktur für den interplanetaren Handel.</p>
+        <h3>🌙 Erst der Anfang</h3>
+        <p>Der Mond ist erst der Anfang. Mit jeder neuen Kolonie und jeder erschlossenen Welt wächst dein Unternehmen – und mit ihm die Chance, die Zukunft des Sonnensystems zu gestalten.</p>
       </article>
     </section>
 
     <section id="colonists-panel" class="colonists-panel" hidden>
       <div class="colonists-head"><div><h2>👥 Kolonistenübersicht</h2><div class="hint">Bevölkerung, Wohnraum, Wachstum und Versorgung</div></div><button id="colonists-close" class="icon-button">✕</button></div>
       <div id="colonists-content"></div>
+    </section>
+
+    <section id="company-panel" class="company-panel" hidden>
+      <div class="company-head"><div><h2>🏢 Unternehmen</h2><div class="hint">Unternehmenswert, Ruf, Aufträge und Finanzen</div></div><button id="company-close" class="icon-button">✕</button></div>
+      <div id="company-content"></div>
     </section>
 
     <section id="economy-panel" class="economy-panel" hidden>
@@ -222,7 +246,7 @@
       <aside id="info-panel" class="panel"></aside>
     </section>
   </main>
-  <script src="game.js?v=ice-market-transport-20261014-9"></script>
+  <script src="game.js?v=company-orders-20261014-1"></script>
   <script>if ("serviceWorker" in navigator) navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{});</script>
 </body>
 </html>

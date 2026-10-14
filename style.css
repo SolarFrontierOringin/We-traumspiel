@@ -808,3 +808,85 @@ body > .planet-build-menu * {
 .construction-queue-progress{height:6px;background:#1d2a3d;border-radius:8px;overflow:hidden;margin-top:7px}
 .construction-queue-progress i{display:block;height:100%;background:#2776d2}
 @media(max-width:430px){.construction-queue-panel{padding:10px}.construction-queue-item{grid-template-columns:minmax(0,1fr) auto}.construction-queue-item button{padding:7px}}
+
+/* Unternehmensübersicht */
+.company-panel{border:1px solid #263754;border-radius:16px;background:#09111f;padding:14px;margin-bottom:8px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.company-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.company-summary{display:grid;gap:9px}
+.company-hero,.company-total{display:grid;gap:7px;padding:13px;border:1px solid #263754;border-radius:12px;background:#0c1627}
+.company-hero>span,.company-total>span{color:#aab8ce;font-size:13px}
+.company-hero>strong{font-size:20px;overflow-wrap:anywhere}
+.company-total>strong{font-size:clamp(22px,5vw,30px);color:#75e09b;overflow-wrap:anywhere}
+.company-hero button{justify-self:start}
+.company-line{display:flex;justify-content:space-between;gap:12px;padding:9px 2px;border-bottom:1px solid #1b2a41}
+.company-line span{display:grid;gap:3px}.company-line small{color:#aab8ce;font-size:12px}
+.company-line strong{text-align:right;white-space:nowrap}
+.company-stock-list{margin-top:8px}
+.company-summary details{padding:10px;border:1px solid #263754;border-radius:10px;background:#0c1627}
+.company-summary summary{cursor:pointer;font-weight:700}
+@media(max-width:430px){.company-line{align-items:flex-start}.company-line strong{white-space:normal}}
+
+
+/* Unternehmensübersicht: Gebäude- und Finanzdetails */
+.company-subsection{padding:10px;border:1px solid #263754;border-radius:10px;background:#0c1627}
+.company-subsection>summary{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.company-subsection>summary span{color:#aab8ce;font-size:12px;font-weight:500;text-align:right}
+.company-subsection .company-stock-list{padding-top:6px}
+.company-subsection .company-line{align-items:flex-start}
+.company-subsection .company-line strong{white-space:normal}
+
+
+/* Finanzverlauf: Ingame-Tag, -Monat und -Jahr */
+.company-finance-periods{padding:10px;border:1px solid #263754;border-radius:10px;background:#0c1627;overflow:hidden}
+.company-finance-periods>summary{cursor:pointer;font-weight:700;padding:2px 0 8px}
+.company-finance-period-head,.company-finance-period-row{display:grid;grid-template-columns:minmax(82px,1fr) repeat(3,minmax(100px,1fr));gap:8px;align-items:center}
+.company-finance-period-head{padding:8px 0;color:#aab8ce;font-size:11px;border-bottom:1px solid #263754}
+.company-finance-period-row{padding:9px 0;border-bottom:1px solid #1b2a41;font-size:12px}
+.company-finance-period-row:last-child{border-bottom:0}
+.company-finance-period-row>span,.company-finance-period-row>strong{text-align:right;overflow-wrap:anywhere}
+.company-finance-period-row>strong:first-child{text-align:left}
+.company-finance-period-list{max-width:100%;overflow-x:auto}
+@media(max-width:560px){
+  .company-finance-period-head,.company-finance-period-row{grid-template-columns:minmax(72px,.8fr) repeat(3,minmax(90px,1fr));gap:6px;min-width:350px}
+  .company-finance-period-head{font-size:10px}
+  .company-finance-period-row{font-size:11px}
+}
+
+
+/* Unternehmensaufträge – lokale Lieferungen und Rufstatus */
+.company-orders-section{display:grid;gap:10px;padding:12px;border:1px solid #315273;border-radius:13px;background:#0a1526}
+.company-orders-heading,.company-order-title,.company-order-section-title{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.company-orders-heading h3{margin:0;font-size:17px}
+.company-orders-heading>span{color:#aab8ce;font-size:12px;white-space:nowrap}
+.company-reputation-card{padding:11px;border:1px solid #3b5f87;border-radius:11px;background:#0c1a2d}
+.company-reputation-track{height:9px;margin:9px 0;background:#1d2a3d;border-radius:10px;overflow:hidden}
+.company-reputation-track i{display:block;height:100%;background:#75e09b;border-radius:10px}
+.company-order-section-title{margin-top:4px;padding-bottom:7px;border-bottom:1px solid #263754}
+.company-order-section-title small{color:#aab8ce;text-align:right;font-size:11px}
+.company-order-list{display:grid;gap:8px}
+.company-order-card{display:grid;gap:8px;padding:11px;border:1px solid #263754;border-radius:11px;background:#0c1627;min-width:0}
+.company-order-title{align-items:flex-start}
+.company-order-title strong:first-child{overflow-wrap:anywhere}
+.company-order-title span{flex-shrink:0;padding:3px 7px;border-radius:20px;background:#183c2c;color:#8ce6ac;font-size:12px;font-weight:700}
+.company-order-details{color:#c7d4e8;font-size:13px;line-height:1.65;overflow-wrap:anywhere}
+.company-order-details strong{color:#eef4ff}
+.company-order-reward{display:flex;justify-content:space-between;gap:8px;align-items:center;color:#aab8ce;font-size:13px}
+.company-order-reward strong{color:#75e09b;text-align:right}
+.company-order-card>button{width:100%}
+.company-order-actions{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px}
+.company-order-actions button{padding:8px 10px;font-size:12px}
+@media(max-width:430px){
+  .company-orders-section{padding:9px}
+  .company-order-title{gap:6px}
+  .company-order-actions{grid-template-columns:1fr}
+  .company-order-section-title{align-items:flex-start;flex-direction:column}
+  .company-order-section-title small{text-align:left}
+}
+
+
+/* Chronik: einmalige Story-Einführung und dauerhaftes Menüfenster */
+.story-intro-card{max-width:620px}
+.story-text p{color:#c7d4e8;line-height:1.65;margin:0 0 12px}
+.story-text h3{margin:17px 0 7px;color:#eaf4ff}
+.story-start-button{width:100%;margin-top:8px;min-height:46px}
+#story-intro-popup[hidden]{display:none!important}
