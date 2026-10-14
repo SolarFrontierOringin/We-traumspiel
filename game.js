@@ -298,6 +298,7 @@ const state = {
     greenhouse: 0,
     foodFactory: 0,
     iceProcessingPlant: 0,
+    iceMine: 0,
     algaeFarm: 0,
     algaeFoodProcessor: 0,
     residentialHouse: 0,
@@ -376,6 +377,7 @@ const buildingTypes = {
   chocolateFactory: { name: 'Schokoladenfabrik', icon: '🍫', resource: null, rate: 0, cost: 500, text: 'Verbraucht 0,02 t Kakaobohnen/s · produziert 0,05 t Schokolade/s · benötigt 5 MW Strom · kein Wasserverbrauch · 500 t Stahl und 300 t Baustoffe · Forschung erforderlich · auf allen Planetenoberflächen außer der Sonne baubar' },
   greenhouse: { name: 'Gewächshaus', icon: '🌱', resource: null, rate: 0, cost: 500, text: 'verbraucht 2 MW Strom und 0,01 Liter Wasser/s · produziert 0,2 t Getreide/s und 0,2 t Gemüse/s · 500 t Stahl · 20 t Polymere · 300 t Baustoffe · Forschung erforderlich' },
   foodFactory: { name: 'Lebensmittelfabrik', icon: '🥫', resource: null, rate: 0, cost: 1900, text: 'verbraucht 5 MW Strom, 0,1 t Getreide/s und 0,05 L Wasser/s · produziert 0,08 t Lebensmittel/s · Forschung erforderlich' },
+  iceMine: { name: 'Eismine', icon: '🧊', resource: 'ice', rate: 0.2, cost: 100, text: 'Fördert 0,2 t Eis/s · keine Forschung erforderlich · nur auf Planeten mit Eisvorkommen' },
   iceProcessingPlant: { name: 'Eisverarbeitungsanlage', icon: '🧊', resource: null, rate: 0, cost: 100, text: 'verbraucht 0,1 t Eis/s aus dem lokalen Lager · produziert 0,2 L Wasser/s · kein Stromverbrauch · auf allen Planeten außer der Sonne · Forschung erforderlich' },
   algaeFarm: { name: 'Algenfarm', icon: '🪴', resource: null, rate: 0, cost: 300, text: 'verbraucht 0,05 t Wasser/s (50 L/s) aus dem lokalen Lager · produziert 0,2 t Algenbiomasse/s · kein zusätzlicher Stromverbrauch · Forschung erforderlich' },
   algaeFoodProcessor: { name: 'Algenverarbeitungsanlage', icon: '🥫', resource: null, rate: 0, cost: 800, text: 'verbraucht 0,1 t Algenbiomasse/s · produziert 0,12 t Lebensmittel/s · Forschung erforderlich' }
@@ -503,6 +505,7 @@ function venusCo2ExtractionRate(id='venus') { return Number(getBuildingsOnPlanet
 
 function getBuildingsOnPlanet(id) {
   if (id === 'earth') {
+    if (state.buildings.iceMine === undefined) state.buildings.iceMine = 0;
     if (state.buildings.iceProcessingPlant === undefined) state.buildings.iceProcessingPlant = 0;
     if (state.buildings.algaeFarm === undefined) state.buildings.algaeFarm = 0;
     if (state.buildings.algaeFoodProcessor === undefined) state.buildings.algaeFoodProcessor = 0;
@@ -510,7 +513,7 @@ function getBuildingsOnPlanet(id) {
     return state.buildings;
   }
   if (!bodies[id].buildings) {
-    bodies[id].buildings = { residentialHouse: 0, mediumResidentialHouse: 0, residentialComplex: 0, habitat: 0, observatory: 0, foodFactory: 0, algaeFarm: 0, algaeFoodProcessor: 0, steelworks: 0, stoneQuarry: 0, buildingMaterialsFactory: 0, coalMine: 0, gasPlant: 0, co2Extraction: 0, co2ProcessingPlant: 0, orbitalCo2Extractor: 0, researchSatellite: 0, ironMine: 0, siliconMine: 0, lithiumMine: 0, copperMine: 0, copperSmelter: 0, lithiumRefinery: 0, machineFactory: 0, glassFactory: 0, heliumExtractor: 0, fusionReactor: 0, outpost: 0, coalPowerPlant: 0, solarPlant: 0, researchLab: 0, moonBase: 0, crudeOilPump: 0, polymerFactory: 0, rubberFactory: 0, plasticFactory: 0, vehicleFactory: 0, electronicsFactory: 0, uraniumMine: 0, uraniumProcessingPlant: 0, nuclearFuelPlant: 0, nuclearReactor: 0, chipFactory: 0, solarSail: 0, solarSatellite: 0, solarProbe: 0, bauxiteMine: 0, titanMine: 0, titanProcessing: 0, titanRefinery: 0, aluminiumOxideRefinery: 0, aluminiumSmelter: 0, hydroelectricPlant: 0, greenhouse: 0, cocoaPlantation: 0 }
+    bodies[id].buildings = { iceMine: 0, residentialHouse: 0, mediumResidentialHouse: 0, residentialComplex: 0, habitat: 0, observatory: 0, foodFactory: 0, algaeFarm: 0, algaeFoodProcessor: 0, steelworks: 0, stoneQuarry: 0, buildingMaterialsFactory: 0, coalMine: 0, gasPlant: 0, co2Extraction: 0, co2ProcessingPlant: 0, orbitalCo2Extractor: 0, researchSatellite: 0, ironMine: 0, siliconMine: 0, lithiumMine: 0, copperMine: 0, copperSmelter: 0, lithiumRefinery: 0, machineFactory: 0, glassFactory: 0, heliumExtractor: 0, fusionReactor: 0, outpost: 0, coalPowerPlant: 0, solarPlant: 0, researchLab: 0, moonBase: 0, crudeOilPump: 0, polymerFactory: 0, rubberFactory: 0, plasticFactory: 0, vehicleFactory: 0, electronicsFactory: 0, uraniumMine: 0, uraniumProcessingPlant: 0, nuclearFuelPlant: 0, nuclearReactor: 0, chipFactory: 0, solarSail: 0, solarSatellite: 0, solarProbe: 0, bauxiteMine: 0, titanMine: 0, titanProcessing: 0, titanRefinery: 0, aluminiumOxideRefinery: 0, aluminiumSmelter: 0, hydroelectricPlant: 0, greenhouse: 0, cocoaPlantation: 0 }
   }
   if (bodies[id].buildings.observatory === undefined) bodies[id].buildings.observatory = 0;
   if (bodies[id].buildings.residentialHouse === undefined) bodies[id].buildings.residentialHouse = 0;
@@ -521,6 +524,7 @@ function getBuildingsOnPlanet(id) {
   if (bodies[id].buildings.algaeFarm === undefined) bodies[id].buildings.algaeFarm = 0;
   if (bodies[id].buildings.algaeFoodProcessor === undefined) bodies[id].buildings.algaeFoodProcessor = 0;
   if (bodies[id].buildings.vehicleFactory === undefined) bodies[id].buildings.vehicleFactory = 0;
+  if (bodies[id].buildings.iceMine === undefined) bodies[id].buildings.iceMine = 0;
   if (bodies[id].buildings.iceProcessingPlant === undefined) bodies[id].buildings.iceProcessingPlant = 0;
   if (bodies[id].buildings.researchSatellite === undefined) bodies[id].buildings.researchSatellite = 0;
   if (bodies[id].buildings.cocoaPlantation === undefined) bodies[id].buildings.cocoaPlantation = 0;
@@ -2241,6 +2245,7 @@ function renderSystem() {
       ${buildButton('hydroelectricPlant')}
       ${buildButton('greenhouse')}
       ${buildButton('foodFactory')}
+      ${buildButton('iceMine')}
       ${buildButton('iceProcessingPlant')}
       ${buildButton('algaeFarm')}
       ${buildButton('algaeFoodProcessor')}
@@ -2270,7 +2275,7 @@ function renderSystem() {
 
     // Gebäudeübersicht Konzept 1.1: planetenabhängige, durchsuchbare Kategorien.
     const buildCategories = [
-      { title: '⛏️ Rohstoffgewinnung', keys: ['titanMine','ironMine','stoneQuarry','coalMine','gasPlant','siliconMine','lithiumMine','copperMine','heliumExtractor','crudeOilPump','uraniumMine','bauxiteMine'] },
+      { title: '⛏️ Rohstoffgewinnung', keys: ['iceMine','titanMine','ironMine','stoneQuarry','coalMine','gasPlant','siliconMine','lithiumMine','copperMine','heliumExtractor','crudeOilPump','uraniumMine','bauxiteMine'] },
       { title: '🏠 Wohnraum & Kolonisten', keys: ['residentialHouse','mediumResidentialHouse','residentialComplex','habitat'] },
       { title: '🌱 Landwirtschaft & Versorgung', keys: ['greenhouse','hydroelectricPlant','cocoaPlantation'] },
       { title: '🍫 Kolonistenversorgung', keys: ['chocolateFactory'] },
@@ -2603,11 +2608,12 @@ function isBuildingAllowed(key, planetId = state.selected) {
     return planetId === 'earth';
   }
   // Merkur und Venus bleiben bis 50 °C vollständig gesperrt; nur Sonnensegel sind vorher erlaubt.
-  if (planetId === 'mercury' && mercuryTemperature() > 50 && key !== 'solarSail' && key !== 'co2ProcessingPlant' && key !== 'iceProcessingPlant' && key !== 'algaeFoodProcessor' && key !== 'cocoaPlantation' && key !== 'chocolateFactory' && !['titanMine','titanProcessing','titanRefinery'].includes(key)) return false;
-  if (planetId === 'venus' && venusTemperature() > 50 && key !== 'solarSail' && key !== 'co2Extraction' && key !== 'co2ProcessingPlant' && key !== 'iceProcessingPlant' && key !== 'algaeFoodProcessor' && key !== 'cocoaPlantation' && key !== 'chocolateFactory' && !['titanMine','titanProcessing','titanRefinery'].includes(key)) return false;
+  if (planetId === 'mercury' && mercuryTemperature() > 50 && key !== 'solarSail' && key !== 'iceMine' && key !== 'co2ProcessingPlant' && key !== 'iceProcessingPlant' && key !== 'algaeFoodProcessor' && key !== 'cocoaPlantation' && key !== 'chocolateFactory' && !['titanMine','titanProcessing','titanRefinery'].includes(key)) return false;
+  if (planetId === 'venus' && venusTemperature() > 50 && key !== 'solarSail' && key !== 'iceMine' && key !== 'co2Extraction' && key !== 'co2ProcessingPlant' && key !== 'iceProcessingPlant' && key !== 'algaeFoodProcessor' && key !== 'cocoaPlantation' && key !== 'chocolateFactory' && !['titanMine','titanProcessing','titanRefinery'].includes(key)) return false;
   // Sonnensegel gibt es auf Merkur und Venus.
   if (key === 'solarSail' && !['mercury','venus'].includes(planetId)) return false;
   if (key === 'co2Extraction' && planetId !== 'venus') return false;
+  if (key === 'iceMine' && (state.viewMode === 'orbit' || Number(bodies[planetId]?.resources?.ice || 0) <= 0)) return false;
   if (key === 'iceProcessingPlant' && (planetId === 'sun' || !state.research?.completed?.iceProcessingPlant)) return false;
   if (key === 'algaeFarm' && (planetId === 'sun' || !state.research?.completed?.algaeFarm)) return false;
   if (key === 'algaeFoodProcessor' && (planetId === 'sun' || !state.research?.completed?.algaeFoodProcessor)) return false;
@@ -2632,7 +2638,7 @@ function isBuildingAllowed(key, planetId = state.selected) {
   if (key === 'moonBase' && ['sun', 'earth'].includes(planetId)) return false;
   if (planetId === 'sun') return false;
   if (key === 'landingPad') return state.viewMode !== 'orbit' && planetId !== 'sun';
-  if (key !== 'nuclearReactor' && key !== 'orbitalCo2Extractor' && key !== 'researchSatellite' && key !== 'iceProcessingPlant' && key !== 'algaeFoodProcessor' && planetId !== 'earth' && key !== 'outpost' && Number(getBuildingsOnPlanet(planetId).outpost || 0) < 1) return false;
+  if (key !== 'nuclearReactor' && key !== 'orbitalCo2Extractor' && key !== 'researchSatellite' && key !== 'iceMine' && key !== 'iceProcessingPlant' && key !== 'algaeFoodProcessor' && planetId !== 'earth' && key !== 'outpost' && Number(getBuildingsOnPlanet(planetId).outpost || 0) < 1) return false;
   if (key === 'heliumExtractor' && !['luna','venus','jupiter'].includes(planetId)) return false;
    if (key === 'crudeOilPump' && planetId !== 'earth') return false;
   if (key === 'hydroelectricPlant' && planetId !== 'earth') return false;
@@ -2778,6 +2784,12 @@ function buildButton(key) {
       isBuildingAllowed(key);
     const limitText = temperature <= 50 ? ' · Merkur hat bereits 50 °C erreicht' : ` · Merkur danach: ${Math.max(50, temperature - 10)} °C`;
     return `<div class="build-card"><div><strong>${b.icon} ${b.name}</strong><small>${b.text} · aktueller Wert: ${temperature.toFixed(0)} °C${limitText}</small></div><button class="build-resource" data-building="${key}" ${affordable ? '' : 'disabled'}>Bauen (${count})</button></div>`;
+  }
+
+  if (key === 'iceMine') {
+    const costs = { steel: 100, buildingMaterials: 50 };
+    const affordable = isBuildingAllowed(key) && Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount);
+    return `<div class="build-card"><div><strong>${b.icon} ${b.name}</strong><small>${b.text} · Baukosten: 100 t Stahl, 50 t Baustoffe</small></div><button class="build-resource" data-building="${key}" ${affordable ? '' : 'disabled'}>Bauen (${Number(count || 0)})</button></div>`;
   }
 
   if (key === 'iceProcessingPlant') {
@@ -2985,6 +2997,7 @@ function demolitionCostMap(key, planetId, currentCount) {
     residentialComplex: { steel: 600, buildingMaterials: 800, glass: 150 },
     habitat: { steel: 200, buildingMaterials: 250 },
     orbitalCo2Extractor: { aluminium: 50, polymers: 40, chips: 20, steel: 190 },
+    iceMine: { steel: 100, buildingMaterials: 50 },
     iceProcessingPlant: { steel: 100, buildingMaterials: 50, electronics: 20 },
     algaeFarm: { steel: 300, buildingMaterials: 150, electronics: 50 },
     algaeFoodProcessor: { steel: 800, buildingMaterials: 500, electronics: 150, chips: 50 },
@@ -3205,7 +3218,12 @@ function buildResourceBuilding(key) {
     return;
   }
 
-  if (key === 'iceProcessingPlant') {
+  if (key === 'iceMine') {
+    const costs = { steel: 100, buildingMaterials: 50 };
+    if (!isBuildingAllowed(key, planetId) || !Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount)) return;
+    for (const [r, amount] of Object.entries(costs)) storage[r] -= amount;
+    bld.iceMine = Number(bld.iceMine || 0) + 1;
+  } else if (key === 'iceProcessingPlant') {
     if (!state.research?.completed?.iceProcessingPlant || planetId === 'sun') return;
     const costs = { steel: 100, buildingMaterials: 50, electronics: 20 };
     if (!Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount)) return;
@@ -4912,10 +4930,14 @@ function renderEconomy() {
   const gunniDollarIncome = colonistCount * 0.1;
   const gunniDollarBalance = Math.max(0, Number(state.gunniDollar || 0));
   const formatGunniDollar = value => `${Number(value || 0).toLocaleString('de-DE', { maximumFractionDigits: 2 })} GünniDollar`;
-  const resources = [['stone','🪨','Stein'],['coal','⚫','Kohle'],['gas','🔥','Gas'],['co2','🌫️','CO₂'],['carbon','⚫','Kohlenstoff'],['oxygen','🫧','Sauerstoff'],['crudeOil','🛢️','Rohöl'],['polymers','🧬','Polymere'],['rubber','⚫','Gummi'],['plastics','🧴','Kunststoff'],['iron','🧲','Eisen'],['steel','🔩','Stahl'],['silicon','🔷','Silizium'],['lithium','🔋','Lithium'],['copperOre','🟠','Kupfererz'],['copper','🟤','Kupfer'],['batteries','🔋','Batterien'],['buildingMaterials','🧱','Baustoffe'],['machines','⚙️','Maschinen'],['electronics','💻','Elektronik'],['uranium','☢️','Uran'],['processedUranium','🧪','Aufbereitetes Uran'],['nuclearFuel','⚛️','Kernbrennstoff'],['chips','💾','Chips'],['helium3','🧪','Helium-3'],['bauxite','🪨','Bauxit'],['aluminiumOxide','⚗️','Aluminiumoxid'],['aluminium','🥈','Aluminium'],['water','💧','Wasser'],['grain','🌾','Getreide'],['vegetables','🥦','Gemüse'],['food','🥫','Lebensmittel'],['algaeBiomass','🪴','Algenbiomasse'],['cocoaBeans','🫘','Kakaobohnen'],['chocolate','🍫','Schokolade']];
+  const resources = [['stone','🪨','Stein'],['ice','🧊','Eis'],['coal','⚫','Kohle'],['gas','🔥','Gas'],['co2','🌫️','CO₂'],['carbon','⚫','Kohlenstoff'],['oxygen','🫧','Sauerstoff'],['crudeOil','🛢️','Rohöl'],['polymers','🧬','Polymere'],['rubber','⚫','Gummi'],['plastics','🧴','Kunststoff'],['iron','🧲','Eisen'],['steel','🔩','Stahl'],['silicon','🔷','Silizium'],['lithium','🔋','Lithium'],['copperOre','🟠','Kupfererz'],['copper','🟤','Kupfer'],['batteries','🔋','Batterien'],['buildingMaterials','🧱','Baustoffe'],['machines','⚙️','Maschinen'],['electronics','💻','Elektronik'],['uranium','☢️','Uran'],['processedUranium','🧪','Aufbereitetes Uran'],['nuclearFuel','⚛️','Kernbrennstoff'],['chips','💾','Chips'],['helium3','🧪','Helium-3'],['bauxite','🪨','Bauxit'],['aluminiumOxide','⚗️','Aluminiumoxid'],['aluminium','🥈','Aluminium'],['water','💧','Wasser'],['grain','🌾','Getreide'],['vegetables','🥦','Gemüse'],['food','🥫','Lebensmittel'],['algaeBiomass','🪴','Algenbiomasse'],['cocoaBeans','🫘','Kakaobohnen'],['chocolate','🍫','Schokolade']];
   const rows = resources.map(([key, icon, name]) => {
-    const amount = ['co2','cocoaBeans','chocolate'].includes(key) ? Object.keys(bodies).filter(id => id !== 'sun').reduce((sum, id) => sum + Number(getPlanetStorage(id)[key] || 0) + Number(getOrbitStorage(id)[key] || 0), 0) : getPlayerResourceAmount(key, 'earth');
+    const amount = ['ice','co2','cocoaBeans','chocolate'].includes(key) ? Object.keys(bodies).filter(id => id !== 'sun').reduce((sum, id) => sum + Number(getPlanetStorage(id)[key] || 0) + Number(getOrbitStorage(id)[key] || 0), 0) : getPlayerResourceAmount(key, 'earth');
     let production = 0, consumption = 0;
+    if (key === 'ice') {
+      production = Object.keys(bodies).filter(id => id !== 'sun').reduce((sum, id) => sum + Number(getBuildingsOnPlanet(id).iceMine || 0) * 0.2, 0);
+      consumption = Object.keys(bodies).filter(id => id !== 'sun').reduce((sum, id) => sum + Number(getBuildingsOnPlanet(id).iceProcessingPlant || 0) * 0.1, 0);
+    }
     if (key === 'co2') {
       production = venusCo2ExtractionRate('venus') + Object.keys(bodies).reduce((sum, id) => sum + Number(getBuildingsOnPlanet(id).orbitalCo2Extractor || 0) * 0.2, 0);
     }
