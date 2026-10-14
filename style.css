@@ -322,8 +322,15 @@ select{padding:7px;border-radius:8px;background:#eef2f7;color:#111}
 
 /* Aufgaben-Reiter: Einführung und Griff nach dem Mond */
 .task-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 10px}
-.task-tab{min-height:44px;padding:10px 9px;border:1px solid #263754;border-radius:11px;background:#0c1627;color:#c7d4e8;text-align:center;font-size:14px}
+.task-tab{min-height:44px;padding:10px 9px;border:1px solid #263754;border-radius:11px;background:#0c1627;color:#c7d4e8;text-align:center;font-size:14px;display:flex;align-items:center;justify-content:center;gap:7px;flex-wrap:wrap}
+.task-tab-label{font-weight:700}
+.task-tab-count{font-size:12px;font-weight:800;white-space:nowrap;color:#aab8ce}
 .task-tab.active{background:#2776d2;border-color:#4c94e6;color:#fff}
+.task-tab.active .task-tab-count{color:#fff}
+.task-tab.task-tab-complete{background:#16452f;border-color:#3f9b68;color:#a7f3c0}
+.task-tab.task-tab-complete .task-tab-count{color:#a7f3c0}
+.task-tab.task-tab-complete.active{background:#1b633e;border-color:#5bd68b;color:#fff}
+.task-tab.task-tab-complete.active .task-tab-count{color:#fff}
 .task-group-summary[hidden]{display:none}
 @media(max-width:430px){.task-tabs{grid-template-columns:1fr}.task-tab{text-align:left}}
 

@@ -1097,7 +1097,14 @@ function renderTasks() {
   const keys = groups.find(group => group.id === activeGroup)?.keys || groups[0].keys;
   panel.innerHTML = `
     <div class="task-tabs" role="tablist" aria-label="Aufgabengruppen">
-      ${groups.map(group => `<button type="button" class="task-tab ${group.id === activeGroup ? 'active' : ''}" data-task-group="${group.id}" role="tab" aria-selected="${group.id === activeGroup}">${group.label}</button>`).join('')}
+      ${groups.map(group => {
+        const completedCount = group.keys.filter(taskIsComplete).length;
+        const allComplete = group.keys.length > 0 && completedCount === group.keys.length;
+        return `<button type="button" class="task-tab ${group.id === activeGroup ? 'active' : ''} ${allComplete ? 'task-tab-complete' : ''}" data-task-group="${group.id}" role="tab" aria-selected="${group.id === activeGroup}">
+          <span class="task-tab-label">${group.label}</span>
+          <span class="task-tab-count">${completedCount} / ${group.keys.length}</span>
+        </button>`;
+      }).join('')}
     </div>
     ${groups.map(group => `<div class="stat task-group-summary" ${group.id === activeGroup ? '' : 'hidden'}><span>${group.label}</span><strong>${group.keys.filter(taskIsComplete).length} / ${group.keys.length}</strong></div>`).join('')}
     <div class="tasks-list">
