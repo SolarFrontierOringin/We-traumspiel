@@ -788,3 +788,16 @@ body > .planet-build-menu * {
   box-shadow:0 0 0 2px #02050b;pointer-events:none;z-index:6;
 }
 .body.luna .colonized-indicator{right:-6px;top:-6px;width:14px;height:14px;font-size:9px;}
+
+/* Bauwarteschlange – zeitbasierte Gebäude pro Planet */
+.construction-queue-panel{border:1px solid #263754;border-radius:16px;background:#09111f;padding:14px;margin:0 0 8px;box-shadow:0 10px 30px rgba(0,0,0,.2)}
+.construction-queue-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.construction-queue-head h2{margin:0 0 4px;font-size:19px}
+.construction-queue-list{display:grid;gap:8px;margin-top:10px}
+.construction-queue-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:10px;border:1px solid #263754;border-radius:11px;background:#0c1627}
+.construction-queue-item small{display:block;color:#aab8ce;margin-top:4px}
+.construction-queue-item button{background:#8f3030;padding:7px 10px;font-size:12px}
+.construction-queue-empty{margin:10px 0 0;color:#aab8ce;font-size:13px}
+.construction-queue-progress{height:6px;background:#1d2a3d;border-radius:8px;overflow:hidden;margin-top:7px}
+.construction-queue-progress i{display:block;height:100%;background:#2776d2}
+@media(max-width:430px){.construction-queue-panel{padding:10px}.construction-queue-item{grid-template-columns:minmax(0,1fr) auto}.construction-queue-item button{padding:7px}}

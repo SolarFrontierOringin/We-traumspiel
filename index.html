@@ -6,7 +6,7 @@
   <title>Solar Frontier: Origins</title>
   <meta name="theme-color" content="#02050b">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=planet-built-indicator-20261013-1">
+  <link rel="stylesheet" href="style.css?v=chocolate-factory-surface-fix-20261014-5">
 </head>
 <body>
 
@@ -43,9 +43,6 @@
           <li>Gummi</li>
           <li>Kunststoff</li>
           <li>Fahrzeugfabrik</li>
-
-          <li>Blumen wurde umgesetzt</li>
-          <li>Neue Aufgaben sind Hinzu gekommen</li>
         </ul>
       </div>
     </article>
@@ -214,6 +211,14 @@
       <div id="save-status" class="save-status"></div>
     </section>
 
+    <section id="construction-queue-panel" class="construction-queue-panel" aria-label="Bauwarteschlange">
+      <div class="construction-queue-head">
+        <div><h2>🏗️ Bauwarteschlange</h2><div id="construction-queue-planet" class="hint">Bauaufträge des ausgewählten Planeten</div></div>
+        <button id="construction-queue-refresh" class="small-button" type="button">Aktualisieren</button>
+      </div>
+      <div id="construction-queue-content"></div>
+    </section>
+
     <section class="game-layout">
       <div class="solar-system-column">
         <div id="solar-system-viewport" class="solar-system-viewport" aria-label="Sonnensystem scrollbarer Bereich"><div id="solar-system" class="solar-system" aria-label="Sonnensystem"></div></div>
@@ -222,7 +227,7 @@
       <aside id="info-panel" class="panel"></aside>
     </section>
   </main>
-  <script src="game.js?v=planet-built-indicator-20261013-1"></script>
+  <script src="game.js?v=chocolate-luxury-storage-fix-20261014-6"></script>
   <script>if ("serviceWorker" in navigator) navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{});</script>
 </body>
 </html>
