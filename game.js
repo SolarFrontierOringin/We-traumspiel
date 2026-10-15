@@ -122,7 +122,7 @@ const MARKET_RESOURCES = {
  coal:{base:5,capacity:60000,initial:60000,unit:'t'}, gas:{base:7,capacity:60000,initial:50000,unit:'t'},
  co2:{base:3,capacity:50000,initial:50000,unit:'t'}, carbon:{base:20,capacity:15000,initial:10000,unit:'t'},
  oxygen:{base:15,capacity:20000,initial:20000,unit:'t'}, crudeOil:{base:18,capacity:30000,initial:25000,unit:'L'},
- polymers:{base:40,capacity:15000,initial:12000,unit:'t'}, rubber:{base:55,capacity:12000,initial:8000,unit:'t'}, plastics:{base:65,capacity:10000,initial:6000,unit:'t'}, iron:{base:10,capacity:100000,initial:100000,unit:'t'},
+ polymers:{base:40,capacity:15000,initial:12000,unit:'t'}, rubber:{base:55,capacity:12000,initial:8000,unit:'t'}, plastics:{base:65,capacity:10000,initial:6000,unit:'t'}, wood:{base:1,capacity:100000,initial:50000,unit:'t'}, iron:{base:10,capacity:100000,initial:100000,unit:'t'},
  steel:{base:25,capacity:50000,initial:40000,unit:'t'}, silicon:{base:12,capacity:50000,initial:45000,unit:'t'},
  lithium:{base:45,capacity:20000,initial:15000,unit:'t'}, copperOre:{base:12,capacity:30000,initial:30000,unit:'t'},
  copper:{base:24,capacity:20000,initial:15000,unit:'t'}, batteries:{base:70,capacity:12000,initial:8000,unit:'t'},
@@ -299,6 +299,7 @@ const state = {
   polymers: 0,
   rubber: 0,
   plastics: 0,
+  wood: 0,
   vehicles: 0,
   electronics: 0,
   iron: 0,
@@ -378,7 +379,9 @@ const state = {
     residentialComplex: 0,
     habitat: 0,
     cocoaPlantation: 0,
-    chocolateFactory: 0
+    chocolateFactory: 0,
+    woodcutter: 0,
+    forester: 0
   },
   lastUpdate: gameNow(),
   buildMenuOpen: false,
@@ -396,6 +399,8 @@ const state = {
 };
 
 const buildingTypes = {
+  woodcutter: { name: 'Holzfäller', icon: '🪓', resource: null, rate: 0, cost: 0, text: 'Verbraucht 1 MW Strom und 0,01 t Bäume/s · produziert 0,005 t Holz/s · ohne Forschung · auf allen Planetenoberflächen baubar' },
+  forester: { name: 'Förster', icon: '🌳', resource: null, rate: 0, cost: 0, text: 'Erhöht die Regeneration der Bäume auf der Erde um 0,5 % je gebautem, mit Strom versorgtem Förster · benötigt 2 MW · Bauzeit 2 Ingame-Minuten · Baukosten: 290 t Stahl, 100 t Polymere, 150 t Chips, 100 t Glas · nur auf Planeten unter 50 °C · unbegrenzt baubar' },
   residentialHouse: { name: 'Wohnhaus', icon: '🏠', resource: null, rate: 0, cost: 1900, text: '100 Wohnplätze · 1.900 t Stahl · 900 t Baustoffe · nur auf der Erde' },
   mediumResidentialHouse: { name: 'Mittleres Wohnhaus', icon: '🏘️', resource: null, rate: 0, cost: 180, text: '150 Wohnplätze · 180 t Stahl · 250 t Baustoffe · 40 t Glas · nur auf der Erde' },
   residentialComplex: { name: 'Wohnkomplex', icon: '🏢', resource: null, rate: 0, cost: 600, text: '500 Wohnplätze · 600 t Stahl · 800 t Baustoffe · 150 t Glas · nur auf der Erde' },
@@ -553,7 +558,7 @@ const bodies = {
   sun: { name: 'Sonne', type: 'Stern', className: 'sun', temperature: 'ca. 5.500 °C Oberfläche', resources: {}, storage: {}, buildings: { solarSatellite: 0 }, orbit: 0 },
   mercury: { name: 'Merkur', type: 'Planet', className: 'mercury', temperature: '430 °C', resources: { stone: 20000, iron: 10000000, silicon: 8000000, lithium: 2000000, copperOre: 30000, uranium: 30000000, titanOre: 5000000, water: 2000000000 }, storage: {}, orbit: 150 },
   venus: { name: 'Venus', type: 'Planet', className: 'venus', temperature: '490 °C', resources: { stone: 10000000, iron: 50000000, silicon: 30000000, lithium: 5000000, copperOre: 3000000, uranium: 20000000, helium3: 20000000, co2: 100000000000000 }, atmosphere: { co2Initial: 100000000000000, pressureInitial: 92 }, storage: {}, orbit: 235 },
-  earth: { name: 'Erde', type: 'Startplanet', className: 'earth', temperature: 'ca. 15 °C Durchschnitt', resources: { stone: 20000000, coal: 15000000, gas: 20000000, iron: 200000000, lithium: 2000000, crudeOil: 6000000, copperOre: 10000000, uranium: 1000000, bauxite: 10000000, water: 1000000000 }, storage: null, orbit: 320 },
+  earth: { name: 'Erde', type: 'Startplanet', className: 'earth', temperature: 'ca. 15 °C Durchschnitt', resources: { stone: 20000000, coal: 15000000, gas: 20000000, iron: 200000000, lithium: 2000000, crudeOil: 6000000, copperOre: 10000000, uranium: 1000000, bauxite: 10000000, water: 1000000000, trees: 10000 }, storage: null, orbit: 320 },
   luna: { name: 'Luna', type: 'Mond der Erde', className: 'luna', temperature: 'ca. -20 °C Durchschnitt', resources: { stone: 3000000, ice: 1000000, iron: 2000000, silicon: 4000000, lithium: 6000000, helium3: 10000000, uranium: 3000000, bauxite: 10000000 }, storage: {}, orbit: 0, moonOf: 'earth', moonOrbit: 55 },
   mars: { name: 'Mars', type: 'Planet', className: 'mars', temperature: 'ca. -63 °C Durchschnitt', resources: { stone: 20000, coal: 20000, gas: 40000, uranium: 10000000, bauxite: 10000000 }, storage: {}, orbit: 405 },
   jupiter: { name: 'Jupiter', type: 'Gasplanet', className: 'jupiter', temperature: 'ca. -110 °C Wolkenobergrenze', resources: { helium3: 500000000, hydrogen: 5000000000, co2: 100000000 }, storage: {}, orbit: 515 },
@@ -561,8 +566,8 @@ const bodies = {
   ceres: { name: 'Ceres', type: 'Zwergplanet', className: 'ceres', temperature: 'ca. -105 °C Durchschnitt', resources: { iron: 5000000, titanium: 4000000, stone: 6000000, water: 7000000 }, storage: {}, orbit: 660 }
 };
 
-const resourceNames = { ice: 'Eis', titanOre: 'Titanerz', processedTitan: 'Aufbereitetes Titan', titanium: 'Titan', bauxite: 'Bauxit', aluminiumOxide: 'Aluminiumoxid', aluminium: 'Aluminium', co2: 'CO₂', carbon: 'Kohlenstoff', oxygen: 'Sauerstoff', stone: 'Stein', coal: 'Kohle', gas: 'Gas', iron: 'Eisen', silicon: 'Silizium', lithium: 'Lithium', copperOre: 'Kupfererz', copper: 'Kupfer', batteries: 'Batterien', buildingMaterials: 'Baustoffe', machines: 'Maschinen', glass: 'Glas', electronics: 'Elektronik', steel: 'Stahl', hydrogen: 'Wasserstoff', helium: 'Helium', helium3: 'Helium-3', crudeOil: 'Rohöl', polymers: 'Polymere', rubber: 'Gummi', plastics: 'Kunststoff', vehicles: 'Fahrzeuge', cocoaBeans: 'Kakaobohnen', chocolate: 'Schokolade', uranium: 'Uran', processedUranium: 'Aufbereitetes Uran', nuclearFuel: 'Kernbrennstoff', chips: 'Chips', water: 'Wasser', grain: 'Getreide', vegetables: 'Gemüse', food: 'Lebensmittel', algaeBiomass: 'Algenbiomasse' };
-const resourceIcons = { ice: '🧊', titanOre: '⚙️', processedTitan: '⚗️', titanium: '🔩', bauxite: '🪨', aluminiumOxide: '⚗️', aluminium: '🥈', co2: '🌫️', carbon: '⚫', oxygen: '🫧', stone: '🪨', coal: '⚫', gas: '🔥', iron: '🧲', silicon: '🔷', lithium: '🔋', copperOre: '🟠', copper: '🟤', batteries: '🔋', buildingMaterials: '🧱', machines: '⚙️', glass: '🪟', electronics: '💻', steel: '🔩', hydrogen: '💨', helium: '💨', helium3: '🧪', crudeOil: '🛢️', polymers: '🧬', rubber: '⚫', plastics: '🧴', vehicles: '🚗', cocoaBeans: '🫘', chocolate: '🍫', uranium: '☢️', processedUranium: '🧪', nuclearFuel: '⚛️', chips: '💾', water: '💧', grain: '🌾', vegetables: '🥦', food: '🥫', algaeBiomass: '🪴' };
+const resourceNames = { ice: 'Eis', titanOre: 'Titanerz', processedTitan: 'Aufbereitetes Titan', titanium: 'Titan', bauxite: 'Bauxit', aluminiumOxide: 'Aluminiumoxid', aluminium: 'Aluminium', co2: 'CO₂', carbon: 'Kohlenstoff', oxygen: 'Sauerstoff', stone: 'Stein', coal: 'Kohle', gas: 'Gas', iron: 'Eisen', silicon: 'Silizium', lithium: 'Lithium', copperOre: 'Kupfererz', copper: 'Kupfer', batteries: 'Batterien', buildingMaterials: 'Baustoffe', machines: 'Maschinen', glass: 'Glas', electronics: 'Elektronik', steel: 'Stahl', hydrogen: 'Wasserstoff', helium: 'Helium', helium3: 'Helium-3', crudeOil: 'Rohöl', polymers: 'Polymere', rubber: 'Gummi', plastics: 'Kunststoff', wood: 'Holz', vehicles: 'Fahrzeuge', cocoaBeans: 'Kakaobohnen', chocolate: 'Schokolade', trees: 'Bäume', uranium: 'Uran', processedUranium: 'Aufbereitetes Uran', nuclearFuel: 'Kernbrennstoff', chips: 'Chips', water: 'Wasser', grain: 'Getreide', vegetables: 'Gemüse', food: 'Lebensmittel', algaeBiomass: 'Algenbiomasse' };
+const resourceIcons = { ice: '🧊', titanOre: '⚙️', processedTitan: '⚗️', titanium: '🔩', bauxite: '🪨', aluminiumOxide: '⚗️', aluminium: '🥈', co2: '🌫️', carbon: '⚫', oxygen: '🫧', stone: '🪨', coal: '⚫', gas: '🔥', iron: '🧲', silicon: '🔷', lithium: '🔋', copperOre: '🟠', copper: '🟤', batteries: '🔋', buildingMaterials: '🧱', machines: '⚙️', glass: '🪟', electronics: '💻', steel: '🔩', hydrogen: '💨', helium: '💨', helium3: '🧪', crudeOil: '🛢️', polymers: '🧬', rubber: '⚫', plastics: '🧴', wood: '🪵', vehicles: '🚗', cocoaBeans: '🫘', chocolate: '🍫', trees: '🌳', uranium: '☢️', processedUranium: '🧪', nuclearFuel: '⚛️', chips: '💾', water: '💧', grain: '🌾', vegetables: '🥦', food: '🥫', algaeBiomass: '🪴' };
 
 function formatTons(value) { return `${value.toFixed(2)} t`; }
 function formatLargeTons(value) {
@@ -582,12 +587,16 @@ function getBuildingsOnPlanet(id) {
     if (state.buildings.algaeFarm === undefined) state.buildings.algaeFarm = 0;
     if (state.buildings.algaeFoodProcessor === undefined) state.buildings.algaeFoodProcessor = 0;
     if (state.buildings.observatory === undefined) state.buildings.observatory = 0;
+    if (state.buildings.forester === undefined) state.buildings.forester = 0;
+    if (state.buildings.woodcutter === undefined) state.buildings.woodcutter = 0;
     return state.buildings;
   }
   if (!bodies[id].buildings) {
-    bodies[id].buildings = { iceMine: 0, residentialHouse: 0, mediumResidentialHouse: 0, residentialComplex: 0, habitat: 0, observatory: 0, foodFactory: 0, algaeFarm: 0, algaeFoodProcessor: 0, steelworks: 0, stoneQuarry: 0, buildingMaterialsFactory: 0, coalMine: 0, gasPlant: 0, co2Extraction: 0, co2ProcessingPlant: 0, orbitalCo2Extractor: 0, researchSatellite: 0, ironMine: 0, siliconMine: 0, lithiumMine: 0, copperMine: 0, copperSmelter: 0, lithiumRefinery: 0, machineFactory: 0, glassFactory: 0, heliumExtractor: 0, fusionReactor: 0, outpost: 0, coalPowerPlant: 0, solarPlant: 0, researchLab: 0, moonBase: 0, crudeOilPump: 0, polymerFactory: 0, rubberFactory: 0, plasticFactory: 0, vehicleFactory: 0, electronicsFactory: 0, uraniumMine: 0, uraniumProcessingPlant: 0, nuclearFuelPlant: 0, nuclearReactor: 0, chipFactory: 0, solarSail: 0, solarSatellite: 0, solarProbe: 0, bauxiteMine: 0, titanMine: 0, titanProcessing: 0, titanRefinery: 0, aluminiumOxideRefinery: 0, aluminiumSmelter: 0, hydroelectricPlant: 0, greenhouse: 0, cocoaPlantation: 0 }
+    bodies[id].buildings = { iceMine: 0, residentialHouse: 0, mediumResidentialHouse: 0, residentialComplex: 0, habitat: 0, observatory: 0, foodFactory: 0, algaeFarm: 0, algaeFoodProcessor: 0, steelworks: 0, stoneQuarry: 0, buildingMaterialsFactory: 0, coalMine: 0, gasPlant: 0, co2Extraction: 0, co2ProcessingPlant: 0, orbitalCo2Extractor: 0, researchSatellite: 0, ironMine: 0, siliconMine: 0, lithiumMine: 0, copperMine: 0, copperSmelter: 0, lithiumRefinery: 0, machineFactory: 0, glassFactory: 0, heliumExtractor: 0, fusionReactor: 0, outpost: 0, coalPowerPlant: 0, solarPlant: 0, researchLab: 0, moonBase: 0, crudeOilPump: 0, polymerFactory: 0, rubberFactory: 0, plasticFactory: 0, vehicleFactory: 0, electronicsFactory: 0, uraniumMine: 0, uraniumProcessingPlant: 0, nuclearFuelPlant: 0, nuclearReactor: 0, chipFactory: 0, solarSail: 0, solarSatellite: 0, solarProbe: 0, bauxiteMine: 0, titanMine: 0, titanProcessing: 0, titanRefinery: 0, aluminiumOxideRefinery: 0, aluminiumSmelter: 0, hydroelectricPlant: 0, greenhouse: 0, cocoaPlantation: 0, woodcutter: 0, forester: 0 }
   }
   if (bodies[id].buildings.observatory === undefined) bodies[id].buildings.observatory = 0;
+  if (bodies[id].buildings.forester === undefined) bodies[id].buildings.forester = 0;
+  if (bodies[id].buildings.woodcutter === undefined) bodies[id].buildings.woodcutter = 0;
   if (bodies[id].buildings.residentialHouse === undefined) bodies[id].buildings.residentialHouse = 0;
   if (bodies[id].buildings.mediumResidentialHouse === undefined) bodies[id].buildings.mediumResidentialHouse = 0;
   if (bodies[id].buildings.residentialComplex === undefined) bodies[id].buildings.residentialComplex = 0;
@@ -613,18 +622,20 @@ function getPlanetStorage(id) {
   if (id === 'earth') return state;
   if (!bodies[id].storage) bodies[id].storage = {};
   if (bodies[id].storage.glass === undefined) bodies[id].storage.glass = 0;
+  if (bodies[id].storage.wood === undefined) bodies[id].storage.wood = 0;
   return bodies[id].storage;
 }
 function getOrbitStorage(id) {
   if (!bodies[id]) return {};
   if (!bodies[id].orbitStorage) bodies[id].orbitStorage = {};
   if (bodies[id].orbitStorage.glass === undefined) bodies[id].orbitStorage.glass = 0;
+  if (bodies[id].orbitStorage.wood === undefined) bodies[id].orbitStorage.wood = 0;
   return bodies[id].orbitStorage;
 }
 function storageAmount(id, resource) { return Number(getPlanetStorage(id)[resource] || 0); }
 function formatStorage(id) {
   const st = state.viewMode === 'orbit' ? getOrbitStorage(id) : getPlanetStorage(id);
-  const keys = ['stone','ice','coal','gas','co2','carbon','oxygen','crudeOil','polymers','rubber','plastics','iron','silicon','lithium','copperOre','copper','batteries','buildingMaterials','machines','glass','electronics','steel','hydrogen','helium','helium3','uranium','processedUranium','nuclearFuel','chips','bauxite','aluminiumOxide','aluminium','titanOre','processedTitan','titanium','water','grain','vegetables','food','algaeBiomass','cocoaBeans','chocolate'];
+  const keys = ['stone','ice','coal','gas','co2','carbon','oxygen','crudeOil','polymers','rubber','plastics','wood','iron','silicon','lithium','copperOre','copper','batteries','buildingMaterials','machines','glass','electronics','steel','hydrogen','helium','helium3','uranium','processedUranium','nuclearFuel','chips','bauxite','aluminiumOxide','aluminium','titanOre','processedTitan','titanium','water','grain','vegetables','food','algaeBiomass','cocoaBeans','chocolate'];
   const rows = keys.filter(k => Number(st[k] || 0) > 0.000001).map(k => `<div class="stat"><span>${resourceIcons[k] || ''} ${resourceNames[k] || k}</span><strong>${k === 'co2' ? formatLargeTons(st[k]) : k === 'water' ? Number(st[k]).toLocaleString('de-DE', { maximumFractionDigits: 2 }) + ' L' : formatTons(st[k])}</strong></div>`);
   const luxury = `<details class="planet-resource-section luxury-storage-section" open><summary>💎 Luxusgüter</summary><div class="planet-resource-list"><div class="stat"><span>🚗 Fahrzeuge</span><strong>${formatTons(Number(st.vehicles || 0))}</strong></div><div class="stat"><span>🍫 Schokolade</span><strong>${formatTons(Number(st.chocolate || 0))}</strong></div></div></details>`;
   return `${rows.length ? rows.join('') : '<p class="hint">Keine normalen Rohstoffe im Lager.</p>'}${luxury}`;
@@ -813,7 +824,7 @@ function foodFactoryProduction(id = state.selected) { return Number(getBuildings
 function foodFactoryElectricityUse(id = state.selected) { return Number(getBuildingsOnPlanet(id).foodFactory || 0) * 5; }
 function newBuildingPowerFactor(id = state.selected) {
   const b = getBuildingsOnPlanet(id);
-  const demand = Number(b.hydroelectricPlant || 0) * 3 + Number(b.greenhouse || 0) * 2 + Number(b.cocoaPlantation || 0) * 5 + Number(b.chocolateFactory || 0) * 5 + foodFactoryElectricityUse(id) + crudeOilElectricityUse(id) + vehicleFactoryElectricityUse(id);
+  const demand = Number(b.hydroelectricPlant || 0) * 3 + Number(b.greenhouse || 0) * 2 + Number(b.cocoaPlantation || 0) * 5 + Number(b.chocolateFactory || 0) * 5 + Number(b.forester || 0) * 2 + Number(b.woodcutter || 0) * 1 + foodFactoryElectricityUse(id) + crudeOilElectricityUse(id) + vehicleFactoryElectricityUse(id);
   return demand > 0 ? Math.min(1, electricityProduction(id) / demand) : 1;
 }
 function solarSatelliteElectricityProduction() { return Number(bodies.sun?.buildings?.solarSatellite || 0) * 10000; }
@@ -857,6 +868,7 @@ function totalBuildingsOnPlanet(id) { return Object.values(getBuildingsOnPlanet(
 
 
 const researchTypes = {
+  forester: { name: 'Förster', icon: '🌳', category: 'Umweltforschung', cost: 16000, time: 0, text: 'Schaltet das Gebäude Förster frei. Voraussetzung: Forschungsvertrag „Regenerative Veränderung“ abgeschlossen.' },
   hydroelectricPlant: { name: 'Wasserkraftwerk', icon: '💧', category: 'Industrielle Grundlagen', cost: 800, time: 180, text: 'Schaltet das Wasserkraftwerk frei. Es verbraucht 3 MW Strom und erzeugt 0,1 Liter Wasser/s aus dem Wasservorkommen der Erde.' },
   greenhouse: { name: 'Gewächshaus', icon: '🌱', category: 'Industrielle Grundlagen', cost: 1500, time: 240, text: 'Schaltet das Gewächshaus frei. Es benötigt Strom und Wasser und produziert Getreide sowie Gemüse.' },
   foodFactory: { name: 'Lebensmittelfabrik', icon: '🥫', category: 'Industrielle Grundlagen', cost: 2500, time: 300, text: 'Schaltet die Lebensmittelfabrik frei. Verarbeitet Getreide und Wasser mit Strom zu Lebensmitteln.' },
@@ -1222,6 +1234,17 @@ function formatResearchTime(seconds) {
   return `${minutes}:${String(secs).padStart(2, '0')}`;
 }
 
+function formatGameDuration(seconds) {
+  const total = Math.max(0, Math.ceil(seconds));
+  const days = Math.floor(total / 86400);
+  const hours = Math.floor((total % 86400) / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const secs = total % 60;
+  if (days > 0) return `${days} Tag${days === 1 ? '' : 'e'} · ${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  if (hours > 0) return `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  return `${minutes}:${String(secs).padStart(2, '0')}`;
+}
+
 function renderResearch() {
   const panel = document.querySelector('#research-content');
   if (!panel) return;
@@ -1368,6 +1391,14 @@ function renderResearch() {
     </div>
   </div>
 
+  <h3>🌳 Umweltforschung</h3>
+  <div class="research-tree">
+    <div class="research-card ${!!completed.forester ? 'research-done' : ''}">
+      <div><strong>🌳 Forschung: Förster</strong><small>Schaltet den Förster frei. Jeder mit Strom versorgte Förster steigert die Regeneration der Bäume um 0,5 %. Bau auf Planeten unter 50 °C; unbegrenzt viele Gebäude möglich.</small><small>🧪 16.000 Forschungspunkte</small><small class="${ensureResearchOrders().completed.regenerativeChange ? 'good' : 'warn'}">${ensureResearchOrders().completed.regenerativeChange ? '✓ Forschungsvertrag „Regenerative Veränderung“ abgeschlossen' : '🔒 Voraussetzung: Forschungsvertrag „Regenerative Veränderung“ (30.000 FP, 3 Ingame-Tage)'}</small></div>
+      <button class="research-button" data-research="forester" ${ensureResearchOrders().completed.regenerativeChange && researchAvailable() && !running && !completed.forester && Number(state.research.points || 0) >= researchTypes.forester.cost ? '' : 'disabled'}>${completed.forester ? 'Abgeschlossen' : active?.key === 'forester' ? 'Läuft …' : 'Forschen'}</button>
+    </div>
+  </div>
+
   <h3>2️⃣ Raketentechnik</h3>
   <div class="research-tree">
     <div class="research-card ${researchedAtlas1 ? 'research-done' : ''}">
@@ -1465,6 +1496,16 @@ function renderResearch() {
 }
 
 const RESEARCH_ORDER_DEFS = {
+  regenerativeChange: {
+    name: 'Regenerative Veränderung',
+    icon: '🌳',
+    description: 'Forschungsvertrag zur Erforschung des Gebäudes Förster und der natürlichen Waldregeneration.',
+    duration: 3 * 24 * 60 * 60,
+    cost: 30000,
+    rewardPoints: 0,
+    prerequisite: 'Forschungslabor auf der Erde',
+    unlock: 'Forschung „Förster“'
+  },
   kolonistenversorgung: {
     name: 'Kolonistenversorgung',
     icon: '👥',
@@ -1560,6 +1601,16 @@ function renderResearchOrders(panel) {
     <button type="button" class="research-tab" data-research-tab="tree" role="tab" aria-selected="false">Forschungsbaum</button>
     <button type="button" class="research-tab active" data-research-tab="orders" role="tab" aria-selected="true">Forschungsaufträge</button>
   </div>
+  <section class="research-order-card ${orders.completed.regenerativeChange ? 'research-done' : ''}">
+    <div class="research-order-title"><strong>🌳 Regenerative Veränderung</strong><span class="research-order-status">${orders.completed.regenerativeChange ? 'Abgeschlossen' : active?.key === 'regenerativeChange' ? 'Läuft' : hasLab ? 'Verfügbar' : 'Gesperrt'}</span></div>
+    <p>Forschungsdauer: <strong>3 Ingame-Tage</strong> · Forschungskosten: <strong>${RESEARCH_ORDER_DEFS.regenerativeChange.cost.toLocaleString('de-DE')} FP</strong></p>
+    <p class="hint">Dieser Forschungsvertrag ist Voraussetzung für die separate Forschung „Förster“ mit 16.000 FP.</p>
+    <div class="research-order-prereq ${hasLab ? 'good' : 'warn'}">${hasLab ? '✓' : '🔒'} Forschungslabor auf Erde: ${hasLab ? 'vorhanden' : 'fehlt'}</div>
+    <div class="research-order-prereq ${Number(state.research.points || 0) >= RESEARCH_ORDER_DEFS.regenerativeChange.cost || orders.completed.regenerativeChange || active?.key === 'regenerativeChange' ? 'good' : 'warn'}">${orders.completed.regenerativeChange ? '✓ Vertrag abgeschlossen' : active?.key === 'regenerativeChange' ? '✓ Forschungskosten bezahlt' : `Forschungspunkte: ${Number(state.research.points || 0).toLocaleString('de-DE')} / ${RESEARCH_ORDER_DEFS.regenerativeChange.cost.toLocaleString('de-DE')} FP`}</div>
+    ${active?.key === 'regenerativeChange' ? `<div class="research-active"><strong>🌳 Regenerative Veränderung</strong><small>${formatGameDuration(Math.max(0, RESEARCH_ORDER_DEFS.regenerativeChange.duration - (gameNow() - active.started) / 1000))} verbleiben</small><div class="research-progress"><i style="width:${Math.min(100, ((gameNow() - active.started) / (RESEARCH_ORDER_DEFS.regenerativeChange.duration * 1000)) * 100)}%"></i></div><button type="button" class="research-cancel-order">Auftrag abbrechen (Startkosten zurückerstatten)</button></div>` : ''}
+    ${!orders.completed.regenerativeChange && active?.key !== 'regenerativeChange' ? `<button type="button" class="research-start-order" data-order-start="regenerativeChange" ${hasLab && Number(state.research.points || 0) >= RESEARCH_ORDER_DEFS.regenerativeChange.cost && !active && !state.research.active ? '' : 'disabled'}>Forschung starten</button>` : ''}
+    ${orders.completed.regenerativeChange ? '<div class="research-unlock">✓ Freigeschaltet: Forschung „Förster“</div>' : ''}
+  </section>
   <section class="research-order-card ${orders.completed.kolonistenversorgung ? 'research-done' : ''}">
     <div class="research-order-title"><strong>👥 Kolonistenversorgung</strong><span class="research-order-status">${orders.completed.kolonistenversorgung ? 'Abgeschlossen' : active?.key === 'kolonistenversorgung' ? 'Läuft' : 'Verfügbar'}</span></div>
     <p>Forschungsdauer: <strong>20 Ingame-Minuten</strong> · Forschungskosten: <strong>${RESEARCH_ORDER_DEFS.kolonistenversorgung.cost.toLocaleString('de-DE')} FP</strong></p>
@@ -1597,7 +1648,7 @@ function startResearchOrder(key) {
   if (key === 'skyObservation') return startSkyObservationResearch();
   const orders = ensureResearchOrders();
   const def = RESEARCH_ORDER_DEFS[key];
-  if (!def || key !== 'kolonistenversorgung' || orders.active || orders.completed[key] || state.research.active || !researchAvailable() || Number(state.research.points || 0) < def.cost) return;
+  if (!def || !['kolonistenversorgung','regenerativeChange'].includes(key) || orders.active || orders.completed[key] || state.research.active || !researchAvailable() || Number(state.research.points || 0) < def.cost) return;
   state.research.points -= def.cost;
   orders.active = { key, started: gameNow() };
   playUiSound('research');
@@ -1673,11 +1724,19 @@ function updateResearchOrders(now) {
 function startResearch(key) {
   if (!researchAvailable() || !researchTypes[key] || state.research.active || ensureResearchOrders().active || state.research.completed[key]) return;
   if ((key === 'cocoaPlantation' || key === 'chocolateFactory') && !ensureResearchOrders().completed.kolonistenversorgung) return;
+  if (key === 'forester' && !ensureResearchOrders().completed.regenerativeChange) return;
   const r = researchTypes[key];
   if (Number(state.research.points || 0) < r.cost) return;
   if (r.chipCost && Number(state.chips || 0) < r.chipCost) return;
   state.research.points -= r.cost;
   if (r.chipCost) state.chips -= r.chipCost;
+  if (Number(r.time || 0) <= 0) {
+    state.research.completed[key] = true;
+    playUiSound('research');
+    renderResearch();
+    saveGame(false);
+    return;
+  }
   state.research.active = { key, started: gameNow() };
   renderResearch();
   saveGame(false);
@@ -1829,7 +1888,7 @@ function loadGame(showMessage = true) {
     // Neue Rohstoffvorkommen aus späteren Spielversionen auch in alten Spielständen ergänzen.
     const defaultResources = {
       mercury: { stone: 20000, iron: 10000000, silicon: 8000000, lithium: 2000000, copperOre: 30000, uranium: 30000000, titanOre: 5000000, water: 2000000000 },
-      earth: { coal: 15000000, gas: 20000000, lithium: 30000, copperOre: 10000000, crudeOil: 6000000, uranium: 1000000, bauxite: 10000000, water: 1000000000 },
+      earth: { coal: 15000000, gas: 20000000, lithium: 30000, copperOre: 10000000, crudeOil: 6000000, uranium: 1000000, bauxite: 10000000, water: 1000000000, trees: 10000 },
       luna: { stone: 3000000, ice: 1000000, lithium: 6000000, helium3: 10000000, uranium: 3000000, bauxite: 10000000 },
       venus: { stone: 10000000, iron: 50000000, silicon: 30000000, lithium: 5000000, copperOre: 3000000, uranium: 20000000, helium3: 20000000, co2: 100000000000000 },
       jupiter: { helium3: 500000000, hydrogen: 5000000000, co2: 100000000 },
@@ -1962,6 +2021,7 @@ function loadGame(showMessage = true) {
       if (body.orbitStorage) delete body.orbitStorage.concrete;
       if (body.resources) delete body.resources.concrete;
       if (!body.buildings) return;
+      body.buildings.forester = Number(body.buildings.forester || 0);
       body.buildings.lithiumMine = Number(body.buildings.lithiumMine || 0);
       body.buildings.copperMine = Number(body.buildings.copperMine || 0);
       body.buildings.copperSmelter = Number(body.buildings.copperSmelter || 0);
@@ -2362,6 +2422,7 @@ function renderSystem() {
 
     // Gebäudeübersicht Konzept 1.1: planetenabhängige, durchsuchbare Kategorien.
     const buildCategories = [
+      { title: '🌲 Forstwirtschaft', keys: ['woodcutter','forester'] },
       { title: '⛏️ Rohstoffgewinnung', keys: ['iceMine','titanMine','ironMine','stoneQuarry','coalMine','gasPlant','siliconMine','lithiumMine','copperMine','heliumExtractor','crudeOilPump','uraniumMine','bauxiteMine'] },
       { title: '🏠 Wohnraum & Kolonisten', keys: ['residentialHouse','mediumResidentialHouse','residentialComplex','habitat'] },
       { title: '🌱 Landwirtschaft & Versorgung', keys: ['greenhouse','hydroelectricPlant','cocoaPlantation'] },
@@ -2562,9 +2623,9 @@ function renderTopResources() {
       // Das Erd-Lager ist gleichzeitig `state`. Daher nur echte Rohstoffe
       // anzeigen und interne Spielvariablen wie lastUpdate/buildMenuOpen ausblenden.
       const resourceKeys = [
-        'stone','ice','coal','gas','crudeOil','polymers','rubber','plastics','co2','carbon','oxygen','iron','steel','silicon','lithium',
+        'stone','ice','coal','gas','crudeOil','polymers','rubber','plastics','wood','co2','carbon','oxygen','iron','steel','silicon','lithium',
         'copperOre','copper','batteries','buildingMaterials','machines',
-        'glass','electronics','chips','hydrogen','helium','helium3','uranium','processedUranium','nuclearFuel','bauxite','aluminiumOxide','aluminium','titanOre','processedTitan','titanium','water','grain','vegetables','food','algaeBiomass','cocoaBeans'
+        'glass','electronics','chips','hydrogen','helium','helium3','wood','uranium','processedUranium','nuclearFuel','bauxite','aluminiumOxide','aluminium','titanOre','processedTitan','titanium','water','grain','vegetables','food','algaeBiomass','cocoaBeans'
       ];
       const makeEntries = (store, isOrbit) => resourceKeys
         .filter(key => Number(store[key] || 0) > 0.000001)
@@ -2670,10 +2731,19 @@ function refreshTopResourceValues() {
   });
 }
 
+function refreshPlanetDepositValues() {
+  infoPanel.querySelectorAll('[data-deposit-resource]').forEach(el => {
+    const key = el.dataset.depositResource;
+    const amount = Number(bodies[state.selected]?.resources?.[key] || 0);
+    const strong = el.querySelector('strong');
+    if (strong) strong.textContent = `${amount.toLocaleString('de-DE', { maximumFractionDigits: 2 })} t`;
+  });
+}
+
 function resourceRows(body) {
   const entries = Object.entries(body.resources);
   if (!entries.length) return '<p class="hint">Keine abbaubaren Rohstoffe.</p>';
-  return entries.map(([key, amount]) => `<div class="stat"><span>${resourceIcons[key] || ''} ${resourceNames[key] || key}</span><strong>${(key === 'crudeOil' || key === 'water') ? amount.toLocaleString('de-DE', { maximumFractionDigits: 2 }) + ' L' : amount.toLocaleString('de-DE', { maximumFractionDigits: 2 }) + ' t'}</strong></div>`).join('');
+  return entries.map(([key, amount]) => `<div class="stat" data-deposit-resource="${key}"><span>${resourceIcons[key] || ''} ${resourceNames[key] || key}</span><strong>${(key === 'crudeOil' || key === 'water') ? amount.toLocaleString('de-DE', { maximumFractionDigits: 2 }) + ' L' : amount.toLocaleString('de-DE', { maximumFractionDigits: 2 }) + ' t'}</strong></div>`).join('');
 }
 
 function buildingCost(key, planetId = state.selected) {
@@ -2684,12 +2754,23 @@ function buildingCost(key, planetId = state.selected) {
   return b.cost;
 }
 
+function planetTemperatureCelsius(planetId) {
+  if (planetId === 'mercury') return mercuryTemperature();
+  if (planetId === 'venus') return venusTemperature();
+  const raw = String(bodies[planetId]?.temperature || '');
+  const match = raw.match(/-?\d+(?:[.,]\d+)?/);
+  return match ? Number(match[0].replace(',', '.')) : Infinity;
+}
+
 function isBuildingAllowed(key, planetId = state.selected) {
   // Gebäude mit Produktionsketten werden auf Oberflächen gebaut, niemals direkt im Orbit.
   // Kakao-Plantage und Schokoladenfabrik sind zusätzlich auf feste Oberflächen begrenzt.
+  if (key === 'woodcutter' && (state.viewMode === 'orbit' || planetId === 'sun')) return false;
   if (key === 'chipFactory' && state.viewMode === 'orbit') return false;
+  if (key === 'forester' && (state.viewMode === 'orbit' || planetId === 'sun' || planetTemperatureCelsius(planetId) >= 50)) return false;
   if (['cocoaPlantation','chocolateFactory'].includes(key) && (!['mercury','venus','earth','luna','mars','ceres'].includes(planetId) || state.viewMode === 'orbit')) return false;
   if (key === 'vehicleFactory') return planetId !== 'sun' && state.viewMode !== 'orbit' && !!state.research?.completed?.vehicleFactory;
+  if (key === 'forester' && !state.research?.completed?.forester) return false;
   if (key === 'observatory' && (planetId !== 'earth' || state.viewMode !== 'surface')) return false;
   if (housingBuildingKeys.includes(key)) {
     if (planetId === 'sun') return false;
@@ -2697,8 +2778,8 @@ function isBuildingAllowed(key, planetId = state.selected) {
     return planetId === 'earth';
   }
   // Merkur und Venus bleiben bis 50 °C vollständig gesperrt; nur Sonnensegel sind vorher erlaubt.
-  if (planetId === 'mercury' && mercuryTemperature() > 50 && key !== 'solarSail' && key !== 'iceMine' && key !== 'co2ProcessingPlant' && key !== 'iceProcessingPlant' && key !== 'algaeFoodProcessor' && key !== 'cocoaPlantation' && key !== 'chocolateFactory' && !['titanMine','titanProcessing','titanRefinery'].includes(key)) return false;
-  if (planetId === 'venus' && venusTemperature() > 50 && key !== 'solarSail' && key !== 'iceMine' && key !== 'co2Extraction' && key !== 'co2ProcessingPlant' && key !== 'iceProcessingPlant' && key !== 'algaeFoodProcessor' && key !== 'cocoaPlantation' && key !== 'chocolateFactory' && !['titanMine','titanProcessing','titanRefinery'].includes(key)) return false;
+  if (planetId === 'mercury' && mercuryTemperature() > 50 && key !== 'solarSail' && key !== 'iceMine' && key !== 'co2ProcessingPlant' && key !== 'iceProcessingPlant' && key !== 'algaeFoodProcessor' && key !== 'cocoaPlantation' && key !== 'chocolateFactory' && key !== 'woodcutter' && !['titanMine','titanProcessing','titanRefinery'].includes(key)) return false;
+  if (planetId === 'venus' && venusTemperature() > 50 && key !== 'solarSail' && key !== 'iceMine' && key !== 'co2Extraction' && key !== 'co2ProcessingPlant' && key !== 'iceProcessingPlant' && key !== 'algaeFoodProcessor' && key !== 'cocoaPlantation' && key !== 'chocolateFactory' && key !== 'woodcutter' && !['titanMine','titanProcessing','titanRefinery'].includes(key)) return false;
   // Sonnensegel gibt es auf Merkur und Venus.
   if (key === 'solarSail' && !['mercury','venus'].includes(planetId)) return false;
   if (key === 'co2Extraction' && planetId !== 'venus') return false;
@@ -2749,6 +2830,23 @@ function buildButton(key) {
     const costText = Object.entries(costs).map(([r, amount]) => `${amount.toLocaleString('de-DE')} t ${({steel:'Stahl',buildingMaterials:'Baustoffe',glass:'Glas'})[r] || r}`).join(' · ');
     const allowedText = isBuildingAllowed(key) ? '' : (key === 'habitat' ? ' · nur außerhalb von Erde und Sonne' : ' · nur auf der Erde');
     return `<div class="build-card"><div><strong>${b.icon} ${b.name}</strong><small>${b.text} · Baukosten: ${costText}${allowedText}</small></div><button class="build-resource" data-building="${key}" ${affordable ? '' : 'disabled'}>Bauen (${count || 0})</button></div>`;
+  }
+
+  if (key === 'woodcutter') {
+    const costs = { steel: 380, glass: 200, buildingMaterials: 900 };
+    const affordable = isBuildingAllowed(key, state.selected) && Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount);
+    return `<div class="build-card"><div><strong>🪓 Holzfäller</strong><small>Verbraucht 1 MW Strom und 0,01 t Bäume/s · produziert 0,005 t Holz/s · ohne Forschung · auf allen Planetenoberflächen baubar · Baukosten: 380 t Stahl · 200 t Glas · 900 t Baustoffe</small></div><button class="build-resource" data-building="woodcutter" ${affordable ? '' : 'disabled'}>Bauen (${Number(count || 0)})</button></div>`;
+  }
+
+  if (key === 'forester') {
+    const costs = { steel: 290, polymers: 100, chips: 150, glass: 100 };
+    const researched = !!state.research?.completed?.forester;
+    const contractDone = !!ensureResearchOrders().completed.regenerativeChange;
+    const queue = ensureForesterBuildQueue(state.selected);
+    const affordable = researched && contractDone && isBuildingAllowed(key, state.selected) && Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount);
+    const status = !contractDone ? ' · Voraussetzung: Forschungsvertrag „Regenerative Veränderung"' : !researched ? ' · Voraussetzung: Forschung Förster (16.000 FP)' : !isBuildingAllowed(key, state.selected) ? ' · Nur auf Planeten unter 50 °C und auf der Oberfläche baubar' : '';
+    const queueText = queue.length ? `<small class="vehicle-factory-queue">${queue.length} Förster im Bau · Bauzeit je Gebäude: 2 Ingame-Minuten</small>` : '';
+    return `<div class="build-card"><div><strong>${b.icon} ${b.name}</strong><small>${b.text}${status} · Baukosten: 290 t Stahl · 100 t Polymere · 150 t Chips · 100 t Glas</small>${queueText}</div><button class="build-resource" data-building="forester" ${affordable ? '' : 'disabled'}>Bauen (${Number(count || 0)})</button></div>`;
   }
 
   if (key === 'observatory') {
@@ -3291,6 +3389,26 @@ function buildResourceBuilding(key) {
   const storage = key === 'orbitalCo2Extractor' ? getOrbitStorage(planetId) : getPlanetStorage(planetId);
   if (!isBuildingAllowed(key, planetId)) return;
 
+  if (key === 'woodcutter') {
+    const costs = { steel: 380, glass: 200, buildingMaterials: 900 };
+    if (!isBuildingAllowed(key, planetId) || !Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount)) return;
+    for (const [r, amount] of Object.entries(costs)) storage[r] = Number(storage[r] || 0) - amount;
+    bld.woodcutter = Number(bld.woodcutter || 0) + 1;
+    playUiSound('build');
+    renderSystem(); renderInfo(); renderTopResources(); renderConstructionQueue(); saveAfterBuild();
+    return;
+  }
+
+  if (key === 'forester') {
+    const costs = { steel: 290, polymers: 100, chips: 150, glass: 100 };
+    if (!state.research?.completed?.forester || !ensureResearchOrders().completed.regenerativeChange || !isBuildingAllowed(key, planetId) || !Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount)) return;
+    for (const [r, amount] of Object.entries(costs)) storage[r] = Number(storage[r] || 0) - amount;
+    ensureForesterBuildQueue(planetId).push({ id: `forester-${Date.now()}-${Math.floor(Math.random() * 1000000)}`, started: gameNow() });
+    playUiSound('build');
+    renderSystem(); renderInfo(); renderTopResources(); renderConstructionQueue(); saveAfterBuild();
+    return;
+  }
+
   if (key === 'observatory') {
     const costs = { steel: 1000, buildingMaterials: 800, electronics: 250, glass: 200 };
     if (Number(bld.observatory || 0) >= 1 || planetId !== 'earth' || state.viewMode !== 'surface' || !Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount)) return;
@@ -3795,7 +3913,7 @@ function renderRocketWindow(body) {
       : (cargo && cargo.amount > 0 ? `${resourceIcons[cargo.resource] || ''} ${resourceNames[cargo.resource] || cargo.resource}: ${cargo.amount.toFixed(2)} ${['crudeOil','water'].includes(cargo.resource) ? 'L' : 't'}` : 'Keine Fracht');
 
     if (r.status === 'orbit' || r.status === 'landed') {
-      const returnOptions = ['stone','ice','coal','gas','crudeOil','water','grain','vegetables','food','algaeBiomass','polymers','rubber','plastics','vehicles','co2','carbon','oxygen','iron','silicon','lithium','copperOre','copper','batteries','buildingMaterials','machines','glass','electronics','uranium','processedUranium','nuclearFuel','steel','bauxite','aluminiumOxide','aluminium','titanium']
+      const returnOptions = ['stone','ice','coal','gas','crudeOil','water','grain','vegetables','food','algaeBiomass','polymers','rubber','plastics','wood','vehicles','co2','carbon','oxygen','iron','silicon','lithium','copperOre','copper','batteries','buildingMaterials','machines','glass','electronics','uranium','processedUranium','nuclearFuel','steel','bauxite','aluminiumOxide','aluminium','titanium']
         .filter(k => Number(getLocationStorage(r.to, r.status === 'landed' ? 'surface' : 'orbit')[k] || 0) > 0.000001)
         .map(k => `<option value="${k}">${resourceIcons[k] || ''} ${resourceNames[k] || k}</option>`).join('');
       const phase = r.status === 'orbit' ? '🛰️ im Orbit' : '🛬 auf der Oberfläche';
@@ -4102,6 +4220,13 @@ function bindRocketControls() {
   renderConstructionQueue();
 }
 
+function ensureForesterBuildQueue(id) {
+  if (!bodies[id] || id === 'sun') return [];
+  if (!Array.isArray(bodies[id].foresterBuildQueue)) bodies[id].foresterBuildQueue = [];
+  bodies[id].foresterBuildQueue = bodies[id].foresterBuildQueue.filter(item => Number.isFinite(Number(item?.started)) && item.id != null);
+  return bodies[id].foresterBuildQueue;
+}
+
 function renderConstructionQueue() {
   const panel = document.querySelector('#construction-queue-panel');
   const content = document.querySelector('#construction-queue-content');
@@ -4120,6 +4245,10 @@ function renderConstructionQueue() {
     const elapsed = Math.max(0, now - Number(rocketFactoryBuildStarted[id] || now));
     jobs.push({key:'rocketFactory', name:'Raketenfabrik', icon:'🚀', elapsed, duration:60000, costs:{steel:1000,buildingMaterials:2000}});
   }
+  ensureForesterBuildQueue(id).forEach((item, index) => {
+    const elapsed = Math.max(0, now - Number(item.started || now));
+    jobs.push({key:`forester-${index}`, name:'Förster', icon:'🌳', elapsed, duration:120000, costs:{steel:290,polymers:100,chips:150,glass:100}});
+  });
   if (!jobs.length) {
     content.innerHTML = '<p class="construction-queue-empty">Keine aktiven Bauaufträge auf diesem Planeten. Gebäude mit Bauzeit erscheinen hier automatisch.</p>';
     return;
@@ -4140,6 +4269,15 @@ function cancelTimedConstruction(id, key) {
     storage.steel = Number(storage.steel || 0) + 1000;
     storage.buildingMaterials = Number(storage.buildingMaterials || 0) + 2000;
     rocketFactoryBuildQueue[id] = 0; rocketFactoryBuildStarted[id] = 0;
+  } else if (String(key).startsWith('forester-')) {
+    const index = Number(String(key).slice('forester-'.length));
+    const queue = ensureForesterBuildQueue(id);
+    if (!Number.isInteger(index) || index < 0 || index >= queue.length) return;
+    queue.splice(index, 1);
+    storage.steel = Number(storage.steel || 0) + 290;
+    storage.polymers = Number(storage.polymers || 0) + 100;
+    storage.chips = Number(storage.chips || 0) + 150;
+    storage.glass = Number(storage.glass || 0) + 100;
   } else return;
   playUiSound('click');
   renderConstructionQueue(); renderTopResources(); renderSystem(); renderInfo(); saveGame(false);
@@ -4154,6 +4292,26 @@ function updateOutposts(now) {
       renderSystem(); renderInfo(); renderConstructionQueue();
     }
   });
+}
+
+function updateForesterConstruction(now) {
+  let changed = false;
+  Object.keys(bodies).forEach(id => {
+    if (id === 'sun') return;
+    const queue = ensureForesterBuildQueue(id);
+    for (let i = queue.length - 1; i >= 0; i--) {
+      if (now - Number(queue[i].started || now) < 120000) continue;
+      const bld = getBuildingsOnPlanet(id);
+      bld.forester = Number(bld.forester || 0) + 1;
+      queue.splice(i, 1);
+      changed = true;
+    }
+  });
+  if (changed) {
+    playUiSound('build');
+    renderSystem(); renderInfo(); renderTopResources(); renderConstructionQueue();
+    saveGame(false);
+  }
 }
 
 function updateRocketFactoryConstruction(now) {
@@ -4249,6 +4407,23 @@ function updateVehicleFactoryConstruction(now = gameNow()) {
   }
 }
 
+function totalPoweredForesters() {
+  return Object.keys(bodies).filter(id => id !== 'sun').reduce((sum, id) => {
+    const count = Math.max(0, Number(getBuildingsOnPlanet(id).forester) || 0);
+    return sum + Math.floor(count * newBuildingPowerFactor(id) + 1e-9);
+  }, 0);
+}
+
+function updateForestRegeneration(delta) {
+  if (!bodies.earth || !(delta > 0)) return;
+  const resources = bodies.earth.resources || (bodies.earth.resources = {});
+  if (!Number.isFinite(Number(resources.trees))) resources.trees = 10000;
+  const current = Math.max(0, Number(resources.trees) || 0);
+  const hourlyBase = current / 1000;
+  const foresterBonus = totalPoweredForesters() * 0.005;
+  resources.trees = current + hourlyBase * (1 + foresterBonus) * (delta / 3600);
+}
+
 function updateResources() {
   const now = gameNow();
   updateMarket(now);
@@ -4256,12 +4431,26 @@ function updateResources() {
   updateSolarProbeFlights();
   const delta = Math.max(0, (now - state.lastUpdate) / 1000);
   state.lastUpdate = now;
+  updateForestRegeneration(delta);
   updateVehicleFactoryConstruction(now);
+  updateForesterConstruction(now);
 
   Object.entries(bodies).forEach(([id, planet]) => {
     if (id === 'sun') return;
     const bld = getBuildingsOnPlanet(id);
     const storage = getPlanetStorage(id);
+    // Holzfäller: verbraucht lokale Bäume und Strom, Holz landet im lokalen Oberflächenlager.
+    if (Number(bld.woodcutter || 0) > 0) {
+      const powerFactor = newBuildingPowerFactor(id);
+      const treesAvailable = Math.max(0, Number(planet.resources?.trees || 0));
+      const neededTrees = 0.01 * Number(bld.woodcutter) * delta;
+      const treeFactor = neededTrees > 0 ? Math.min(1, treesAvailable / neededTrees) : 0;
+      const factor = Math.min(powerFactor, treeFactor);
+      if (factor > 0) {
+        planet.resources.trees = Math.max(0, treesAvailable - neededTrees * factor);
+        storage.wood = Number(storage.wood || 0) + 0.005 * Number(bld.woodcutter) * delta * factor;
+      }
+    }
     // Kakao-Plantage: nur mit Strom und lokal vorhandenem Wasser; Erzeugung in Kakaobohnen.
     if (Number(bld.cocoaPlantation || 0) > 0) {
       const powerFactor = newBuildingPowerFactor(id);
@@ -4759,6 +4948,7 @@ function updateResources() {
   // Dadurch bleibt sie synchron, auch wenn die Produktionswerte schneller steigen
   // als ein kompletter UI-Renderzyklus.
   refreshTopResourceValues();
+  refreshPlanetDepositValues();
   if (!updateResources.lastUiUpdate || now - updateResources.lastUiUpdate >= 500) {
     updateResources.lastUiUpdate = now;
     renderTopResources();
@@ -5466,9 +5656,9 @@ function renderEconomy() {
   const gunniDollarIncome = colonistCount * 0.1;
   const gunniDollarBalance = Math.max(0, Number(state.gunniDollar || 0));
   const formatGunniDollar = value => `${Number(value || 0).toLocaleString('de-DE', { maximumFractionDigits: 2 })} GünniDollar`;
-  const resources = [['stone','🪨','Stein'],['ice','🧊','Eis'],['coal','⚫','Kohle'],['gas','🔥','Gas'],['co2','🌫️','CO₂'],['carbon','⚫','Kohlenstoff'],['oxygen','🫧','Sauerstoff'],['crudeOil','🛢️','Rohöl'],['polymers','🧬','Polymere'],['rubber','⚫','Gummi'],['plastics','🧴','Kunststoff'],['iron','🧲','Eisen'],['steel','🔩','Stahl'],['silicon','🔷','Silizium'],['lithium','🔋','Lithium'],['copperOre','🟠','Kupfererz'],['copper','🟤','Kupfer'],['batteries','🔋','Batterien'],['buildingMaterials','🧱','Baustoffe'],['machines','⚙️','Maschinen'],['glass','🪟','Glas'],['electronics','💻','Elektronik'],['uranium','☢️','Uran'],['processedUranium','🧪','Aufbereitetes Uran'],['nuclearFuel','⚛️','Kernbrennstoff'],['chips','💾','Chips'],['helium3','🧪','Helium-3'],['bauxite','🪨','Bauxit'],['aluminiumOxide','⚗️','Aluminiumoxid'],['aluminium','🥈','Aluminium'],['water','💧','Wasser'],['grain','🌾','Getreide'],['vegetables','🥦','Gemüse'],['food','🥫','Lebensmittel'],['algaeBiomass','🪴','Algenbiomasse'],['cocoaBeans','🫘','Kakaobohnen'],['chocolate','🍫','Schokolade']];
+  const resources = [['stone','🪨','Stein'],['ice','🧊','Eis'],['coal','⚫','Kohle'],['gas','🔥','Gas'],['co2','🌫️','CO₂'],['carbon','⚫','Kohlenstoff'],['oxygen','🫧','Sauerstoff'],['crudeOil','🛢️','Rohöl'],['polymers','🧬','Polymere'],['rubber','⚫','Gummi'],['plastics','🧴','Kunststoff'],['wood','🪵','Holz'],['iron','🧲','Eisen'],['steel','🔩','Stahl'],['silicon','🔷','Silizium'],['lithium','🔋','Lithium'],['copperOre','🟠','Kupfererz'],['copper','🟤','Kupfer'],['batteries','🔋','Batterien'],['buildingMaterials','🧱','Baustoffe'],['machines','⚙️','Maschinen'],['glass','🪟','Glas'],['electronics','💻','Elektronik'],['uranium','☢️','Uran'],['processedUranium','🧪','Aufbereitetes Uran'],['nuclearFuel','⚛️','Kernbrennstoff'],['chips','💾','Chips'],['helium3','🧪','Helium-3'],['bauxite','🪨','Bauxit'],['aluminiumOxide','⚗️','Aluminiumoxid'],['aluminium','🥈','Aluminium'],['water','💧','Wasser'],['grain','🌾','Getreide'],['vegetables','🥦','Gemüse'],['food','🥫','Lebensmittel'],['algaeBiomass','🪴','Algenbiomasse'],['cocoaBeans','🫘','Kakaobohnen'],['chocolate','🍫','Schokolade']];
   const rows = resources.map(([key, icon, name]) => {
-    const amount = ['ice','co2','cocoaBeans','chocolate'].includes(key) ? Object.keys(bodies).filter(id => id !== 'sun').reduce((sum, id) => sum + Number(getPlanetStorage(id)[key] || 0) + Number(getOrbitStorage(id)[key] || 0), 0) : getPlayerResourceAmount(key, 'earth');
+    const amount = ['ice','co2','cocoaBeans','chocolate','wood'].includes(key) ? Object.keys(bodies).filter(id => id !== 'sun').reduce((sum, id) => sum + Number(getPlanetStorage(id)[key] || 0) + Number(getOrbitStorage(id)[key] || 0), 0) : getPlayerResourceAmount(key, 'earth');
     let production = 0, consumption = 0;
     if (key === 'ice') {
       production = Object.keys(bodies).filter(id => id !== 'sun').reduce((sum, id) => sum + Number(getBuildingsOnPlanet(id).iceMine || 0) * 0.2, 0);
@@ -5479,6 +5669,7 @@ function renderEconomy() {
     }
     if (key === 'carbon') { production = co2ProcessingProduction('earth', 'carbon'); consumption = 0; }
     if (key === 'oxygen') { production = co2ProcessingProduction('earth', 'oxygen'); consumption = 0; }
+    if (key === 'wood') { production = Object.keys(bodies).filter(id => id !== 'sun').reduce((sum,id) => sum + Number(getBuildingsOnPlanet(id).woodcutter || 0) * 0.005 * newBuildingPowerFactor(id) * (Number(bodies[id].resources?.trees || 0) > 0 ? 1 : 0), 0); consumption = 0; }
     if (key === 'crudeOil') { production = crudeOilProduction('earth'); consumption = Number(getBuildingsOnPlanet('earth').polymerFactory || 0) * 0.001 + rubberOilUse('earth'); }
     if (key === 'polymers') { production = Number(getBuildingsOnPlanet('earth').polymerFactory || 0) * 0.0005; consumption = 0; }
     if (key === 'rubber') { production = rubberProduction('earth'); consumption = plasticRubberUse('earth'); }
@@ -5561,7 +5752,7 @@ function renderEconomy() {
   const productionRows = productionKeys.map(k=>rowByKey[k]).filter(Boolean).join('');
   const buildingRows = Object.entries(allPlanetBuildings).map(([key,count])=>`<div class="stat economy-building-row"><span>${buildingTypes[key]?.icon || '🏭'} ${buildingTypes[key]?.name || key}</span><strong>${count}</strong></div>`).join('');
   const energyProduction = electricityProduction('earth');
-  const energyConsumption = Number(b.hydroelectricPlant || 0) * 3 + Number(b.greenhouse || 0) * 2 + Number(b.cocoaPlantation || 0) * 5 + foodFactoryElectricityUse('earth') + crudeOilElectricityUse('earth') + vehicleFactoryElectricityUse('earth');
+  const energyConsumption = Number(b.hydroelectricPlant || 0) * 3 + Number(b.greenhouse || 0) * 2 + Number(b.cocoaPlantation || 0) * 5 + Number(b.woodcutter || 0) * 1 + foodFactoryElectricityUse('earth') + crudeOilElectricityUse('earth') + vehicleFactoryElectricityUse('earth');
   const energyBalance = energyProduction - energyConsumption;
   panel.innerHTML = `
     <div class="economy-quick-overview">
