@@ -984,7 +984,17 @@ body > .planet-build-menu * {
 .solar-system-selector-upcoming.active{color:#f1eaff;border-style:solid;border-color:#8264c9;background:linear-gradient(135deg,#17152c,#0a1428);box-shadow:inset 0 0 18px rgba(124,86,220,.18)}
 .solar-system-selector-upcoming.active span{color:#c9b8ff}
 .solar-system-selector-current.active{box-shadow:0 0 12px rgba(65,151,255,.15)}
+/* Sonnensystem 2 erhält eine größere Sternenkarte, damit Noxaris weit außen liegt. */
+.solar-system.system2-expanded{width:1800px;height:1800px;min-width:1800px;min-height:1800px}
 .system2-star{position:absolute;left:50%;top:50%;width:58px;height:58px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff8d8 0%,#b7a7ff 25%,#5d4da8 60%,#191a3b 100%);box-shadow:0 0 22px rgba(153,125,255,.8),0 0 65px rgba(88,94,220,.35)}
 .orbit.noxaris-orbit{border-color:rgba(143,126,224,.36);box-shadow:0 0 18px rgba(87,91,210,.08)}
 .body.noxaris{width:48px;height:48px;border:1px solid rgba(184,173,255,.85);background:radial-gradient(circle at 28% 24%,#6e8bc1 0%,#303e75 22%,#171c42 48%,#090d20 72%,#03050d 100%);box-shadow:inset -8px -6px 12px rgba(0,0,0,.8),inset 4px 3px 8px rgba(127,166,255,.38),0 0 13px rgba(103,104,235,.75),0 0 32px rgba(124,75,220,.45),0 0 55px rgba(43,127,186,.2);overflow:visible}
 .body.noxaris::before{content:"";position:absolute;inset:-8px;border-radius:50%;background:conic-gradient(from 35deg,transparent 0 18%,rgba(116,81,205,.3) 25%,transparent 38%,rgba(64,144,204,.28) 54%,transparent 72%,rgba(160,97,229,.24) 84%,transparent 100%);filter:blur(5px);z-index:-1;pointer-events:none}
+
+/* Kolonistenanzahl direkt im ausgewählten Planetenmenü */
+.colonists-planet-count{border:1px solid #315273;border-radius:10px;padding:10px 9px;margin:8px 0;background:#0b1728}
+.colonists-planet-count strong{color:#75e09b;font-size:1.05em}
+
+
+/* Kolonisten-Shuttle */
+.colonist-shuttle-card .shuttle-field{display:grid;gap:5px;margin:10px 0;padding:10px;border:1px solid #263754;border-radius:10px;background:#0c1627}.colonist-shuttle-card .shuttle-field label{display:flex;justify-content:space-between;gap:8px;align-items:center}.colonist-shuttle-card .shuttle-field input[type=range]{width:100%;accent-color:#2776d2}.colonist-shuttle-card .shuttle-field input[type=number],.colonist-shuttle-card select{width:100%;padding:9px;border:1px solid #344967;border-radius:8px;background:#eef2f7;color:#111}.colonist-shuttle-card #launch-colonist-shuttle{width:100%;margin-top:8px}.colonist-shuttle-card .rocket-h2-launch>label{display:grid;gap:5px;margin:8px 0}

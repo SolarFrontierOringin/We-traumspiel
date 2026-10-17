@@ -6,7 +6,7 @@
   <title>Solar Frontier: Origins</title>
   <meta name="theme-color" content="#02050b">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=noxaris-mystic-20261016-1">
+  <link rel="stylesheet" href="style.css?v=build-window-fix-20261017-1">
 </head>
 <body>
 
@@ -32,24 +32,19 @@
           <g fill="#dceaff"><circle cx="36" cy="21" r="2"/><circle cx="181" cy="20" r="2"/><circle cx="202" cy="78" r="1.7"/><circle cx="48" cy="82" r="1.5"/><circle cx="154" cy="88" r="1.3"/></g>
         </svg>
       </div>
-      <div class="update-popup-kicker">🚀 GROSSES UPDATE</div>
-      <h2 id="update-popup-title">🌌 Samstag-Update</h2>
+      <div class="update-popup-kicker">📡 KLEINES UPDATE</div>
+      <h2 id="update-popup-title">Kleines Update am Donnerstag 😉</h2>
       <div class="update-popup-message">
-        <p><strong>🎉 Ein großes Update für Solar Frontier: Origins!</strong><br>Es gibt viele Neuerungen zu entdecken:</p>
-        <ul>
-          <li>🏭 <strong>Neue Gebäude</strong> für den Ausbau deines Unternehmens</li>
-          <li>📈 <strong>Farbliche Marktanzeige:</strong> Steigende und fallende Preise sind jetzt leichter zu erkennen.</li>
-          <li>🪐 <strong>Neue Planeten</strong> zum Entdecken und Erschließen</li>
-          <li>☢️ <strong>Neuer Rohstoff:</strong> Radioaktive Materialien</li>
-          <li>🛡️ <strong>Neues Lager</strong> für radioaktive Gegenstände</li>
-          <li>📦 <strong>Überarbeitete Lageranzeige</strong> für mehr Übersicht</li>
-          <li>☄️ <strong>Asteroidenabbau:</strong> Asteroiden sind nicht mehr nur eine Erscheinung! Ihr könnt sie jetzt anfliegen und mit den neuen Minerraketen abbauen. Außerdem wurde der Asteroidenpool erweitert.</li>
-          <li>📋 <strong>Neue Firmenaufträge</strong></li>
-          <li>🔬 <strong>Überarbeitete Forschung</strong> und Anpassungen bei den Forschungsverträgen</li>
-          <li>🌌 <strong>Einblick in das zweite Sonnensystem</strong> mit mystischen Planeten – weitere Inhalte folgen bald!</li>
-        </ul>
+        <p><strong>🌳 Neuer Holzbestand auf der Erde</strong><br>Auf der Erde gibt es jetzt einen neuen Holzbestand. Gewinne mit dem Sägewerk Biomasse und Bretter oder lass den Wald durch den Förster wachsen.</p>
+        <p>Zudem gibt es einen neuen Forschungsvertrag <strong>„Regenerative Veränderung“</strong>. Er führt uns dazu, Ressourcen nicht nur zu entnehmen, sondern Bestände auch zu schützen.</p>
+        <p><strong>Bleibt gespannt. Neuerungen kommen!!!</strong></p>
         <hr>
-        <p><strong>🚀 Viel Spaß beim Entdecken der neuen Inhalte!</strong><br>Das ist erst der Anfang – weitere Neuerungen folgen bald.</p>
+        <p><strong>🧑‍🚀 Mitspieler für die Entwicklerversion gesucht!</strong><br>Ich suche noch Spieler, die die Entwicklerversion spielen wollen. Eine Einweisung gibt es durch mich – per PC oder Handy. Einfach melden.</p>
+        <p><strong>Besonderheiten:</strong></p>
+        <ul>
+          <li>Alles ist freigeschaltet.</li>
+          <li>Wir suchen gemeinsam nach Fehlern.</li>
+        </ul>
       </div>
     </article>
   </section>
@@ -75,6 +70,24 @@
         <p><strong>🌌 Sonnensystem 2 wurde für die spätere Erschließung freigeschaltet.</strong></p>
       </div>
       <button id="system-failure-story-confirm" class="story-start-button" type="button">🚀 Nachricht bestätigen</button>
+    </article>
+  </section>
+
+  <!-- Einmaliges Popup nach Abschluss aller Aufgaben der Einführung -->
+  <section id="introduction-complete-popup" class="update-popup-overlay" role="dialog" aria-modal="true" aria-labelledby="introduction-complete-title" aria-hidden="true" hidden>
+    <article class="update-popup-card story-intro-card">
+      <button id="introduction-complete-close" class="update-popup-close" type="button" aria-label="Popup schließen">✕</button>
+      <div class="update-popup-art" aria-hidden="true">
+        <svg viewBox="0 0 320 104"><circle cx="246" cy="58" r="34" fill="#2776d2"/><path d="M216 49 Q232 41 247 51 T276 49 M220 68 Q236 59 253 68 T274 67" fill="none" stroke="#6ee7a8" stroke-width="7" stroke-linecap="round"/><g fill="#dceaff"><circle cx="36" cy="21" r="2"/><circle cx="181" cy="20" r="2"/><circle cx="202" cy="78" r="1.7"/><circle cx="48" cy="82" r="1.5"/></g></svg>
+      </div>
+      <div class="update-popup-kicker">🎉 EINSTIEG GESCHAFFT</div>
+      <h2 id="introduction-complete-title">Einführung abgeschlossen!</h2>
+      <div class="story-text">
+        <p><strong>Glückwunsch, Firmenleitung!</strong></p>
+        <p>Du hast alle Aufgaben der Einführung abgeschlossen und damit die Grundlagen für dein Raumfahrtunternehmen geschaffen.</p>
+        <p>🌙 Jetzt wartet die nächste Herausforderung: der Griff nach dem Mond. Baue dein Unternehmen weiter aus und bereite dich auf die nächsten Schritte im Sonnensystem vor.</p>
+      </div>
+      <button id="introduction-complete-confirm" class="story-start-button" type="button">🚀 Weiter geht’s</button>
     </article>
   </section>
 
@@ -296,7 +309,7 @@
       <aside id="info-panel" class="panel"></aside>
     </section>
   </main>
-  <script src="game.js?v=noxaris-mystic-20261016-1"></script>
+  <script src="game.js?v=build-window-fix-20261017-1"></script>
   <script>if ("serviceWorker" in navigator) navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{});</script>
 </body>
 </html>
