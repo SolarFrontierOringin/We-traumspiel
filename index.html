@@ -6,7 +6,7 @@
   <title>Solar Frontier: Origins</title>
   <meta name="theme-color" content="#02050b">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=popup-update-20261015-3">
+  <link rel="stylesheet" href="style.css?v=noxaris-mystic-20261016-1">
 </head>
 <body>
 
@@ -33,12 +33,9 @@
         </svg>
       </div>
       <div class="update-popup-kicker">📡 KLEINES UPDATE</div>
-      <h2 id="update-popup-title">Freitag Update 😉</h2>
+      <h2 id="update-popup-title">Kleines Update am Donnerstag 😉</h2>
       <div class="update-popup-message">
-        <p><strong>wichtige Änderungen.</strong><p/>
-          <p>- Neuer Planet ist hinzu gekommen, dieser bringt nicht nur einen Neuen Rohstoff ins Spiel. Der neue Rohstoff ist Hoch Strahlend und benötigt dafür ein Extra Lager das jetzt gebaut werden kann.</p>
-          <p>Markt!!! Der Markt wurde noch mal Überarbeitet. Preise Werden Farblich dargestellt. Übersicht über Preisverlauf und wie die Preisentiwcklung ist wurde hinzu gefügt. Das Spiel gibt jezt Regelmäßig an was das Lokratifste Verkaufsgeschäft ist.<p/>
-        <p><strong>🌳 Neuer Holzbestand auf der Erde</strong><br>Auf der Erde gibt es jetzt einen neuen Holzbestand. Baue Holz mit dem neuen Holzfäller ab oder lass den Wald durch den Förster wachsen.</p>
+        <p><strong>🌳 Neuer Holzbestand auf der Erde</strong><br>Auf der Erde gibt es jetzt einen neuen Holzbestand. Gewinne mit dem Sägewerk Biomasse und Bretter oder lass den Wald durch den Förster wachsen.</p>
         <p>Zudem gibt es einen neuen Forschungsvertrag <strong>„Regenerative Veränderung“</strong>. Er führt uns dazu, Ressourcen nicht nur zu entnehmen, sondern Bestände auch zu schützen.</p>
         <p><strong>Bleibt gespannt. Neuerungen kommen!!!</strong></p>
         <hr>
@@ -49,6 +46,30 @@
           <li>Wir suchen gemeinsam nach Fehlern.</li>
         </ul>
       </div>
+    </article>
+  </section>
+
+
+
+  <!-- Einmaliges Story-Popup nach Abschluss von „Das System wird versagen“ -->
+  <section id="system-failure-story-popup" class="update-popup-overlay" role="dialog" aria-modal="true" aria-labelledby="system-failure-story-title" aria-hidden="true" hidden>
+    <article class="update-popup-card story-intro-card">
+      <button id="system-failure-story-close" class="update-popup-close" type="button" aria-label="Geschichte schließen">✕</button>
+      <div class="update-popup-art" aria-hidden="true">
+        <svg viewBox="0 0 320 104"><circle cx="246" cy="58" r="34" fill="#2776d2"/><path d="M216 49 Q232 41 247 51 T276 49 M220 68 Q236 59 253 68 T274 67" fill="none" stroke="#6ee7a8" stroke-width="7" stroke-linecap="round"/><g fill="#dceaff"><circle cx="36" cy="21" r="2"/><circle cx="181" cy="20" r="2"/><circle cx="202" cy="78" r="1.7"/><circle cx="48" cy="82" r="1.5"/></g></svg>
+      </div>
+      <div class="update-popup-kicker">📡 SIGNAL ENTSCHLÜSSELT</div>
+      <h2 id="system-failure-story-title">Das System wird versagen</h2>
+      <div class="story-text">
+        <p>Die Forschungsabteilung hat es endlich geschafft, das mysteriöse Signal aus dem All zu entschlüsseln.</p>
+        <p>Die Nachricht enthält Koordinaten eines weit entfernten Sonnensystems. Doch die letzten Sekunden der Übertragung geben den Wissenschaftlern Rätsel auf.</p>
+        <p><em>„…das System wird versagen… keine Zeit mehr… sucht nach dem zweiten Ursprung…“</em></p>
+        <p>Danach bricht das Signal endgültig ab.</p>
+        <p>Die Menschheit steht vor einer Entscheidung: Ignorieren wir die Warnung oder wagen wir den Schritt ins Unbekannte?</p>
+        <p>Der Vorstand deines Unternehmens genehmigt die Vorbereitungen für eine neue Expedition. Ein zweites Sonnensystem ist entdeckt – doch was dort auf uns wartet, bleibt ungewiss.</p>
+        <p><strong>🌌 Sonnensystem 2 wurde für die spätere Erschließung freigeschaltet.</strong></p>
+      </div>
+      <button id="system-failure-story-confirm" class="story-start-button" type="button">🚀 Nachricht bestätigen</button>
     </article>
   </section>
 
@@ -112,6 +133,7 @@
         <button id="company-button" class="menu-item">🏢 <span>Unternehmen</span></button>
         <button id="colonists-button" class="menu-item">👥 <span>Kolonisten</span></button>
         <button id="research-button" class="menu-item">🔬 <span>Forschung</span></button>
+        <button id="asteroids-button" class="menu-item">☄️ <span>Asteroidenabbau</span></button>
         <button id="tasks-button" class="menu-item">📋 <span>Aufgaben</span></button>
         <div class="menu-item menu-language">
           <span>🌐 <span>Sprache</span></span>
@@ -178,6 +200,11 @@
       <div id="research-content"></div>
     </section>
 
+    <section id="asteroids-panel" class="research-panel asteroid-management-panel" hidden>
+      <div class="research-head"><div><h2>☄️ Dynamischer Asteroidenabbau</h2><div class="hint">Alle Asteroiden und Minerraketen arbeiten parallel · keine Missionsverwaltung</div></div><button id="asteroids-close" class="icon-button" type="button">✕</button></div>
+      <div id="asteroids-content"></div>
+    </section>
+
     <section id="tasks-panel" class="tasks-panel" hidden>
       <div class="tasks-head"><div><h2>📋 Aufgaben</h2><div class="hint">Einführung · Ziele und Fortschritt</div></div><button id="tasks-close" class="icon-button">✕</button></div>
       <div id="tasks-content"></div>
@@ -200,6 +227,11 @@
         <p>Baue dein Unternehmen auf, erschließe Rohstoffe, errichte Produktionsanlagen und entwickle die Infrastruktur für den interplanetaren Handel.</p>
         <h3>🌙 Erst der Anfang</h3>
         <p>Der Mond ist erst der Anfang. Mit jeder neuen Kolonie und jeder erschlossenen Welt wächst dein Unternehmen – und mit ihm die Chance, die Zukunft des Sonnensystems zu gestalten.</p>
+        <section id="chronicle-system2-story" hidden>
+          <h3>📡 Das System wird versagen</h3>
+          <p>Die Forschungsabteilung entschlüsselte einen rätselhaften Notruf aus dem All. Die Nachricht enthielt Koordinaten eines weit entfernten Sonnensystems und die Warnung: „…das System wird versagen… keine Zeit mehr… sucht nach dem zweiten Ursprung…“</p>
+          <p>Das Signal brach ab. Die Menschheit beschloss, dem Hinweis nachzugehen. Sonnensystem 2 wurde entdeckt – seine Erschließung steht noch bevor.</p>
+        </section>
       </article>
     </section>
 
@@ -249,13 +281,17 @@
 
     <section class="game-layout">
       <div class="solar-system-column">
+        <section class="solar-system-selector" aria-label="Sonnensysteme">
+          <button type="button" class="solar-system-selector-current" aria-current="true">☀️ Sonnensystem 1 <span>Unser Heimatsystem</span></button>
+          <button type="button" class="solar-system-selector-upcoming" aria-current="false">🌌 Sonnensystem 2 <span>Noxaris · unerforscht</span></button>
+        </section>
         <div id="solar-system-viewport" class="solar-system-viewport" aria-label="Sonnensystem scrollbarer Bereich"><div id="solar-system" class="solar-system" aria-label="Sonnensystem"></div></div>
         <button id="open-build-menu-button" class="open-build-menu-button" type="button" disabled>🏗️ Erst einen Planeten auswählen</button>
       </div>
       <aside id="info-panel" class="panel"></aside>
     </section>
   </main>
-  <script src="game.js?v=popup-update-20261015-3"></script>
+  <script src="game.js?v=noxaris-mystic-20261016-1"></script>
   <script>if ("serviceWorker" in navigator) navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{});</script>
 </body>
 </html>
