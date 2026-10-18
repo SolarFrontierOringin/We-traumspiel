@@ -6,3 +6,7 @@ Performance UI update
 
 menü Upade
 - Übersicht wurde gelöscht, Infos nur noch im Popup nach jeden neuen laden der seite 
+
+
+geplant
+Neues raletwn system, mit mehrfach aufträge, speit system (aktuell im test)
