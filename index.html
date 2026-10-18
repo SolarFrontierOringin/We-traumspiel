@@ -6,7 +6,7 @@
   <title>Solar Frontier: Origins</title>
   <meta name="theme-color" content="#02050b">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=build-window-fix-20261017-3">
+  <link rel="stylesheet" href="style.css?v=economy-balance-20261018">
 </head>
 <body>
 
@@ -44,6 +44,14 @@
           <li>Asteroiden tauchen nicht mehr nur auf, sondern sind jetzt fest im Spiel integriert und können abgebaut werden.</li>
           <li>Neues Lager für Strahlung</li>
           <li>Und vieles mehr!</li>
+        </ul>
+        <hr>
+        <h3>🛠️ Aktuell in Arbeit</h3>
+        <ul>
+          <li>UI-Anpassung: Dashboard Wirtschaft</li>
+          <li>Überarbeitung der Kolonisten</li>
+          <li>Anbindung neuer Spielinhalte</li>
+          <li>Anpassung der Forschung</li>
         </ul>
       </div>
     </article>
@@ -146,7 +154,6 @@
         <button id="main-menu-close" class="icon-button" type="button" onclick="document.getElementById('main-menu').hidden=true">✕</button>
       </div>
       <div class="main-menu-items">
-        <button id="news-button" class="menu-item">📰 <span>Neuigkeiten</span></button>
         <button id="economy-button" class="menu-item">📊 <span>Wirtschaft</span></button>
         <button id="company-button" class="menu-item">🏢 <span>Unternehmen</span></button>
         <button id="colonists-button" class="menu-item">👥 <span>Kolonisten</span></button>
@@ -309,7 +316,7 @@
       <aside id="info-panel" class="panel"></aside>
     </section>
   </main>
-  <script src="game.js?v=build-button-shadow-fix-20261017-1"></script>
+  <script src="game.js?v=economy-balance-20261018"></script>
   <script>if ("serviceWorker" in navigator) navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{});</script>
 </body>
 </html>
