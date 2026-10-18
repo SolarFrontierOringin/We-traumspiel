@@ -998,3 +998,34 @@ body > .planet-build-menu * {
 
 /* Kolonisten-Shuttle */
 .colonist-shuttle-card .shuttle-field{display:grid;gap:5px;margin:10px 0;padding:10px;border:1px solid #263754;border-radius:10px;background:#0c1627}.colonist-shuttle-card .shuttle-field label{display:flex;justify-content:space-between;gap:8px;align-items:center}.colonist-shuttle-card .shuttle-field input[type=range]{width:100%;accent-color:#2776d2}.colonist-shuttle-card .shuttle-field input[type=number],.colonist-shuttle-card select{width:100%;padding:9px;border:1px solid #344967;border-radius:8px;background:#eef2f7;color:#111}.colonist-shuttle-card #launch-colonist-shuttle{width:100%;margin-top:8px}.colonist-shuttle-card .rocket-h2-launch>label{display:grid;gap:5px;margin:8px 0}
+
+
+/* Reparatur: Baumenü zuverlässig als separates Fenster über dem Spiel anzeigen. */
+body > .planet-build-menu {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+.planet-storage-details {
+  margin: 12px 0;
+  border: 1px solid #263754;
+  border-radius: 12px;
+  background: #09111f;
+  overflow: hidden;
+}
+.planet-storage-details > summary {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px;
+  background: #101e32;
+  cursor: pointer;
+  list-style: none;
+  font-weight: 750;
+}
+.planet-storage-details > summary::-webkit-details-marker { display: none; }
+.planet-storage-details > summary::before { content: "▸"; color: #aab8ce; }
+.planet-storage-details[open] > summary::before { content: "▾"; }
+.planet-storage-content { padding: 4px 10px 10px; }
+.planet-storage-content > .planet-resource-section { margin-top: 8px; }
