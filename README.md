@@ -10,5 +10,8 @@ menü Upade
 - Übersicht wurde gelöscht, Infos nur noch im Popup nach jeden neuen laden der seite 
 
 
-geplant
-Neues raletwn system, mit mehrfach aufträge, speit system (aktuell im test)
+Gelante Updates
+Umbau Anpassung des kompletten Raketen Und der Flugzentrale.
+- Raketen benötigen jetzt Treibstoff
+- Raketen können von der Oberfläche im Orbit stationiert werden.
+- Raketen können Zyklische missione jetzt auch von Planeten machen die nur ein Orbit haben
