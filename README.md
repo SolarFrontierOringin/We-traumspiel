@@ -2,7 +2,9 @@ Solar Frontier by Baddy
 
 
 Performance UI update
-- wirtschaftsübersicht 
+- wirtschaftsübersicht farbliche Darstellung produktion und Vernrauch
+- Raketenflugbanenen werden im Sonnensystem angezeigt
+- Anpassung Optik flugzeiten, vergangene flugzeit (bessere darstellung)
 
 menü Upade
 - Übersicht wurde gelöscht, Infos nur noch im Popup nach jeden neuen laden der seite 
