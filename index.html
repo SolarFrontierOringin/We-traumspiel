@@ -6,7 +6,7 @@
   <title>Solar Frontier: Origins</title>
   <meta name="theme-color" content="#02050b">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=economy-balance-20261018">
+  <link rel="stylesheet" href="style.css?v=cyclic-missions-center-20261020">
 </head>
 <body>
 
@@ -33,26 +33,19 @@
         </svg>
       </div>
       <div class="update-popup-kicker">📡 NEUES UPDATE</div>
-      <h2 id="update-popup-title">Neues Update kommt heute, laufe des tage</h2>
+      <h2 id="update-popup-title">Neues Dienstag-Update</h2>
       <div class="update-popup-message">
         <ul>
-          <li><h3>neues Update ist bereits fertig, befindet sich aktuell im Test. Eine App des spiels ist auch fertig.</h3></li>
-          <li>Neue Gebäude</li>
-          <li>Neue Planeten</li>
-          <li>Einblicke in das zweite Sonnensystem mit Aufgaben und Forschungsvertrag – mehr kommt!</li>
-          <li>Anpassungen einiger Rohstoffadern</li>
-          <li>Der Markt wurde neu angepasst und verbessert.</li>
-          <li>Asteroiden tauchen nicht mehr nur auf, sondern sind jetzt fest im Spiel integriert und können abgebaut werden.</li>
-          <li>Neues Lager für Strahlung</li>
-          <li>Und vieles mehr!</li>
-        </ul>
-        <hr>
-        <h3>🛠️ Aktuell in Arbeit</h3>
-        <ul>
-          <li>UI-Anpassung: Dashboard Wirtschaft</li>
-          <li>Überarbeitung der Kolonisten</li>
-          <li>Anbindung neuer Spielinhalte</li>
-          <li>Anpassung der Forschung</li>
+          <li><strong>Wirtschaft:</strong> Die Benutzeroberfläche wurde angepasst. Das Dashboard ist jetzt farblich gekennzeichnet und zeigt übersichtlich, was produziert und was verbraucht wird.</li>
+          <li><strong>Raketen:</strong> Die Benutzeroberfläche wurde angepasst. Raketenflugbahnen sind jetzt im Sonnensystem sichtbar.</li>
+          <li>Raketen benötigen jetzt Treibstoff zum Fliegen.</li>
+          <li>Die Treibstoffraffinerie wurde neu hinzugefügt.</li>
+          <li>Mehrere Flüssigkeitslager können jetzt gebaut werden.</li>
+          <li><strong>Zyklische Missionen (Daueraufträge):</strong> Am Start- und Zielplaneten wird jeweils eine Start- und Landerampe benötigt.</li>
+          <li>Die Flugzentrale wurde vom Startbildschirm entfernt und ist jetzt über das Menü erreichbar.</li>
+          <li>Die Flugzentrale bietet eine bessere Übersicht – auch bei später mehr als 100 Flügen.</li>
+          <li>Die Unternehmensstufen wurden angepasst.</li>
+          <li>Unternehmensaufträge der Stufe 1 sind jetzt nur noch für Erde und Mond verfügbar.</li>
         </ul>
       </div>
     </article>
@@ -97,6 +90,22 @@
         <p>🌙 Jetzt wartet die nächste Herausforderung: der Griff nach dem Mond. Baue dein Unternehmen weiter aus und bereite dich auf die nächsten Schritte im Sonnensystem vor.</p>
       </div>
       <button id="introduction-complete-confirm" class="story-start-button" type="button">🚀 Weiter geht’s</button>
+    </article>
+  </section>
+
+  <!-- Einmaliges Popup nach Abschluss aller Aufgaben unter „Die Kolonisten“ -->
+  <section id="colonists-complete-popup" class="update-popup-overlay" role="dialog" aria-modal="true" aria-labelledby="colonists-complete-title" aria-hidden="true" hidden>
+    <article class="update-popup-card story-intro-card">
+      <button id="colonists-complete-close" class="update-popup-close" type="button" aria-label="Popup schließen">✕</button>
+      <div class="update-popup-art" aria-hidden="true">
+        <svg viewBox="0 0 320 104"><circle cx="246" cy="58" r="34" fill="#2776d2"/><path d="M216 49 Q232 41 247 51 T276 49 M220 68 Q236 59 253 68 T274 67" fill="none" stroke="#6ee7a8" stroke-width="7" stroke-linecap="round"/><g fill="#dceaff"><circle cx="36" cy="21" r="2"/><circle cx="181" cy="20" r="2"/><circle cx="202" cy="78" r="1.7"/><circle cx="48" cy="82" r="1.5"/></g></svg>
+      </div>
+      <div class="update-popup-kicker">🎉 DIE ERSTEN KOLONISTEN</div>
+      <h2 id="colonists-complete-title">Wir sind da!</h2>
+      <div class="story-text">
+        <p>Wir haben es geschaft, die ersten Kolonisten sind unseren Unternehmen hinzu gekommen. Jetzt liegt es an uns wie wir weiter machen</p>
+      </div>
+      <button id="colonists-complete-confirm" class="story-start-button" type="button">🚀 Weiter</button>
     </article>
   </section>
 
@@ -160,6 +169,8 @@
         <button id="colonists-button" class="menu-item">👥 <span>Kolonisten</span></button>
         <button id="research-button" class="menu-item">🔬 <span>Forschung</span></button>
         <button id="asteroids-button" class="menu-item">☄️ <span>Asteroidenabbau</span></button>
+        <button id="flight-center-button" class="menu-item">🚀 <span>Flugzentrale</span></button>
+        <button id="cyclic-missions-button" class="menu-item">🔁 <span>Zyklische Missionen</span></button>
         <button id="tasks-button" class="menu-item">📋 <span>Aufgaben</span></button>
         <div class="menu-item menu-language">
           <span>🌐 <span>Sprache</span></span>
@@ -229,6 +240,22 @@
     <section id="asteroids-panel" class="research-panel asteroid-management-panel" hidden>
       <div class="research-head"><div><h2>☄️ Dynamischer Asteroidenabbau</h2><div class="hint">Alle Asteroiden und Minerraketen arbeiten parallel · keine Missionsverwaltung</div></div><button id="asteroids-close" class="icon-button" type="button">✕</button></div>
       <div id="asteroids-content"></div>
+    </section>
+
+    <section id="cyclic-missions-panel" class="flight-center-panel cyclic-missions-panel" hidden>
+      <div class="flight-center-head">
+        <div><h2>🔁 Zyklische Missionen</h2><div class="hint">Wiederkehrende Flüge · nach Startplanet gruppiert</div></div>
+        <button id="cyclic-missions-close" class="icon-button" type="button" aria-label="Zyklische Missionen schließen">✕</button>
+      </div>
+      <div id="cyclic-missions-content"></div>
+    </section>
+
+    <section id="flight-center-panel" class="flight-center-panel" hidden>
+      <div class="flight-center-head">
+        <div><h2>🚀 Flugzentrale</h2><div class="hint">Raketenflotte · Produktion · Flugsteuerung · Fracht · Stationierung</div></div>
+        <button id="flight-center-close" class="icon-button" type="button">✕</button>
+      </div>
+      <div id="flight-center-content"></div>
     </section>
 
     <section id="tasks-panel" class="tasks-panel" hidden>
@@ -317,7 +344,7 @@
       <aside id="info-panel" class="panel"></aside>
     </section>
   </main>
-  <script src="game.js?v=economy-balance-20261018"></script>
+  <script src="game.js?v=orbital-co2-extractor-build-status-20261020"></script>
   <script>if ("serviceWorker" in navigator) navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{});</script>
 </body>
 </html>

@@ -1029,3 +1029,247 @@ body > .planet-build-menu {
 .planet-storage-details[open] > summary::before { content: "▾"; }
 .planet-storage-content { padding: 4px 10px 10px; }
 .planet-storage-content > .planet-resource-section { margin-top: 8px; }
+
+
+/* Wirtschafts-Dashboard: Produktions-/Verbrauchsbilanz je Ressource */
+.economy-resource-row{
+  display:grid;
+  grid-template-columns:minmax(0,1.2fr) minmax(65px,.65fr) minmax(82px,1fr) minmax(82px,1fr);
+  gap:8px;
+  align-items:center;
+  padding:10px;
+  margin:7px 0;
+  border:1px solid #263754;
+  border-radius:11px;
+  border-bottom:1px solid #263754;
+  background:#102033;
+}
+.economy-resource-row.surplus{background:linear-gradient(110deg,rgba(20,105,65,.35),rgba(9,17,31,.96));border-color:#27875a}
+.economy-resource-row.shortage{background:linear-gradient(110deg,rgba(135,38,48,.38),rgba(9,17,31,.96));border-color:#a84450}
+.economy-resource-row.balanced{background:linear-gradient(110deg,rgba(30,91,150,.35),rgba(9,17,31,.96));border-color:#347fc0}
+.economy-resource-name,.economy-flow-value{display:flex;flex-direction:column;gap:4px;min-width:0}
+.economy-resource-name{font-weight:700;overflow-wrap:anywhere}
+.economy-stock{font-size:12px;color:#b7c7dd;overflow-wrap:anywhere}
+.economy-flow-value small{font-size:11px;color:#b7c7dd}
+.economy-flow-value strong{font-size:13px;overflow-wrap:anywhere}
+.economy-resource-row.surplus .economy-flow-value:nth-child(2) strong{color:#75e09b}
+.economy-resource-row.shortage .economy-flow-value:nth-child(3) strong{color:#ff8585}
+.economy-resource-row.balanced .economy-flow-value strong{color:#80c8ff}
+@media(max-width:430px){
+  .economy-resource-row{grid-template-columns:minmax(0,1fr) minmax(55px,.7fr);gap:6px;padding:8px}
+  .economy-resource-name{font-size:13px}
+  .economy-stock,.economy-flow-value strong{font-size:11px}
+  .economy-flow-value{padding-top:4px;border-top:1px solid rgba(150,180,220,.18)}
+  .economy-flow-value small{font-size:10px}
+}
+
+
+/* Erfolgsbenachrichtigung für Marktgeschäfte */
+.market-toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom, 0px));transform:translateX(-50%);z-index:9999;width:max-content;max-width:calc(100vw - 28px);padding:14px 18px;border:1px solid #3f9b68;border-radius:14px;background:#0b2119;color:#baf7ce;box-shadow:0 12px 36px rgba(0,0,0,.5);font-weight:750;font-size:14px;line-height:1.45;text-align:center;opacity:1;transition:opacity .25s ease,transform .25s ease}
+.market-toast-hide{opacity:0;transform:translate(-50%,10px)}
+.market-toast[hidden]{display:none}
+
+
+/* Sichtbarer Raketenverkehr im Sonnensystem */
+#rocket-layer {
+  position:absolute;
+  inset:0;
+  width:1060px;
+  height:1060px;
+  z-index:7;
+  pointer-events:none;
+  overflow:visible;
+}
+.rocket-flight-paths {
+  position:absolute;
+  inset:0;
+  width:1060px;
+  height:1060px;
+  overflow:visible;
+}
+.rocket-flight-line {
+  stroke:#7cc7ff;
+  stroke-width:2.5;
+  stroke-dasharray:8 7;
+  opacity:.78;
+  filter:drop-shadow(0 0 3px rgba(80,180,255,.8));
+}
+.rocket-flight-line.returning {
+  stroke:#ffd36a;
+  stroke-dasharray:5 6;
+}
+.rocket-marker {
+  position:absolute;
+  transform:translate(-50%,-50%);
+  display:flex;
+  align-items:center;
+  gap:3px;
+  z-index:8;
+  white-space:nowrap;
+  padding:3px 5px;
+  border:1px solid #7cc7ff;
+  border-radius:9px;
+  background:rgba(3,12,27,.94);
+  box-shadow:0 0 12px rgba(39,118,210,.65);
+  color:#eef4ff;
+  font-size:12px;
+  line-height:1.2;
+}
+.rocket-marker-icon { font-size:20px; line-height:1; }
+.rocket-marker-label {
+  display:block;
+  max-width:100px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  font-weight:700;
+}
+.rocket-marker.rocket-returning {
+  border-color:#ffd36a;
+  box-shadow:0 0 12px rgba(255,211,106,.45);
+}
+.rocket-marker.rocket-landed { opacity:.8; }
+@media(max-width:430px) {
+  .rocket-marker { padding:2px 4px; font-size:10px; }
+  .rocket-marker-icon { font-size:17px; }
+  .rocket-marker-label { max-width:72px; }
+}
+
+/* Flüssigtreibstofflager */
+.liquid-tank-card{border-color:#376080;background:linear-gradient(135deg,#0c1b2c,#0c1627)}
+.liquid-tank-summary{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px;font-size:13px;color:#d9e4f4}
+.liquid-tank-summary strong{color:#75e09b;white-space:nowrap}
+.liquid-tank-progress{height:10px;background:#1d2a3d;border:1px solid #31445d;border-radius:99px;overflow:hidden;margin:6px 0 3px}
+.liquid-tank-progress i{display:block;height:100%;background:linear-gradient(90deg,#2776d2,#39c5df);border-radius:99px;transition:width .2s ease}
+.rocket-stationing{margin:10px 0;padding:11px;border:1px solid #315273;border-radius:12px;background:#0b1728}
+.rocket-stationing h3{margin:0 0 6px}
+.rocket-stationing-row{display:grid;grid-template-columns:minmax(0,1fr) 95px;gap:8px;margin:8px 0}
+.rocket-stationing-row label{display:grid;gap:5px;font-size:13px}
+.rocket-stationing-row input{width:100%;padding:8px;border:1px solid #344967;border-radius:8px;background:#eef2f7;color:#111}
+.rocket-stationing select{width:100%}
+.rocket-stationing #station-rockets-to-orbit{width:100%}
+.rocket-stationed-summary{font-size:12px;line-height:1.7;color:#aab8ce;margin-top:9px}
+.rocket-stationed-summary strong{color:#eef4ff;margin-right:5px}
+@media(max-width:430px){.rocket-stationing-row{grid-template-columns:minmax(0,1fr) 80px}}
+
+
+/* Ausklappbares Flüssiglager mit Füllstandsbalken */
+.liquid-storage-section summary{display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer;list-style:none;padding:10px 11px;font-weight:700}
+.liquid-storage-section summary::-webkit-details-marker{display:none}
+.liquid-storage-section summary strong{font-size:12px;color:#aab8ce;font-weight:600;text-align:right}
+.liquid-storage-meter{margin:4px 0 10px}
+.liquid-storage-meter-label{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:#c7d4e8;margin-bottom:5px}
+.liquid-storage-meter-label strong{color:#75e09b}
+.liquid-storage-progress{height:10px;background:#1d2a3d;border:1px solid #31445d;border-radius:99px;overflow:hidden}
+.liquid-storage-progress i{display:block;height:100%;background:linear-gradient(90deg,#2776d2,#39c5df);border-radius:99px;transition:width .2s ease}
+
+
+/* Zentrale Flugverwaltung als eigener Menüpunkt */
+.flight-center-panel{border:1px solid #263754;border-radius:16px;background:#09111f;padding:14px;margin-bottom:8px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.flight-center-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+#flight-center-content{display:grid;gap:10px}
+.flight-center-panel .rocket-window{margin-top:10px}
+.flight-center-panel .rocket-box{display:grid;gap:9px}
+@media(max-width:430px){.flight-center-panel{padding:10px}.flight-center-head{gap:6px}}
+
+/* Flugzentrale – Sci-Fi-Leitstelle */
+.flight-center-panel{position:relative;overflow:hidden;border:1px solid #24506f;background:radial-gradient(ellipse at 95% 0%,rgba(28,115,173,.2),transparent 38%),linear-gradient(160deg,#071321 0%,#09111f 55%,#050b14 100%);box-shadow:0 16px 42px rgba(0,0,0,.38),inset 0 1px rgba(112,203,255,.08)}
+.flight-center-panel:before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.18;background-image:linear-gradient(rgba(71,157,210,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(71,157,210,.12) 1px,transparent 1px);background-size:28px 28px;mask-image:linear-gradient(to bottom right,#000,transparent 75%)}
+.flight-center-head,.flight-center-panel #flight-center-content{position:relative;z-index:1}
+.flight-center-head{align-items:center;padding-bottom:12px;border-bottom:1px solid #1b3c56}
+.flight-center-head h2{letter-spacing:.04em;text-shadow:0 0 18px rgba(63,183,255,.25)}
+.flight-center-command-banner{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:14px;border:1px solid #244b68;border-radius:13px;background:linear-gradient(110deg,rgba(15,46,72,.92),rgba(8,20,34,.92));box-shadow:inset 0 1px rgba(123,211,255,.08)}
+.flight-center-command-banner h3{margin:4px 0;font-size:clamp(17px,3vw,22px);color:#eaf7ff}
+.flight-center-command-banner p{margin:0;color:#9fb8d1;font-size:13px;line-height:1.45}
+.flight-center-kicker{display:block;color:#57caff;font-size:10px;font-weight:900;letter-spacing:.18em}
+.flight-center-signal{display:flex;align-items:center;gap:7px;white-space:nowrap;color:#83efbd;font-size:10px;font-weight:900;letter-spacing:.08em}
+.flight-center-signal i{width:7px;height:7px;border-radius:50%;background:#5ef0a9;box-shadow:0 0 11px #5ef0a9}
+.flight-center-overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:10px 0 12px}
+.flight-center-location,.flight-center-metric{min-width:0;padding:10px;border:1px solid #1d3a53;border-radius:11px;background:linear-gradient(145deg,#0e2033,#091522)}
+.flight-center-location{grid-column:1/-1;display:grid;grid-template-columns:auto 1fr;column-gap:9px;align-items:center}
+.flight-center-location .flight-center-kicker{grid-column:1/-1;margin-bottom:3px}
+.flight-center-location strong{font-size:15px}
+.flight-center-location small{color:#9bb2c9;font-size:11px;text-align:right}
+.flight-center-metric span,.flight-center-metric small{display:block;color:#9bb2c9;font-size:11px;line-height:1.35}
+.flight-center-metric strong{display:block;margin:5px 0;color:#7edcff;font-size:24px;line-height:1.1;text-shadow:0 0 14px rgba(70,192,255,.15)}
+.flight-center-tab-layout{display:grid;gap:10px}
+.flight-center-tabs{display:flex;gap:7px;overflow-x:auto;padding:5px 2px 9px;scrollbar-width:thin;scrollbar-color:#2e6587 #091522;border-bottom:1px solid #1d3c56}
+.flight-center-tab{flex:0 0 auto;min-height:42px;padding:9px 12px;border:1px solid #24445e;border-radius:9px;background:#0b1a2a;color:#b8d0e6;font-size:12px;white-space:nowrap;transition:background .15s,border-color .15s,box-shadow .15s}
+.flight-center-tab:hover{background:#102a40;border-color:#347aa2}
+.flight-center-tab.active{border-color:#47c4ff;background:linear-gradient(135deg,#15517a,#10324f);color:#fff;box-shadow:0 0 0 1px rgba(71,196,255,.12),0 0 17px rgba(30,151,220,.14)}
+.flight-center-tab-heading{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:4px 2px 8px;border-bottom:1px solid #1e405b;margin-bottom:8px}
+.flight-center-tab-heading span{font-size:15px;font-weight:850;color:#e9f7ff}
+.flight-center-tab-heading small{font-size:10px;color:#66c9f4;text-transform:uppercase;letter-spacing:.12em}
+.flight-center-tab-panel{min-width:0;padding:11px;border:1px solid #1a3b55;border-radius:12px;background:rgba(5,14,24,.76)}
+.flight-center-tab-panel[hidden]{display:none!important}
+.flight-center-fleet-list{display:grid;gap:7px;margin:8px 0}
+.flight-center-fleet-card{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:9px;align-items:center;padding:9px 10px;border:1px solid #1c3a53;border-radius:10px;background:linear-gradient(100deg,#0d1d2e,#091522)}
+.flight-center-fleet-icon{display:grid;place-items:center;width:32px;height:32px;border:1px solid #285575;border-radius:9px;background:#102941;font-size:17px}
+.flight-center-fleet-card strong,.flight-center-fleet-card small{display:block}
+.flight-center-fleet-card strong{font-size:13px;color:#e6f4ff}
+.flight-center-fleet-card small{margin-top:3px;color:#8fa9c2;font-size:10px}
+.flight-center-fleet-card b{min-width:34px;padding:6px 8px;border:1px solid #285675;border-radius:8px;background:#0b2437;color:#78d8ff;text-align:center;font-size:15px}
+.flight-center-intro,.flight-center-limit{padding:10px;border:1px solid #23435c;border-radius:10px;background:#0b1a29}
+.flight-center-limit{color:#c5d9ea}
+.flight-center-tab-panel .rocket-type-card,.flight-center-tab-panel .rocket-stationing,.flight-center-tab-panel .transport-route,.flight-center-tab-panel .rocket-factory-queue,.flight-center-tab-panel .rocket-flight{border-color:#254760;box-shadow:inset 0 1px rgba(117,201,255,.025)}
+.flight-center-tab-panel .rocket-type-card{margin:7px 0;background:linear-gradient(145deg,#0e2032,#0a1624)}
+.flight-center-tab-panel .rocket-type-card>summary{padding:12px;color:#e4f3ff}
+.flight-center-tab-panel .rocket-type-card[open]>summary{color:#78d9ff;border-bottom:1px solid #214862}
+.flight-center-tab-panel .rocket-type-content{padding:10px}
+.flight-center-tab-panel .rocket-build-box,.flight-center-tab-panel .rocket-h2-launch{border-color:#23445d;background:#0b1a29}
+.flight-center-tab-panel button:not(.flight-center-tab){box-shadow:0 2px 0 rgba(0,0,0,.2)}
+.flight-center-tab-panel select,.flight-center-tab-panel input:not([type=range]){border:1px solid #35536b}
+.flight-center-tab-panel .rocket-progress{height:8px;border-radius:99px;background:#14283a;overflow:hidden}
+.flight-center-tab-panel .rocket-progress i{background:linear-gradient(90deg,#248bd1,#50d8ff);box-shadow:0 0 10px rgba(80,216,255,.45)}
+@media(max-width:600px){.flight-center-panel{padding:10px}.flight-center-command-banner{align-items:flex-start;flex-direction:column}.flight-center-signal{align-self:flex-end}.flight-center-overview{grid-template-columns:repeat(2,minmax(0,1fr))}.flight-center-location{grid-column:1/-1}.flight-center-location small{text-align:left}.flight-center-tab{padding:9px 10px}.flight-center-tab-panel{padding:8px}.flight-center-tab-heading{align-items:flex-start;flex-direction:column;gap:3px}}
+
+
+/* Eigenständige, nach Startplaneten gruppierte Verwaltung zyklischer Missionen */
+.cyclic-missions-panel{border-color:#24506f}
+.cyclic-mission-banner{margin-bottom:10px}
+.cyclic-mission-overview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 0 14px}
+.cyclic-mission-overview>div{min-width:0;padding:12px;border:1px solid #1d3a53;border-radius:11px;background:linear-gradient(145deg,#0e2033,#091522)}
+.cyclic-mission-overview small,.cyclic-mission-overview strong{display:block}
+.cyclic-mission-overview small{color:#9bb5cc;font-size:11px}
+.cyclic-mission-overview strong{margin-top:4px;color:#7edcff;font-size:24px}
+.cyclic-create-panel{border:1px solid #244760;border-radius:12px;background:rgba(5,14,24,.82);overflow:hidden}
+.cyclic-create-panel>summary{padding:13px 14px;cursor:pointer;font-weight:800;color:#e9f7ff;list-style:none}
+.cyclic-create-panel>summary::-webkit-details-marker{display:none}
+.cyclic-create-panel>summary:before{content:'▸';display:inline-block;margin-right:8px;color:#57caff}
+.cyclic-create-panel[open]>summary:before{content:'▾'}
+.cyclic-create-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:12px;border-top:1px solid #1d3a53}
+.cyclic-create-grid label{display:grid;gap:5px;min-width:0;color:#c7d8e8;font-size:12px;font-weight:700}
+.cyclic-create-grid select,.cyclic-create-grid input{width:100%;min-width:0;padding:10px;border:1px solid #35536b;border-radius:8px;background:#eef2f7;color:#111;font:inherit}
+.cyclic-create-grid .cyclic-create-button{grid-column:1/-1;width:100%;min-height:44px}
+.cyclic-create-panel>.hint{padding:0 12px 12px;margin:0}
+.cyclic-missions-list-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:18px 0 8px}
+.cyclic-missions-list-head h3{margin:0;font-size:16px}
+.cyclic-missions-list-head span{color:#8fb6d1;font-size:12px}
+.cyclic-missions-list{display:grid;gap:8px}
+.cyclic-planet-group{border:1px solid #244760;border-radius:12px;background:linear-gradient(145deg,#0c1b2a,#07111d);overflow:hidden}
+.cyclic-planet-group>summary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px;cursor:pointer;list-style:none}
+.cyclic-planet-group>summary::-webkit-details-marker{display:none}
+.cyclic-planet-group>summary:before{content:'▸';color:#57caff;margin-right:3px}
+.cyclic-planet-group[open]>summary:before{content:'▾'}
+.cyclic-planet-name{flex:1;font-weight:850;color:#e9f7ff}
+.cyclic-planet-count{padding:4px 8px;border:1px solid #285575;border-radius:99px;background:#0b2437;color:#78d8ff;font-size:11px;white-space:nowrap}
+.cyclic-planet-missions{display:grid;gap:8px;padding:0 9px 9px}
+.cyclic-mission-card{min-width:0;padding:11px;border:1px solid #1d3e58;border-radius:10px;background:rgba(5,15,25,.82)}
+.cyclic-mission-card-head{display:flex;align-items:center;gap:9px;min-width:0}
+.cyclic-mission-rocket{display:grid;place-items:center;flex:0 0 36px;height:36px;border:1px solid #285575;border-radius:10px;background:#102941;font-size:19px}
+.cyclic-mission-card-title{flex:1;min-width:0}
+.cyclic-mission-card-title strong,.cyclic-mission-card-title small{display:block;overflow-wrap:anywhere}
+.cyclic-mission-card-title strong{font-size:13px;color:#e6f4ff}
+.cyclic-mission-card-title small{margin-top:3px;color:#8fa9c2;font-size:10px}
+.cyclic-mission-status{padding:5px 7px;border:1px solid #285575;border-radius:8px;background:#0b2437;color:#8be9b1;font-size:10px;font-weight:800;white-space:nowrap}
+.cyclic-mission-status.is-waiting{border-color:#80622b;background:#2b2110;color:#ffd36a}
+.cyclic-mission-status.is-paused{border-color:#49576a;background:#172131;color:#bdc9d8}
+.cyclic-mission-route{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0;padding:9px;border-radius:8px;background:#0a1927;color:#c7d8e8;font-size:12px}
+.cyclic-route-line{color:#57caff;font-size:17px}
+.cyclic-mission-details{display:flex;flex-wrap:wrap;gap:7px 14px;color:#9bb5cc;font-size:11px}
+.cyclic-mission-details strong{color:#eaf7ff}
+.cyclic-mission-state{margin-top:8px;padding-top:8px;border-top:1px solid #1d3449;color:#b9cee0;font-size:12px;line-height:1.45;overflow-wrap:anywhere}
+.cyclic-mission-actions{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin-top:9px}
+.cyclic-mission-actions button{padding:8px 10px;font-size:12px}
+.cyclic-mission-actions small{color:#9bb5cc;font-size:11px}
+.cyclic-empty-state{padding:20px 14px;border:1px dashed #2b4a63;border-radius:12px;color:#9bb5cc;text-align:center;line-height:1.5}
+@media(max-width:500px){.cyclic-create-grid{grid-template-columns:1fr}.cyclic-mission-overview{gap:6px}.cyclic-mission-overview>div{padding:9px}.cyclic-mission-overview strong{font-size:21px}.cyclic-mission-card-head{align-items:flex-start;flex-wrap:wrap}.cyclic-mission-status{margin-left:45px}.cyclic-mission-route{gap:5px}.cyclic-mission-details{display:grid;grid-template-columns:1fr 1fr}}
