@@ -6,7 +6,7 @@
   <title>Solar Frontier: Origins</title>
   <meta name="theme-color" content="#02050b">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=cyclic-missions-center-20261020">
+  <link rel="stylesheet" href="style.css?v=asteroid-belt-20261021">
 </head>
 <body>
 
@@ -32,21 +32,18 @@
           <g fill="#dceaff"><circle cx="36" cy="21" r="2"/><circle cx="181" cy="20" r="2"/><circle cx="202" cy="78" r="1.7"/><circle cx="48" cy="82" r="1.5"/><circle cx="154" cy="88" r="1.3"/></g>
         </svg>
       </div>
-      <div class="update-popup-kicker">📡 NEUES UPDATE</div>
-      <h2 id="update-popup-title">Neues Dienstag-Update</h2>
+      <div class="update-popup-kicker">📡 NEUES MITTWOCH-UPDATE</div>
+      <h2 id="update-popup-title">!!Achtung neues Mittwoch update!!</h2>
       <div class="update-popup-message">
+        <p><strong>⚠️ !! UNTERNEHMEN ist gesperrt bis zum Abschluss der Aufgabe!!</strong></p>
         <ul>
-          <li><h3>Neues Update befindet sich bereits in Planung und wird aktuell getestet. Ihr könnt gespannt sein was nun frolgt. Einige Planeten wurden noch mal stark angepasst. Es gibt für alle Planeten jetzt eien Atmosphäre</h3></li>
-          <li><strong>Wirtschaft:</strong> Die Benutzeroberfläche wurde angepasst. Das Dashboard ist jetzt farblich gekennzeichnet und zeigt übersichtlich, was produziert und was verbraucht wird.</li>
-          <li><strong>Raketen:</strong> Die Benutzeroberfläche wurde angepasst. Raketenflugbahnen sind jetzt im Sonnensystem sichtbar.</li>
-          <li>Raketen benötigen jetzt Treibstoff zum Fliegen.</li>
-          <li>Die Treibstoffraffinerie wurde neu hinzugefügt.</li>
-          <li>Mehrere Flüssigkeitslager können jetzt gebaut werden.</li>
-          <li><strong>Zyklische Missionen (Daueraufträge):</strong> Am Start- und Zielplaneten wird jeweils eine Start- und Landerampe benötigt.</li>
-          <li>Die Flugzentrale wurde vom Startbildschirm entfernt und ist jetzt über das Menü erreichbar.</li>
-          <li>Die Flugzentrale bietet eine bessere Übersicht – auch bei später mehr als 100 Flügen.</li>
-          <li>Die Unternehmensstufen wurden angepasst.</li>
-          <li>Unternehmensaufträge der Stufe 1 sind jetzt nur noch für Erde und Mond verfügbar.</li>
+          <li>Diverse Fixes durchgeführt.</li>
+          <li>Asteroiden werden auf der Karte des Sonnensystems angezeigt.</li>
+          <li>Neues Gebäude: <strong>Unternehmenszentrum</strong>.</li>
+          <li>Neue Aufgaben wurden ergänzt.</li>
+          <li>Neue Ansicht der Gebäudekarten im Baumenü.</li>
+          <li>Luna und Venus haben eine Atmosphäre. Diese muss einen Wert von 1,0 Bar erreichen, damit Kolonisten in Gebäuden leben können. Davor können sie nur im Habitat leben. Das Habitat bekommt im nächsten Update Unterhaltskosten.</li>
+          <li>Damit beginnt langsam das Terraforming der Planeten.</li>
         </ul>
       </div>
     </article>
@@ -166,7 +163,7 @@
       </div>
       <div class="main-menu-items">
         <button id="economy-button" class="menu-item">📊 <span>Wirtschaft</span></button>
-        <button id="company-button" class="menu-item">🏢 <span>Unternehmen</span></button>
+        <button id="company-headquarters-button" class="menu-item" hidden>🏢 <span>Unternehmenszentrale</span></button>
         <button id="colonists-button" class="menu-item">👥 <span>Kolonisten</span></button>
         <button id="research-button" class="menu-item">🔬 <span>Forschung</span></button>
         <button id="asteroids-button" class="menu-item">☄️ <span>Asteroidenabbau</span></button>
@@ -299,6 +296,11 @@
       <div id="company-content"></div>
     </section>
 
+    <section id="company-headquarters-panel" class="flight-center-panel company-headquarters-panel" hidden>
+      <div class="flight-center-head"><div><h2>🏢 Unternehmenszentrale</h2><div class="hint">Unternehmensstufe und Finanzen</div></div><button id="company-headquarters-close" class="icon-button" type="button">✕</button></div>
+      <div id="company-headquarters-content"></div>
+    </section>
+
     <section id="economy-panel" class="economy-panel" hidden>
       <div class="economy-head">
         <div>
@@ -345,7 +347,7 @@
       <aside id="info-panel" class="panel"></aside>
     </section>
   </main>
-  <script src="game.js?v=orbital-co2-extractor-build-status-20261020"></script>
+  <script src="game.js?v=company-headquarters-20261021"></script>
   <script>if ("serviceWorker" in navigator) navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{});</script>
 </body>
 </html>
