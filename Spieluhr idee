@@ -1,0 +1,64 @@
+Solar Frontier: Origins – Konzept zur Spielzeitbeschleunigung
+
+1. Neue Spielzeit
+
+Die Spielzeit wird zentral beschleunigt.
+
+- x1: 1 reale Minute = 20 Spielminuten
+- x3: 1 reale Minute = 60 Spielminuten
+- x5: 1 reale Minute = 100 Spielminuten
+- x10: 1 reale Minute = 200 Spielminuten
+
+Ein Spieltag umfasst 24 Spielstunden.
+
+Geschwindigkeit| Dauer eines Spieltags
+x1| 72 Minuten
+x3| 24 Minuten
+x5| 14 Minuten 24 Sekunden
+x10| 7 Minuten 12 Sekunden
+
+2. Alle Spielsysteme verwenden dieselbe Spielzeit
+
+Die zentrale Spieluhr steuert:
+
+- Gebäudeproduktion und Rohstoffverbrauch
+- Stromerzeugung und Stromverbrauch
+- Forschung und Forschungsaufträge
+- Bauzeiten und Bauwarteschlange
+- Kolonistenwachstum und Versorgung
+- Ressourcenregeneration und Waldwachstum
+- Raketenflüge und Transportzeiten
+- Marktpreisverläufe und zeitabhängige Spielereignisse
+
+3. Produktion und Rohstoffreserven
+
+Durch die beschleunigte Spielzeit würden bisherige Produktionsraten pro realer Minute deutlich stärker wirken.
+
+Deshalb werden Produktionsraten schrittweise neu balanciert:
+
+- Minen fördern weniger Rohstoffe pro Spielsekunde.
+- Verarbeitende Fabriken werden an die angepassten Rohstoffmengen angepasst.
+- Verbrauch, Produktion und Strombedarf bleiben aufeinander abgestimmt.
+- Bestehende Weltreserven werden nicht pauschal reduziert.
+
+Ziel ist eine schnellere Spielentwicklung, ohne dass Rohstoffe unverhältnismäßig schnell erschöpft werden.
+
+4. Technische Umsetzung
+
+Die Spielgeschwindigkeit wird über eine zentrale Spielzeitberechnung gesteuert. Alle zeitabhängigen Systeme greifen auf dieselbe Spielzeit zurück.
+
+Die Geschwindigkeit darf nicht doppelt angewendet werden. Produktionsmengen müssen aus der tatsächlich vergangenen Spielzeit berechnet werden, nicht aus der Anzahl der Berechnungsdurchläufe.
+
+5. Test und Balance
+
+Die Umstellung erfolgt schrittweise:
+
+1. Zentrale Spieluhr und Geschwindigkeitsstufen implementieren.
+2. Produktions- und Verbrauchsraten prüfen und anpassen.
+3. Forschung, Bauzeiten, Strom und Kolonistenversorgung testen.
+4. Simulationen über 1, 7 und 30 Spieltage durchführen.
+5. Bestehende Spielstände und laufende Aufträge auf Kompatibilität prüfen.
+
+Ziel
+
+Solar Frontier: Origins soll schneller voranschreiten und sich lebendiger anfühlen. Gleichzeitig sollen Rohstoffmanagement, Industrieausbau, Forschung und Energieversorgung langfristig interessante Entscheidungen bleiben.
