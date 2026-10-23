@@ -6,7 +6,7 @@
   <title>Solar Frontier: Origins</title>
   <meta name="theme-color" content="#02050b">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=stock-dynamic-20261023">
+  <link rel="stylesheet" href="style.css?v=terraform-help-20261023">
 </head>
 <body>
 
@@ -15,8 +15,8 @@
     <article class="update-popup-card">
       <button id="update-popup-close" class="update-popup-close" type="button" aria-label="Updatefenster schließen">✕</button>
       <nav class="update-popup-navigation" aria-label="Update-Seiten">
-        <button type="button" class="update-popup-page-button active" data-update-page="1" aria-current="page">Seite 1 · Freitag-Update</button>
-        <button type="button" class="update-popup-page-button" data-update-page="2">Seite 2 · Vorheriges Update</button>
+        <button type="button" class="update-popup-page-button active" data-update-page="1" aria-current="page">Seite 1 · Neues Update</button>
+        <button type="button" class="update-popup-page-button" data-update-page="2">Seite 2 · Alte Updates</button>
       </nav>
       <div class="update-popup-art" aria-hidden="true">
         <svg viewBox="0 0 320 104" role="img" aria-label="Rakete über einem Planeten">
@@ -36,34 +36,35 @@
         </svg>
       </div>
       <section class="update-popup-page" data-update-page-content="1">
-        <div class="update-popup-kicker">📡 FREITAG-UPDATE & ANKÜNDIGUNGEN</div>
-        <h2 id="update-popup-title">Freitag Update 🫡</h2>
-        <div class="update-popup-message">
-          <ul>
-            <li><strong>Neue Gebäude:</strong> 🏗🏗Nickelmine, Stromspeicher und Graphitproduktion.🧱🏗</li>
-            <li><strong>Neuer Rohstoff Nickel:</strong> Nickel kann abgebaut werden und benötigt zuvor Forschung.</li>
-            <li><strong>Drei KI-Unternehmen:</strong> Ihr könnt ihren Umsatz ansehen, ihre Aktien kaufen und Dividenden kassieren.</li>
-            <li><strong>Anpassungen:</strong> Einige Menüpunkte wurden überarbeitet.</li>
-            <li><h3><strong>Planeten haben jetzt alle eine Atmosphäre.</strong></h3></li>
-            <li>Die Kolonisten können auf Planeten  bis 1 Bar Druck der Atmosphäre nur in Habitate leben. Habitate sind Kostenpflichtig geworden.</li>
-            <li>Es gibt ein Neues Lager (Gaslager). ihr Könnt prodozierte Gase auf jedenen Planeten feei setzten.</li>
-          </ul>
-        </div>
-        <div class="update-popup-footnote">Viel Spaß beim Entdecken der Neuerungen! 🚀</div>
-      </section>
-      <section class="update-popup-page" data-update-page-content="2" hidden>
-        <div class="update-popup-kicker">📡 VORHERIGES UPDATE</div>
-        <h2>Neue Gebäude für dein Raumfahrtunternehmen</h2>
+        <div class="update-popup-kicker">📡 NEUES UPDATE & ANKÜNDIGUNGEN</div>
+        <h2 id="update-popup-title">Neue Gebäude für dein Raumfahrtunternehmen</h2>
         <div class="update-popup-message">
           <p><strong>🏗️ Neue Produktions- und Energiegebäude</strong></p>
           <ul>
             <li><strong>Nickelmine:</strong> Ein neues Gebäude für den Nickelabbau.</li>
             <li><strong>Synthetische Graphitproduktion:</strong> Graphit kann nun industriell hergestellt werden.</li>
             <li><strong>Batteriespeicher I:</strong> Speichert Energie und unterstützt die Stromversorgung.</li>
+            <li><strong>Neue Hilfe im Menü:</strong> Erklärungen und ein Spielhandbuch helfen dir bei den Spielfunktionen.</li>
           </ul>
           <p>Die neuen Gebäude erweitern die Möglichkeiten für Rohstoffproduktion und Energiemanagement.</p>
         </div>
         <div class="update-popup-footnote">Weitere Ankündigungen und neue Änderungen erscheinen hier bei künftigen Updates.</div>
+      </section>
+      <section class="update-popup-page" data-update-page-content="2" hidden>
+        <div class="update-popup-kicker">📡 ÄLTERES MITTWOCH-UPDATE</div>
+        <h2>!!Achtung neues Mittwoch update!!</h2>
+        <div class="update-popup-message">
+          <p><strong>⚠️ !! UNTERNEHMEN ist gesperrt bis zum Abschluss der Aufgabe!!</strong></p>
+          <ul>
+            <li>Diverse Fixes durchgeführt.</li>
+            <li>Asteroiden werden auf der Karte des Sonnensystems angezeigt.</li>
+            <li>Neues Gebäude: <strong>Unternehmenszentrum</strong>.</li>
+            <li>Neue Aufgaben wurden ergänzt.</li>
+            <li>Neue Ansicht der Gebäudekarten im Baumenü.</li>
+            <li>Luna und Venus haben eine Atmosphäre. Diese muss einen Wert von 1,0 Bar erreichen, damit Kolonisten in Gebäuden leben können. Davor können sie nur im Habitat leben. Das Habitat bekommt im nächsten Update Unterhaltskosten.</li>
+            <li>Damit beginnt langsam das Terraforming der Planeten.</li>
+          </ul>
+        </div>
       </section>
     </article>
   </section>
@@ -199,6 +200,7 @@
         </div>
         <button id="save-menu-button" class="menu-item">💾 <span>Spiel</span></button>
         <button id="introduction-button" class="menu-item">📖 <span>Chronik</span></button>
+        <button id="help-button" class="menu-item">❔ <span>Hilfe & Spielhandbuch</span></button>
       </div>
     </section>
 
@@ -279,6 +281,36 @@
       <div class="tasks-head"><div><h2>📋 Aufgaben</h2><div class="hint">Einführung · Ziele und Fortschritt</div></div><button id="tasks-close" class="icon-button">✕</button></div>
       <div id="tasks-content"></div>
     </section>
+
+    <section id="help-panel" class="help-panel" hidden>
+      <div class="help-head">
+        <div><h2>❔ Hilfe & Spielhandbuch</h2><div class="hint">Erklärungen zu den Spielsystemen und ein Assistent für die ersten Schritte</div></div>
+        <button id="help-close" class="icon-button" type="button" aria-label="Hilfe schließen">✕</button>
+      </div>
+      <div class="help-actions">
+        <button id="help-guide-start" type="button">🚀 Schritt-für-Schritt-Assistent starten</button>
+        <button id="help-show-all" type="button" class="small-button">📚 Alle Themen</button>
+      </div>
+      <label class="help-search-label" for="help-search">🔎 Im Handbuch suchen</label>
+      <input id="help-search" class="help-search" type="search" placeholder="z. B. Nickel, Strom, Aktien …" autocomplete="off">
+      <div id="help-category-list" class="help-category-list" aria-label="Hilfe-Kategorien"></div>
+      <div id="help-articles" class="help-articles" aria-live="polite"></div>
+    </section>
+
+    <section id="help-guide-overlay" class="update-popup-overlay" role="dialog" aria-modal="true" aria-labelledby="help-guide-title" hidden>
+      <article class="update-popup-card help-guide-card">
+        <button id="help-guide-close" class="update-popup-close" type="button" aria-label="Assistent schließen">✕</button>
+        <div class="update-popup-art" aria-hidden="true"><svg viewBox="0 0 320 104"><circle cx="250" cy="58" r="34" fill="#2776d2"/><path d="M220 49 Q236 41 251 51 T280 49 M224 68 Q240 59 257 68 T278 67" fill="none" stroke="#6ee7a8" stroke-width="7" stroke-linecap="round"/><g fill="#dceaff"><circle cx="36" cy="21" r="2"/><circle cx="181" cy="20" r="2"/><circle cx="202" cy="78" r="1.7"/><circle cx="48" cy="82" r="1.5"/></g></svg></div>
+        <div class="update-popup-kicker">🧭 DEIN SPIELASSISTENT</div>
+        <h2 id="help-guide-title">Gemeinsam starten</h2>
+        <div id="help-guide-step-content" class="help-guide-content"></div>
+        <div class="help-guide-progress"><span id="help-guide-progress-text">Schritt 1 von 5</span><div class="help-guide-progress-track"><i id="help-guide-progress-bar"></i></div></div>
+        <div class="help-guide-controls"><button id="help-guide-back" type="button" class="small-button">← Zurück</button><button id="help-guide-next" type="button">Weiter →</button></div>
+      </article>
+    </section>
+    <button id="floating-help-button" class="floating-help-button" type="button" aria-label="Hilfe öffnen" title="Hilfe öffnen">?</button>
+
+
 
     <section id="introduction-panel" class="introduction-panel" hidden>
       <div class="introduction-head">

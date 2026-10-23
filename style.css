@@ -1553,3 +1553,14 @@ body > .planet-build-menu .planet-build-header {
 .stock-chart.stock-up{color:#75e09b}
 .stock-chart.stock-down{color:#ff7c7c}
 .stock-chart-wrap small{display:block;margin-top:5px;color:#aab8ce;font-size:11px}
+
+
+/* Hilfe-Handbuch und interaktiver Spielassistent */
+.help-panel{border:1px solid #263754;border-radius:16px;background:#09111f;padding:14px;margin-bottom:8px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.help-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.help-head h2{margin:0 0 5px}
+.help-actions{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}.help-search-label{display:block;font-weight:700;margin:12px 0 6px}.help-search{width:100%;padding:11px 12px;border:1px solid #344967;border-radius:10px;background:#0c1627;color:#eef4ff;font:inherit}
+.help-category-list{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0}.help-category-button{width:auto;padding:8px 10px;border:1px solid #344967;background:#0c1627;color:#dceaff}.help-category-button.active{background:#2776d2;border-color:#63a9f2;color:#fff}
+.help-articles{display:grid;gap:9px}.help-article{border:1px solid #263754;border-radius:12px;background:#0c1627;overflow:hidden}.help-article summary{padding:12px;cursor:pointer;font-weight:750;list-style:none}.help-article summary::-webkit-details-marker{display:none}.help-article summary::after{content:'＋';float:right;color:#82cfff}.help-article[open] summary::after{content:'−'}.help-article-body{padding:0 12px 12px;color:#c7d4e8;line-height:1.55}.help-article-body p{margin:6px 0}.help-article-body ul{padding-left:20px;margin:6px 0}.help-empty{padding:12px;border:1px dashed #344967;border-radius:10px;color:#aab8ce}
+.floating-help-button{position:fixed;right:14px;bottom:16px;z-index:5000;width:48px;height:48px;padding:0;border:2px solid #9ed9ff;border-radius:50%;background:#125aa2;color:#fff;font-size:25px;font-weight:900;box-shadow:0 5px 20px #0009}.floating-help-button:hover{background:#2776d2}
+.help-guide-card{width:min(100%,540px)}.help-guide-content{min-height:145px;padding:12px;border:1px solid #263754;border-radius:12px;background:#0c1627;color:#dce7f8;line-height:1.6}.help-guide-content h3{margin:0 0 8px;color:#fff}.help-guide-content p{margin:7px 0}.help-guide-content ul{padding-left:21px}.help-guide-progress{margin-top:13px;color:#aab8ce;font-size:13px}.help-guide-progress-track{height:7px;margin-top:6px;background:#1d2a3d;border-radius:8px;overflow:hidden}.help-guide-progress-track i{display:block;height:100%;width:20%;background:#55b7ff;transition:width .2s}.help-guide-controls{display:flex;justify-content:space-between;gap:8px;margin-top:12px}.help-guide-controls button{min-width:105px}
+@media(max-width:430px){.help-head{gap:7px}.help-head h2{font-size:20px}.help-actions button{width:100%}.floating-help-button{right:10px;bottom:10px;width:44px;height:44px}}

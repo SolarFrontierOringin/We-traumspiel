@@ -8018,6 +8018,91 @@ function setupAICompanies() {
   });
 }
 
+
+const SOLAR_HELP_TOPICS = [
+  {category:'Grundlagen',title:'Erste Schritte',keywords:'start spielbeginn anfang',body:'<p>Beginne mit den Aufgaben und baue die ersten benötigten Gebäude. Die Aufgaben helfen dir, wichtige Grundlagen Schritt für Schritt kennenzulernen.</p><ul><li>Prüfe zuerst die Aufgaben.</li><li>Wähle einen Planeten aus, um seine Informationen und Gebäude zu sehen.</li><li>Behalte Rohstoffe, Lager und Stromversorgung im Blick.</li></ul>'},
+  {category:'Grundlagen',title:'Planeten und Rohstoffe',keywords:'planet erde luna mars merkur venus eisen nickel graphit rohstoff',body:'<p>Wähle einen Himmelskörper in der Sonnensystemansicht aus, um seine verfügbaren Rohstoffe und Informationen anzusehen. Nicht jeder Rohstoff ist auf jedem Planeten vorhanden.</p><p>Ein Rohstoffvorkommen ist begrenzt. Prüfe vor dem Bau, ob der passende Rohstoff am Standort verfügbar ist.</p>'},
+  {category:'Gebäude & Produktion',title:'Gebäude bauen',keywords:'bau baumenü gebäude kosten bauzeit',body:'<p>Öffne bei einem Planeten die Gebäudeübersicht. Dort siehst du die verfügbaren Gebäude und – sofern angezeigt – Kosten, Voraussetzungen und Bauzeit.</p><p>Ein Gebäude kann Rohstoffe, Strom oder eine Freischaltung durch Forschung benötigen. Lies die Angaben auf der Gebäudekarte vor dem Bau.</p>'},
+  {category:'Gebäude & Produktion',title:'Produktionsketten verstehen',keywords:'produktion verbrauch fabrik eisen stahl graphit nickel',body:'<p>Viele Produkte entstehen in mehreren Schritten. Ein weiterverarbeitendes Gebäude benötigt die passenden Einsatzstoffe aus dem Lager oder aus vorgelagerten Produktionsgebäuden.</p><ul><li>Prüfe die Produktion und den Verbrauch.</li><li>Stelle sicher, dass benötigte Rohstoffe vorhanden sind.</li><li>Wenn die Produktion stockt, kontrolliere Rohstoffbestand, Strom und Freischaltungen.</li></ul>'},
+  {category:'Energie',title:'Strom und Stromspeicher',keywords:'strom energie mw megawatt speicher batterie ladeleistung entladeleistung',body:'<p>Stromerzeuger liefern Energie, Gebäude verbrauchen sie. Vergleiche die erzeugte Leistung mit dem aktuellen Verbrauch.</p><p>Stromspeicher verschieben Energie zeitlich: Sie können Strom aufnehmen und später wieder abgeben. Ein Speicher ersetzt keine dauerhafte Stromquelle, wenn über längere Zeit mehr verbraucht als erzeugt wird.</p>'},
+  {category:'Forschung',title:'Forschung und Freischaltungen',keywords:'forschung forschungspunkte fp technologie nickelmine',body:'<p>Im Forschungsmenü findest du verfügbare Forschungsprojekte und ihre Voraussetzungen. Manche Gebäude oder Rohstoffe werden erst nach Abschluss einer passenden Forschung zugänglich.</p><p>Wenn etwas noch nicht gebaut werden kann, prüfe zuerst, ob eine Forschung oder Aufgabe fehlt.</p>'},
+  {category:'Transport & Raumfahrt',title:'Raketen und Transporte',keywords:'rakete fracht flugzeit transport orbit flugzentrale',body:'<p>Die Flugzentrale verwaltet Raketen und Transporte. Prüfe vor dem Start Ziel, verfügbare Rakete, Fracht und Flugstatus.</p><p>Für einen Transport müssen passende Kapazität und verfügbare Ladung vorhanden sein. Achte darauf, ob eine Mission Hin- und Rückflug oder weitere Bedingungen verwendet.</p>'},
+  {category:'Transport & Raumfahrt',title:'Asteroidenabbau',keywords:'asteroid asteroidenabbau miner ionium uran',body:'<p>Im Menü Asteroidenabbau findest du die verfügbaren Asteroiden und die dazugehörigen Abbauoptionen. Prüfe die enthaltenen Rohstoffe und die Voraussetzungen der eingesetzten Technik.</p>'},
+  {category:'Wirtschaft',title:'Wirtschaft und Unternehmenszentrale',keywords:'wirtschaft geld günnidollar unternehmenszentrale einnahmen ausgaben',body:'<p>Das Wirtschaftsmenü zeigt wirtschaftliche Informationen deines Unternehmens. In der Unternehmenszentrale findest du zusätzliche Finanzübersichten, wenn sie für deinen Spielstand verfügbar ist.</p><p>Behalte Einnahmen und Ausgaben im Auge, damit laufende Kosten und geplante Investitionen zusammenpassen.</p>'},
+  {category:'Wirtschaft',title:'KI-Unternehmen, Aktien und Dividenden',keywords:'ki unternehmen helios nova nasga aktien aktienmarkt umsatz dividende anteile',body:'<p>Im Menü <strong>KI-Unternehmen</strong> kannst du Informationen zu den KI-Firmen ansehen und – sofern der Handel verfügbar ist – Aktien kaufen oder verkaufen.</p><p>Dividenden hängen von den Regeln und der finanziellen Lage des jeweiligen Unternehmens ab. Der angezeigte voraussichtliche Betrag ist keine Garantie für eine künftige Auszahlung.</p><p>Aktienkurse können sich verändern. Kaufe daher nur, wenn du die möglichen Schwankungen einkalkulierst.</p>'},
+  {category:'Wirtschaft',title:'Markt und Rohstoffpreise',keywords:'markt marktplatz preise kaufen verkaufen handel rohstoffe',body:'<p>Im Markt kannst du verfügbare Rohstoffe handeln. Preise können schwanken und Kauf- sowie Verkaufspreise voneinander abweichen.</p><p>Vergleiche den Preis mit deinem aktuellen Lagerbestand und deiner Produktionsplanung, bevor du handelst.</p>'},
+  {category:'Kolonisten',title:'Kolonisten und Versorgung',keywords:'kolonisten bevölkerung habitat nahrung wasser wachstum atmosphäre druck sauerstoff',body:'<p>Kolonisten benötigen geeignete Lebensbedingungen, freien Wohnraum sowie Versorgung mit Nahrung und Wasser. Normale Wohngebäude benötigen mindestens 1,05 bar und 18–25 % Sauerstoff in der Atmosphäre. Habitate besitzen eine eigene Lebenserhaltung.</p><p>Wenn Kolonisten nicht einziehen oder sich die Bevölkerung nicht wie erwartet entwickelt, kontrolliere den Atmosphärenstatus, verfügbare Unterkünfte und die Versorgung des Standorts.</p>'},
+  {category:'Spielverwaltung',title:'Speichern und Spielgeschwindigkeit',keywords:'speichern spielstand laden autosave geschwindigkeit x1 x2 x3 x5 x10',body:'<p>Nutze das Spielmenü für die verfügbaren Speicher- und Ladefunktionen. Das Spiel speichert außerdem bestimmte Änderungen automatisch.</p><p>Über die Spielgeschwindigkeit kannst du den Ablauf der Spielzeit beschleunigen. Bei höherer Geschwindigkeit laufen zeitbasierte Vorgänge entsprechend schneller ab.</p>'},
+  {category:'Terraforming',title:'Terraforming und Atmosphäre aufbauen',keywords:'terraforming atmosphäre atmosphärendruck bar co2 sauerstoff stickstoff gas regulator planet luna venus kolonie kolonisten habitat',body:'<p><strong>Terraforming</strong> bedeutet, die Atmosphäre eines Himmelskörpers gezielt aufzubauen und ihre Zusammensetzung zu verbessern. Wähle den gewünschten Planeten oder Luna aus und öffne die Atmosphären-Ansicht auf der Oberfläche.</p><ol><li>Baue bei Bedarf ein <strong>Gas- und Kohlenstofflager</strong>, um freigegebene Gase lokal zu lagern.</li><li>Stelle die benötigten Gase her oder transportiere sie zum Zielkörper.</li><li>In der Atmosphären-Ansicht kannst du vorhandene Gase aus dem Oberflächenlager in die Atmosphäre abgeben. Prüfe vor jeder Freigabe die Gasart und Menge.</li><li>Der <strong>Atmosphären-Regulator</strong> gibt automatisch bis zu 0,2 t CO₂ pro Ingame-Sekunde aus dem lokalen Oberflächenlager ab. Ist kein CO₂ vorhanden, pausiert er und setzt fort, sobald wieder CO₂ im Lager liegt.</li><li>Kontrolliere danach den Atmosphärendruck und den Sauerstoffanteil in der Planetenansicht.</li></ol><p>Der Druck steigt abhängig von der freigegebenen Gasmenge und den Eigenschaften des Himmelskörpers. Ein höherer Druck allein bedeutet noch nicht, dass die Atmosphäre für normale Wohngebäude geeignet ist.</p>'},
+  {category:'Terraforming',title:'Atmosphäre: Voraussetzungen für Kolonisten',keywords:'kolonisten kolonist wohngebäude habitat 1,05 bar 0,9 bar sauerstoff o2 18 25 prozent freigabe',body:'<p>Für <strong>normale Wohngebäude</strong> müssen beide Bedingungen gleichzeitig erfüllt sein:</p><ul><li><strong>Atmosphärendruck mindestens 1,05 bar</strong></li><li><strong>Sauerstoffanteil zwischen 18 % und 25 %</strong></li></ul><p>Wenn der Druck unter 1,05 bar liegt oder der Sauerstoffanteil außerhalb dieses Bereichs liegt, bleiben normale Wohngebäude für Kolonisten gesperrt.</p><p><strong>Habitate</strong> verfügen über eigene Lebenserhaltung und können unabhängig von der Freigabe normaler Wohngebäude genutzt werden. Die Spielanzeige markiert die Atmosphäre unter 0,9 bar als kritisch; prüfe den Status des jeweiligen Himmelskörpers vor der Ansiedlung.</p><p><strong>Tipp:</strong> Öffne die Atmosphären-Ansicht und beobachte sowohl den Druck in bar als auch den Sauerstoffanteil. Gib nicht einfach nur Sauerstoff ab, ohne die Gesamtgasmenge und den Anteil im Blick zu behalten.</p>'},
+];
+
+function setupHelpSystem(){
+  const panel=document.querySelector('#help-panel');
+  const menu=document.querySelector('#main-menu');
+  const menuButton=document.querySelector('#help-button');
+  const floatingButton=document.querySelector('#floating-help-button');
+  const closeButton=document.querySelector('#help-close');
+  const search=document.querySelector('#help-search');
+  const categoryList=document.querySelector('#help-category-list');
+  const articles=document.querySelector('#help-articles');
+  const guide=document.querySelector('#help-guide-overlay');
+  const guideTitle=document.querySelector('#help-guide-title');
+  const guideContent=document.querySelector('#help-guide-step-content');
+  const guideProgressText=document.querySelector('#help-guide-progress-text');
+  const guideProgressBar=document.querySelector('#help-guide-progress-bar');
+  const guideBack=document.querySelector('#help-guide-back');
+  const guideNext=document.querySelector('#help-guide-next');
+  if(!panel||!articles||!guide) return;
+  const categories=['Alle Themen',...new Set(SOLAR_HELP_TOPICS.map(topic=>topic.category))];
+  let selectedCategory='Alle Themen';
+  const guideSteps=[
+    {title:'1. Überblick gewinnen',body:'<p>Willkommen bei <strong>Solar Frontier: Origins</strong>! Dein Unternehmen wächst Schritt für Schritt. Du musst nicht alles auf einmal lernen.</p><p><strong>Dein erster Anlaufpunkt:</strong> Öffne das Menü und sieh dir die Aufgaben an. Sie geben dir konkrete nächste Ziele.</p>'},
+    {title:'2. Planeten und Gebäude',body:'<p>Wähle einen Planeten in der Sonnensystemansicht aus. Prüfe die dortigen Rohstoffe und öffne die Gebäudeübersicht.</p><p>Bevor du baust, lies Kosten, Voraussetzungen und mögliche Forschungshinweise auf der Gebäudekarte.</p>'},
+    {title:'3. Rohstoffe und Produktion',body:'<p>Gebäude können Rohstoffe abbauen oder verarbeiten. Achte darauf, welche Materialien eine Produktionsanlage benötigt und was sie herstellt.</p><p>Wenn etwas nicht produziert, prüfe Lagerbestand, Rohstoffvorkommen, Forschung und Strom.</p>'},
+    {title:'4. Forschung und Energie',body:'<p>Mit Forschung schaltest du weitere Möglichkeiten frei. Öffne das Forschungsmenü, wenn ein Gebäude oder Rohstoff noch gesperrt ist.</p><p>Vergleiche bei der Energie die Stromerzeugung mit dem Verbrauch. Speicher helfen, Energie zu einem späteren Zeitpunkt zu nutzen.</p>'},
+    {title:'5. Wirtschaft ausbauen',body:'<p>Später kannst du Transporte, Kolonistenversorgung, Markt und KI-Unternehmen nutzen. Kontrolliere regelmäßig deine Einnahmen, Ausgaben und Lagerbestände.</p><p>Aktienkurse können schwanken und Dividenden sind nicht garantiert. Nutze das Spielhandbuch jederzeit über das ❔-Symbol.</p><p><strong>Fertig!</strong> Du kannst den Assistenten später erneut starten.</p>'}
+  ];
+  function renderCategories(){
+    categoryList.innerHTML='';
+    categories.forEach(category=>{
+      const button=document.createElement('button');button.type='button';button.className='help-category-button'+(category===selectedCategory?' active':'');button.textContent=category;
+      button.addEventListener('click',()=>{selectedCategory=category;renderCategories();renderArticles();});categoryList.appendChild(button);
+    });
+  }
+  function renderArticles(){
+    const query=String(search?.value||'').trim().toLocaleLowerCase('de');
+    const list=SOLAR_HELP_TOPICS.filter(topic=>(selectedCategory==='Alle Themen'||topic.category===selectedCategory)&&(!query||`${topic.title} ${topic.category} ${topic.keywords} ${topic.body.replace(/<[^>]*>/g,' ')}`.toLocaleLowerCase('de').includes(query)));
+    articles.innerHTML='';
+    if(!list.length){articles.innerHTML='<div class="help-empty">Keine passenden Themen gefunden. Versuche einen anderen Suchbegriff.</div>';return;}
+    list.forEach((topic,index)=>{const details=document.createElement('details');details.className='help-article';if(query&&index===0)details.open=true;const summary=document.createElement('summary');summary.textContent=`${topic.title}`;const body=document.createElement('div');body.className='help-article-body';body.innerHTML=topic.body;details.append(summary,body);articles.appendChild(details);});
+  }
+  function openHelp(){
+    panel.hidden=false;if(menu)menu.hidden=true;
+    ['#news-panel','#economy-panel','#research-panel','#tasks-panel','#introduction-panel','#colonists-panel','#settings-panel','#market-panel','#company-panel','#company-headquarters-panel','#flight-center-panel','#cyclic-missions-panel','#asteroids-panel'].forEach(selector=>{const element=document.querySelector(selector);if(element)element.hidden=true;});
+    renderCategories();renderArticles();panel.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+  function closeGuide(){guide.hidden=true;}
+  let guideStep=0;
+  function renderGuide(){
+    const step=guideSteps[guideStep];guideTitle.textContent=step.title;guideContent.innerHTML=step.body;
+    guideProgressText.textContent=`Schritt ${guideStep+1} von ${guideSteps.length}`;
+    guideProgressBar.style.width=`${((guideStep+1)/guideSteps.length)*100}%`;
+    guideBack.disabled=guideStep===0;guideNext.textContent=guideStep===guideSteps.length-1?'Fertig ✓':'Weiter →';
+  }
+  function startGuide(){openHelp();guideStep=0;renderGuide();guide.hidden=false;}
+  menuButton?.addEventListener('click',openHelp);floatingButton?.addEventListener('click',openHelp);closeButton?.addEventListener('click',()=>{panel.hidden=true;});
+  search?.addEventListener('input',renderArticles);
+  document.querySelector('#help-show-all')?.addEventListener('click',()=>{selectedCategory='Alle Themen';if(search)search.value='';renderCategories();renderArticles();});
+  document.querySelector('#help-guide-start')?.addEventListener('click',startGuide);
+  document.querySelector('#help-guide-close')?.addEventListener('click',closeGuide);
+  guideBack?.addEventListener('click',()=>{if(guideStep>0){guideStep--;renderGuide();}});
+  guideNext?.addEventListener('click',()=>{if(guideStep<guideSteps.length-1){guideStep++;renderGuide();}else closeGuide();});
+  guide?.addEventListener('click',event=>{if(event.target===guide)closeGuide();});
+  renderCategories();renderArticles();
+}
+
+
 function setupMainMenu() {
   const menuButton = document.querySelector('#main-menu-button');
   const menu = document.querySelector('#main-menu');
@@ -9292,6 +9377,7 @@ if (updatePopup && updatePopupClose) {
 }
 
 setupMainMenu();
+setupHelpSystem();
 setupGameClockControls();
 document.querySelector('#construction-queue-refresh')?.addEventListener('click', renderConstructionQueue);
 setupSaveMenu();
