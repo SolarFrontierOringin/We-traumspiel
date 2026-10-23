@@ -445,7 +445,7 @@ select{padding:7px;border-radius:8px;background:#eef2f7;color:#111}
 .update-popup-close{
   position:absolute;right:10px;top:10px;width:40px;height:40px;padding:0;
   border:1px solid #49617f;border-radius:12px;background:#20334d;color:#fff;
-  font-size:20px;z-index:2;
+  font-size:20px;z-index:10;flex-shrink:0;
 }
 .update-popup-art{height:104px;margin:-3px 36px 10px 0;overflow:hidden;border-radius:12px;background:radial-gradient(ellipse at 75% 50%,#152f56,#07101e 72%)}
 .update-popup-art svg{display:block;width:100%;height:104px}
@@ -1366,3 +1366,109 @@ body > .planet-build-menu {
 
 /* Sichtbare Asteroiden im äußeren Gürtel des Sonnensystems */
 .solar-asteroid{position:absolute;z-index:6;transform:translate(-50%,-50%);width:29px;height:29px;padding:0;border:1px solid rgba(185,205,235,.7);border-radius:50%;background:radial-gradient(circle at 35% 30%,#5c6b80,#202b3b 72%);box-shadow:0 0 9px rgba(120,170,220,.45);font-size:16px;line-height:1;display:grid;place-items:center}.solar-asteroid:hover{transform:translate(-50%,-50%) scale(1.18);background:#314b6b}
+
+
+/* Lokale Stromversorgung – Kraftwerk-Layout */
+.planet-electricity-panel{margin:10px 0;border:1px solid #315273;border-radius:12px;background:#0b1728;overflow:hidden}
+.planet-electricity-panel>summary{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 12px;cursor:pointer;list-style:none;font-weight:750}
+.planet-electricity-panel>summary::-webkit-details-marker{display:none}
+.planet-electricity-panel>summary::before{content:"⚡";margin-right:4px}
+.planet-electricity-panel>summary span{margin-left:auto;font-size:13px}
+.planet-electricity-content{padding:0 12px 12px}
+.electricity-summary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:6px 0 14px}
+.electricity-summary-card{display:grid;gap:5px;padding:10px;border:1px solid #263754;border-radius:10px;background:#0c1627;min-width:0}
+.electricity-summary-card span{font-size:12px;color:#aab8ce}
+.electricity-summary-card strong{font-size:clamp(14px,3.5vw,18px);overflow-wrap:anywhere}
+.planet-electricity-content h4{margin:14px 0 5px;font-size:14px}
+.electricity-note{font-size:12px;margin-top:12px}
+@media(max-width:430px){.planet-electricity-panel>summary{align-items:flex-start}.electricity-summary-card{padding:8px}}
+
+
+/* FIX: Das Baumenü bleibt beim Bauen fest im sichtbaren Handyfenster.
+   Es liegt direkt unter body und wird nach Bauaktionen neu gerendert. */
+body > .planet-build-menu {
+  position: fixed !important;
+  left: 50% !important;
+  top: 10px !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: translateX(-50%) !important;
+  width: min(94vw, 760px) !important;
+  min-width: 0 !important;
+  max-width: 94vw !important;
+  max-height: calc(100vh - 20px) !important;
+  max-height: calc(100dvh - 20px) !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch !important;
+  z-index: 2147483647 !important;
+}
+body > .planet-build-menu .planet-build-header {
+  position: sticky !important;
+  top: 0 !important;
+}
+
+
+/* Forschungsansicht – aktive Forschung, Kategorien und visueller Technologiebaum */
+.research-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 16px}
+.research-tab{min-height:44px;padding:10px 12px;border:1px solid #263754;border-radius:12px;background:#0c1627;color:#c7d4e8}
+.research-tab.active{background:#2776d2;border-color:#4c94e6;color:#fff}
+.research-active{margin:0 0 14px;padding:16px;border:1px solid #4386c8;border-radius:16px;background:linear-gradient(135deg,#10243b,#0c1627)}
+.research-active>strong{display:block;font-size:18px;margin-bottom:6px}
+.research-active small{font-size:13px;line-height:1.45}
+.research-overview{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 14px;margin:0 0 20px;padding:12px 14px;border:1px solid #263754;border-radius:14px;background:#0c1627}
+.research-overview .stat{font-size:13px;align-items:center}
+.research-section-heading{display:grid;gap:4px;margin:18px 0 10px}
+.research-section-heading strong{font-size:22px;letter-spacing:.1px}
+.research-section-heading small{color:#aab8ce;line-height:1.4}
+.research-categories{display:grid;gap:10px}
+.research-category{border:1px solid #2a3d59;border-radius:15px;background:#091321;overflow:hidden}
+.research-category[open]{border-color:#3c5e87}
+.research-category-summary{display:flex;align-items:center;justify-content:space-between;gap:10px;list-style:none;cursor:pointer;padding:14px;background:linear-gradient(110deg,#102039,#0c1627);font-weight:800}
+.research-category-summary::-webkit-details-marker{display:none}
+.research-category-summary::before{content:'＋';color:#8fbfff;font-size:16px;flex:0 0 18px}
+.research-category[open]>.research-category-summary::before{content:'−'}
+.research-category-title{flex:1;min-width:0;line-height:1.35}
+.research-category-count{font-size:11px;font-weight:700;color:#aab8ce;text-align:right;white-space:nowrap}
+.research-category>.research-tree{display:grid;gap:10px;padding:12px;position:relative}
+.research-card{position:relative;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:14px;border-radius:13px;background:#0d192a;border-color:#293e5c;box-shadow:inset 3px 0 0 #3a6594}
+.research-card::before{content:'';position:absolute;left:-12px;top:50%;width:10px;border-top:1px solid #42658d}
+.research-card strong{display:block;line-height:1.4}
+.research-card small{font-size:12px;line-height:1.5}
+.research-card.research-done{background:#0b211d;border-color:#2f795a;box-shadow:inset 3px 0 0 #3fa875}
+.research-button{min-width:100px;max-width:130px;white-space:normal;line-height:1.25}
+.research-idle-card{display:flex;align-items:center;gap:12px;margin-bottom:14px;padding:14px;border:1px dashed #354b69;border-radius:14px;background:#0c1627}
+.research-idle-icon{font-size:28px}
+.research-idle-card strong,.research-idle-card small{display:block}
+.research-idle-card small{margin-top:4px;color:#aab8ce;line-height:1.4}
+.research-orbit-details{margin-top:14px}
+.research-orbit-details .orbit-research-overview{margin:0;border:0;border-radius:0;background:transparent;padding:12px}
+.research-orbit-details .orbit-research-overview h3{font-size:20px;margin-bottom:12px}
+.research-orbit-details .orbit-research-global{padding:14px;border-radius:12px;margin-bottom:12px}
+.research-orbit-details .orbit-research-global strong{font-size:28px}
+.research-orbit-details .orbit-research-overview>p.hint{font-size:13px;margin-bottom:12px}
+.research-orbit-details .orbit-research-row{min-height:64px;padding:10px 12px;border-radius:12px}
+.research-orbit-details .orbit-research-icon{font-size:24px;flex-basis:28px}
+@media(max-width:560px){
+  .research-panel{padding:12px}
+  .research-overview{grid-template-columns:1fr;padding:8px 12px}
+  .research-category-summary{padding:12px 10px;gap:7px}
+  .research-category-count{font-size:10px;white-space:normal;max-width:100px}
+  .research-category>.research-tree{padding:9px;gap:9px}
+  .research-card{grid-template-columns:1fr;padding:12px}
+  .research-card::before{left:-9px;width:7px}
+  .research-button{max-width:none;width:100%;min-height:40px}
+  .research-head h2{font-size:28px}
+}
+
+/* Batteriespeicher I */
+.battery-storage-controls{display:grid;gap:8px;padding:10px;border:1px solid #315273;border-radius:12px;background:#0b1728;margin:8px 0 12px}.battery-control-label{display:grid;gap:5px;color:#c7d4e8;font-size:13px}.battery-control-label select{width:100%;padding:9px;border:1px solid #344967;border-radius:8px;background:#eef2f7;color:#111}.battery-storage-card{border-color:#315273}
+
+
+/* Start-Updatefenster: Seitennavigation oben */
+.update-popup-navigation{position:sticky;top:-20px;z-index:4;display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:-20px -20px 14px;padding:12px 54px 10px 12px;border-bottom:1px solid #263754;background:rgba(9,17,31,.97);backdrop-filter:blur(8px)}
+.update-popup-page-button{min-height:42px;padding:8px 10px;border:1px solid #344967;border-radius:10px;background:#0c1627;color:#c7d4e8;font-size:13px;line-height:1.25}
+.update-popup-page-button.active{background:#2776d2;border-color:#69b8ff;color:#fff}
+.update-popup-page[hidden]{display:none!important}
+@media(max-width:430px){.update-popup-navigation{top:-16px;margin:-16px -16px 12px;padding:10px 48px 9px 9px;gap:5px}.update-popup-page-button{font-size:12px;padding:7px 5px}}
