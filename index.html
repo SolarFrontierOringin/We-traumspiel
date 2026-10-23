@@ -6,7 +6,7 @@
   <title>Solar Frontier: Origins</title>
   <meta name="theme-color" content="#02050b">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=battery-storage-20261023">
+  <link rel="stylesheet" href="style.css?v=stock-dynamic-20261023">
 </head>
 <body>
 
@@ -15,8 +15,8 @@
     <article class="update-popup-card">
       <button id="update-popup-close" class="update-popup-close" type="button" aria-label="Updatefenster schließen">✕</button>
       <nav class="update-popup-navigation" aria-label="Update-Seiten">
-        <button type="button" class="update-popup-page-button active" data-update-page="1" aria-current="page">Seite 1 · Neues Update</button>
-        <button type="button" class="update-popup-page-button" data-update-page="2">Seite 2 · Alte Updates</button>
+        <button type="button" class="update-popup-page-button active" data-update-page="1" aria-current="page">Seite 1 · Freitag-Update</button>
+        <button type="button" class="update-popup-page-button" data-update-page="2">Seite 2 · Vorheriges Update</button>
       </nav>
       <div class="update-popup-art" aria-hidden="true">
         <svg viewBox="0 0 320 104" role="img" aria-label="Rakete über einem Planeten">
@@ -36,35 +36,31 @@
         </svg>
       </div>
       <section class="update-popup-page" data-update-page-content="1">
-        <div class="update-popup-kicker">📡 NEUE ANKÜNDIGUNGEN Freitag Update</div>
-        <h2 id="update-popup-title">Neue Gebäude für dein Raumfahrtunternehmen</h2>
+        <div class="update-popup-kicker">📡 FREITAG-UPDATE & ANKÜNDIGUNGEN</div>
+        <h2 id="update-popup-title">Freitag Update 🫡</h2>
+        <div class="update-popup-message">
+          <ul>
+            <li><strong>Neue Gebäude:</strong> Nickelmine, Stromspeicher und Graphitproduktion.</li>
+            <li><strong>Neuer Rohstoff Nickel:</strong> Nickel kann abgebaut werden und benötigt zuvor Forschung.</li>
+            <li><strong>Drei KI-Unternehmen:</strong> Ihr könnt ihren Umsatz ansehen, ihre Aktien kaufen und Dividenden kassieren.</li>
+            <li><strong>Anpassungen:</strong> Einige Menüpunkte wurden überarbeitet.</li>
+          </ul>
+        </div>
+        <div class="update-popup-footnote">Viel Spaß beim Entdecken der Neuerungen! 🚀</div>
+      </section>
+      <section class="update-popup-page" data-update-page-content="2" hidden>
+        <div class="update-popup-kicker">📡 VORHERIGES UPDATE</div>
+        <h2>Neue Gebäude für dein Raumfahrtunternehmen</h2>
         <div class="update-popup-message">
           <p><strong>🏗️ Neue Produktions- und Energiegebäude</strong></p>
           <ul>
             <li><strong>Nickelmine:</strong> Ein neues Gebäude für den Nickelabbau.</li>
             <li><strong>Synthetische Graphitproduktion:</strong> Graphit kann nun industriell hergestellt werden.</li>
             <li><strong>Batteriespeicher I:</strong> Speichert Energie und unterstützt die Stromversorgung.</li>
-            <li><h3>Strom Management wurde überarbeitet &#10004</h3></li>
           </ul>
           <p>Die neuen Gebäude erweitern die Möglichkeiten für Rohstoffproduktion und Energiemanagement.</p>
         </div>
         <div class="update-popup-footnote">Weitere Ankündigungen und neue Änderungen erscheinen hier bei künftigen Updates.</div>
-      </section>
-      <section class="update-popup-page" data-update-page-content="2" hidden>
-        <div class="update-popup-kicker">📡 ÄLTERES MITTWOCH-UPDATE</div>
-        <h2>!!Achtung neues Mittwoch update!!</h2>
-        <div class="update-popup-message">
-          <p><strong>⚠️ !! UNTERNEHMEN ist gesperrt bis zum Abschluss der Aufgabe!!</strong></p>
-          <ul>
-            <li>Diverse Fixes durchgeführt.</li>
-            <li>Asteroiden werden auf der Karte des Sonnensystems angezeigt.</li>
-            <li>Neues Gebäude: <strong>Unternehmenszentrum</strong>.</li>
-            <li>Neue Aufgaben wurden ergänzt.</li>
-            <li>Neue Ansicht der Gebäudekarten im Baumenü.</li>
-            <li>Luna und Venus haben eine Atmosphäre. Diese muss einen Wert von 1,0 Bar erreichen, damit Kolonisten in Gebäuden leben können. Davor können sie nur im Habitat leben. Das Habitat bekommt im nächsten Update Unterhaltskosten.</li>
-            <li>Damit beginnt langsam das Terraforming der Planeten.</li>
-          </ul>
-        </div>
       </section>
     </article>
   </section>
@@ -182,6 +178,7 @@
       </div>
       <div class="main-menu-items">
         <button id="economy-button" class="menu-item">📊 <span>Wirtschaft</span></button>
+        <button id="ai-companies-button" class="menu-item">🤖 <span>KI-Unternehmen</span></button>
         <button id="company-headquarters-button" class="menu-item" hidden>🏢 <span>Unternehmenszentrale</span></button>
         <button id="colonists-button" class="menu-item">👥 <span>Kolonisten</span></button>
         <button id="research-button" class="menu-item">🔬 <span>Forschung</span></button>
@@ -313,6 +310,14 @@
     <section id="company-panel" class="company-panel" hidden>
       <div class="company-head"><div><h2>🏢 Unternehmen</h2><div class="hint">Unternehmenswert, Ruf, Aufträge und Finanzen</div></div><button id="company-close" class="icon-button">✕</button></div>
       <div id="company-content"></div>
+    </section>
+
+    <section id="ai-companies-panel" class="ai-companies-panel" hidden>
+      <div class="ai-companies-head">
+        <div><h2>🤖 KI-Unternehmen</h2><div class="hint">Drei KI-Unternehmen · Börsenhandel · eigene Entwicklung</div></div>
+        <button id="ai-companies-close" class="icon-button" type="button" aria-label="KI-Unternehmen schließen">✕</button>
+      </div>
+      <div id="ai-companies-content"></div>
     </section>
 
     <section id="company-headquarters-panel" class="flight-center-panel company-headquarters-panel" hidden>

@@ -1472,3 +1472,84 @@ body > .planet-build-menu .planet-build-header {
 .update-popup-page-button.active{background:#2776d2;border-color:#69b8ff;color:#fff}
 .update-popup-page[hidden]{display:none!important}
 @media(max-width:430px){.update-popup-navigation{top:-16px;margin:-16px -16px 12px;padding:10px 48px 9px 9px;gap:5px}.update-popup-page-button{font-size:12px;padding:7px 5px}}
+
+
+/* Einheitliche, einklappbare Atmosphärenübersicht für alle Planeten außer der Sonne */
+.planet-atmosphere-details{margin:10px 0;border:1px solid #315273;border-radius:12px;background:#0b1728;overflow:hidden}
+.planet-atmosphere-details>summary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 12px;cursor:pointer;list-style:none;font-weight:700}
+.planet-atmosphere-details>summary::-webkit-details-marker{display:none}
+.planet-atmosphere-details>summary::before{content:"▸";color:#9eb9da;margin-right:4px}
+.planet-atmosphere-details[open]>summary::before{content:"▾"}
+.planet-atmosphere-content{padding:0 12px 12px}
+.planet-atmosphere-content label{display:block;margin:9px 0 5px;color:#c7d4e8}
+.planet-atmosphere-content select,.planet-atmosphere-content input{display:block;width:100%;padding:9px;border:1px solid #344967;border-radius:8px;background:#eef2f7;color:#111}
+.planet-atmosphere-content button{width:100%;margin-top:10px}
+
+/* Atmosphärenzusammensetzung im Planeten-Infofenster */
+.atmosphere-gas-row strong{font-size:12px;text-align:right;max-width:65%;overflow-wrap:anywhere}.atmosphere-status{padding:8px 10px;border:1px solid #263754;border-radius:9px;background:#0c1627}.atmosphere-composition-title{margin:12px 0 4px;color:#d9e4f4;font-size:14px}
+
+/* Kolonisten-Freigabe anhand von Druck und Sauerstoff */
+.colonist-atmosphere-status{margin:10px 0;padding:10px;border:1px solid #263754;border-radius:10px;background:#0c1627}
+.colonist-atmosphere-status p{margin:6px 0}
+.colonist-atmosphere-status small{display:block;color:#aab8ce;line-height:1.45}
+
+
+/* KI-Unternehmen – eigenständige Konkurrenten */
+.ai-companies-panel{border:1px solid #36547b;border-radius:16px;background:#09111f;padding:14px;margin-bottom:8px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.ai-companies-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px}
+.ai-companies-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.ai-company-card{border:1px solid #263754;border-radius:13px;background:#0c1627;padding:12px;min-width:0}
+.ai-company-card h3{margin:0 0 5px;font-size:17px}
+.ai-company-tagline{color:#aab8ce;font-size:12px;margin-bottom:10px}
+.ai-company-stats{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.ai-company-stat{padding:8px;border:1px solid #263754;border-radius:9px;background:#09111f;min-width:0}
+.ai-company-stat span{display:block;color:#aab8ce;font-size:11px}
+.ai-company-stat strong{display:block;margin-top:3px;font-size:14px;overflow-wrap:anywhere}
+.ai-company-progress{height:7px;background:#1d2a3d;border-radius:8px;overflow:hidden;margin:6px 0 10px}
+.ai-company-progress i{display:block;height:100%;background:#2776d2}
+.ai-company-buildings{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.ai-company-chip{font-size:11px;border:1px solid #263754;border-radius:8px;padding:4px 6px;color:#c7d4e8}
+.ai-company-log{margin-top:12px;border:1px solid #263754;border-radius:11px;padding:10px;background:#0c1627}
+.ai-company-log ul{padding-left:20px;margin:7px 0 0;color:#c7d4e8}
+.ai-company-log li{margin:5px 0;font-size:13px}
+@media(max-width:600px){.ai-companies-grid{grid-template-columns:1fr}.ai-company-stats{grid-template-columns:1fr 1fr}}
+
+
+/* Aktienmarkt innerhalb der KI-Unternehmen */
+.stock-exchange{margin-top:14px;padding:12px;border:1px solid #315273;border-radius:14px;background:#081321}
+.stock-exchange>h3{margin:0 0 10px}
+.stock-overview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 0}
+.stock-overview>div,.stock-metrics>div{padding:9px;border:1px solid #263754;border-radius:9px;background:#0c1627;min-width:0}
+.stock-overview span,.stock-metrics span{display:block;color:#aab8ce;font-size:11px}
+.stock-overview strong,.stock-metrics strong{display:block;margin-top:4px;font-size:14px;overflow-wrap:anywhere}
+.stock-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
+.stock-card{padding:11px;border:1px solid #263754;border-radius:12px;background:#0c1627;min-width:0}
+.stock-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.stock-card-head h3{margin:0 0 4px;font-size:16px}
+.stock-price{color:#75e09b;white-space:nowrap}
+.stock-metrics{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}
+.stock-policy{margin-top:9px;padding:9px;border-radius:9px;background:#09111f;border:1px solid #263754}
+.stock-policy p{margin:5px 0;color:#c7d4e8;font-size:13px;line-height:1.4}
+.stock-policy small{color:#aab8ce}
+.stock-quantity-label{display:block;margin-top:10px;font-size:12px;color:#c7d4e8}
+.stock-quantity{width:100%;padding:9px;margin-top:5px;border:1px solid #344967;border-radius:8px;background:#eef2f7;color:#111}
+.stock-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}
+.stock-sell{background:#36536f}
+.stock-history{margin-top:12px;padding:10px;border:1px solid #263754;border-radius:10px;background:#0c1627}
+.stock-history h3{margin:0 0 6px}
+.stock-history ul{margin:0;padding-left:20px;color:#c7d4e8}
+.stock-history li{margin:5px 0;font-size:13px}
+@media(max-width:600px){.stock-grid{grid-template-columns:1fr}.stock-overview{grid-template-columns:1fr}.stock-card-head{flex-wrap:wrap}}
+
+
+/* Dynamischer Aktienmarkt */
+.stock-price-wrap{display:grid;justify-items:end;gap:4px}
+.stock-change{font-size:12px;font-weight:800;white-space:nowrap}
+.stock-up{color:#75e09b}
+.stock-down{color:#ff7c7c}
+.stock-flat{color:#aab8ce}
+.stock-chart-wrap{margin:10px 0 12px;padding:8px 9px;border:1px solid #263754;border-radius:10px;background:#07101d}
+.stock-chart{display:block;width:100%;height:58px;color:#aab8ce}
+.stock-chart.stock-up{color:#75e09b}
+.stock-chart.stock-down{color:#ff7c7c}
+.stock-chart-wrap small{display:block;margin-top:5px;color:#aab8ce;font-size:11px}
