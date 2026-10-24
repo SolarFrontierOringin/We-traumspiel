@@ -1564,3 +1564,18 @@ body > .planet-build-menu .planet-build-header {
 .floating-help-button{position:fixed;right:14px;bottom:16px;z-index:5000;width:48px;height:48px;padding:0;border:2px solid #9ed9ff;border-radius:50%;background:#125aa2;color:#fff;font-size:25px;font-weight:900;box-shadow:0 5px 20px #0009}.floating-help-button:hover{background:#2776d2}
 .help-guide-card{width:min(100%,540px)}.help-guide-content{min-height:145px;padding:12px;border:1px solid #263754;border-radius:12px;background:#0c1627;color:#dce7f8;line-height:1.6}.help-guide-content h3{margin:0 0 8px;color:#fff}.help-guide-content p{margin:7px 0}.help-guide-content ul{padding-left:21px}.help-guide-progress{margin-top:13px;color:#aab8ce;font-size:13px}.help-guide-progress-track{height:7px;margin-top:6px;background:#1d2a3d;border-radius:8px;overflow:hidden}.help-guide-progress-track i{display:block;height:100%;width:20%;background:#55b7ff;transition:width .2s}.help-guide-controls{display:flex;justify-content:space-between;gap:8px;margin-top:12px}.help-guide-controls button{min-width:105px}
 @media(max-width:430px){.help-head{gap:7px}.help-head h2{font-size:20px}.help-actions button{width:100%}.floating-help-button{right:10px;bottom:10px;width:44px;height:44px}}
+
+
+/* 2-Sekunden-Intro */
+.startup-intro{position:fixed;inset:0;z-index:20000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;overflow:hidden;background:radial-gradient(ellipse at 50% 42%,#122a4b 0%,#06101f 48%,#02050b 100%);color:#eef4ff;text-align:center;animation:intro-fade-out .35s ease 1.65s forwards}
+.startup-intro[hidden]{display:none!important}
+.startup-intro h1{font-size:clamp(25px,7vw,38px);letter-spacing:.3px;text-shadow:0 0 24px rgba(80,180,255,.35)}
+.startup-intro p{margin:0;color:#aab8ce;font-size:14px;letter-spacing:1px}
+.startup-intro-art{width:min(90vw,430px);height:140px;display:grid;place-items:center;animation:intro-art-float 1.4s ease-in-out infinite alternate}
+.startup-intro-art svg{width:100%;height:100%;overflow:visible;filter:drop-shadow(0 0 14px rgba(76,166,255,.24))}
+.startup-intro-stars{position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(#dceaff 1px,transparent 1.6px),radial-gradient(rgba(130,200,255,.8) 1px,transparent 1.6px);background-size:83px 79px,137px 121px;background-position:12px 17px,42px 51px;opacity:.45}
+.startup-intro-loader{width:150px;height:3px;margin-top:8px;overflow:hidden;border-radius:5px;background:#233752}
+.startup-intro-loader i{display:block;width:45%;height:100%;border-radius:5px;background:#63d8ff;animation:intro-loader 1.6s ease-in-out forwards}
+@keyframes intro-art-float{from{transform:translateY(3px)}to{transform:translateY(-5px)}}
+@keyframes intro-loader{from{transform:translateX(-110%)}to{transform:translateX(240%)}}
+@keyframes intro-fade-out{to{opacity:0;visibility:hidden;pointer-events:none}}

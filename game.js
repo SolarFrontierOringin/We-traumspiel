@@ -3402,6 +3402,10 @@ function updateRocketVisuals(now = gameNow()) {
   paths.setAttribute('aria-hidden', 'true');
   layer.appendChild(paths);
 
+  // Raketenankünfte erst vollständig verbuchen und die Oberfläche danach
+  // höchstens einmal aktualisieren. So wird beim Eintreffen mehrerer Raketen
+  // nicht mitten in der Verarbeitung wiederholt das komplette Planetenmenü gebaut.
+  let rocketUiChanged = false;
   for (const rocket of rockets) {
     if (rocket.status === 'returned') continue;
     const returning = rocket.status === 'returning';
@@ -6537,9 +6541,12 @@ function updateRockets(now) {
         addRocketToStock(rocket.type, rocket.from, rocket.fromMode || 'surface');
       }
       saveGame(false);
-      renderInfo();
-      renderTopResources();
+      rocketUiChanged = true;
     }
+  }
+  if (rocketUiChanged) {
+    renderInfo();
+    renderTopResources();
   }
 }
 
@@ -9350,8 +9357,17 @@ document.querySelector('#colonists-complete-confirm')?.addEventListener('click',
 document.querySelector('#system-failure-story-close')?.addEventListener('click', closeSystemFailureStory);
 document.querySelector('#system-failure-story-confirm')?.addEventListener('click', closeSystemFailureStory);
 
-// Updatefenster: erscheint bei jedem Seitenstart erneut und wird nur über X geschlossen.
+// Start-Intro: zwei Sekunden zeigen, danach das Updatefenster öffnen.
+const startupIntro = document.querySelector('#startup-intro');
 const updatePopup = document.querySelector('#update-popup');
+if (startupIntro) {
+  window.setTimeout(() => {
+    startupIntro.hidden = true;
+    if (updatePopup) { updatePopup.hidden = false; updatePopup.setAttribute('aria-hidden', 'false'); }
+  }, 2000);
+}
+// Updatefenster: erscheint bei jedem Seitenstart erneut und wird nur über X geschlossen.
+
 const updatePopupClose = document.querySelector('#update-popup-close');
 if (updatePopup) {
   const pageButtons = [...updatePopup.querySelectorAll('[data-update-page]')];
