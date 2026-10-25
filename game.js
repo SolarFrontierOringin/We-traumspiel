@@ -82,10 +82,11 @@ let gameSpeed = 1;
 function gameNow() {
   const realNow = performance.now();
   const realDelta = Math.max(0, realNow - gameClockLastReal);
-  // Die Uhr darf nicht davon abhängen, ob ein Mobile-WebView document.hidden
-  // korrekt meldet. Beim Wechsel in/aus den Hintergrund wird der Zeitanker separat
-  // zurückgesetzt, damit beim Zurückkehren kein großer Zeitsprung entsteht.
-  gameClockElapsedMs += realDelta * gameSpeed;
+  // Mobile-Browser pausieren die Spielwelt im Hintergrund, statt beim Zurückkehren
+  // einen großen Zeitsprung und einen unkontrollierten Verbrauchsschub auszulösen.
+  if (typeof document !== 'undefined' && !document.hidden) {
+    gameClockElapsedMs += realDelta * gameSpeed;
+  }
   gameClockLastReal = realNow;
   return gameClockElapsedMs;
 }
@@ -3401,10 +3402,7 @@ function updateRocketVisuals(now = gameNow()) {
   paths.setAttribute('aria-hidden', 'true');
   layer.appendChild(paths);
 
-  // Raketenankünfte erst vollständig verbuchen und die Oberfläche danach
-  // höchstens einmal aktualisieren. So wird beim Eintreffen mehrerer Raketen
-  // nicht mitten in der Verarbeitung wiederholt das komplette Planetenmenü gebaut.
-  let rocketUiChanged = false;
+  // Hier werden nur die Raketenmarker gezeichnet; Ankünfte verarbeitet updateRockets().
   for (const rocket of rockets) {
     if (rocket.status === 'returned') continue;
     const returning = rocket.status === 'returning';
@@ -6425,9 +6423,8 @@ function updateRocketFactoryConstruction(now) {
 }
 
 function updateRockets(now) {
-  // Wichtig: Der Änderungs-Marker gilt nur für diesen Simulationsschritt.
-  // Global gespeichert blieb er nach der ersten Ankunft dauerhaft true und
-  // löste danach bei JEDEM Frame vollständige UI-Neuaufbauten aus.
+  // Lokaler Marker pro Simulationsschritt: nach Ankunft/Rückkehr nur einmal
+  // die Oberfläche aktualisieren und nicht bei jedem Frame erneut rendern.
   let rocketUiChanged = false;
   Object.keys(bodies).forEach(id => {
     if (id === 'sun') return;
@@ -6702,9 +6699,21 @@ function updateAtmosphereRegulators(planetId, storage, buildings, delta) {
 }
 
 function updateResources() {
-  // Den nächsten Simulationsschritt sofort vormerken: Falls ein einzelner
-  // Produktions-/Ankunftsschritt einen Fehler wirft, bleibt die Schleife aktiv.
-  requestAnimationFrame(updateResources);
+  // Leistungsbremse für Mobilbrowser: Die umfangreiche Simulation muss nicht
+  // bei jedem Bildschirm-Frame (oft 60-mal pro Sekunde) komplett neu laufen.
+  // Produktionsmengen bleiben korrekt, weil delta aus der zentralen Spieluhr
+  // berechnet wird. Raketenmarker werden zwischen den Simulationstakten separat
+  // mit begrenzter Häufigkeit aktualisiert.
+  const realFrameNow = performance.now();
+  if (updateResources.lastSimulationReal && realFrameNow - updateResources.lastSimulationReal < 200) {
+    if (!updateResources.lastRocketVisualReal || realFrameNow - updateResources.lastRocketVisualReal >= 80) {
+      updateResources.lastRocketVisualReal = realFrameNow;
+      updateRocketVisuals(gameNow());
+    }
+    requestAnimationFrame(updateResources);
+    return;
+  }
+  updateResources.lastSimulationReal = realFrameNow;
   const now = gameNow();
   updateMarket(now);
   updateCompanyOrders(now);
@@ -7334,13 +7343,7 @@ function updateResources() {
   // Das Lager der Erde ist gleichzeitig das Spieler-/Hauptlager.
   updateOutposts(now); renderConstructionQueue();
   updateRocketFactoryConstruction(now);
-  // Eine fehlerhafte Ankunftsverarbeitung darf die zentrale Spielschleife
-  // nicht abbrechen (sonst bleibt auch die Spieluhr dauerhaft stehen).
-  try {
-    updateRockets(now);
-  } catch (error) {
-    console.error('[Solar Frontier] Fehler bei der Raketenverarbeitung:', error);
-  }
+  updateRockets(now);
   updateOrbitMissions(gameNow());
   // Forschungspunkte werden durch das Forschungslabor auf der Erde erzeugt.
   // 1 Forschungspunkt pro Sekunde je Forschungslabor.
@@ -7397,6 +7400,7 @@ function updateResources() {
 
   // Raketen werden unabhängig vom restlichen UI animiert, damit der Flugweg
   // zwischen Startplanet und Zielorbit auf dem Sonnensystem sichtbar bleibt.
+  updateResources.lastRocketVisualReal = realFrameNow;
   updateRocketVisuals(now);
   refreshColonistsPanelLive();
   if (!updateResources.lastClockUiUpdate || now - updateResources.lastClockUiUpdate >= 200) {
@@ -7404,6 +7408,7 @@ function updateResources() {
     updateGameClockDisplay(now);
   }
 
+  requestAnimationFrame(updateResources);
 }
 
 
@@ -9406,15 +9411,6 @@ if (updatePopup && updatePopupClose) {
 setupMainMenu();
 setupHelpSystem();
 setupGameClockControls();
-// Die Kalenderanzeige wird separat aktualisiert. Ein Fehler in Produktion,
-// Raketen oder UI kann die sichtbare Uhr dadurch nicht mehr dauerhaft einfrieren.
-setInterval(() => {
-  try {
-    updateGameClockDisplay(gameNow());
-  } catch (error) {
-    console.error('[Solar Frontier] Fehler bei der Kalenderanzeige:', error);
-  }
-}, 200);
 document.querySelector('#construction-queue-refresh')?.addEventListener('click', renderConstructionQueue);
 setupSaveMenu();
 setupTopPanels();
@@ -9448,9 +9444,6 @@ function saveGameOnExit() {
 window.addEventListener('pagehide', saveGameOnExit);
 window.addEventListener('beforeunload', saveGameOnExit);
 document.addEventListener('visibilitychange', () => {
-  // Zeitanker bei jedem Sichtbarkeitswechsel neu setzen. So bleibt die Uhr auch
-  // in Acode/WebViews stabil, selbst wenn document.hidden unzuverlässig ist.
-  gameClockLastReal = performance.now();
   if (!restartingGame && document.visibilityState === 'hidden') saveGame(false);
 });
 
