@@ -6425,6 +6425,10 @@ function updateRocketFactoryConstruction(now) {
 }
 
 function updateRockets(now) {
+  // Wichtig: Der Änderungs-Marker gilt nur für diesen Simulationsschritt.
+  // Global gespeichert blieb er nach der ersten Ankunft dauerhaft true und
+  // löste danach bei JEDEM Frame vollständige UI-Neuaufbauten aus.
+  let rocketUiChanged = false;
   Object.keys(bodies).forEach(id => {
     if (id === 'sun') return;
     ensureRocketData(id);
