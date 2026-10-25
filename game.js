@@ -3338,35 +3338,9 @@ function setupSaveMenu() {
 }
 
 function rocketBodyPoint(id) {
-  // Asteroidengürtel im äußeren Bereich zwischen Mars und Jupiter.
-  // Entdeckte Asteroiden bleiben hier sichtbar, bis sie verschwinden/ablaufen.
-  const asteroidOrders = ensureResearchOrders();
-  const visibleAsteroids = asteroidOrders.discoveredAsteroids.filter(a => !a.vanished && Number(a.expiresAt) > gameNow());
-  const belt = document.createElement('div');
-  belt.className = 'asteroid-belt-orbit';
-  belt.setAttribute('aria-hidden', 'true');
-  belt.style.width = '520px';
-  belt.style.height = '520px';
-  solarSystem.appendChild(belt);
-  visibleAsteroids.forEach((asteroid, index) => {
-    const marker = document.createElement('button');
-    marker.type = 'button';
-    marker.className = 'asteroid-system-marker';
-    marker.textContent = asteroidTypeByKey(asteroid.typeKey).icon || '☄️';
-    marker.title = `${asteroid.name} · ${asteroidTypeByKey(asteroid.typeKey).name}`;
-    marker.setAttribute('aria-label', marker.title);
-    const angle = ((Number(asteroid.number) || index + 1) * 137.508 + 18) * Math.PI / 180;
-    const radius = 250 + ((Number(asteroid.number) || index) % 5 - 2) * 13;
-    marker.style.left = `calc(50% + ${Math.cos(angle) * radius}px)`;
-    marker.style.top = `calc(50% + ${Math.sin(angle) * radius}px)`;
-    marker.addEventListener('click', () => {
-      const type = asteroidTypeByKey(asteroid.typeKey);
-      const resourcesText = Object.entries(asteroid.resources || {}).map(([key, amount]) => `${resourceNames[key] || key}: ${Number(amount).toLocaleString('de-DE')} t`).join('<br>');
-      infoPanel.innerHTML = `<h2>${type.icon} ${asteroid.name}</h2><div class="stat"><span>Typ</span><strong>${type.name}</strong></div><p>${resourcesText || 'Keine Rohstoffdaten verfügbar.'}</p><p class="hint">Asteroid im äußeren Asteroidengürtel.</p>`;
-    });
-    solarSystem.appendChild(marker);
-  });
-
+  // Diese Funktion berechnet ausschließlich Koordinaten.
+  // Grafikelemente dürfen hier nicht erzeugt werden: Sie wird pro Rakete
+  // in jedem Animationsframe aufgerufen und würde sonst den DOM ständig vergrößern.
   const angles = { sun: 0, mercury: 25, venus: 150, earth: 250, mars: 70, ceres: 90, jupiter: 145, saturn: 200, uranus: 35, neptune: 275, pluto: 230, io: 315 };
   if (id === 'sun') return { x: 530, y: 530 };
   if (id === 'luna') {
@@ -6699,21 +6673,6 @@ function updateAtmosphereRegulators(planetId, storage, buildings, delta) {
 }
 
 function updateResources() {
-  // Leistungsbremse für Mobilbrowser: Die umfangreiche Simulation muss nicht
-  // bei jedem Bildschirm-Frame (oft 60-mal pro Sekunde) komplett neu laufen.
-  // Produktionsmengen bleiben korrekt, weil delta aus der zentralen Spieluhr
-  // berechnet wird. Raketenmarker werden zwischen den Simulationstakten separat
-  // mit begrenzter Häufigkeit aktualisiert.
-  const realFrameNow = performance.now();
-  if (updateResources.lastSimulationReal && realFrameNow - updateResources.lastSimulationReal < 200) {
-    if (!updateResources.lastRocketVisualReal || realFrameNow - updateResources.lastRocketVisualReal >= 80) {
-      updateResources.lastRocketVisualReal = realFrameNow;
-      updateRocketVisuals(gameNow());
-    }
-    requestAnimationFrame(updateResources);
-    return;
-  }
-  updateResources.lastSimulationReal = realFrameNow;
   const now = gameNow();
   updateMarket(now);
   updateCompanyOrders(now);
@@ -7400,7 +7359,6 @@ function updateResources() {
 
   // Raketen werden unabhängig vom restlichen UI animiert, damit der Flugweg
   // zwischen Startplanet und Zielorbit auf dem Sonnensystem sichtbar bleibt.
-  updateResources.lastRocketVisualReal = realFrameNow;
   updateRocketVisuals(now);
   refreshColonistsPanelLive();
   if (!updateResources.lastClockUiUpdate || now - updateResources.lastClockUiUpdate >= 200) {
