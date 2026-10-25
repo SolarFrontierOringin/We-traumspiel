@@ -82,11 +82,10 @@ let gameSpeed = 1;
 function gameNow() {
   const realNow = performance.now();
   const realDelta = Math.max(0, realNow - gameClockLastReal);
-  // Mobile-Browser pausieren die Spielwelt im Hintergrund, statt beim Zurückkehren
-  // einen großen Zeitsprung und einen unkontrollierten Verbrauchsschub auszulösen.
-  if (typeof document !== 'undefined' && !document.hidden) {
-    gameClockElapsedMs += realDelta * gameSpeed;
-  }
+  // Die Uhr darf nicht davon abhängen, ob ein Mobile-WebView document.hidden
+  // korrekt meldet. Beim Wechsel in/aus den Hintergrund wird der Zeitanker separat
+  // zurückgesetzt, damit beim Zurückkehren kein großer Zeitsprung entsteht.
+  gameClockElapsedMs += realDelta * gameSpeed;
   gameClockLastReal = realNow;
   return gameClockElapsedMs;
 }
@@ -6699,6 +6698,9 @@ function updateAtmosphereRegulators(planetId, storage, buildings, delta) {
 }
 
 function updateResources() {
+  // Den nächsten Simulationsschritt sofort vormerken: Falls ein einzelner
+  // Produktions-/Ankunftsschritt einen Fehler wirft, bleibt die Schleife aktiv.
+  requestAnimationFrame(updateResources);
   const now = gameNow();
   updateMarket(now);
   updateCompanyOrders(now);
@@ -7328,7 +7330,13 @@ function updateResources() {
   // Das Lager der Erde ist gleichzeitig das Spieler-/Hauptlager.
   updateOutposts(now); renderConstructionQueue();
   updateRocketFactoryConstruction(now);
-  updateRockets(now);
+  // Eine fehlerhafte Ankunftsverarbeitung darf die zentrale Spielschleife
+  // nicht abbrechen (sonst bleibt auch die Spieluhr dauerhaft stehen).
+  try {
+    updateRockets(now);
+  } catch (error) {
+    console.error('[Solar Frontier] Fehler bei der Raketenverarbeitung:', error);
+  }
   updateOrbitMissions(gameNow());
   // Forschungspunkte werden durch das Forschungslabor auf der Erde erzeugt.
   // 1 Forschungspunkt pro Sekunde je Forschungslabor.
@@ -7392,7 +7400,6 @@ function updateResources() {
     updateGameClockDisplay(now);
   }
 
-  requestAnimationFrame(updateResources);
 }
 
 
@@ -9395,6 +9402,15 @@ if (updatePopup && updatePopupClose) {
 setupMainMenu();
 setupHelpSystem();
 setupGameClockControls();
+// Die Kalenderanzeige wird separat aktualisiert. Ein Fehler in Produktion,
+// Raketen oder UI kann die sichtbare Uhr dadurch nicht mehr dauerhaft einfrieren.
+setInterval(() => {
+  try {
+    updateGameClockDisplay(gameNow());
+  } catch (error) {
+    console.error('[Solar Frontier] Fehler bei der Kalenderanzeige:', error);
+  }
+}, 200);
 document.querySelector('#construction-queue-refresh')?.addEventListener('click', renderConstructionQueue);
 setupSaveMenu();
 setupTopPanels();
@@ -9428,6 +9444,9 @@ function saveGameOnExit() {
 window.addEventListener('pagehide', saveGameOnExit);
 window.addEventListener('beforeunload', saveGameOnExit);
 document.addEventListener('visibilitychange', () => {
+  // Zeitanker bei jedem Sichtbarkeitswechsel neu setzen. So bleibt die Uhr auch
+  // in Acode/WebViews stabil, selbst wenn document.hidden unzuverlässig ist.
+  gameClockLastReal = performance.now();
   if (!restartingGame && document.visibilityState === 'hidden') saveGame(false);
 });
 
