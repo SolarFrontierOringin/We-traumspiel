@@ -3394,11 +3394,6 @@ function updateRocketVisuals(now = gameNow()) {
   const layer = document.querySelector('#rocket-layer');
   if (!layer) return;
 
-  // TEMPORÄRER DIAGNOSETEST: Raketenlinien und -marker ausblenden.
-  // Die Flugmechanik und Ankünfte laufen weiterhin separat über updateRockets().
-  layer.style.display = 'none';
-  return;
-
   // SVG und Marker werden wiederverwendet statt in jedem Animationsframe
   // komplett gelöscht und neu erstellt zu werden. Das reduziert DOM-Arbeit
   // auf Mobilgeräten, ohne Flugzeiten oder Ankunftslogik zu verändern.
