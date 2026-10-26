@@ -6699,6 +6699,21 @@ function updateAtmosphereRegulators(planetId, storage, buildings, delta) {
 }
 
 function updateResources() {
+  // Leistungsbremse für Mobilbrowser: Die umfangreiche Simulation muss nicht
+  // bei jedem Bildschirm-Frame (oft 60-mal pro Sekunde) komplett neu laufen.
+  // Produktionsmengen bleiben korrekt, weil delta aus der zentralen Spieluhr
+  // berechnet wird. Raketenmarker werden zwischen den Simulationstakten separat
+  // mit begrenzter Häufigkeit aktualisiert.
+  const realFrameNow = performance.now();
+  if (updateResources.lastSimulationReal && realFrameNow - updateResources.lastSimulationReal < 200) {
+    if (!updateResources.lastRocketVisualReal || realFrameNow - updateResources.lastRocketVisualReal >= 80) {
+      updateResources.lastRocketVisualReal = realFrameNow;
+      updateRocketVisuals(gameNow());
+    }
+    requestAnimationFrame(updateResources);
+    return;
+  }
+  updateResources.lastSimulationReal = realFrameNow;
   const now = gameNow();
   updateMarket(now);
   updateCompanyOrders(now);
@@ -7385,6 +7400,7 @@ function updateResources() {
 
   // Raketen werden unabhängig vom restlichen UI animiert, damit der Flugweg
   // zwischen Startplanet und Zielorbit auf dem Sonnensystem sichtbar bleibt.
+  updateResources.lastRocketVisualReal = realFrameNow;
   updateRocketVisuals(now);
   refreshColonistsPanelLive();
   if (!updateResources.lastClockUiUpdate || now - updateResources.lastClockUiUpdate >= 200) {
