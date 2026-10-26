@@ -3393,16 +3393,22 @@ function rocketOrbitPoint(id) {
 function updateRocketVisuals(now = gameNow()) {
   const layer = document.querySelector('#rocket-layer');
   if (!layer) return;
-  layer.innerHTML = '';
-  // Fluglinien liegen unter den Raketenmarkern und zeigen Start sowie Ziel.
-  const svgNS = 'http://www.w3.org/2000/svg';
-  const paths = document.createElementNS(svgNS, 'svg');
-  paths.setAttribute('class', 'rocket-flight-paths');
-  paths.setAttribute('viewBox', '0 0 1060 1060');
-  paths.setAttribute('aria-hidden', 'true');
-  layer.appendChild(paths);
 
-  // Hier werden nur die Raketenmarker gezeichnet; Ankünfte verarbeitet updateRockets().
+  // SVG und Marker werden wiederverwendet statt in jedem Animationsframe
+  // komplett gelöscht und neu erstellt zu werden. Das reduziert DOM-Arbeit
+  // auf Mobilgeräten, ohne Flugzeiten oder Ankunftslogik zu verändern.
+  const svgNS = 'http://www.w3.org/2000/svg';
+  let paths = layer.querySelector('.rocket-flight-paths');
+  if (!paths) {
+    paths = document.createElementNS(svgNS, 'svg');
+    paths.setAttribute('class', 'rocket-flight-paths');
+    paths.setAttribute('viewBox', '0 0 1060 1060');
+    paths.setAttribute('aria-hidden', 'true');
+    layer.prepend(paths);
+  }
+
+  let pathIndex = 0;
+  let markerIndex = 0;
   for (const rocket of rockets) {
     if (rocket.status === 'returned') continue;
     const returning = rocket.status === 'returning';
@@ -3424,32 +3430,49 @@ function updateRocketVisuals(now = gameNow()) {
       end = rocketBodyPoint(toId);
     }
 
-    const path = document.createElementNS(svgNS, 'line');
+    let path = paths.children[pathIndex];
+    if (!path) {
+      path = document.createElementNS(svgNS, 'line');
+      paths.appendChild(path);
+    }
+    path.style.display = '';
     path.setAttribute('x1', start.x);
     path.setAttribute('y1', start.y);
     path.setAttribute('x2', end.x);
     path.setAttribute('y2', end.y);
     path.setAttribute('class', `rocket-flight-line${returning ? ' returning' : ''}`);
-    paths.appendChild(path);
+    pathIndex++;
 
     const x = start.x + (end.x - start.x) * progress;
     const y = start.y + (end.y - start.y) * progress;
-    const el = document.createElement('div');
+    let el = layer.querySelectorAll('.rocket-marker')[markerIndex];
+    if (!el) {
+      el = document.createElement('div');
+      el.className = 'rocket-marker';
+      const emoji = document.createElement('span');
+      emoji.className = 'rocket-marker-icon';
+      emoji.textContent = '🚀';
+      el.appendChild(emoji);
+      const label = document.createElement('span');
+      label.className = 'rocket-marker-label';
+      el.appendChild(label);
+      layer.appendChild(el);
+    }
+    el.style.display = '';
     el.className = `rocket-marker rocket-${rocket.status}${returning ? ' rocket-returning' : ''}`;
     el.setAttribute('aria-label', `${rocket.name}: ${bodies[fromId].name} nach ${bodies[toId].name}`);
-    const emoji = document.createElement('span');
-    emoji.className = 'rocket-marker-icon';
-    emoji.textContent = '🚀';
-    el.appendChild(emoji);
-    const label = document.createElement('span');
-    label.className = 'rocket-marker-label';
-    label.textContent = `${returning ? '↩ ' : '→ '}${bodies[toId].name}`;
-    el.appendChild(label);
+    el.querySelector('.rocket-marker-label').textContent = `${returning ? '↩ ' : '→ '}${bodies[toId].name}`;
     el.title = `${rocket.name}: ${bodies[fromId].name} → ${bodies[toId].name}`;
     el.style.left = `${x}px`;
     el.style.top = `${y}px`;
-    layer.appendChild(el);
+    markerIndex++;
   }
+
+  // Nicht mehr benötigte Elemente nur ausblenden; beim nächsten Flug können
+  // sie wiederverwendet werden, statt ständig neue DOM-Knoten anzulegen.
+  for (let i = pathIndex; i < paths.children.length; i++) paths.children[i].style.display = 'none';
+  const markers = layer.querySelectorAll('.rocket-marker');
+  for (let i = markerIndex; i < markers.length; i++) markers[i].style.display = 'none';
 }
 
 function hasSurfaceBuildings(bodyId) {
@@ -6699,21 +6722,6 @@ function updateAtmosphereRegulators(planetId, storage, buildings, delta) {
 }
 
 function updateResources() {
-  // Leistungsbremse für Mobilbrowser: Die umfangreiche Simulation muss nicht
-  // bei jedem Bildschirm-Frame (oft 60-mal pro Sekunde) komplett neu laufen.
-  // Produktionsmengen bleiben korrekt, weil delta aus der zentralen Spieluhr
-  // berechnet wird. Raketenmarker werden zwischen den Simulationstakten separat
-  // mit begrenzter Häufigkeit aktualisiert.
-  const realFrameNow = performance.now();
-  if (updateResources.lastSimulationReal && realFrameNow - updateResources.lastSimulationReal < 200) {
-    if (!updateResources.lastRocketVisualReal || realFrameNow - updateResources.lastRocketVisualReal >= 80) {
-      updateResources.lastRocketVisualReal = realFrameNow;
-      updateRocketVisuals(gameNow());
-    }
-    requestAnimationFrame(updateResources);
-    return;
-  }
-  updateResources.lastSimulationReal = realFrameNow;
   const now = gameNow();
   updateMarket(now);
   updateCompanyOrders(now);
@@ -7400,7 +7408,6 @@ function updateResources() {
 
   // Raketen werden unabhängig vom restlichen UI animiert, damit der Flugweg
   // zwischen Startplanet und Zielorbit auf dem Sonnensystem sichtbar bleibt.
-  updateResources.lastRocketVisualReal = realFrameNow;
   updateRocketVisuals(now);
   refreshColonistsPanelLive();
   if (!updateResources.lastClockUiUpdate || now - updateResources.lastClockUiUpdate >= 200) {
