@@ -3391,93 +3391,65 @@ function rocketOrbitPoint(id) {
 }
 
 function updateRocketVisuals(now = gameNow()) {
-  const layer = document.querySelector('#rocket-layer');
-  if (!layer) return;
-
-  // TEMPORÄRER DIAGNOSETEST: Raketenlinien und -marker ausblenden.
-  // Die Flugmechanik und Ankünfte laufen weiterhin separat über updateRockets().
-  layer.style.display = 'none';
-  return;
-
-  // SVG und Marker werden wiederverwendet statt in jedem Animationsframe
-  // komplett gelöscht und neu erstellt zu werden. Das reduziert DOM-Arbeit
-  // auf Mobilgeräten, ohne Flugzeiten oder Ankunftslogik zu verändern.
-  const svgNS = 'http://www.w3.org/2000/svg';
-  let paths = layer.querySelector('.rocket-flight-paths');
-  if (!paths) {
-    paths = document.createElementNS(svgNS, 'svg');
-    paths.setAttribute('class', 'rocket-flight-paths');
-    paths.setAttribute('viewBox', '0 0 1060 1060');
-    paths.setAttribute('aria-hidden', 'true');
-    layer.prepend(paths);
-  }
-
-  let pathIndex = 0;
-  let markerIndex = 0;
+  // Keine Fluglinien oder beweglichen Raketenmarker mehr zeichnen.
+  // Stattdessen zeigen kleine Symbole direkt an den Planeten den Raketenstatus.
+  const statusByBody = new Map();
+  const missionsByBody = new Map();
+  const addRocket = (bodyId, rocket) => {
+    if (!bodies[bodyId] || bodyId === 'sun') return;
+    if (!statusByBody.has(bodyId)) statusByBody.set(bodyId, []);
+    statusByBody.get(bodyId).push(rocket);
+  };
   for (const rocket of rockets) {
-    if (rocket.status === 'returned') continue;
-    const returning = rocket.status === 'returning';
-    const fromId = returning ? (rocket.fromReturn || rocket.from) : rocket.from;
-    const toId = rocket.to;
-    if (!bodies[fromId] || !bodies[toId]) continue;
-
-    let start = rocket.fromMode === 'orbit' ? rocketOrbitPoint(fromId) : rocketBodyPoint(fromId);
-    let end = rocket.targetMode === 'surface' && rocket.status === 'landed' ? rocketBodyPoint(toId) : rocketOrbitPoint(toId);
-    let progress = 1;
-    if (rocket.status === 'outbound' || returning) {
-      const elapsed = Math.max(0, now - Number(rocket.started || now));
-      progress = Math.min(1, rocket.duration > 0 ? elapsed / rocket.duration : 1);
-      if (returning) {
-        start = rocketOrbitPoint(fromId);
-        end = rocket.returnMode === 'orbit' ? rocketOrbitPoint(toId) : rocketBodyPoint(toId);
-      }
-    } else if (rocket.status === 'landed') {
-      end = rocketBodyPoint(toId);
+    if (!rocket || rocket.status === 'returned') continue;
+    if (rocket.status === 'returning') {
+      addRocket(rocket.fromReturn || rocket.to, rocket);
+      addRocket(rocket.to, rocket);
+    } else {
+      // Auch gelandete Raketen und Raketen, die im Orbit warten, bleiben sichtbar.
+      addRocket(rocket.from, rocket);
+      addRocket(rocket.to, rocket);
     }
-
-    let path = paths.children[pathIndex];
-    if (!path) {
-      path = document.createElementNS(svgNS, 'line');
-      paths.appendChild(path);
-    }
-    path.style.display = '';
-    path.setAttribute('x1', start.x);
-    path.setAttribute('y1', start.y);
-    path.setAttribute('x2', end.x);
-    path.setAttribute('y2', end.y);
-    path.setAttribute('class', `rocket-flight-line${returning ? ' returning' : ''}`);
-    pathIndex++;
-
-    const x = start.x + (end.x - start.x) * progress;
-    const y = start.y + (end.y - start.y) * progress;
-    let el = layer.querySelectorAll('.rocket-marker')[markerIndex];
-    if (!el) {
-      el = document.createElement('div');
-      el.className = 'rocket-marker';
-      const emoji = document.createElement('span');
-      emoji.className = 'rocket-marker-icon';
-      emoji.textContent = '🚀';
-      el.appendChild(emoji);
-      const label = document.createElement('span');
-      label.className = 'rocket-marker-label';
-      el.appendChild(label);
-      layer.appendChild(el);
-    }
-    el.style.display = '';
-    el.className = `rocket-marker rocket-${rocket.status}${returning ? ' rocket-returning' : ''}`;
-    el.setAttribute('aria-label', `${rocket.name}: ${bodies[fromId].name} nach ${bodies[toId].name}`);
-    el.querySelector('.rocket-marker-label').textContent = `${returning ? '↩ ' : '→ '}${bodies[toId].name}`;
-    el.title = `${rocket.name}: ${bodies[fromId].name} → ${bodies[toId].name}`;
-    el.style.left = `${x}px`;
-    el.style.top = `${y}px`;
-    markerIndex++;
   }
-
-  // Nicht mehr benötigte Elemente nur ausblenden; beim nächsten Flug können
-  // sie wiederverwendet werden, statt ständig neue DOM-Knoten anzulegen.
-  for (let i = pathIndex; i < paths.children.length; i++) paths.children[i].style.display = 'none';
-  const markers = layer.querySelectorAll('.rocket-marker');
-  for (let i = markerIndex; i < markers.length; i++) markers[i].style.display = 'none';
+  for (const mission of orbitMissions) {
+    if (!mission || mission.status === 'paused') continue;
+    for (const bodyId of [mission.source, mission.destination]) {
+      if (!bodies[bodyId] || bodyId === 'sun') continue;
+      if (!missionsByBody.has(bodyId)) missionsByBody.set(bodyId, []);
+      missionsByBody.get(bodyId).push(mission);
+    }
+  }
+  for (const [bodyId, body] of Object.entries(bodies)) {
+    if (bodyId === 'sun') continue;
+    const element = document.querySelector(`[data-body-id="${bodyId}"]`);
+    if (!element) continue;
+    let rocketBadge = element.querySelector(':scope > .rocket-status-indicator');
+    const activeRockets = statusByBody.get(bodyId) || [];
+    if (activeRockets.length) {
+      if (!rocketBadge) {
+        rocketBadge = document.createElement('span');
+        rocketBadge.className = 'rocket-status-indicator';
+        rocketBadge.setAttribute('aria-hidden', 'true');
+        element.appendChild(rocketBadge);
+      }
+      rocketBadge.textContent = activeRockets.length > 1 ? `🚀${activeRockets.length}` : '🚀';
+      rocketBadge.title = `${activeRockets.length} aktive ${activeRockets.length === 1 ? 'Rakete' : 'Raketen'} an ${body.name} (Flug, Oberfläche oder Orbit)`;
+      rocketBadge.setAttribute('aria-label', rocketBadge.title);
+    } else if (rocketBadge) rocketBadge.remove();
+    let missionBadge = element.querySelector(':scope > .cyclic-mission-indicator');
+    const activeMissions = missionsByBody.get(bodyId) || [];
+    if (activeMissions.length) {
+      if (!missionBadge) {
+        missionBadge = document.createElement('span');
+        missionBadge.className = 'cyclic-mission-indicator';
+        missionBadge.setAttribute('aria-hidden', 'true');
+        element.appendChild(missionBadge);
+      }
+      missionBadge.textContent = '∞';
+      missionBadge.title = `${activeMissions.length} aktive zyklische ${activeMissions.length === 1 ? 'Mission' : 'Missionen'} mit ${body.name}`;
+      missionBadge.setAttribute('aria-label', missionBadge.title);
+    } else if (missionBadge) missionBadge.remove();
+  }
 }
 
 function hasSurfaceBuildings(bodyId) {
@@ -3614,6 +3586,7 @@ function renderSystem() {
   moon.className = `body luna${state.selected === 'luna' ? ' selected' : ''}`;
   moon.type = 'button';
   moon.setAttribute('aria-label', 'Luna');
+  moon.dataset.bodyId = 'luna';
   moon.title = 'Luna';
   const moonAngle = 225 * Math.PI / 180;
   moon.style.left = `${Math.cos(moonAngle) * bodies.luna.moonOrbit}px`;
@@ -3641,6 +3614,7 @@ function renderSystem() {
     if (id === 'luna') return;
     const element = document.createElement('button');
     element.className = `body ${body.className}${state.selected === id ? ' selected' : ''}`;
+    element.dataset.bodyId = id;
     element.type = 'button';
     element.setAttribute('aria-label', body.name);
     element.title = body.name;
@@ -3677,10 +3651,6 @@ function renderSystem() {
 
   renderAsteroidVisuals();
 
-  const rocketLayer = document.createElement('div');
-  rocketLayer.id = 'rocket-layer';
-  rocketLayer.setAttribute('aria-label', 'Raketenverkehr');
-  solarSystem.appendChild(rocketLayer);
   updateRocketVisuals();
 
   // Das Baumenü wird über den separaten Button unter der Sonnensystemansicht geöffnet.

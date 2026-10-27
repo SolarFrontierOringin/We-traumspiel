@@ -417,8 +417,7 @@ select{padding:7px;border-radius:8px;background:#eef2f7;color:#111}
 #solar-system.building-menu-open > .body-wrap,
 #solar-system.building-menu-open > .orbit,
 #solar-system.building-menu-open > .moon-orbit,
-#solar-system.building-menu-open > .moon-system,
-#solar-system.building-menu-open > #rocket-layer {
+#solar-system.building-menu-open > .moon-system {
   display: none !important;
 }
 #solar-system.building-menu-open > .planet-build-menu {
@@ -1072,69 +1071,21 @@ body > .planet-build-menu {
 .market-toast[hidden]{display:none}
 
 
-/* Sichtbarer Raketenverkehr im Sonnensystem */
-#rocket-layer {
-  position:absolute;
-  inset:0;
-  width:1060px;
-  height:1060px;
-  z-index:7;
-  pointer-events:none;
-  overflow:visible;
+/* Kompakte Raketen- und Missionssymbole direkt auf den Planeten */
+.body .rocket-status-indicator,
+.body .cyclic-mission-indicator {
+  position:absolute; left:-9px; display:grid; place-items:center;
+  min-width:20px; height:20px; padding:0 3px;
+  border:1px solid #7cc7ff; border-radius:9px; background:#071425;
+  color:#fff; font-size:12px; font-weight:800; line-height:1;
+  white-space:nowrap; box-shadow:0 0 0 2px #02050b,0 0 8px rgba(39,118,210,.55);
+  pointer-events:none; z-index:7;
 }
-.rocket-flight-paths {
-  position:absolute;
-  inset:0;
-  width:1060px;
-  height:1060px;
-  overflow:visible;
-}
-.rocket-flight-line {
-  stroke:#7cc7ff;
-  stroke-width:2.5;
-  stroke-dasharray:8 7;
-  opacity:.78;
-  filter:drop-shadow(0 0 3px rgba(80,180,255,.8));
-}
-.rocket-flight-line.returning {
-  stroke:#ffd36a;
-  stroke-dasharray:5 6;
-}
-.rocket-marker {
-  position:absolute;
-  transform:translate(-50%,-50%);
-  display:flex;
-  align-items:center;
-  gap:3px;
-  z-index:8;
-  white-space:nowrap;
-  padding:3px 5px;
-  border:1px solid #7cc7ff;
-  border-radius:9px;
-  background:rgba(3,12,27,.94);
-  box-shadow:0 0 12px rgba(39,118,210,.65);
-  color:#eef4ff;
-  font-size:12px;
-  line-height:1.2;
-}
-.rocket-marker-icon { font-size:20px; line-height:1; }
-.rocket-marker-label {
-  display:block;
-  max-width:100px;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  font-weight:700;
-}
-.rocket-marker.rocket-returning {
-  border-color:#ffd36a;
-  box-shadow:0 0 12px rgba(255,211,106,.45);
-}
-.rocket-marker.rocket-landed { opacity:.8; }
-@media(max-width:430px) {
-  .rocket-marker { padding:2px 4px; font-size:10px; }
-  .rocket-marker-icon { font-size:17px; }
-  .rocket-marker-label { max-width:72px; }
-}
+.body .rocket-status-indicator { top:-9px; }
+.body .cyclic-mission-indicator { top:13px; min-width:19px; border-color:#b99aff; color:#d9c7ff; font-size:16px; }
+.body.luna .rocket-status-indicator,
+.body.luna .cyclic-mission-indicator { left:-8px; min-width:17px; height:17px; font-size:11px; }
+.body.luna .cyclic-mission-indicator { top:10px; font-size:14px; }
 
 /* Flüssigtreibstofflager */
 .liquid-tank-card{border-color:#376080;background:linear-gradient(135deg,#0c1b2c,#0c1627)}
