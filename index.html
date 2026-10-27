@@ -6,7 +6,7 @@
   <title>Solar Frontier: Origins</title>
   <meta name="theme-color" content="#02050b">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=rocket-status-20261027">
+  <link rel="stylesheet" href="style.css?v=start-popup-20261027">
 </head>
 <body>
 
@@ -35,13 +35,13 @@
     <div class="startup-intro-loader" aria-hidden="true"><i></i></div>
   </section>
 
-  <!-- Zweitseitiges Start-Updatefenster: Navigation oben -->
+  <!-- Zweitseitiges Start-Updatefenster: aktuelle Meldung und Chronik -->
   <section id="update-popup" class="update-popup-overlay" role="dialog" aria-modal="true" aria-labelledby="update-popup-title" hidden>
     <article class="update-popup-card">
       <button id="update-popup-close" class="update-popup-close" type="button" aria-label="Updatefenster schließen">✕</button>
       <nav class="update-popup-navigation" aria-label="Update-Seiten">
-        <button type="button" class="update-popup-page-button active" data-update-page="1" aria-current="page">Seite 1 · Neues Update</button>
-        <button type="button" class="update-popup-page-button" data-update-page="2">Seite 2 · Alte Updates</button>
+        <button type="button" class="update-popup-page-button active" data-update-page="1" aria-current="page">Seite 1 · Aktuell</button>
+        <button type="button" class="update-popup-page-button" data-update-page="2">Seite 2 · Chronik</button>
       </nav>
       <div class="update-popup-art" aria-hidden="true">
         <svg viewBox="0 0 320 104" role="img" aria-label="Rakete über einem Planeten">
@@ -61,9 +61,24 @@
         </svg>
       </div>
       <section class="update-popup-page" data-update-page-content="1">
-        <div class="update-popup-kicker">📡 NEUES UPDATE & ANKÜNDIGUNGEN</div>
-        <h2 id="update-popup-title">Neue Gebäude für dein Raumfahrtunternehmen</h2>
+        <div class="update-popup-kicker">📡 AKTUELLE SYSTEMMELDUNG</div>
+        <h2 id="update-popup-title">!!! Achtung – wichtige Meldung !!!</h2>
         <div class="update-popup-message">
+          <p><strong>■● !!! Achtung ●■ !!</strong></p>
+          <p>Das Problem, das zum Ruckeln des Sonnensystems geführt hat, wurde nun endgültig gefunden und angepasst.</p>
+          <p>Wir arbeiten bereits seit heute Abend am neuen Update …</p>
+          <h3>Aktuelle Neuerungen:</h3>
+          <ul>
+            <li>Raketen fliegen nicht mehr mit Linien. Sie werden symbolisch am Planeten eingeblendet.</li>
+          </ul>
+        </div>
+        <div class="update-popup-footnote">Weitere Neuigkeiten zum Update folgen hier.</div>
+      </section>
+      <section class="update-popup-page" data-update-page-content="2" hidden>
+        <div class="update-popup-kicker">📖 UPDATE-CHRONIK</div>
+        <h2>Frühere Ankündigungen</h2>
+        <div class="update-popup-message">
+          <h3>📡 Vorheriges Update – Neue Gebäude für dein Raumfahrtunternehmen</h3>
           <p><strong>🏗️ Neue Produktions- und Energiegebäude</strong></p>
           <ul>
             <li><strong>Nickelmine:</strong> Ein neues Gebäude für den Nickelabbau.</li>
@@ -72,12 +87,8 @@
           </ul>
           <p>Die neuen Gebäude erweitern die Möglichkeiten für Rohstoffproduktion und Energiemanagement.</p>
         </div>
-        <div class="update-popup-footnote">Weitere Ankündigungen und neue Änderungen erscheinen hier bei künftigen Updates.</div>
-      </section>
-      <section class="update-popup-page" data-update-page-content="2" hidden>
-        <div class="update-popup-kicker">📡 ÄLTERES MITTWOCH-UPDATE</div>
-        <h2>!!Achtung neues Mittwoch update!!</h2>
-        <div class="update-popup-message">
+        <div class="update-popup-footnote">
+          <h3>📜 Älteres Mittwoch-Update</h3>
           <p><strong>⚠️ !! UNTERNEHMEN ist gesperrt bis zum Abschluss der Aufgabe!!</strong></p>
           <ul>
             <li>Diverse Fixes durchgeführt.</li>
@@ -90,6 +101,8 @@
           </ul>
         </div>
       </section>
+    </article>
+  </section>
     </article>
   </section>
 
