@@ -40,6 +40,8 @@ background-size:140px 120px,190px 160px,230px 180px,170px 210px,auto}
 .uranus{width:40px;height:40px;background:radial-gradient(circle at 32% 28%,#c5fbff 0%,#70cbd7 55%,#3a879d 100%);box-shadow:0 0 12px rgba(112,203,215,.3)}
 .building-badge{position:absolute;left:30px;top:12px;width:38px;height:38px;padding:0;border-radius:10px;background:#2776d2;font-size:18px;z-index:5}
 .moon-system{position:absolute;transform:translate(-50%,-50%);width:0;height:0;z-index:4}.moon-orbit{position:absolute;border:1px dashed rgba(200,220,255,.35);border-radius:50%;pointer-events:none;z-index:1}
+/* DIAGNOSETEST: Luna-Umlaufbahn vorübergehend ausblenden, um Rendering-Ruckeln einzugrenzen. */
+.moon-orbit{display:none!important}
 .panel{border:1px solid #263754;border-radius:18px;background:#09111f;padding:14px;align-self:start;box-shadow:0 10px 30px rgba(0,0,0,.25)}
 .panel h2,.panel h3{margin-top:0}
 .stat{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #1b2a41}
