@@ -5,6 +5,5 @@ Neue Projekte und Ziele
 [] Test ob auch Funktioniert
 
 -Spieluhr Änderung? wie kann diese umgesetzt werden
-[]
 
-
+! Habitat kann jetzt von 0 bis 30 Bar gebaut werden. kolonisten können dprt wohnen auch wenn keine Atmosphäre vorhanden ist 
