@@ -1,3 +1,9 @@
-kleine Änderungen fixes
-- Öl wird jetzt bei mehreren verschiedenen Verbrauche fair aufgeteilt
-- 
+Neue Projekte und Ziele 
+
+- Kolonisten verbrauch anpassen
+- neue Schwerlast Rakete entwickeln
+[] Test ob auch Funktioniert
+
+-Spieluhr Änderung? wie kann diese umgesetzt werden
+[]
+
