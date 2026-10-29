@@ -13,7 +13,7 @@ const BACKUP_SAVE_KEY = 'solarFrontierOriginsSave_backup_v2';
 // Zweites Sonnensystem: Noxaris liegt auf der äußersten Umlaufbahn.
 const futureSolarSystem = {
   id: 'system2', name: 'Sonnensystem 2',
-  bodies: [{ id: 'noxaris', name: 'Noxaris', type: 'Mystischer Planet', className: 'noxaris', orbit: 1420, temperature: 'Unbekannt', resources: {}, storage: {} }]
+  bodies: [{ id: 'noxaris', name: 'Noxaris', type: 'Mystischer Planet', className: 'noxaris', orbit: 1420, temperature: 'Unbekannt', resources: { iron: 2000000, stone: 1000000 }, storage: {} }]
 };
 let activeSolarSystemId = 'system1';
 
@@ -473,7 +473,9 @@ const state = {
     luxuryFurnitureFactory: 0,
     woodcutter: 0,
     forester: 0,
-    atmosphereRegulator: 0
+    atmosphereRegulator: 0,
+    waterElectrolysis: 0,
+    treeNursery: 0
   },
   lastUpdate: gameNow(),
   buildMenuOpen: false,
@@ -498,13 +500,15 @@ const buildingTypes = {
   steelworks: { name: 'Stahlwerk', icon: '🏭', resource: null, rate: 0.2, cost: 0, text: 'Produziert 0,2 t Stahl/s und verbraucht 0,2 t Eisen/s · Baukosten abhängig von der Anzahl vorhandener Stahlwerke' },
   gasCarbonStorage: { name: 'Gas- und Kohlenstofflager', icon: '🛢️', resource: null, rate: 0, cost: 200, text: '100.000 t Kapazität je Rohstoff und Lagergebäude für Sauerstoff, CO₂, Wasserstoff und Gas · Oberfläche und Orbit · CO₂ kann nur in diesem Lager gespeichert werden · kein Stromverbrauch · keine Forschung · unbegrenzt baubar' },
   atmosphereRegulator: { name: 'Atmosphären-Regulator', icon: '🌐', resource: null, rate: 0, cost: 200, text: 'Gibt automatisch bis zu 0,2 t CO₂ pro Ingame-Sekunde aus dem lokalen Oberflächenlager in die Atmosphäre ab · gibt bei geringerem Lagerbestand nur die verfügbare Menge frei · pausiert bei leerem Lager und setzt automatisch fort, sobald CO₂ verfügbar ist · ohne Forschung · auf allen Planetenoberflächen außer der Sonne baubar · Bauzeit 10 Ingame-Sekunden · Baukosten: 200 t Stahl und 200 t Baustoffe' },
+  waterElectrolysis: { name: 'Wasserelektrolyseanlage', icon: '⚗️', resource: null, rate: 0, cost: 200, text: 'Verbraucht 0,2 Liter Wasser/s und 1 MW Strom · produziert Wasserstoff und Sauerstoff · auf Planetenoberflächen außer der Sonne baubar · Baukosten: 200 t Stahl und 200 t Baustoffe' },
+  treeNursery: { name: 'Baumschule I', icon: '🌱', resource: null, rate: 1 / 10800, cost: 150, text: 'Produziert 1 t Bäume pro 3 Ingame-Stunden · benötigt 1 MW Strom · kein Wasserverbrauch · auf Planetenoberflächen mit geeigneter Oberfläche baubar · Baukosten: 150 t Stahl, 100 t Glas und 200 t Baustoffe' },
   woodcutter: { name: 'Sägewerk', icon: '🪵', resource: null, rate: 0, cost: 0, text: 'Verbraucht 1 MW Strom und 0,01 t Bäume/s · produziert 0,009 t Biomasse/s und 0,009 t Bretter/s · ohne Forschung · auf allen Planetenoberflächen baubar' },
   nickelMining: { name: 'Grabung nach Nickelerz', icon: '⛏️', category: 'Tiefengrabung', cost: 200, time: 2 * 60 * 60, text: 'Schaltet Nickelerz global frei: Abbau auf allen Planeten und nickelhaltigen Asteroiden sowie Handel und Transport werden erst nach Abschluss dieser Forschung ermöglicht.' },
-  forester: { name: 'Förster', icon: '🌳', resource: null, rate: 0, cost: 0, text: 'Erhöht die Regeneration der Bäume auf der Erde um 0,5 % je gebautem, mit Strom versorgtem Förster · benötigt 2 MW · Bauzeit 2 Ingame-Minuten · Baukosten: 290 t Stahl, 100 t Polymere, 150 t Chips, 100 t Glas · nur auf Planeten unter 50 °C · unbegrenzt baubar' },
-  residentialHouse: { name: 'Wohnhaus', icon: '🏠', resource: null, rate: 0, cost: 1900, text: '100 Wohnplätze · 1.900 t Stahl · 900 t Baustoffe · auf geeigneten Planetenoberflächen außer der Sonne baubar; Kolonisten benötigen mindestens 1,05 bar und 18–25 % Sauerstoff' },
-  mediumResidentialHouse: { name: 'Mittleres Wohnhaus', icon: '🏘️', resource: null, rate: 0, cost: 180, text: '150 Wohnplätze · 180 t Stahl · 250 t Baustoffe · 40 t Glas · auf geeigneten Planetenoberflächen außer der Sonne baubar; Kolonisten benötigen mindestens 1,05 bar und 18–25 % Sauerstoff' },
-  residentialComplex: { name: 'Wohnkomplex', icon: '🏢', resource: null, rate: 0, cost: 600, text: '500 Wohnplätze · 600 t Stahl · 800 t Baustoffe · 150 t Glas · auf geeigneten Planetenoberflächen außer der Sonne baubar; Kolonisten benötigen mindestens 1,05 bar und 18–25 % Sauerstoff' },
-  habitat: { name: 'Habitat', icon: '🛖', resource: null, rate: 0, cost: 200, text: '150 Wohnplätze · 200 t Stahl · 250 t Baustoffe · auf allen Himmelskörpern außer Erde und Sonne' },
+  forester: { name: 'Förster', icon: '🌳', resource: null, rate: 0, cost: 0, text: 'Erhöht die lokale Regeneration der Bäume um 0,5 % je gebautem, mit Strom versorgtem Förster · benötigt 2 MW · Bauzeit 2 Ingame-Minuten · Baukosten: 290 t Stahl, 100 t Polymere, 150 t Chips, 100 t Glas · nur auf Planeten unter 50 °C · unbegrenzt baubar' },
+  residentialHouse: { name: 'Wohnhaus', icon: '🏠', resource: null, rate: 0, cost: 1900, text: '100 Wohnplätze · 1.900 t Stahl · 900 t Baustoffe · auf Planetenoberflächen bei −10 °C bis +50 °C baubar · Kolonisten benötigen mindestens 1,05 bar und 18–25 % Sauerstoff' },
+  mediumResidentialHouse: { name: 'Mittleres Wohnhaus', icon: '🏘️', resource: null, rate: 0, cost: 180, text: '150 Wohnplätze · 180 t Stahl · 250 t Baustoffe · 40 t Glas · auf Planetenoberflächen bei −10 °C bis +50 °C baubar · Kolonisten benötigen mindestens 1,05 bar und 18–25 % Sauerstoff' },
+  residentialComplex: { name: 'Wohnkomplex', icon: '🏢', resource: null, rate: 0, cost: 600, text: '500 Wohnplätze · 600 t Stahl · 800 t Baustoffe · 150 t Glas · auf Planetenoberflächen bei −10 °C bis +50 °C baubar · Kolonisten benötigen mindestens 1,05 bar und 18–25 % Sauerstoff' },
+  habitat: { name: 'Habitat', icon: '🛖', resource: null, rate: 0, cost: 200, text: '150 Wohnplätze · 200 t Stahl · 250 t Baustoffe · auf allen Planetenoberflächen außer der Sonne baubar · unabhängig von der Planetentemperatur durch Spezialisolierung · bewohnbar bei 0–30 bar Außendruck und unabhängig von der äußeren Sauerstoffmischung' },
   stoneQuarry: { name: 'Steinbruch', icon: '🪨', resource: 'stone', rate: 0.1, cost: 30, text: 'Kein Verbrauch · produziert 0,1 t Stein/s pro Gebäude' },
   buildingMaterialsFactory: { name: 'Baustofffabrik', icon: '🧱', resource: null, rate: 0, cost: 40, text: 'verbraucht 0,20 t Stein/s · produziert 0,15 t Baustoffe/s' },
   coalMine: { name: 'Kohlemine', icon: '⛏️', resource: 'coal', rate: 0.5, cost: 15, text: '0,5 t Kohle/s' },
@@ -881,7 +885,7 @@ function renderAtmospherePanel(planetId) {
           : 'Atmosphärendruck liegt außerhalb des erdähnlichen Bereichs.';
   const colonistAtmosphere = getColonistAtmosphereStatus(planetId);
   const colonistStatusClass = colonistAtmosphere.normalHousingAllowed ? 'good' : colonistAtmosphere.habitatAllowed ? 'warn' : 'bad';
-  const colonistStatusHtml = `<div class="colonist-atmosphere-status"><strong>👥 Kolonisten-Freigabe</strong><p class="${colonistStatusClass}">${colonistAtmosphere.label}</p><small>Normale Wohngebäude: ab 1,05 bar und 18–25 % O₂ · Habitat: ab 0,9 bar</small></div>`;
+  const colonistStatusHtml = `<div class="colonist-atmosphere-status"><strong>👥 Kolonisten-Freigabe</strong><p class="${colonistStatusClass}">${colonistAtmosphere.label}</p><small>Normale Wohngebäude: ab 1,05 bar und 18–25 % O₂ · Habitat: unabhängig von Außendruck und Sauerstoffmischung</small></div>`;
   const storage = getPlanetStorage(planetId);
   const gases = Object.entries(ATMOSPHERE_RELEASE_GASES).map(([key, gas]) =>
     `<option value="${key}">${gas.icon} ${gas.label} · Lager: ${formatAtmosphereTons(Number(storage[key] || 0))}</option>`).join('');
@@ -926,7 +930,7 @@ function getBuildingsOnPlanet(id) {
     return state.buildings;
   }
   if (!bodies[id].buildings) {
-    bodies[id].buildings = { companyHeadquarters: 0, gasCarbonStorageOrbit: 0, iceMine: 0, residentialHouse: 0, mediumResidentialHouse: 0, residentialComplex: 0, habitat: 0, observatory: 0, foodFactory: 0, algaeFarm: 0, algaeFoodProcessor: 0, steelworks: 0, stoneQuarry: 0, buildingMaterialsFactory: 0, coalMine: 0, gasPlant: 0, co2Extraction: 0, co2ProcessingPlant: 0, orbitalCo2Extractor: 0, researchSatellite: 0, ironMine: 0, nickelMine: 0, graphiteMine: 0, syntheticGraphitePlant: 0, siliconMine: 0, lithiumMine: 0, copperMine: 0, copperSmelter: 0, lithiumRefinery: 0, machineFactory: 0, glassFactory: 0, heliumExtractor: 0, fusionReactor: 0, outpost: 0, coalPowerPlant: 0, solarPlant: 0, researchLab: 0, moonBase: 0, crudeOilPump: 0, refinery: 0, polymerFactory: 0, rubberFactory: 0, plasticFactory: 0, vehicleFactory: 0, electronicsFactory: 0, uraniumMine: 0, ioniumMine: 0, uraniumProcessingPlant: 0, nuclearFuelPlant: 0, nuclearReactor: 0, radioactiveStorageSurface: 0, radioactiveStorageOrbit: 0, chipFactory: 0, solarSail: 0, warmingSail: 0, solarSatellite: 0, solarProbe: 0, bauxiteMine: 0, titanMine: 0, titanProcessing: 0, titanRefinery: 0, aluminiumOxideRefinery: 0, aluminiumSmelter: 0, hydroelectricPlant: 0, greenhouse: 0, cocoaPlantation: 0, woodcutter: 0, forester: 0, atmosphereRegulator: 0 }
+    bodies[id].buildings = { companyHeadquarters: 0, gasCarbonStorageOrbit: 0, iceMine: 0, residentialHouse: 0, mediumResidentialHouse: 0, residentialComplex: 0, habitat: 0, observatory: 0, foodFactory: 0, algaeFarm: 0, algaeFoodProcessor: 0, steelworks: 0, stoneQuarry: 0, buildingMaterialsFactory: 0, coalMine: 0, gasPlant: 0, co2Extraction: 0, co2ProcessingPlant: 0, orbitalCo2Extractor: 0, researchSatellite: 0, ironMine: 0, nickelMine: 0, graphiteMine: 0, syntheticGraphitePlant: 0, siliconMine: 0, lithiumMine: 0, copperMine: 0, copperSmelter: 0, lithiumRefinery: 0, machineFactory: 0, glassFactory: 0, heliumExtractor: 0, fusionReactor: 0, outpost: 0, coalPowerPlant: 0, solarPlant: 0, researchLab: 0, moonBase: 0, crudeOilPump: 0, refinery: 0, polymerFactory: 0, rubberFactory: 0, plasticFactory: 0, vehicleFactory: 0, electronicsFactory: 0, uraniumMine: 0, ioniumMine: 0, uraniumProcessingPlant: 0, nuclearFuelPlant: 0, nuclearReactor: 0, radioactiveStorageSurface: 0, radioactiveStorageOrbit: 0, chipFactory: 0, solarSail: 0, warmingSail: 0, solarSatellite: 0, solarProbe: 0, bauxiteMine: 0, titanMine: 0, titanProcessing: 0, titanRefinery: 0, aluminiumOxideRefinery: 0, aluminiumSmelter: 0, hydroelectricPlant: 0, greenhouse: 0, cocoaPlantation: 0, woodcutter: 0, forester: 0, atmosphereRegulator: 0, waterElectrolysis: 0, treeNursery: 0 }
   }
   if (bodies[id].buildings.nickelMine === undefined) bodies[id].buildings.nickelMine = 0;
   if (bodies[id].buildings.syntheticGraphitePlant === undefined) bodies[id].buildings.syntheticGraphitePlant = 0;
@@ -938,6 +942,8 @@ function getBuildingsOnPlanet(id) {
   if (bodies[id].buildings.radioactiveStorageOrbit === undefined) bodies[id].buildings.radioactiveStorageOrbit = 0;
   if (bodies[id].buildings.forester === undefined) bodies[id].buildings.forester = 0;
   if (bodies[id].buildings.atmosphereRegulator === undefined) bodies[id].buildings.atmosphereRegulator = 0;
+  if (bodies[id].buildings.waterElectrolysis === undefined) bodies[id].buildings.waterElectrolysis = 0;
+  if (bodies[id].buildings.treeNursery === undefined) bodies[id].buildings.treeNursery = 0;
   if (bodies[id].buildings.refinery === undefined) bodies[id].buildings.refinery = 0;
   if (bodies[id].buildings.woodcutter === undefined) bodies[id].buildings.woodcutter = 0;
   if (bodies[id].buildings.residentialHouse === undefined) bodies[id].buildings.residentialHouse = 0;
@@ -1066,9 +1072,8 @@ const housingCosts = {
 };
 
 // Kolonisten-Atmosphärenregeln: normale Wohngebäude benötigen mindestens
-// 1,05 bar und 18–25 % Sauerstoff. Habitate sind von der Außenatmosphäre unabhängig.
+// 1,05 bar und 18–25 % Sauerstoff. Habitate sind unabhängig vom Außendruck bewohnbar.
 const COLONIST_ATMOSPHERE_MIN_PRESSURE = 1.05;
-const COLONIST_HABITAT_MIN_PRESSURE = 0.9;
 const COLONIST_OXYGEN_MIN_PERCENT = 18;
 const COLONIST_OXYGEN_MAX_PERCENT = 25;
 
@@ -1084,14 +1089,10 @@ function getColonistAtmosphereStatus(id) {
   const oxygenPercent = total > 0 ? oxygen / total * 100 : 0;
   const oxygenOk = oxygenPercent >= COLONIST_OXYGEN_MIN_PERCENT && oxygenPercent <= COLONIST_OXYGEN_MAX_PERCENT;
   const normalHousingAllowed = pressure >= COLONIST_ATMOSPHERE_MIN_PRESSURE && oxygenOk;
-  const habitatAllowed = pressure >= COLONIST_HABITAT_MIN_PRESSURE;
+  const habitatAllowed = true;
   let label = normalHousingAllowed
     ? 'Sauerstoffanteil und Druck geeignet – normale Wohngebäude freigegeben.'
-    : pressure < COLONIST_HABITAT_MIN_PRESSURE
-      ? 'Kritisch: unter 0,9 bar. Kolonisten benötigen Habitate mit eigener Lebenserhaltung.'
-      : !oxygenOk
-        ? 'Sauerstoffanteil ungeeignet. Normale Wohngebäude bleiben gesperrt; Habitate sind erforderlich.'
-        : 'Druck unter 1,05 bar. Kolonisten dürfen nur in Habitaten leben.';
+    : 'Normale Wohngebäude gesperrt; Habitate sind unabhängig von Außendruck und Sauerstoff bewohnbar.';
   return { pressure, oxygenPercent, breathable: oxygenOk, normalHousingAllowed, habitatAllowed, label };
 }
 function canHouseColonistInBuilding(id, buildingKey) {
@@ -1299,7 +1300,7 @@ function foodFactoryProduction(id = state.selected) { return Number(getBuildings
 function foodFactoryElectricityUse(id = state.selected) { return Number(getBuildingsOnPlanet(id).foodFactory || 0) * 5; }
 function newBuildingPowerFactor(id = state.selected) {
   const b = getBuildingsOnPlanet(id);
-  const demand = Number(b.hydroelectricPlant || 0) * 3 + Number(b.greenhouse || 0) * 2 + Number(b.cocoaPlantation || 0) * 5 + Number(b.chocolateFactory || 0) * 5 + Number(b.luxuryFurnitureFactory || 0) * 5 + Number(b.forester || 0) * 2 + Number(b.woodcutter || 0) * 1 + Number(b.nickelMine || 0) * 1 + Number(b.graphiteMine || 0) * 5 + Number(b.syntheticGraphitePlant || 0) * 10 + foodFactoryElectricityUse(id) + crudeOilElectricityUse(id) + vehicleFactoryElectricityUse(id);
+  const demand = Number(b.hydroelectricPlant || 0) * 3 + Number(b.greenhouse || 0) * 2 + Number(b.cocoaPlantation || 0) * 5 + Number(b.chocolateFactory || 0) * 5 + Number(b.luxuryFurnitureFactory || 0) * 5 + Number(b.forester || 0) * 2 + Number(b.woodcutter || 0) * 1 + Number(b.waterElectrolysis || 0) * 1 + Number(b.treeNursery || 0) * 1 + Number(b.nickelMine || 0) * 1 + Number(b.graphiteMine || 0) * 5 + Number(b.syntheticGraphitePlant || 0) * 10 + foodFactoryElectricityUse(id) + crudeOilElectricityUse(id) + vehicleFactoryElectricityUse(id);
   // Bei Strommangel wird die verfügbare Leistung anteilig auf strompflichtige
   // Gebäude verteilt, statt sämtliche Produktion abrupt auf null zu setzen.
   if (demand <= 0) return 1;
@@ -1348,6 +1349,7 @@ function electricityConsumptionBreakdown(id = state.selected) {
     { name: 'Luxusmöbel-Fabrik', count: Number(b.luxuryFurnitureFactory || 0), perBuilding: 5 },
     { name: 'Förster', count: Number(b.forester || 0), perBuilding: 2 },
     { name: 'Holzfäller', count: Number(b.woodcutter || 0), perBuilding: 1 },
+    { name: 'Wasserelektrolyseanlage', count: Number(b.waterElectrolysis || 0), perBuilding: 1 },
     { name: 'Nickelmine', count: Number(b.nickelMine || 0), perBuilding: 1 },
     { name: 'Graphitmine', count: Number(b.graphiteMine || 0), perBuilding: 5 },
     { name: 'Synthetische Graphitproduktion', count: Number(b.syntheticGraphitePlant || 0), perBuilding: 10 },
@@ -3541,7 +3543,8 @@ function renderSystem() {
     label.textContent = 'Noxaris';
     planet.appendChild(label);
     planet.addEventListener('click', () => {
-      infoPanel.innerHTML = `<h2>🌌 Noxaris</h2><div class="stat"><span>Typ</span><strong>Mystischer Planet</strong></div><div class="stat"><span>Temperatur</span><strong>Unbekannt</strong></div><p class="hint">Ein geheimnisvoller, dunkelblauer Planet, umgeben von violett-blauen kosmischen Nebeln. Seine Herkunft und seine Rohstoffe sind noch unerforscht.</p>`;
+      const noxaris = futureSolarSystem.bodies[0];
+      infoPanel.innerHTML = `<h2>🌌 Noxaris</h2><div class="stat"><span>Typ</span><strong>${noxaris.type}</strong></div><div class="stat"><span>Temperatur</span><strong>${noxaris.temperature}</strong></div><h3>🪨 Rohstoffvorkommen</h3><div class="stat"><span>Eisen</span><strong>${Number(noxaris.resources.iron || 0).toLocaleString('de-DE')} t</strong></div><div class="stat"><span>Stein</span><strong>${Number(noxaris.resources.stone || 0).toLocaleString('de-DE')} t</strong></div><p class="hint">Ein geheimnisvoller, dunkelblauer Planet, umgeben von violett-blauen kosmischen Nebeln.</p>`;
     });
     solarSystem.appendChild(planet);
     const buildMenuTriggerButton = document.querySelector('#open-build-menu-button');
@@ -3710,7 +3713,9 @@ function renderSystem() {
       ${buildButton('greenhouse')}
       ${buildButton('woodcutter')}
       ${buildButton('forester')}
+      ${buildButton('treeNursery')}
       ${buildButton('atmosphereRegulator')}
+      ${buildButton('waterElectrolysis')}
       ${buildButton('foodFactory')}
       ${buildButton('iceMine')}
       ${buildButton('iceProcessingPlant')}
@@ -3758,7 +3763,7 @@ function renderSystem() {
     // Gebäudeübersicht Konzept 1.1: planetenabhängige, durchsuchbare Kategorien.
     const buildCategories = [
       { title: '🏢 Unternehmensverwaltung', keys: ['companyHeadquarters'] },
-      { title: '🌍 Terraforming', keys: ['atmosphereRegulator'] },
+      { title: '🌍 Terraforming', keys: ['atmosphereRegulator','waterElectrolysis','treeNursery'] },
       { title: '🌲 Forstwirtschaft', keys: ['forester'] },
       { title: '🛢️ Verbrauch', keys: ['refinery'] },
 
@@ -3826,7 +3831,7 @@ function renderSystem() {
         const key = keyForCard(card);
         const small = card.querySelector('small');
         const desc = small ? small.textContent : '';
-        const fullDesc = key === 'vehicleFactory' ? `${buildingTypes.vehicleFactory.text} · Baukosten: 500 t Stahl, 250 t Baustoffe, 100 t Elektronik und 200 t Chips` : desc;
+        const fullDesc = key === 'vehicleFactory' ? `${buildingTypes.vehicleFactory.text} · Baukosten: 500 t Stahl, 250 t Baustoffe, 100 t Elektronik und 200 t Chips` : key === 'habitat' ? `${buildingTypes.habitat.text} · Kapazität: 150 Kolonisten · Baukosten: 200 t Stahl und 250 t Baustoffe · Unterhalt: 88 GünniDollar pro Ingame-Stunde` : desc;
         // Antippbare Kosten-, Verbrauchs- und Produktionskacheln. Die Werte
         // werden aus der vorhandenen Beschreibung gelesen; Mechaniken bleiben unberührt.
         const getInfoText = (kind) => {
@@ -4273,11 +4278,12 @@ function isBuildingAllowed(key, planetId = state.selected) {
   if (key === 'graphiteMine') return state.viewMode === 'surface' && ['earth','luna','mars','io'].includes(planetId) && Number(bodies[planetId]?.resources?.graphite || 0) > 0;
   if (key === 'syntheticGraphitePlant' && (state.viewMode !== 'surface' || planetId === 'sun' || !hasPlanetSurface(planetId))) return false;
   if (key === 'companyHeadquarters') return planetId === 'earth' && state.viewMode === 'surface' && taskIsComplete('company_start_name') && Number(getBuildingsOnPlanet('earth').companyHeadquarters || 0) < 1;
-  if (key === 'atmosphereRegulator') return state.viewMode === 'surface' && planetId !== 'sun' && !!bodies[planetId];
+  if (key === 'atmosphereRegulator' || key === 'waterElectrolysis') return state.viewMode === 'surface' && planetId !== 'sun' && !!bodies[planetId] && hasPlanetSurface(planetId);
   if (key === 'liquidStorage') return planetId !== 'sun';
   if (key === 'refinery') return state.viewMode === 'surface' && planetId !== 'sun' && hasPlanetSurface(planetId) && planetTemperatureCelsius(planetId) < 50;
   if (key === 'orbitLandingPad') return state.viewMode === 'orbit' && planetId !== 'sun';
-  if (key === 'woodcutter' && (state.viewMode === 'orbit' || planetId === 'sun')) return false;
+  if (key === 'woodcutter' && (state.viewMode === 'orbit' || planetId === 'sun' || !hasPlanetSurface(planetId) || planetTemperatureCelsius(planetId) >= 50)) return false;
+  if (key === 'treeNursery' && (state.viewMode !== 'surface' || planetId === 'sun' || !hasPlanetSurface(planetId))) return false;
   if (key === 'radioactiveStorageSurface' && (state.viewMode !== 'surface' || planetId === 'sun')) return false;
   if (key === 'radioactiveStorageOrbit' && (state.viewMode !== 'orbit' || planetId === 'sun')) return false;
   if (key === 'chipFactory' && state.viewMode === 'orbit') return false;
@@ -4291,16 +4297,20 @@ function isBuildingAllowed(key, planetId = state.selected) {
     // Wohngebäude dürfen auf allen geeigneten Planetenoberflächen gebaut werden.
     // Die Atmosphärenregel entscheidet separat, ob Kolonisten darin wohnen dürfen.
     if (planetId === 'sun' || !hasPlanetSurface(planetId)) return false;
-    if (key === 'habitat' && planetId === 'earth') return false;
-    // Nicht hier freigeben: danach müssen weiterhin die Temperatur- und
-    // sonstigen Oberflächenregeln des jeweiligen Planeten greifen.
+    // Normale Wohngebäude benötigen an der Oberfläche milde Temperaturen.
+    // Habitate sind durch ihre Spezialisolierung davon ausgenommen.
+    if (state.viewMode === 'surface' && key !== 'habitat') {
+      const temperature = planetTemperatureCelsius(planetId);
+      if (temperature < -10 || temperature > 50) return false;
+    }
+    // Die Atmosphärenregel entscheidet separat, ob Kolonisten darin wohnen dürfen.
   }
   // Temperaturgrenze gilt ausschließlich für die Planetenoberfläche, niemals für den Orbit.
-  if (state.viewMode === 'surface' && planetId === 'mercury' && mercuryTemperature() > 50 && key !== 'solarSail' && key !== 'iceMine' && key !== 'co2ProcessingPlant' && key !== 'iceProcessingPlant' && key !== 'algaeFoodProcessor' && key !== 'radioactiveStorageSurface' && key !== 'cocoaPlantation' && key !== 'chocolateFactory' && key !== 'woodcutter' && !['titanMine','titanProcessing','titanRefinery'].includes(key)) return false;
-  if (state.viewMode === 'surface' && planetId === 'venus' && venusTemperature() > 50 && key !== 'solarSail' && key !== 'iceMine' && key !== 'co2Extraction' && key !== 'co2ProcessingPlant' && key !== 'iceProcessingPlant' && key !== 'algaeFoodProcessor' && key !== 'radioactiveStorageSurface' && key !== 'cocoaPlantation' && key !== 'chocolateFactory' && key !== 'woodcutter' && !['titanMine','titanProcessing','titanRefinery'].includes(key)) return false;
+  if (state.viewMode === 'surface' && planetId === 'mercury' && mercuryTemperature() > 50 && key !== 'habitat' && key !== 'solarSail' && key !== 'iceMine' && key !== 'co2ProcessingPlant' && key !== 'iceProcessingPlant' && key !== 'algaeFoodProcessor' && key !== 'radioactiveStorageSurface' && key !== 'cocoaPlantation' && key !== 'chocolateFactory' && key !== 'woodcutter' && key !== 'treeNursery' && !['titanMine','titanProcessing','titanRefinery'].includes(key)) return false;
+  if (state.viewMode === 'surface' && planetId === 'venus' && venusTemperature() > 50 && key !== 'habitat' && key !== 'solarSail' && key !== 'iceMine' && key !== 'co2Extraction' && key !== 'co2ProcessingPlant' && key !== 'iceProcessingPlant' && key !== 'algaeFoodProcessor' && key !== 'radioactiveStorageSurface' && key !== 'cocoaPlantation' && key !== 'chocolateFactory' && key !== 'woodcutter' && key !== 'treeNursery' && !['titanMine','titanProcessing','titanRefinery'].includes(key)) return false;
   // Auf der Venusoberfläche ist der Bau erst unter 1,0 bar möglich.
   // CO₂-Extraktion bleibt als Weg zum Senken des Drucks erlaubt; im Orbit gilt die Sperre nicht.
-  if (state.viewMode === 'surface' && planetId === 'venus' && venusAtmosphericPressure() >= 1 && !['solarSail','co2Extraction','radioactiveStorageSurface'].includes(key)) return false;
+  if (state.viewMode === 'surface' && planetId === 'venus' && venusAtmosphericPressure() >= 1 && !['solarSail','co2Extraction','radioactiveStorageSurface','habitat','treeNursery'].includes(key)) return false;
   // Sonnensegel dürfen in jedem Planetenorbit gebaut werden; an der Oberfläche weiterhin nur auf Merkur und Venus.
   if (key === 'solarSail' && (state.viewMode === 'orbit' ? planetId === 'sun' : !['mercury','venus'].includes(planetId))) return false;
   if (key === 'warmingSail' && (state.viewMode !== 'orbit' || planetId === 'sun')) return false;
@@ -4451,6 +4461,18 @@ function buildButtonUnsafe(key) {
     return `<div class="build-card"><div><strong>${b.icon} ${b.name}</strong><small>${b.text}</small>${queuedText}</div><button class="build-resource" data-building="${key}" ${affordable ? '' : 'disabled'}>Bauen (${Number(count || 0)})</button></div>`;
   }
 
+  if (key === 'waterElectrolysis') {
+    const costs = { steel: 200, buildingMaterials: 200 };
+    const affordable = isBuildingAllowed(key, state.selected) && Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount);
+    return `<div class="build-card"><div><strong>${b.icon} ${b.name}</strong><small>${b.text}</small></div><button class="build-resource" data-building="${key}" ${affordable ? '' : 'disabled'}>Bauen (${Number(count || 0)})</button></div>`;
+  }
+
+  if (key === 'treeNursery') {
+    const costs = { steel: 150, glass: 100, buildingMaterials: 200 };
+    const affordable = isBuildingAllowed(key, state.selected) && Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount);
+    return `<div class="build-card"><div><strong>${b.icon} ${b.name}</strong><small>${b.text}</small></div><button class="build-resource" data-building="${key}" ${affordable ? '' : 'disabled'}>Bauen (${Number(count || 0)})</button></div>`;
+  }
+
   if (key === 'radioactiveStorageSurface' || key === 'radioactiveStorageOrbit') {
     const costs = { steel: 500, buildingMaterials: 500, glass: 200, electronics: 100 };
     const affordable = isBuildingAllowed(key, state.selected) && Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount);
@@ -4462,9 +4484,10 @@ function buildButtonUnsafe(key) {
     const costs = housingCosts[key];
     const affordable = isBuildingAllowed(key) && Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount);
     const costText = Object.entries(costs).map(([r, amount]) => `${amount.toLocaleString('de-DE')} t ${({steel:'Stahl',buildingMaterials:'Baustoffe',glass:'Glas'})[r] || r}`).join(' · ');
-    const allowedText = isBuildingAllowed(key) ? '' : (key === 'habitat' ? ' · nur außerhalb von Erde und Sonne' : ' · nur auf der Erde');
-    const upkeepText = key === 'habitat' ? ' · Unterhalt: 88 GD/Ingame-Stunde' : '';
-    return `<div class="build-card"><div><strong>${b.icon} ${b.name}</strong><small>${b.text} · Baukosten: ${costText}${upkeepText}${allowedText}</small></div><button class="build-resource" data-building="${key}" ${affordable ? '' : 'disabled'}>Bauen (${count || 0})</button></div>`;
+    const allowedText = isBuildingAllowed(key) ? '' : (key === 'habitat' ? ' · auf allen Planetenoberflächen außer der Sonne' : ' · nur auf der Erde');
+    const upkeepText = key === 'habitat' ? ' · Unterhalt: 88 GünniDollar pro Ingame-Stunde' : '';
+    const habitatDetails = key === 'habitat' ? ' · Auf allen Planetenoberflächen außer der Sonne baubar · Spezialisolierung: unabhängig von der Planetentemperatur · bei 0–30 bar Außendruck und unabhängig von der äußeren Sauerstoffmischung bewohnbar · Kapazität: 150 Kolonisten' : '';
+    return `<div class="build-card"><div><strong>${b.icon} ${b.name}</strong><small>${b.text} · Baukosten: ${costText}${upkeepText}${habitatDetails}${allowedText}</small></div><button class="build-resource" data-building="${key}" ${affordable ? '' : 'disabled'}>Bauen (${count || 0})</button></div>`;
   }
 
   if (key === 'woodcutter') {
@@ -5233,6 +5256,27 @@ function buildResourceBuilding(key) {
     });
     playUiSound('build');
     renderSystem(); renderInfo(); renderTopResources(); renderConstructionQueue(); saveAfterBuild();
+    return;
+  }
+
+  if (key === 'waterElectrolysis') {
+    const costs = { steel: 200, buildingMaterials: 200 };
+    if (!isBuildingAllowed(key, planetId) || !Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount)) return;
+    for (const [r, amount] of Object.entries(costs)) storage[r] = Number(storage[r] || 0) - amount;
+    bld.waterElectrolysis = Number(bld.waterElectrolysis || 0) + 1;
+    playUiSound('build');
+    renderSystem(); renderInfo(); renderTopResources(); saveAfterBuild();
+    return;
+  }
+
+  if (key === 'treeNursery') {
+    const costs = { steel: 150, glass: 100, buildingMaterials: 200 };
+    if (!isBuildingAllowed(key, planetId) || !Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount)) return;
+    for (const [r, amount] of Object.entries(costs)) storage[r] = Number(storage[r] || 0) - amount;
+    bld.treeNursery = Number(bld.treeNursery || 0) + 1;
+    if (!Number.isFinite(Number(bodies[planetId].resources?.trees))) bodies[planetId].resources.trees = 0;
+    playUiSound('build');
+    renderSystem(); renderInfo(); renderTopResources(); saveAfterBuild();
     return;
   }
 
@@ -6574,21 +6618,37 @@ function updateVehicleFactoryConstruction(now = gameNow()) {
   }
 }
 
-function totalPoweredForesters() {
-  return Object.keys(bodies).filter(id => id !== 'sun').reduce((sum, id) => {
-    const count = Math.max(0, Number(getBuildingsOnPlanet(id).forester) || 0);
-    return sum + Math.floor(count * newBuildingPowerFactor(id) + 1e-9);
-  }, 0);
+function poweredForestersOnPlanet(planetId) {
+  const count = Math.max(0, Number(getBuildingsOnPlanet(planetId).forester) || 0);
+  return Math.floor(count * newBuildingPowerFactor(planetId) + 1e-9);
 }
 
 function updateForestRegeneration(delta) {
-  if (!bodies.earth || !(delta > 0)) return;
-  const resources = bodies.earth.resources || (bodies.earth.resources = {});
-  if (!Number.isFinite(Number(resources.trees))) resources.trees = 10000;
-  const current = Math.max(0, Number(resources.trees) || 0);
-  const hourlyBase = current / 1000;
-  const foresterBonus = totalPoweredForesters() * 0.005;
-  resources.trees = current + hourlyBase * (1 + foresterBonus) * (delta / 3600);
+  if (!(delta > 0)) return;
+  Object.keys(bodies).forEach(planetId => {
+    if (planetId === 'sun' || !hasPlanetSurface(planetId)) return;
+    const temperature = planetTemperatureCelsius(planetId);
+    // Natürliche Waldregeneration ist nur zwischen -20 °C und +50 °C möglich.
+    if (!Number.isFinite(temperature) || temperature < -20 || temperature > 50) return;
+    const resources = bodies[planetId].resources || (bodies[planetId].resources = {});
+    if (!Number.isFinite(Number(resources.trees)) || Number(resources.trees) <= 0) return;
+    const current = Math.max(0, Number(resources.trees) || 0);
+    const hourlyBase = current / 1000;
+    const atmosphere = ensurePlanetAtmosphere(planetId);
+    const pressure = atmosphere && PLANET_ATMOSPHERE_PHYSICS[planetId]
+      ? atmosphericPressureFromMass(planetId, Number(atmosphere.totalGas) || 0)
+      : 0;
+    // Druckbonus steigt linear von 0 % auf maximal 100 % bei 1 bar.
+    const pressureBonus = Math.min(1, Math.max(0, pressure));
+    // Jeder lokal mit Strom versorgte Förster bringt weitere 0,5 %.
+    const foresterBonus = poweredForestersOnPlanet(planetId) * 0.005;
+    resources.trees = current + hourlyBase * (1 + pressureBonus) * (1 + foresterBonus) * (delta / 3600);
+
+    // Wälder erzeugen zusätzlich Wasser direkt im planetaren Rohstoffbestand:
+    // 25 Liter pro Ingame-Tag je 1.000 Bäume. Der Wald darf unbegrenzt wachsen.
+    const waterPerGameSecond = (current / 1000) * 25 / 86400;
+    resources.water = Math.max(0, Number(resources.water) || 0) + waterPerGameSecond * delta;
+  });
 }
 
 function atmosphereMassForPressure(planetId, pressureBar) {
@@ -6718,6 +6778,21 @@ function updateResources() {
     const storage = getPlanetStorage(id);
     updateBatteryStorage(id, delta);
     updateAtmosphereRegulators(id, storage, bld, delta);
+    // Wasserelektrolyse: verarbeitet bis zu 0,2 Liter Wasser/s je Anlage.
+    // Die Gasprodukte werden in Tonnen im lokalen Oberflächenlager geführt.
+    if (Number(bld.waterElectrolysis || 0) > 0 && delta > 0) {
+      const count = Number(bld.waterElectrolysis || 0);
+      const powerFactor = newBuildingPowerFactor(id);
+      const waterAvailable = Math.max(0, Number(storage.water || 0));
+      const requestedWater = 0.2 * count * delta * powerFactor;
+      const waterUsed = Math.min(waterAvailable, requestedWater);
+      if (waterUsed > 0) {
+        storage.water = Math.max(0, waterAvailable - waterUsed);
+        // 1 Liter Wasser ≈ 1 kg; Masseanteile: 11,19 % Wasserstoff und 88,81 % Sauerstoff.
+        storage.hydrogen = Number(storage.hydrogen || 0) + waterUsed * 0.0001119;
+        storage.oxygen = Number(storage.oxygen || 0) + waterUsed * 0.0008881;
+      }
+    }
     // Kupfer wird auf jedem Planeten fair auf alle gleichzeitig kupferverbrauchenden
     // Produktionsgebäude verteilt. Die gleiche Versorgungsquote verhindert, dass
     // die zuerst ausgeführten Produktionsblöcke das Kupfer vollständig aufbrauchen.
@@ -6734,6 +6809,14 @@ function updateResources() {
     // Kupfer wird auf jedem Planeten fair auf alle gleichzeitig kupferverbrauchenden
     // Produktionsgebäude verteilt. Die gleiche Versorgungsquote verhindert, dass
     // die zuerst ausgeführten Produktionsblöcke das Kupfer vollständig aufbrauchen.
+    // Baumschule I: erzeugt lokale Bäume ohne Wasserverbrauch; Strom bestimmt die Produktionsquote.
+    if (Number(bld.treeNursery || 0) > 0 && delta > 0) {
+      const powerFactor = newBuildingPowerFactor(id);
+      if (powerFactor > 0) {
+        if (!Number.isFinite(Number(planet.resources?.trees))) planet.resources.trees = 0;
+        planet.resources.trees = Math.max(0, Number(planet.resources.trees) || 0) + (1 / 10800) * Number(bld.treeNursery) * delta * powerFactor;
+      }
+    }
     // Sägewerk: verbraucht lokale Bäume und Strom; Biomasse und Bretter landen im Oberflächenlager.
     if (Number(bld.woodcutter || 0) > 0) {
       const powerFactor = newBuildingPowerFactor(id);
@@ -8039,7 +8122,7 @@ const SOLAR_HELP_TOPICS = [
   {category:'Kolonisten',title:'Kolonisten und Versorgung',keywords:'kolonisten bevölkerung habitat nahrung wasser wachstum atmosphäre druck sauerstoff',body:'<p>Kolonisten benötigen geeignete Lebensbedingungen, freien Wohnraum sowie Versorgung mit Nahrung und Wasser. Normale Wohngebäude benötigen mindestens 1,05 bar und 18–25 % Sauerstoff in der Atmosphäre. Habitate besitzen eine eigene Lebenserhaltung.</p><p>Wenn Kolonisten nicht einziehen oder sich die Bevölkerung nicht wie erwartet entwickelt, kontrolliere den Atmosphärenstatus, verfügbare Unterkünfte und die Versorgung des Standorts.</p>'},
   {category:'Spielverwaltung',title:'Speichern und Spielgeschwindigkeit',keywords:'speichern spielstand laden autosave geschwindigkeit x1 x2 x3 x5 x10',body:'<p>Nutze das Spielmenü für die verfügbaren Speicher- und Ladefunktionen. Das Spiel speichert außerdem bestimmte Änderungen automatisch.</p><p>Über die Spielgeschwindigkeit kannst du den Ablauf der Spielzeit beschleunigen. Bei höherer Geschwindigkeit laufen zeitbasierte Vorgänge entsprechend schneller ab.</p>'},
   {category:'Terraforming',title:'Terraforming und Atmosphäre aufbauen',keywords:'terraforming atmosphäre atmosphärendruck bar co2 sauerstoff stickstoff gas regulator planet luna venus kolonie kolonisten habitat',body:'<p><strong>Terraforming</strong> bedeutet, die Atmosphäre eines Himmelskörpers gezielt aufzubauen und ihre Zusammensetzung zu verbessern. Wähle den gewünschten Planeten oder Luna aus und öffne die Atmosphären-Ansicht auf der Oberfläche.</p><ol><li>Baue bei Bedarf ein <strong>Gas- und Kohlenstofflager</strong>, um freigegebene Gase lokal zu lagern.</li><li>Stelle die benötigten Gase her oder transportiere sie zum Zielkörper.</li><li>In der Atmosphären-Ansicht kannst du vorhandene Gase aus dem Oberflächenlager in die Atmosphäre abgeben. Prüfe vor jeder Freigabe die Gasart und Menge.</li><li>Der <strong>Atmosphären-Regulator</strong> gibt automatisch bis zu 0,2 t CO₂ pro Ingame-Sekunde aus dem lokalen Oberflächenlager ab. Ist kein CO₂ vorhanden, pausiert er und setzt fort, sobald wieder CO₂ im Lager liegt.</li><li>Kontrolliere danach den Atmosphärendruck und den Sauerstoffanteil in der Planetenansicht.</li></ol><p>Der Druck steigt abhängig von der freigegebenen Gasmenge und den Eigenschaften des Himmelskörpers. Ein höherer Druck allein bedeutet noch nicht, dass die Atmosphäre für normale Wohngebäude geeignet ist.</p>'},
-  {category:'Terraforming',title:'Atmosphäre: Voraussetzungen für Kolonisten',keywords:'kolonisten kolonist wohngebäude habitat 1,05 bar 0,9 bar sauerstoff o2 18 25 prozent freigabe',body:'<p>Für <strong>normale Wohngebäude</strong> müssen beide Bedingungen gleichzeitig erfüllt sein:</p><ul><li><strong>Atmosphärendruck mindestens 1,05 bar</strong></li><li><strong>Sauerstoffanteil zwischen 18 % und 25 %</strong></li></ul><p>Wenn der Druck unter 1,05 bar liegt oder der Sauerstoffanteil außerhalb dieses Bereichs liegt, bleiben normale Wohngebäude für Kolonisten gesperrt.</p><p><strong>Habitate</strong> verfügen über eigene Lebenserhaltung und können unabhängig von der Freigabe normaler Wohngebäude genutzt werden. Die Spielanzeige markiert die Atmosphäre unter 0,9 bar als kritisch; prüfe den Status des jeweiligen Himmelskörpers vor der Ansiedlung.</p><p><strong>Tipp:</strong> Öffne die Atmosphären-Ansicht und beobachte sowohl den Druck in bar als auch den Sauerstoffanteil. Gib nicht einfach nur Sauerstoff ab, ohne die Gesamtgasmenge und den Anteil im Blick zu behalten.</p>'},
+  {category:'Terraforming',title:'Atmosphäre: Voraussetzungen für Kolonisten',keywords:'kolonisten kolonist wohngebäude habitat 1,05 bar sauerstoff o2 18 25 prozent freigabe',body:'<p>Für <strong>normale Wohngebäude</strong> müssen beide Bedingungen gleichzeitig erfüllt sein:</p><ul><li><strong>Atmosphärendruck mindestens 1,05 bar</strong></li><li><strong>Sauerstoffanteil zwischen 18 % und 25 %</strong></li></ul><p>Wenn der Druck unter 1,05 bar liegt oder der Sauerstoffanteil außerhalb dieses Bereichs liegt, bleiben normale Wohngebäude für Kolonisten gesperrt.</p><p><strong>Habitate</strong> verfügen über eigene Lebenserhaltung und können unabhängig von der Freigabe normaler Wohngebäude genutzt werden. Habitate besitzen eine eigene Lebenserhaltung und können bei jedem Außendruck sowie unabhängig von der äußeren Sauerstoffmischung genutzt werden. Sie können auf allen Planetenoberflächen außer der Sonne gebaut werden und sind durch ihre Spezialisolierung unabhängig von der Planetentemperatur.</p><p><strong>Tipp:</strong> Öffne die Atmosphären-Ansicht und beobachte sowohl den Druck in bar als auch den Sauerstoffanteil. Gib nicht einfach nur Sauerstoff ab, ohne die Gesamtgasmenge und den Anteil im Blick zu behalten.</p>'},
 ];
 
 function setupHelpSystem(){
@@ -9088,6 +9171,7 @@ function renderEconomy() {
     }
     if (key === 'carbon') { production = co2ProcessingProduction('earth', 'carbon'); consumption = 0; }
     if (key === 'oxygen') { production = co2ProcessingProduction('earth', 'oxygen'); consumption = 0; }
+    if (key === 'trees') { production = Object.keys(bodies).filter(id => id !== 'sun').reduce((sum,id) => sum + Number(getBuildingsOnPlanet(id).treeNursery || 0) * (1 / 10800) * newBuildingPowerFactor(id), 0); consumption = Object.keys(bodies).filter(id => id !== 'sun').reduce((sum,id) => sum + Number(getBuildingsOnPlanet(id).woodcutter || 0) * 0.01 * Math.min(newBuildingPowerFactor(id), Number(bodies[id].resources?.trees || 0) > 0 ? 1 : 0), 0); }
     if (key === 'wood' || key === 'biomass') { production = Object.keys(bodies).filter(id => id !== 'sun').reduce((sum,id) => sum + Number(getBuildingsOnPlanet(id).woodcutter || 0) * 0.009 * newBuildingPowerFactor(id) * (Number(bodies[id].resources?.trees || 0) > 0 ? 1 : 0), 0); consumption = 0; }
     if (key === 'crudeOil') { production = Object.keys(bodies).filter(id => id !== 'sun').reduce((sum,id) => sum + crudeOilProduction(id), 0); consumption = Object.keys(bodies).filter(id => id !== 'sun').reduce((sum,id) => sum + Number(getBuildingsOnPlanet(id).polymerFactory || 0) * 0.001 + rubberOilUse(id) + syntheticGraphiteOilUse(id) + Number(getBuildingsOnPlanet(id).refinery || 0) * 0.2, 0); }
     if (key === 'graphite') { production = Object.keys(bodies).filter(id => id !== 'sun').reduce((sum,id) => { const b = getBuildingsOnPlanet(id); const mineRate = ['earth','luna','mars','io'].includes(id) && Number(bodies[id].resources?.graphite || 0) > 0 ? Number(b.graphiteMine || 0) * 0.05 : 0; const syntheticRate = Number(b.syntheticGraphitePlant || 0) * 0.05 * Math.min(newBuildingPowerFactor(id), Number(getPlanetStorage(id).crudeOil || 0) > 0 ? 1 : 0); return sum + mineRate * newBuildingPowerFactor(id) + syntheticRate; }, 0); consumption = 0; }
