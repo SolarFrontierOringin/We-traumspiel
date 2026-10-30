@@ -6,7 +6,7 @@
   <title>Solar Frontier: Origins</title>
   <meta name="theme-color" content="#02050b">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=start-popup-20261027">
+  <link rel="stylesheet" href="style.css?v=popup-update-20261030">
 </head>
 <body>
 
@@ -62,23 +62,34 @@
       </div>
       <section class="update-popup-page" data-update-page-content="1">
         <div class="update-popup-kicker">📡 AKTUELLE SYSTEMMELDUNG</div>
-        <h2 id="update-popup-title">!! Hört, hört!!!</h2>
+        <h2 id="update-popup-title">Aktuelle Updates &amp; Fixes</h2>
         <div class="update-popup-message">
-          <p><strong>🚀 Neues Update … 29. Oktober 2026 (Donnerstag)</strong></p>
-          <h3>Neuerungen</h3>
+          <p><strong>🚀 Neue Anpassungen in Solar Frontier: Origins</strong></p>
+          <ul>
+            <li>Anpassung der Atmosphäre.</li>
+            <li>Der Wald erzeugt Wasser, ohne Wasser zu verbrauchen.</li>
+            <li>Anpassung der Sonnen-Wärmesegel.</li>
+            <li>Gebäude können jetzt bei Engpässen in ihrer Leistung reduziert werden.</li>
+            <li>Kolonisten können unter verschiedenen Atmosphärenbedingungen leben: bei einem Druck von 0,8 bis 2 bar und einem Sauerstoffanteil von 15 bis 25 %.</li>
+            <li>Ein neuer Planet wurde hinzugefügt – er ist wichtig für die Hauptstory.</li>
+          </ul>
+        </div>
+        <div class="update-popup-footnote">Die vorherigen Ankündigungen findest du auf Seite 2 in der Chronik.</div>
+      </section>
+      <section class="update-popup-page" data-update-page-content="2" hidden>
+        <div class="update-popup-kicker">📖 UPDATE-CHRONIK</div>
+        <h2>Frühere Ankündigungen</h2>
+        <div class="update-popup-message">
+          <h3>📡 Donnerstags-Update – 29. Oktober 2026</h3>
+          <p><strong>Neuerungen und Anpassungen</strong></p>
           <ul>
             <li>Wälder bzw. Bäume können auf jedem Planeten wachsen – bei Temperaturen zwischen -20 °C und +50 °C.</li>
             <li>Der Wald erzeugt Wasser und verbraucht nichts.</li>
             <li>Die Baumschule I ermöglicht den Beginn der Aufforstung auf Planeten.</li>
             <li>Neues Gebäude: <strong>Elektrolyseur</strong> – erzeugt aus Wasser Wasserstoff und Sauerstoff.</li>
           </ul>
-          <p><strong>!!!! ⚠️⚠️ Terraforming ist noch in Bearbeitung! Die Sauerstoff- und Atmosphärendruck-Funktion (bar) ist noch nicht fertig. ⬅️☢️☣️</strong></p>
+          <p><strong>Hinweis:</strong> Terraforming war zu diesem Zeitpunkt noch in Bearbeitung. Die Sauerstoff- und Atmosphärendruck-Funktion (bar) war noch nicht fertig.</p>
         </div>
-        <div class="update-popup-footnote">Weitere Neuigkeiten zum Update folgen hier.</div>
-      </section>
-      <section class="update-popup-page" data-update-page-content="2" hidden>
-        <div class="update-popup-kicker">📖 UPDATE-CHRONIK</div>
-        <h2>Frühere Ankündigungen</h2>
         <div class="update-popup-message">
           <h3>📡 Vorherige Systemmeldung – Fix für das Ruckeln des Sonnensystems</h3>
           <p><strong>■● !!! Achtung ●■ !!</strong></p>
@@ -455,7 +466,7 @@
       <aside id="info-panel" class="panel"></aside>
     </section>
   </main>
-  <script src="game.js?v=rocket-marker-fix-20261025"></script>
+  <script src="game.js?v=popup-update-20261030"></script>
   <script>if ("serviceWorker" in navigator) navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{});</script>
 </body>
 </html>
