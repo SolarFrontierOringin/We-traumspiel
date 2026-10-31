@@ -343,7 +343,7 @@ select{padding:7px;border-radius:8px;background:#eef2f7;color:#111}
 
 
 /* Kompaktes, umklappbares Wirtschafts-Dashboard */
-.economy-quick-overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin:10px 0 12px}
+.economy-quick-overview{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:10px 0 12px}
 .economy-quick-card{min-width:0;padding:10px;border:1px solid #263754;border-radius:11px;background:#0c1627;display:grid;gap:5px}
 .economy-quick-card span{font-size:12px;line-height:1.25;color:#aab8ce}
 .economy-quick-card strong{font-size:clamp(14px,3.6vw,19px);overflow-wrap:anywhere}
@@ -366,7 +366,7 @@ select{padding:7px;border-radius:8px;background:#eef2f7;color:#111}
  .economy-section summary{padding:10px;font-size:13px}
  .economy-section summary span{max-width:42%;font-size:10px}
 }
-@media(min-width:761px){.economy-quick-overview{grid-template-columns:repeat(4,minmax(0,1fr))}.economy-section-content .stat{font-size:14px}}
+@media(min-width:761px){.economy-quick-overview{grid-template-columns:repeat(2,minmax(0,1fr))}.economy-section-content .stat{font-size:14px}}
 
 
 /* Kompakte, einklappbare Produktionsdetails in der Planetenansicht */
@@ -1568,3 +1568,17 @@ body > .planet-build-menu .planet-build-header {
 .building-performance-control label strong{color:#75e09b;font-size:15px}
 .building-performance-control input[type=range]{display:block;width:100%;margin:6px 0;accent-color:#3288ed}
 .building-performance-control small{display:block;color:#aab8ce;font-size:11px;line-height:1.35}
+
+/* Stromspeicher-Übersicht im Wirtschafts-Dashboard */
+.dashboard-battery-summary{margin:0 0 14px;padding:14px;border:1px solid rgba(73,173,221,.28);border-radius:12px;background:linear-gradient(135deg,rgba(15,45,70,.72),rgba(10,22,38,.78));}
+.dashboard-battery-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+.dashboard-battery-heading strong{color:#d8efff;}
+.dashboard-battery-heading span{font-weight:700;color:#8ee7b7;}
+.dashboard-battery-track{height:9px;overflow:hidden;border-radius:99px;background:rgba(255,255,255,.1);margin-bottom:12px;}
+.dashboard-battery-track i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#39b9f4,#5be0a2);}
+.dashboard-battery-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;}
+.dashboard-battery-stats>div{display:flex;flex-direction:column;gap:4px;min-width:0;padding:9px;border-radius:8px;background:rgba(255,255,255,.045);}
+.dashboard-battery-stats span,.dashboard-battery-summary>small{font-size:.78rem;color:var(--muted,#9aaec2);}
+.dashboard-battery-stats strong{font-size:.92rem;color:#edf7ff;overflow-wrap:anywhere;}
+.dashboard-battery-summary>small{display:block;margin-top:10px;}
+@media(max-width:600px){.dashboard-battery-stats{grid-template-columns:repeat(2,minmax(0,1fr));}}

@@ -474,6 +474,7 @@ const state = {
     woodcutter: 0,
     forester: 0,
     atmosphereRegulator: 0,
+    gasRemoval: 0,
     waterElectrolysis: 0,
     treeNursery: 0
   },
@@ -500,6 +501,7 @@ const buildingTypes = {
   steelworks: { name: 'Stahlwerk', icon: '🏭', resource: null, rate: 0.2, cost: 0, text: 'Produziert 0,2 t Stahl/s und verbraucht 0,2 t Eisen/s · Baukosten abhängig von der Anzahl vorhandener Stahlwerke' },
   gasCarbonStorage: { name: 'Gas- und Kohlenstofflager', icon: '🛢️', resource: null, rate: 0, cost: 200, text: '100.000 t Kapazität je Rohstoff und Lagergebäude für Sauerstoff, CO₂, Wasserstoff und Gas · Oberfläche und Orbit · CO₂ kann nur in diesem Lager gespeichert werden · kein Stromverbrauch · keine Forschung · unbegrenzt baubar' },
   atmosphereRegulator: { name: 'Atmosphären-Regulator', icon: '🌐', resource: null, rate: 0, cost: 200, text: 'Gibt automatisch bis zu 0,2 t CO₂ pro Ingame-Sekunde aus dem lokalen Oberflächenlager in die Atmosphäre ab · gibt bei geringerem Lagerbestand nur die verfügbare Menge frei · pausiert bei leerem Lager und setzt automatisch fort, sobald CO₂ verfügbar ist · ohne Forschung · auf allen Planetenoberflächen außer der Sonne baubar · Bauzeit 10 Ingame-Sekunden · Baukosten: 200 t Stahl und 200 t Baustoffe' },
+  gasRemoval: { name: 'Gasentfernungsanlage', icon: '🌫️', resource: null, rate: 0, cost: 200, text: 'Entfernt bis zu 0,05 t/s des ausgewählten atmosphärischen Gases · ohne Lagerung · auf Planetenoberflächen außer der Sonne baubar' },
   waterElectrolysis: { name: 'Wasserelektrolyseanlage', icon: '⚗️', resource: null, rate: 0, cost: 200, text: 'Verbraucht 0,2 Liter Wasser/s und 1 MW Strom · produziert Wasserstoff und Sauerstoff · auf Planetenoberflächen außer der Sonne baubar · Baukosten: 200 t Stahl und 200 t Baustoffe' },
   treeNursery: { name: 'Baumschule I', icon: '🌱', resource: null, rate: 1 / 10800, cost: 150, text: 'Produziert 1 t Bäume pro 3 Ingame-Stunden · benötigt 1 MW Strom · kein Wasserverbrauch · auf Planetenoberflächen mit geeigneter Oberfläche baubar · Baukosten: 150 t Stahl, 100 t Glas und 200 t Baustoffe' },
   woodcutter: { name: 'Sägewerk', icon: '🪵', resource: null, rate: 0, cost: 0, text: 'Verbraucht 1 MW Strom und 0,01 t Bäume/s · produziert 0,009 t Biomasse/s und 0,009 t Bretter/s · ohne Forschung · auf allen Planetenoberflächen baubar' },
@@ -581,7 +583,8 @@ const rocketTypes = {
   titan1: { name: 'Titan 1', icon: '🚀', costSteel: 2000, costAluminium: 300, costChips: 250, costBatteries: 200, costTitanium: 120, capacity: 1500, compartments: 3, buildTime: 120 },
   colonistShuttle: { name: 'Kolonisten-Shuttle', icon: '🧑‍🚀', capacity: 25, costSteel: 500, costElectronics: 200, costChips: 150, costPolymers: 100, buildTime: 60 },
   mobileMiner: { name: 'Mobile Minerrakete', icon: '⛏️', costSteel: 1900, costGlass: 600, costChips: 1400, costElectronics: 1100, costPolymers: 300, buildTime: 600 },
-  tankRocket: { name: 'Tankrakete', icon: '🛢️', costSteel: 120, costBatteries: 30, costElectronics: 20, capacity: 10000, buildTime: 60 }
+  tankRocket: { name: 'Tankrakete', icon: '🛢️', costSteel: 120, costBatteries: 30, costElectronics: 20, capacity: 10000, buildTime: 60 },
+  adler1: { name: 'Adler 1', icon: '🚀', costSteel: 2500, costGlass: 250, costChips: 400, costElectronics: 100, capacity: 10000, buildTime: 3600, compartments: 3 }
 };
 
 // Flugzeiten in Sekunden für Oberflächenziele; Ceres ist ein reguläres Flugziel. Orbitziele sind 3 Sekunden schneller.
@@ -614,7 +617,7 @@ function getOrbitBuildings(id) {
 }
 function getOrbitLandingPadCount(id) { return Math.max(0, Number(getOrbitBuildings(id).orbitLandingPad) || 0); }
 function getOrbitRocketSlotsUsed(id) {
-  const stored = ['hercules1','hercules2','atlas1','titan1'].reduce((sum,type) => sum + getRocketStockCount(type,id,'orbit'), 0);
+  const stored = ['hercules1','hercules2','atlas1','titan1','adler1'].reduce((sum,type) => sum + getRocketStockCount(type,id,'orbit'), 0);
   const assigned = orbitMissions.filter(m => m.source === id && m.sourceMode === 'orbit').length;
   return stored + assigned;
 }
@@ -669,7 +672,7 @@ function getRocketStockHome(preferredId) {
   return Object.keys(bodies).find(id => hasPlanetSurface(id) && Number(getBuildingsOnPlanet(id).landingPad || 0) > 0) || preferredId;
 }
 function addRocketToStock(type, preferredId, mode = 'surface') {
-  const stockByType = { hercules1: rocketStock, hercules2: rocketStock2, atlas1: rocketStockAtlas1, titan1: rocketStockTitan1, colonistShuttle: rocketStockColonistShuttle, mobileMiner: rocketStockMobileMiner };
+  const stockByType = { hercules1: rocketStock, hercules2: rocketStock2, atlas1: rocketStockAtlas1, titan1: rocketStockTitan1, adler1: rocketStockAdler1, colonistShuttle: rocketStockColonistShuttle, mobileMiner: rocketStockMobileMiner };
   const stock = stockByType[type];
   if (!stock) return;
   const home = mode === 'orbit' ? preferredId : getRocketStockHome(preferredId);
@@ -695,11 +698,12 @@ const rocketStockTitan1 = {};
 const rocketStockColonistShuttle = {};
 const rocketStockMobileMiner = {};
 const rocketStockTankRocket = {};
+const rocketStockAdler1 = {};
 const liquidTankBuildQueue = {};
 const liquidTankBuildStarted = {};
 const orbitRocketStockSuffix = '__orbit';
 function rocketStockKey(id, mode='surface') { return mode === 'orbit' ? `${id}${orbitRocketStockSuffix}` : id; }
-function getRocketStockMap(type) { return ({hercules1:rocketStock,hercules2:rocketStock2,atlas1:rocketStockAtlas1,titan1:rocketStockTitan1,colonistShuttle:rocketStockColonistShuttle,mobileMiner:rocketStockMobileMiner,tankRocket:rocketStockTankRocket})[type] || null; }
+function getRocketStockMap(type) { return ({hercules1:rocketStock,hercules2:rocketStock2,atlas1:rocketStockAtlas1,titan1:rocketStockTitan1,adler1:rocketStockAdler1,colonistShuttle:rocketStockColonistShuttle,mobileMiner:rocketStockMobileMiner,tankRocket:rocketStockTankRocket})[type] || null; }
 function getRocketStockCount(type,id,mode='surface') { const map=getRocketStockMap(type); return Math.max(0,Number(map?.[rocketStockKey(id,mode)]||0)); }
 function changeRocketStock(type,id,mode,delta) { const map=getRocketStockMap(type); if(!map)return; const key=rocketStockKey(id,mode); map[key]=Math.max(0,Number(map[key]||0)+Number(delta||0)); }
 function ensureLiquidTankData(id) { if(!bodies[id])return null; if(!bodies[id].liquidTanks||typeof bodies[id].liquidTanks!=='object') bodies[id].liquidTanks={surface:0,orbit:0}; bodies[id].liquidTanks.surface=Math.max(0,Number(bodies[id].liquidTanks.surface)||0); bodies[id].liquidTanks.orbit=Math.max(0,Number(bodies[id].liquidTanks.orbit)||0); if(!bodies[id].liquidFuel||typeof bodies[id].liquidFuel!=='object') bodies[id].liquidFuel={surface:0,orbit:0}; bodies[id].liquidFuel.surface=Math.max(0,Number(bodies[id].liquidFuel.surface)||0); bodies[id].liquidFuel.orbit=Math.max(0,Number(bodies[id].liquidFuel.orbit)||0); return bodies[id]; }
@@ -931,7 +935,7 @@ function getBuildingsOnPlanet(id) {
     return state.buildings;
   }
   if (!bodies[id].buildings) {
-    bodies[id].buildings = { companyHeadquarters: 0, gasCarbonStorageOrbit: 0, iceMine: 0, residentialHouse: 0, mediumResidentialHouse: 0, residentialComplex: 0, habitat: 0, observatory: 0, foodFactory: 0, algaeFarm: 0, algaeFoodProcessor: 0, steelworks: 0, stoneQuarry: 0, buildingMaterialsFactory: 0, coalMine: 0, gasPlant: 0, co2Extraction: 0, co2ProcessingPlant: 0, orbitalCo2Extractor: 0, researchSatellite: 0, ironMine: 0, nickelMine: 0, graphiteMine: 0, syntheticGraphitePlant: 0, siliconMine: 0, lithiumMine: 0, copperMine: 0, copperSmelter: 0, lithiumRefinery: 0, machineFactory: 0, glassFactory: 0, heliumExtractor: 0, fusionReactor: 0, outpost: 0, coalPowerPlant: 0, solarPlant: 0, researchLab: 0, moonBase: 0, crudeOilPump: 0, refinery: 0, polymerFactory: 0, rubberFactory: 0, plasticFactory: 0, vehicleFactory: 0, electronicsFactory: 0, uraniumMine: 0, ioniumMine: 0, uraniumProcessingPlant: 0, nuclearFuelPlant: 0, nuclearReactor: 0, radioactiveStorageSurface: 0, radioactiveStorageOrbit: 0, chipFactory: 0, solarSail: 0, warmingSail: 0, solarSatellite: 0, solarProbe: 0, bauxiteMine: 0, titanMine: 0, titanProcessing: 0, titanRefinery: 0, aluminiumOxideRefinery: 0, aluminiumSmelter: 0, hydroelectricPlant: 0, greenhouse: 0, cocoaPlantation: 0, woodcutter: 0, forester: 0, atmosphereRegulator: 0, waterElectrolysis: 0, treeNursery: 0 }
+    bodies[id].buildings = { companyHeadquarters: 0, gasCarbonStorageOrbit: 0, iceMine: 0, residentialHouse: 0, mediumResidentialHouse: 0, residentialComplex: 0, habitat: 0, observatory: 0, foodFactory: 0, algaeFarm: 0, algaeFoodProcessor: 0, steelworks: 0, stoneQuarry: 0, buildingMaterialsFactory: 0, coalMine: 0, gasPlant: 0, co2Extraction: 0, co2ProcessingPlant: 0, orbitalCo2Extractor: 0, researchSatellite: 0, ironMine: 0, nickelMine: 0, graphiteMine: 0, syntheticGraphitePlant: 0, siliconMine: 0, lithiumMine: 0, copperMine: 0, copperSmelter: 0, lithiumRefinery: 0, machineFactory: 0, glassFactory: 0, heliumExtractor: 0, fusionReactor: 0, outpost: 0, coalPowerPlant: 0, solarPlant: 0, researchLab: 0, moonBase: 0, crudeOilPump: 0, refinery: 0, polymerFactory: 0, rubberFactory: 0, plasticFactory: 0, vehicleFactory: 0, electronicsFactory: 0, uraniumMine: 0, ioniumMine: 0, uraniumProcessingPlant: 0, nuclearFuelPlant: 0, nuclearReactor: 0, radioactiveStorageSurface: 0, radioactiveStorageOrbit: 0, chipFactory: 0, solarSail: 0, warmingSail: 0, solarSatellite: 0, solarProbe: 0, bauxiteMine: 0, titanMine: 0, titanProcessing: 0, titanRefinery: 0, aluminiumOxideRefinery: 0, aluminiumSmelter: 0, hydroelectricPlant: 0, greenhouse: 0, cocoaPlantation: 0, woodcutter: 0, forester: 0, atmosphereRegulator: 0, gasRemoval: 0, waterElectrolysis: 0, treeNursery: 0 }
   }
   if (bodies[id].buildings.nickelMine === undefined) bodies[id].buildings.nickelMine = 0;
   if (bodies[id].buildings.syntheticGraphitePlant === undefined) bodies[id].buildings.syntheticGraphitePlant = 0;
@@ -944,6 +948,7 @@ function getBuildingsOnPlanet(id) {
   if (bodies[id].buildings.forester === undefined) bodies[id].buildings.forester = 0;
   if (bodies[id].buildings.atmosphereRegulator === undefined) bodies[id].buildings.atmosphereRegulator = 0;
   if (bodies[id].buildings.waterElectrolysis === undefined) bodies[id].buildings.waterElectrolysis = 0;
+  if (bodies[id].buildings.gasRemoval === undefined) bodies[id].buildings.gasRemoval = 0;
   if (bodies[id].buildings.treeNursery === undefined) bodies[id].buildings.treeNursery = 0;
   if (bodies[id].buildings.refinery === undefined) bodies[id].buildings.refinery = 0;
   if (bodies[id].buildings.woodcutter === undefined) bodies[id].buildings.woodcutter = 0;
@@ -972,7 +977,7 @@ const PERFORMANCE_CONTROLLED_BUILDINGS = new Set([
   'fusionReactor','coalPowerPlant','solarPlant','hydroelectricPlant','greenhouse','woodcutter','forester','treeNursery',
   'waterElectrolysis','foodFactory','iceMine','iceProcessingPlant','algaeFarm','algaeFoodProcessor','cocoaPlantation',
   'chocolateFactory','luxuryFurnitureFactory','crudeOilPump','refinery','uraniumMine','ioniumMine','uraniumProcessingPlant',
-  'nuclearFuelPlant','nuclearReactor','chipFactory','electronicsFactory','polymerFactory','rubberFactory','plasticFactory',
+  'nuclearFuelPlant','nuclearReactor','gasRemoval','chipFactory','electronicsFactory','polymerFactory','rubberFactory','plasticFactory',
   'syntheticGraphitePlant','vehicleFactory','titanMine','titanProcessing','titanRefinery'
 ]);
 
@@ -3761,6 +3766,7 @@ function renderSystem() {
       ${buildButton('treeNursery')}
       ${buildButton('atmosphereRegulator')}
       ${buildButton('waterElectrolysis')}
+      ${buildButton('gasRemoval')}
       ${buildButton('foodFactory')}
       ${buildButton('iceMine')}
       ${buildButton('iceProcessingPlant')}
@@ -3808,7 +3814,7 @@ function renderSystem() {
     // Gebäudeübersicht Konzept 1.1: planetenabhängige, durchsuchbare Kategorien.
     const buildCategories = [
       { title: '🏢 Unternehmensverwaltung', keys: ['companyHeadquarters'] },
-      { title: '🌍 Terraforming', keys: ['atmosphereRegulator','waterElectrolysis','treeNursery'] },
+      { title: '🌍 Terraforming', keys: ['atmosphereRegulator','waterElectrolysis','gasRemoval','treeNursery'] },
       { title: '🌲 Forstwirtschaft', keys: ['forester'] },
       { title: '🛢️ Verbrauch', keys: ['refinery'] },
 
@@ -4357,7 +4363,7 @@ function isBuildingAllowed(key, planetId = state.selected) {
   if (key === 'graphiteMine') return state.viewMode === 'surface' && ['earth','luna','mars','io'].includes(planetId) && Number(bodies[planetId]?.resources?.graphite || 0) > 0;
   if (key === 'syntheticGraphitePlant' && (state.viewMode !== 'surface' || planetId === 'sun' || !hasPlanetSurface(planetId))) return false;
   if (key === 'companyHeadquarters') return planetId === 'earth' && state.viewMode === 'surface' && taskIsComplete('company_start_name') && Number(getBuildingsOnPlanet('earth').companyHeadquarters || 0) < 1;
-  if (key === 'atmosphereRegulator' || key === 'waterElectrolysis') return state.viewMode === 'surface' && planetId !== 'sun' && !!bodies[planetId] && hasPlanetSurface(planetId);
+  if (key === 'atmosphereRegulator' || key === 'waterElectrolysis' || key === 'gasRemoval') return state.viewMode === 'surface' && planetId !== 'sun' && !!bodies[planetId] && hasPlanetSurface(planetId);
   if (key === 'liquidStorage') return planetId !== 'sun';
   if (key === 'refinery') return state.viewMode === 'surface' && planetId !== 'sun' && hasPlanetSurface(planetId) && planetTemperatureCelsius(planetId) < 50;
   if (key === 'orbitLandingPad') return state.viewMode === 'orbit' && planetId !== 'sun';
@@ -4428,6 +4434,13 @@ function isBuildingAllowed(key, planetId = state.selected) {
   return true;
 }
 
+function setGasRemovalGas(gasKey) {
+  const allowed = new Set(['co2','oxygen','nitrogen','hydrogen','helium','methane','argon']);
+  if (!allowed.has(gasKey) || !bodies[state.selected]) return;
+  bodies[state.selected].gasRemovalGas = gasKey;
+  saveGame(false);
+}
+
 function buildButton(key) {
   // Ein fehlerhafter Gebäudedatensatz darf nicht den gesamten Bau-Dialog blockieren.
   try {
@@ -4439,6 +4452,13 @@ function buildButton(key) {
 }
 
 function buildButtonUnsafe(key) {
+  if (key === 'gasRemoval') {
+    const b = buildingTypes[key];
+    const count = Number(getBuildingsOnPlanet(state.selected).gasRemoval || 0);
+    const selected = String(bodies[state.selected]?.gasRemovalGas || 'co2');
+    const gasOptions = [['co2','Kohlendioxid (CO₂)'],['oxygen','Sauerstoff'],['nitrogen','Stickstoff'],['hydrogen','Wasserstoff'],['helium','Helium'],['methane','Methan'],['argon','Argon']];
+    return `<div class="build-card"><div><strong>${b.icon} ${b.name}</strong><small>${b.text}</small><label>Zu entfernendes Gas <select data-gas-removal-select onchange="setGasRemovalGas(this.value)">${gasOptions.map(([key,label]) => `<option value="${key}" ${selected===key?'selected':''}>${label}</option>`).join('')}</select></label></div><button class="build-resource" data-building="gasRemoval">Bauen (${count})</button></div>`;
+  }
   if (key === 'gasCarbonStorage') {
     const b = buildingTypes[key];
     const mode = state.viewMode === 'orbit' ? 'orbit' : 'surface';
@@ -4657,7 +4677,16 @@ function buildButtonUnsafe(key) {
   }
 
   if (key === 'crudeOilPump') {
-    const cost = buildingCost(key, state.selected);
+    if (key === 'gasRemoval') {
+    const b = buildingTypes[key];
+    const count = Number(getBuildingsOnPlanet(state.selected).gasRemoval || 0);
+    const storage = getPlanetStorage(state.selected);
+    const costs = { steel: 200, buildingMaterials: 200 };
+    const affordable = isBuildingAllowed(key, state.selected) && Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount);
+    return `<div class="build-card"><div><strong>${b.icon} ${b.name}</strong><small>${b.text}</small><small>Baukosten: 200 t Stahl · 200 t Baustoffe</small></div><button class="build-resource" data-building="${key}" ${affordable ? '' : 'disabled'}>Bauen (${count})</button></div>`;
+  }
+
+  const cost = buildingCost(key, state.selected);
     const affordable = isBuildingAllowed(key, state.selected) && Number(storage.steel || 0) >= cost && Number(storage.buildingMaterials || 0) >= 40;
     return `<div class="build-card"><div><strong>${b.icon} ${b.name}</strong><small>${b.text} · ${buildingCardCostText(key, state.selected).replace(/^Baukosten:\s*/i, '')}</small></div><button class="build-resource" data-building="${key}" ${affordable ? '' : 'disabled'}>Bauen (${count})</button></div>`;
   }
@@ -5337,6 +5366,16 @@ function buildResourceBuilding(key) {
     return;
   }
 
+  if (key === 'gasRemoval') {
+    const costs = { steel: 200, buildingMaterials: 200 };
+    if (!isBuildingAllowed(key, planetId) || !Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount)) return;
+    for (const [r, amount] of Object.entries(costs)) storage[r] = Number(storage[r] || 0) - amount;
+    bld.gasRemoval = Number(bld.gasRemoval || 0) + 1;
+    playUiSound('build');
+    renderSystem(); renderInfo(); renderTopResources(); saveAfterBuild();
+    return;
+  }
+
   if (key === 'waterElectrolysis') {
     const costs = { steel: 200, buildingMaterials: 200 };
     if (!isBuildingAllowed(key, planetId) || !Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount)) return;
@@ -5648,7 +5687,7 @@ function queueRocket(type, id = state.selected) {
   if (type === 'tankRocket' && state.viewMode === 'orbit') return rocketLaunchError('Tankraketen werden auf der Planetenoberfläche gebaut.');
   ensureRocketData(id);
   if (!rocketFactoryHasCapacity(id)) return;
-  const costs = { hercules1:{steel:45}, hercules2:{steel:300,batteries:50,aluminium:50}, atlas1:{steel:340,chips:150,batteries:200,aluminium:100}, titan1:{steel:2000,aluminium:300,chips:250,batteries:200,titanium:120}, colonistShuttle:{steel:500,electronics:200,chips:150,polymers:100}, mobileMiner:{steel:1900,glass:600,chips:1400,electronics:1100,polymers:300}, tankRocket:{steel:120,batteries:30,electronics:20} }[type];
+  const costs = { hercules1:{steel:45}, hercules2:{steel:300,batteries:50,aluminium:50}, atlas1:{steel:340,chips:150,batteries:200,aluminium:100}, titan1:{steel:2000,aluminium:300,chips:250,batteries:200,titanium:120}, colonistShuttle:{steel:500,electronics:200,chips:150,polymers:100}, mobileMiner:{steel:1900,glass:600,chips:1400,electronics:1100,polymers:300}, tankRocket:{steel:120,batteries:30,electronics:20}, adler1:{steel:2500,glass:250,chips:400,electronics:100} }[type];
   if (type === 'titan1' && !state.research?.completed?.titan1) return;
   if (type === 'mobileMiner' && !ensureResearchOrders().completed.mobileMinerAsteroids) return;
   const storage=getPlanetStorage(id);
@@ -5864,6 +5903,31 @@ function launchTitan1(source, destination) {
   renderInfo(); renderTopResources(); saveGame(false);
 }
 
+
+function launchAdler1(source, destination) {
+  ensureRocketData(source);
+  if (!bodies[destination] || destination === source || destination === 'sun') return rocketLaunchError('Bitte einen anderen Zielplaneten auswählen.');
+  const sourceMode = state.viewMode === 'orbit' ? 'orbit' : 'surface';
+  if (getRocketStockCount('adler1',source,sourceMode)<1) return rocketLaunchError('Keine Adler-1-Rakete an diesem Startort verfügbar.');
+  if (sourceMode === 'surface' && Number(getBuildingsOnPlanet(source).landingPad || 0) < 1) return rocketLaunchError('Für den Start wird eine Start- & Landerampe benötigt.');
+  if (!checkRocketLimit(1)) return;
+  
+  const cargo = (rocketCargoSlots || []).map(slot => ({ resource: slot.resource, amount: Math.max(0, Number(slot.amount) || 0) })).filter(slot => slot.resource && slot.amount > 0);
+  if (cargo.some(slot => slot.resource === 'nickelOre') && !state.research?.completed?.nickelMining) { rocketLaunchError('Nickelerz ist global gesperrt. Schließe zuerst „Grabung nach Nickelerz“ ab.'); return; }
+   const total = cargo.reduce((sum, slot) => sum + slot.amount, 0);
+  if (total <= 0 || total > 10000.000001) return rocketLaunchError('Die Fracht muss größer als 0 und darf höchstens 10.000 t/L betragen.');
+  const targetMode = rocketDestinationMode;
+  if (!chargeRocketRoundTripFuel('adler1', source, destination, sourceMode, targetMode)) return;
+  const sourceStorage = getLocationStorage(source, sourceMode);
+  for (const slot of cargo) if (Number(sourceStorage[slot.resource] || 0) + 0.000001 < slot.amount) return rocketLaunchError('Nicht genug Fracht im Lager.');
+  for (const slot of cargo) { sourceStorage[slot.resource] = Number(sourceStorage[slot.resource] || 0) - slot.amount; if (Math.abs(sourceStorage[slot.resource]) < 0.000001) sourceStorage[slot.resource] = 0; }
+  changeRocketStock('adler1',source,sourceMode,-1);
+  const duration = flightDurationSeconds(destination, targetMode) * 1000;
+  rockets.push({ id: Date.now() + Math.random(), name: rocketTypes.titan1.name, type: 'adler1', from: source, to: destination, fromMode: sourceMode, targetMode, started: gameNow(), duration, status: 'outbound', capacity: 10000, compartments: 3, cargo });
+  recordLunaFlight(destination);
+  renderInfo(); renderTopResources(); saveGame(false);
+}
+
 function launchTankRocket() {
   const source = state.selected;
   const destination = rocketDestination;
@@ -6006,7 +6070,7 @@ function renderRocketWindow(body) {
     const isTitan1 = r.type === 'titan1';
     const isShuttle = r.type === 'colonistShuttle';
     const isTankRocket = r.type === 'tankRocket';
-    const maxCapacity = isShuttle || isTankRocket ? 0 : isTitan1 ? 1500 : isAtlas1 ? 500 : (isH2 ? 300 : 120);
+    const maxCapacity = isShuttle || isTankRocket ? 0 : r.type === 'adler1' ? 10000 : isTitan1 ? 1500 : isAtlas1 ? 500 : (isH2 ? 300 : 120);
     const cargo = r.deliveredCargo || r.cargo;
     const cargoText = isTankRocket ? `🛢️ ${Number(r.fuelCargoLiters||0).toLocaleString('de-DE')} L Treibstoff${r.fuelDelivered ? ' · geliefert' : ''}` : isShuttle ? `👥 ${Number(r.passengers||0)} Kolonisten · 🍲 ${Number(r.supplyCargo?.food||0).toLocaleString('de-DE')} t Lebensmittel · 💧 ${Number(r.supplyCargo?.water||0).toLocaleString('de-DE')} L Wasser` : Array.isArray(cargo)
       ? (cargo.length ? cargo.map(c => `${resourceIcons[c.resource] || ''} ${resourceNames[c.resource] || c.resource}: ${c.amount.toFixed(2)} ${['crudeOil','water'].includes(c.resource) ? 'L' : 't'}`).join(' · ') : 'Keine Fracht')
@@ -6049,13 +6113,13 @@ function renderRocketWindow(body) {
   if (!rocketCargoSlots.length) rocketCargoSlots.push({ resource: 'stone', amount: 0 });
   rocketCargoSlots.forEach(slot => {
     const available = Number(getLocationStorage(source, state.viewMode === 'orbit' ? 'orbit' : 'surface')[slot.resource] || 0);
-    slot.amount = Math.max(0, Math.min(Number(slot.amount) || 0, available, 1500));
+    slot.amount = Math.max(0, Math.min(Number(slot.amount) || 0, available, 10000));
   });
   const h2Total = rocketCargoSlots.reduce((sum, slot) => sum + Number(slot.amount || 0), 0);
   const h2Possible = h2Total > 0 && h2Total <= 300.000001;
   const h2SlotsHtml = rocketCargoSlots.map((slot, i) => {
     const available = Number(getLocationStorage(source, state.viewMode === 'orbit' ? 'orbit' : 'surface')[slot.resource] || 0);
-    return `<div class="rocket-compartment dynamic-cargo-row"><div class="cargo-row-heading"><strong>Fracht ${i+1}</strong><button type="button" class="cargo-remove" data-slot="${i}" aria-label="Frachtzeile ${i+1} entfernen">✕</button></div><select class="rocket-h2-resource" data-slot="${i}">${cargoOptions.replace(`value="${slot.resource}"`, `value="${slot.resource}" selected`)}</select><label class="cargo-amount-label">Menge (${['crudeOil','water'].includes(slot.resource) ? 'L' : 't'})<input class="rocket-h2-amount" data-slot="${i}" type="number" min="0" max="${Math.min(1500, available)}" step="0.01" value="${Number(slot.amount || 0).toFixed(2)}"><input class="rocket-h2-range" data-slot="${i}" type="range" min="0" max="${Math.max(0, Math.min(1500, available))}" step="0.01" value="${Math.min(Number(slot.amount || 0), available, 1500)}" aria-label="Frachtmenge ${i+1}"></label><small>Verfügbar: ${formatTons(available)}</small></div>`;
+    return `<div class="rocket-compartment dynamic-cargo-row"><div class="cargo-row-heading"><strong>Fracht ${i+1}</strong><button type="button" class="cargo-remove" data-slot="${i}" aria-label="Frachtzeile ${i+1} entfernen">✕</button></div><select class="rocket-h2-resource" data-slot="${i}">${cargoOptions.replace(`value="${slot.resource}"`, `value="${slot.resource}" selected`)}</select><label class="cargo-amount-label">Menge (${['crudeOil','water'].includes(slot.resource) ? 'L' : 't'})<input class="rocket-h2-amount" data-slot="${i}" type="number" min="0" max="${Math.min(10000, available)}" step="0.01" value="${Number(slot.amount || 0).toFixed(2)}"><input class="rocket-h2-range" data-slot="${i}" type="range" min="0" max="${Math.max(0, Math.min(10000, available))}" step="0.01" value="${Math.min(Number(slot.amount || 0), available, 10000)}" aria-label="Frachtmenge ${i+1}"></label><small>Verfügbar: ${formatTons(available)}</small></div>`;
   }).join('');
 
   const activeRocketCount = getActiveRocketCount();
@@ -6076,6 +6140,7 @@ function renderRocketWindow(body) {
 
     <details class="rocket-type-card"><summary>🏗️ Titan 1 · Bau <span>1.500 t/L · Bestand: ${stockTitan1}</span></summary><div class="rocket-type-content"><div class="rocket-build-box titan1-box"><strong>🚀 Titan 1</strong><small>2.000 t Stahl + 300 t Aluminium + 250 t Chips + 200 t Batterien + 120 t Titan · 120 Sekunden Bauzeit · 1.500 t/L Kapazität · Forschung Schwerlastraketen erforderlich</small><button id="build-titan1" ${!rocketFactoryHasCapacity(source) || localSteel < 2000 || localAluminium < 300 || localChips < 250 || localBatteries < 200 || getPlayerResourceAmount('titanium','nickelOre',source) < 120 || !state.research?.completed?.titan1 ? 'disabled' : ''}>🚀 Titan 1 bauen</button></div>
     <div class="rocket-stock">Titan 1 verfügbar: <strong>${stockTitan1}</strong></div></div></details>
+    <details class="rocket-type-card"><summary>🏗️ Adler 1 · Bau <span>10.000 t/L · Bestand: ${getRocketStockCount('adler1',source,sourceModeForStock)}</span></summary><div class="rocket-type-content"><div class="rocket-build-box"><strong>🚀 Adler 1</strong><small>2.500 t Stahl + 250 t Glas + 400 t Chips + 100 t Elektronik · 1 Ingame-Stunde Bauzeit · 10.000 t/L Kapazität</small><button id="build-adler1" ${!rocketFactoryHasCapacity(source) || localSteel < 2500 || localGlass < 250 || localChips < 400 || localElectronics < 100 ? 'disabled' : ''}>🚀 Adler 1 bauen</button></div><div class="rocket-stock">Adler 1 verfügbar: <strong>${getRocketStockCount('adler1',source,sourceModeForStock)}</strong></div></div></details>
 
     <details class="rocket-type-card"><summary>🧑‍🚀 Kolonisten-Shuttle · Bau <span>25 Kolonisten · Bestand: ${stockColonistShuttle}</span></summary><div class="rocket-type-content"><div class="rocket-build-box"><strong>🧑‍🚀 Kolonisten-Shuttle</strong><small>500 t Stahl · 200 t Elektronik · 150 t Chips · 100 t Polymere · 60 Sekunden Bauzeit · maximal 25 Kolonisten pro Flug</small>${factoryQueue.length && factoryQueue[0] === 'colonistShuttle' ? `<div class="rocket-progress"><i style="width:${Math.min(100,(activeBuildTime-factoryRemaining)/activeBuildTime*100)}%"></i></div>` : ''}<button id="build-colonist-shuttle" ${!rocketFactoryHasCapacity(source) || localSteel < 500 || localElectronics < 200 || localChips < 150 || localPolymers < 100 ? 'disabled' : ''}>🧑‍🚀 Kolonisten-Shuttle bauen</button></div><div class="rocket-stock">Kolonisten-Shuttles verfügbar: <strong>${stockColonistShuttle}</strong></div></div></details>
 
@@ -6091,6 +6156,7 @@ function renderRocketWindow(body) {
     <small class="hint">Oberfläche: ${flightDurationSeconds(target, 'surface')} s · Orbit: ${flightDurationSeconds(target, 'orbit')} s</small></section>
 
         <details class="rocket-type-card rocket-cargo-card"><summary>📦 Titan 1 · Fracht <span>1.500 t/L · Beladung: ${h2Total.toFixed(0)} t/L</span></summary><div class="rocket-type-content"><div class="rocket-h2-launch titan1-launch"><strong>🚀 Titan 1 · Mehrere Frachtarten</strong><div class="rocket-capacity">Gesamtkapazität: <strong>1.500 t/L</strong> · Belegung: <strong>${h2Total.toFixed(2)} t/L</strong></div><div class="rocket-compartments">${h2SlotsHtml}</div><button type="button" class="cargo-add" ${rocketCargoSlots.length>=20 || h2Total>=1500 ? "disabled" : ""}>＋ Fracht hinzufügen</button>${h2Total > 1500 ? '<small class="bad">Maximal 1.500 t/L pro Titan 1.</small>' : ''}<label class="rocket-count-label">Anzahl Raketen <input type="number" class="rocket-count" id="rocket-count-titan1" min="1" max="${stockTitan1}" value="1" inputmode="numeric"></label><button class="rocket-launch" id="launch-titan1" ${stockTitan1 < 1 || h2Total <= 0 || h2Total > 1500.000001 || !state.research?.completed?.titan1 ? 'disabled' : ''}>🚀 Titan 1 nach ${bodies[target].name} starten</button><p class="hint">Flugzeit zum Zielort: ${sec} Sekunden · mehrere Frachtarten pro Mission.</p></div></div></details>
+    <details class="rocket-type-card rocket-cargo-card"><summary>📦 Adler 1 · Fracht <span>10.000 t/L · Beladung: ${h2Total.toFixed(0)} t/L</span></summary><div class="rocket-type-content"><div class="rocket-h2-launch adler1-launch"><strong>🚀 Adler 1 · Mehrere Frachtarten</strong><div class="rocket-capacity">Gesamtkapazität: <strong>10.000 t/L</strong> · Belegung: <strong>${h2Total.toFixed(2)} t/L</strong></div><div class="rocket-compartments">${h2SlotsHtml}</div><button type="button" class="cargo-add" ${rocketCargoSlots.length>=20 || h2Total>=10000 ? "disabled" : ""}>＋ Fracht hinzufügen</button>${h2Total > 10000 ? '<small class="bad">Maximal 10.000 t/L pro Adler 1.</small>' : ''}<label class="rocket-count-label">Anzahl Raketen <input type="number" class="rocket-count" id="rocket-count-adler1" min="1" max="${getRocketStockCount('adler1',source,sourceModeForStock)}" value="1" inputmode="numeric"></label><button class="rocket-launch" id="launch-adler1" ${getRocketStockCount('adler1',source,sourceModeForStock)<1 || h2Total<=0 || h2Total>10000.000001 ? 'disabled' : ''}>🚀 Adler 1 nach ${bodies[target].name} starten</button><p class="hint">Flugzeit zum Zielort: ${sec} Sekunden · mehrere Frachtarten pro Mission.</p></div></div></details>
 
     <details class="rocket-type-card rocket-cargo-card">
       <summary>📦 Atlas 1 · Fracht <span>500 t/L pro Rakete</span></summary><div class="rocket-type-content">
@@ -6258,6 +6324,8 @@ function bindRocketControls() {
   const b2=root.querySelector('#build-hercules2'); if(b2)b2.addEventListener('click',buildHercules2);
   const ba=root.querySelector('#build-atlas1'); if(ba)ba.addEventListener('click',buildAtlas1);
   const bt=root.querySelector('#build-titan1'); if(bt)bt.addEventListener('click',buildTitan1);
+  const badler=root.querySelector('#build-adler1'); if(badler)badler.addEventListener('click',()=>queueRocket('adler1'));
+  const ladler=root.querySelector('#launch-adler1'); if(ladler)ladler.addEventListener('click',()=>launchAdler1(state.selected,rocketDestination));
   const bcs=root.querySelector('#build-colonist-shuttle'); if(bcs)bcs.addEventListener('click',()=>queueRocket('colonistShuttle'));
   const shuttleLaunch=root.querySelector('#launch-colonist-shuttle'); if(shuttleLaunch)shuttleLaunch.addEventListener('click',launchColonistShuttle);
   const shuttlePassengers=root.querySelector('#shuttle-passengers');
@@ -6284,7 +6352,7 @@ function bindRocketControls() {
 
   root.querySelectorAll('.cargo-add').forEach(el=>el.addEventListener('click',()=>{
     if (rocketCargoSlots.length >= 20) return;
-    const capacity = el.closest('.titan1-launch') ? 1500 : el.closest('.atlas1-launch') ? 500 : 300;
+    const capacity = el.closest('.adler1-launch') ? 10000 : el.closest('.titan1-launch') ? 1500 : el.closest('.atlas1-launch') ? 500 : 300;
     const currentTotal = rocketCargoSlots.reduce((sum, slot) => sum + (Number(slot.amount)||0), 0);
     if (currentTotal >= capacity) return;
     rocketCargoSlots.push({resource:'stone',amount:0});
@@ -6300,13 +6368,13 @@ function bindRocketControls() {
     const i=Number(el.dataset.slot);
     rocketCargoSlots[i].resource=el.value;
     const available=getPlayerResourceAmount(el.value,state.selected);
-    rocketCargoSlots[i].amount=Math.min(Number(rocketCargoSlots[i].amount)||0,available,1500);
+    rocketCargoSlots[i].amount=Math.min(Number(rocketCargoSlots[i].amount)||0,available,el.closest('.adler1-launch') ? 10000 : 1500);
     renderInfo();
   }));
   root.querySelectorAll('.rocket-h2-amount').forEach(el=>el.addEventListener('input',()=>{
     const i=Number(el.dataset.slot);
     const available=Number(getLocationStorage(state.selected, state.viewMode === 'orbit' ? 'orbit' : 'surface')[rocketCargoSlots[i]?.resource] || 0);
-    rocketCargoSlots[i].amount=Math.max(0,Math.min(1500,available,Number(el.value)||0));
+    rocketCargoSlots[i].amount=Math.max(0,Math.min(el.closest('.adler1-launch') ? 10000 : 1500,available,Number(el.value)||0));
     const range=root.querySelector(`.rocket-h2-range[data-slot="${i}"]`);
     if(range) range.value=rocketCargoSlots[i].amount;
     const row=el.closest('.dynamic-cargo-row');
@@ -6327,16 +6395,16 @@ function bindRocketControls() {
     button.addEventListener('click',()=>{
       const countInput=root.querySelector(`#${countId}`);
       const count=Math.max(1,Math.min(99,Number(countInput?.value)||1));
-      const stock=type==='hercules2'?(rocketStock2[state.selected]||0):type==='atlas1'?(rocketStockAtlas1[state.selected]||0):(rocketStockTitan1[state.selected]||0);
+      const stock=type==='hercules2'?(rocketStock2[state.selected]||0):type==='atlas1'?(rocketStockAtlas1[state.selected]||0):type==='adler1'?getRocketStockCount('adler1',state.selected,state.viewMode==='orbit'?'orbit':'surface'):(rocketStockTitan1[state.selected]||0);
       if(count>stock){rocketLaunchError(`Du hast nur ${stock} Rakete(n) dieses Typs verfügbar.`);return;}
       if(!checkRocketLimit(count)) return;
       const original=rocketCargoSlots.map(slot=>({...slot}));
-      const capacity=type==='hercules2'?300:type==='atlas1'?500:1500;
+      const capacity=type==='hercules2'?300:type==='atlas1'?500:type==='adler1'?10000:1500;
       const total=original.reduce((sum,slot)=>sum+Math.max(0,Number(slot.amount)||0),0);
       if(total>capacity*count+0.000001){rocketLaunchError(`Die Gesamtfracht überschreitet die Kapazität von ${count} Rakete(n).`);return;}
       rocketCargoSlots=original.map(slot=>({...slot,amount:(Number(slot.amount)||0)/count}));
       for(let n=0;n<count;n++){
-        const before=type==='hercules2'?(rocketStock2[state.selected]||0):type==='atlas1'?(rocketStockAtlas1[state.selected]||0):(rocketStockTitan1[state.selected]||0);
+        const before=type==='hercules2'?(rocketStock2[state.selected]||0):type==='atlas1'?(rocketStockAtlas1[state.selected]||0):type==='adler1'?getRocketStockCount('adler1',state.selected,state.viewMode==='orbit'?'orbit':'surface'):(rocketStockTitan1[state.selected]||0);
         if(before<=0) break;
         launchFn(state.selected,rocketDestination);
       }
@@ -6347,6 +6415,7 @@ function bindRocketControls() {
   launchFleet('hercules2','rocket-count-hercules2',launchHercules2);
   launchFleet('atlas1','rocket-count-atlas1',launchAtlas1);
   launchFleet('titan1','rocket-count-titan1',launchTitan1);
+  launchFleet('adler1','rocket-count-adler1',launchAdler1);
   root.querySelectorAll('.rocket-land').forEach(x=>x.addEventListener('click',()=>{
     const r=rockets.find(r=>String(r.id)===String(x.dataset.rocketId));
     if(!r || r.status!=='orbit' || !rocketCanLand(r.to)) return;
@@ -6538,6 +6607,7 @@ function updateRockets(now) {
       if (type === 'hercules2') rocketStock2[id] = (rocketStock2[id] || 0) + 1;
       if (type === 'atlas1') rocketStockAtlas1[id] = (rocketStockAtlas1[id] || 0) + 1;
       if (type === 'titan1') rocketStockTitan1[id] = (rocketStockTitan1[id] || 0) + 1;
+      if (type === 'adler1') rocketStockAdler1[id] = (rocketStockAdler1[id] || 0) + 1;
       if (type === 'colonistShuttle') rocketStockColonistShuttle[id] = (rocketStockColonistShuttle[id] || 0) + 1;
       if (type === 'mobileMiner') { rocketStockMobileMiner[id] = (rocketStockMobileMiner[id] || 0) + 1; if (!document.querySelector('#asteroids-panel')?.hidden) renderAsteroidsPanel(); }
       if (type === 'tankRocket') rocketStockTankRocket[id] = (rocketStockTankRocket[id] || 0) + 1;
@@ -6838,8 +6908,26 @@ function updateResources() {
     const storage = getPlanetStorage(id);
     updateBatteryStorage(id, delta);
     updateAtmosphereRegulators(id, storage, bld, delta);
+    // Gasentfernungsanlage: entzieht bis zu 0,7 t/s aus der Atmosphäre,
+    // proportional zur jeweils vorhandenen Gaszusammensetzung.
+    const gasRemovalCount = Math.max(0, Number(bld.gasRemoval) || 0);
+    const atmosphereForRemoval = ensurePlanetAtmosphere(id);
+    if (gasRemovalCount > 0 && delta > 0 && atmosphereForRemoval) {
+      const gases = atmosphereForRemoval.gases || (atmosphereForRemoval.gases = {});
+      const total = Math.max(0, Number(atmosphereForRemoval.totalGas) || 0);
+      const selectedGas = String(planet.gasRemovalGas || 'co2');
+      const gasAmount = Math.max(0, Number(gases[selectedGas]) || 0);
+      const removed = Math.min(gasAmount, 0.05 * gasRemovalCount * delta);
+      if (removed > 0 && total > 0) {
+        gases[selectedGas] = Math.max(0, gasAmount - removed);
+        atmosphereForRemoval.totalGas = Math.max(0, total - removed);
+        atmosphereForRemoval.oxygen = Math.max(0, Number(gases.oxygen) || 0);
+        if (id === 'venus') planet.resources.co2 = Math.max(0, Number(planet.resources.co2 || 0) - removed * (Number(gases.co2 || 0) / Math.max(1e-12, atmosphereForRemoval.totalGas)));
+      }
+    }
     // Wasserelektrolyse: verarbeitet bis zu 0,2 Liter Wasser/s je Anlage.
-    // Die Gasprodukte werden in Tonnen im lokalen Oberflächenlager geführt.
+    // Wasserstoff und Sauerstoff werden direkt der Planetenatmosphäre hinzugefügt,
+    // nicht im Rohstofflager gespeichert. Atmosphärische Gaswerte sind in Tonnen.
     if (Number(bld.waterElectrolysis || 0) > 0 && delta > 0) {
       const count = Number(bld.waterElectrolysis || 0);
       const powerFactor = newBuildingPowerFactor(id);
@@ -6849,8 +6937,16 @@ function updateResources() {
       if (waterUsed > 0) {
         storage.water = Math.max(0, waterAvailable - waterUsed);
         // 1 Liter Wasser ≈ 1 kg; Masseanteile: 11,19 % Wasserstoff und 88,81 % Sauerstoff.
-        storage.hydrogen = Number(storage.hydrogen || 0) + waterUsed * 0.0001119;
-        storage.oxygen = Number(storage.oxygen || 0) + waterUsed * 0.0008881;
+        const hydrogenProduced = waterUsed * 0.0001119;
+        const oxygenProduced = waterUsed * 0.0008881;
+        const atmosphere = ensurePlanetAtmosphere(id);
+        if (atmosphere) {
+          const gases = atmosphere.gases || (atmosphere.gases = {});
+          gases.hydrogen = Math.max(0, Number(gases.hydrogen) || 0) + hydrogenProduced;
+          gases.oxygen = Math.max(0, Number(gases.oxygen) || 0) + oxygenProduced;
+          atmosphere.totalGas = Math.max(0, Number(atmosphere.totalGas) || 0) + hydrogenProduced + oxygenProduced;
+          atmosphere.oxygen = gases.oxygen;
+        }
       }
     }
     // Kupfer wird auf jedem Planeten fair auf alle gleichzeitig kupferverbrauchenden
@@ -8324,7 +8420,7 @@ function organizeFlightCenterTabs() {
 
   const stockTypes = [
     ['hercules1', 'Herkules 1'], ['hercules2', 'Herkules 2'], ['atlas1', 'Atlas 1'],
-    ['titan1', 'Titan 1'], ['colonistShuttle', 'Kolonisten-Shuttle'],
+    ['titan1', 'Titan 1'], ['adler1', 'Adler 1'], ['colonistShuttle', 'Kolonisten-Shuttle'],
     ['mobileMiner', 'Mobile Minerrakete'], ['tankRocket', 'Tankrakete']
   ];
   const source = state.selected;
@@ -9339,6 +9435,21 @@ function renderEconomy() {
   const energyProduction = electricityProduction('earth');
   const energyConsumption = electricityConsumption('earth');
   const energyBalance = energyProduction - energyConsumption;
+  const batteryPlanets = Object.keys(bodies).filter(id => id !== 'sun');
+  const batteryOverview = batteryPlanets.reduce((totals, id) => {
+    const count = Math.max(0, Number(getBuildingsOnPlanet(id).batteryStorage) || 0);
+    if (!count) return totals;
+    const data = ensureBatteryStorageData(id);
+    totals.count += count;
+    totals.capacity += count * 100;
+    totals.stored += Math.min(count * 100, Number(data.chargeMWh) || 0);
+    totals.maxCharge += count * 10;
+    totals.maxDischarge += count * 10;
+    totals.planets.push(bodies[id]?.name || id);
+    return totals;
+  }, { count: 0, capacity: 0, stored: 0, maxCharge: 0, maxDischarge: 0, planets: [] });
+  const batteryPercent = batteryOverview.capacity ? batteryOverview.stored / batteryOverview.capacity * 100 : 0;
+  const batterySummary = `<div class="dashboard-battery-summary"><div class="dashboard-battery-heading"><strong>🔋 Gespeicherter Strom</strong><span>${batteryOverview.stored.toLocaleString('de-DE',{maximumFractionDigits:2})} / ${batteryOverview.capacity.toLocaleString('de-DE')} MWh</span></div><div class="dashboard-battery-track"><i style="width:${batteryPercent}%"></i></div><div class="dashboard-battery-stats"><div><span>Füllstand</span><strong>${batteryPercent.toLocaleString('de-DE',{maximumFractionDigits:1})} %</strong></div><div><span>Speicher</span><strong>${batteryOverview.count} · ${batteryOverview.planets.length} Planeten</strong></div><div><span>Max. Laden</span><strong>${formatElectricPower(batteryOverview.maxCharge)}</strong></div><div><span>Max. Entladen</span><strong>${formatElectricPower(batteryOverview.maxDischarge)}</strong></div></div>${batteryOverview.count ? `<small>Standorte: ${batteryOverview.planets.join(', ')}</small>` : '<small>Noch keine Batteriespeicher gebaut.</small>'}</div>`;
   const forestPlanets = Object.keys(bodies).filter(id => id !== 'sun' && Number(bodies[id].resources?.trees || 0) > 0);
   const forestNumber = value => Number(value || 0).toLocaleString('de-DE', { maximumFractionDigits: 4 });
   const forestRows = forestPlanets.map(id => {
@@ -9362,14 +9473,12 @@ function renderEconomy() {
   panel.innerHTML = `
     <div class="economy-quick-overview">
       <div class="economy-quick-card"><span>Gebäude im Sonnensystem</span><strong>${total}</strong></div>
-      <div class="economy-quick-card"><span>⛏️ Eisenproduktion</span><strong>${ironProduction('earth').toFixed(2)} t/s</strong></div>
-      <div class="economy-quick-card"><span>🔩 Stahlproduktion</span><strong>${steelProduction('earth').toFixed(2)} t/s</strong></div>
       <div class="economy-quick-card"><span>💵 GünniDollar</span><strong>${formatGunniDollar(gunniDollarBalance)}</strong><small>${gunniDollarIncome.toLocaleString('de-DE', { maximumFractionDigits: 2 })} GünniDollar/s Einnahmen</small></div>
     </div>
     <details class="economy-section"><summary>📦 Rohstoffe & Lager <span>Bestände aller Rohstoffe</span></summary><div class="economy-section-content">${stockRows}</div></details>
     <details class="economy-section"><summary>🏭 Produktion & Verbrauch <span>Förderung und Materialflüsse</span></summary><div class="economy-section-content">${productionRows}</div></details>
     <details class="economy-section"><summary>💎 Luxusgüter <span>Fahrzeuge im Oberflächen- und Orbitlager</span></summary><div class="economy-section-content">${luxuryRows}</div></details>
-    <details class="economy-section"><summary>⚡ Energie <span>Erde · ${formatElectricPower(energyBalance)}</span></summary><div class="economy-section-content">${renderElectricityPanel('earth')}</div></details>
+    <details class="economy-section"><summary>⚡ Energie <span>Erde · ${formatElectricPower(energyBalance)}</span></summary><div class="economy-section-content">${batterySummary}${renderElectricityPanel('earth')}</div></details>
     <details class="economy-section"><summary>🏢 Gebäude im Sonnensystem <span>${total} Gebäude</span></summary><div class="economy-section-content">${buildingRows}</div></details>
     <details class="economy-section"><summary>🚀 Raketen & Transport <span>Transportübersicht</span></summary><div class="economy-section-content"><p class="hint">Öffne die Raketen- und Orbitansicht für Flüge, Fracht und Raketenbestände.</p></div></details>
     ${forestOverview}`;
