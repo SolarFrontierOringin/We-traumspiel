@@ -9,3 +9,8 @@ Neue Projekte und Ziele
 ! Habitat kann jetzt von 0 bis 30 Bar gebaut werden. kolonisten können dprt wohnen auch wenn keine Atmosphäre vorhanden ist 
 
 normale Wohnhäuser können erst ab 1,05 bar gebaut werden. Kolonisten benötige Sauerstoff in der Atmosphäre von 18-25% 
+
+
+
+Neuerungen 
+☆Dashboard wurde angepasst, Strom zeigt jetzt auch gespeicherten Strom. 
