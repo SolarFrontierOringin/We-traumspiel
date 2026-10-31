@@ -5042,6 +5042,87 @@ function renderInfo() {
     }
   }
 }
+
+function freightResourceLabel(key) {
+  const labels = { iron:'Eisen', ironOre:'Eisenerz', steel:'Stahl', stone:'Stein', silicon:'Silizium', lithium:'Lithium', copper:'Kupfer', copperOre:'Kupfererz', uranium:'Uran', helium3:'Helium-3', water:'Wasser', ice:'Eis', glass:'Glas', chips:'Chips', electronics:'Elektronik', plastic:'Kunststoff', polymers:'Polymere', rubber:'Gummi', wood:'Holz', biomass:'Biomasse', food:'Nahrung', oxygen:'Sauerstoff', hydrogen:'Wasserstoff', nitrogen:'Stickstoff', co2:'CO₂', argon:'Argon', fuel:'Treibstoff', ionium:'Ionium', cocoa:'Kakao', chocolate:'Schokolade', luxuryFurniture:'Luxusmöbel', vehicles:'Fahrzeuge', crudeOil:'Rohöl', gas:'Gas' };
+  return labels[key] || key.replace(/([A-Z])/g, ' $1').replace(/^./, c => c.toUpperCase());
+}
+function freightResourceKeys(id) {
+  const a = getPlanetStorage(id), b = getOrbitStorage(id);
+  return [...new Set([...Object.keys(a), ...Object.keys(b)])].filter(k => typeof a[k] === 'number' || typeof b[k] === 'number').filter(k => !['money','günnidollar','colonists'].includes(k.toLowerCase())).sort();
+}
+function freightTransfer(id, direction, resource, amount) {
+  const surface = getPlanetStorage(id), orbit = getOrbitStorage(id);
+  const source = direction === 'surface-orbit' ? surface : orbit;
+  const destination = direction === 'surface-orbit' ? orbit : surface;
+  const requested = Math.max(0, Number(amount) || 0);
+  const available = Math.max(0, Number(source[resource]) || 0);
+  const moved = Math.min(requested, available);
+  if (!moved) return 0;
+  source[resource] = available - moved;
+  destination[resource] = Math.max(0, Number(destination[resource]) || 0) + moved;
+  return moved;
+}
+function renderFreightPanel(id) {
+  const rules = bodies[id].freightAutomation || (bodies[id].freightAutomation = { enabled:false, direction:'surface-orbit', resource:'iron', target:0, reserve:0 });
+  const keys = freightResourceKeys(id);
+  if (!keys.includes(rules.resource)) rules.resource = keys[0] || '';
+  const options = keys.map(k => `<option value="${k}" ${k === rules.resource ? 'selected' : ''}>${freightResourceLabel(k)}</option>`).join('');
+  return `<details class="freight-transport-details"><summary>📦 Frachttransport Oberfläche ↔ Orbit</summary>
+    <div class="planet-storage-content">
+      <label for="freight-direction">Transportrichtung</label>
+      <select id="freight-direction"><option value="surface-orbit" ${rules.direction === 'surface-orbit' ? 'selected' : ''}>Oberfläche → Orbit</option><option value="orbit-surface" ${rules.direction === 'orbit-surface' ? 'selected' : ''}>Orbit → Oberfläche</option></select>
+      <label for="freight-resource">Rohstoff</label><select id="freight-resource">${options}</select>
+      <label for="freight-amount">Manuelle Menge</label><input id="freight-amount" type="number" min="0" step="any" value="1">
+      <button type="button" id="freight-transfer">Sofort transportieren</button>
+      <hr><label><input type="checkbox" id="freight-auto" ${rules.enabled ? 'checked' : ''}> Automatisch bis zum Zielbestand auffüllen</label>
+      <label for="freight-target">Zielbestand am Zielort</label><input id="freight-target" type="number" min="0" step="any" value="${Number(rules.target)||0}">
+      <label for="freight-reserve">Mindestbestand am Ausgangsort</label><input id="freight-reserve" type="number" min="0" step="any" value="${Number(rules.reserve)||0}">
+      <button type="button" id="freight-save-rule">Automatik speichern</button>
+      <p class="hint" id="freight-status">Automatik wird sofort bis zum Zielbestand ausgeführt, der Mindestbestand bleibt am Ausgangsort.</p>
+    </div></details>`;
+}
+function bindFreightPanel(id) {
+  const panel = infoPanel.querySelector('.freight-transport-details');
+  if (!panel) return;
+  const $ = sel => panel.querySelector(sel);
+  const direction = $('#freight-direction'), resource = $('#freight-resource');
+  const amount = $('#freight-amount'), enabled = $('#freight-auto'), target = $('#freight-target'), reserve = $('#freight-reserve');
+  const status = $('#freight-status');
+  const rules = bodies[id].freightAutomation || (bodies[id].freightAutomation = {});
+  const saveRule = () => {
+    rules.enabled = !!enabled.checked;
+    rules.direction = direction.value;
+    rules.resource = resource.value;
+    rules.target = Math.max(0, Number(target.value)||0);
+    rules.reserve = Math.max(0, Number(reserve.value)||0);
+  };
+  $('#freight-transfer').addEventListener('click', () => {
+    const moved = freightTransfer(id, direction.value, resource.value, amount.value);
+    status.textContent = moved > 0 ? `${moved.toLocaleString('de-DE')} t sofort transportiert.` : 'Kein Bestand für den Transport verfügbar.';
+    renderInfo();
+  });
+  $('#freight-save-rule').addEventListener('click', () => {
+    saveRule();
+    const source = direction.value === 'surface-orbit' ? getPlanetStorage(id) : getOrbitStorage(id);
+    const destination = direction.value === 'surface-orbit' ? getOrbitStorage(id) : getPlanetStorage(id);
+    const key = resource.value;
+    const gap = Math.max(0, rules.target - (Number(destination[key])||0));
+    const movable = Math.max(0, (Number(source[key])||0) - rules.reserve);
+    const moved = rules.enabled ? freightTransfer(id, rules.direction, key, Math.min(gap, movable)) : 0;
+    status.textContent = rules.enabled ? (moved > 0 ? `${moved.toLocaleString('de-DE')} t automatisch transportiert.` : 'Zielbestand erreicht oder Mindestbestand schützt den Ausgangsort.') : 'Automatik deaktiviert.';
+    renderInfo();
+  });
+  // Bestehende aktive Regel wird beim Öffnen der Ansicht sofort ausgeführt.
+  if (rules.enabled && rules.resource) {
+    const source = rules.direction === 'surface-orbit' ? getPlanetStorage(id) : getOrbitStorage(id);
+    const destination = rules.direction === 'surface-orbit' ? getOrbitStorage(id) : getPlanetStorage(id);
+    const gap = Math.max(0, (Number(rules.target)||0) - (Number(destination[rules.resource])||0));
+    const movable = Math.max(0, (Number(source[rules.resource])||0) - (Number(rules.reserve)||0));
+    freightTransfer(id, rules.direction, rules.resource, Math.min(gap, movable));
+  }
+}
+
 function renderInfoInternal() {
   if (activeSolarSystemId === 'system2') return;
   const body = bodies[state.selected];
@@ -5054,7 +5135,8 @@ function renderInfoInternal() {
   const bld = getBuildingsOnPlanet(state.selected);
   const localStorage = getPlanetStorage(state.selected);
   if (state.viewMode === 'orbit') {
-    infoPanel.innerHTML = renderOrbitInfo(body);
+    infoPanel.innerHTML = renderOrbitInfo(body) + renderFreightPanel(state.selected);
+    bindFreightPanel(state.selected);
     bindPlanetViewControls();
     bindPlanetResourceDetails();
     const atmosphereReleaseButton = document.querySelector('#planet-atmosphere-release');

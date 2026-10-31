@@ -1582,3 +1582,12 @@ body > .planet-build-menu .planet-build-header {
 .dashboard-battery-stats strong{font-size:.92rem;color:#edf7ff;overflow-wrap:anywhere;}
 .dashboard-battery-summary>small{display:block;margin-top:10px;}
 @media(max-width:600px){.dashboard-battery-stats{grid-template-columns:repeat(2,minmax(0,1fr));}}
+
+
+/* Frachttransport Oberfläche ↔ Orbit */
+.freight-transport-details{margin-top:10px;border:1px solid #315273;border-radius:12px;background:#0c1627;overflow:hidden}
+.freight-transport-details>summary{padding:12px;cursor:pointer;font-weight:700;color:#eef4ff}
+.freight-transport-details>.planet-storage-content{display:grid;gap:8px;padding:0 12px 12px}
+.freight-transport-details label{display:block;color:#c7d4e8}
+.freight-transport-details input:not([type=checkbox]),.freight-transport-details select{width:100%;padding:9px;border:1px solid #344967;border-radius:8px;background:#eef2f7;color:#111}
+.freight-transport-details input[type=checkbox]{margin-right:6px}
