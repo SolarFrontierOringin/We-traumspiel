@@ -518,7 +518,7 @@ const buildingTypes = {
   co2Extraction: { name: 'CO₂-Extraktionsanlage', icon: '🌫️', resource: 'co2', rate: 0.25, cost: 25, text: 'extrahiert 0,25 t CO₂/s aus der Atmosphäre · nur auf Venus' },
   co2ProcessingPlant: { name: 'CO₂-Verarbeitung', icon: '⚗️', resource: null, rate: 0, cost: 50, text: 'verarbeitet 0,2 t CO₂/s → 0,1 t Kohlenstoff + 0,1 t Sauerstoff · auf allen Planeten außer der Sonne' },
   orbitalCo2Extractor: { name: 'CO₂-Orbit-Extraktor', icon: '🛰️', resource: null, rate: 0, cost: 0, text: 'Fördert 0,2 t CO₂/s · kein Stromverbrauch · lagert CO₂ im jeweiligen Orbit-Lager ein · nur im Orbit' },
-  researchSatellite: { name: 'Forschungssatellit', icon: '🛰️', resource: null, rate: 0, cost: 800, text: 'Erzeugt 1 Forschungspunkt/s · kein Stromverbrauch · maximal 1 Forschungssatellit pro Orbit · Baukosten: 800 t Stahl, 120 t Elektronik, 80 t Chips, 100 t Glas' },
+  researchSatellite: { name: 'Forschungssatellit', icon: '🛰️', resource: null, rate: 0, cost: 800, text: 'Erzeugt 0,5 Forschungspunkte/s · kein Stromverbrauch · maximal 1 Forschungssatellit pro Orbit · Baukosten: 800 t Stahl, 120 t Elektronik, 80 t Chips, 100 t Glas' },
   ironMine: { name: 'Eisenmine', icon: '🧲', resource: 'iron', rate: 0.1, cost: 20, text: '0,1 t Eisen/s' },
   nickelMine: { name: 'Nickelmine', icon: '🪨', resource: 'nickelOre', rate: 0.1, cost: 30, text: '0,1 t Nickelerz/s · benötigt 1 MW Strom · Baukosten: 30 t Stahl · nur auf Planetenoberflächen mit Nickelerzvorkommen und nach Abschluss der Forschung „Grabung nach Nickelerz“' },
   graphiteMine: { name: 'Graphitmine', icon: '⚫', resource: 'graphite', rate: 0.05, cost: 0, text: '0,05 t Graphit/s · benötigt 5 MW Strom · Baukosten: 800 t Stahl, 1.100 t Baustoffe und 100 t Glas · keine Forschung · nur auf Erde, Luna, Mars und Io mit Graphitvorkommen' },
@@ -1243,8 +1243,8 @@ function processColonists(id, delta) {
   const colonistIncome = body.colonists * 0.0002 * delta;
   state.gunniDollar = Math.max(0, Number(state.gunniDollar) || 0) + colonistIncome;
   recordCompanyFinance('income', colonistIncome, 'Kolonisten-Einnahmen', false);
-  const foodNeed = body.colonists * 0.00001 * delta; // t Lebensmittel/s je Kolonist
-  const waterNeedLitres = body.colonists * 0.01 * delta; // 0,00001 t Wasser = 0,01 Liter
+  const foodNeed = body.colonists * (0.001 / 86400) * delta; // 0,001 t Nahrung je Kolonist und Spieltag
+  const waterNeedLitres = body.colonists * (2 / 86400) * delta; // 2 Liter Wasser je Kolonist und Spieltag
   const foodAvailable = Math.max(0, Number(storage.food) || 0);
   const waterAvailable = Math.max(0, Number(storage.water) || 0);
   storage.food = Math.max(0, foodAvailable - Math.min(foodAvailable, foodNeed));
@@ -1281,11 +1281,17 @@ function processColonists(id, delta) {
     body.colonistGrowthAccumulator = 0;
     return;
   }
-  // Der Fahrzeugbonus wirkt auf die Wachstumsrate (Multiplikator 1,10), nicht als separate Zeitverkürzung.
-  const baseGrowthPerSecond = (body.colonistGrowthPercent / 100) / 30;
+  // Staffelung nach aktueller Bevölkerung; Luxusartikel geben zusätzliche Wachstumsboni.
+  const population = Math.max(0, Number(body.colonists) || 0);
+  const [growthCount, growthInterval] = population >= 90000 ? [7, 60]
+    : population >= 50000 ? [5, 45]
+    : population >= 20000 ? [4, 45]
+    : population >= 10000 ? [2, 45]
+    : [1, 45];
+  const baseGrowthPerSecond = (growthCount / growthInterval) * (body.colonistGrowthPercent / 100);
   const vehicleBonusSeconds = vehicleLuxuryActive ? luxurySeconds * 0.10 : 0;
-  const chocolateBonusSeconds = chocolateLuxuryActive ? chocolateLuxurySeconds * 0.08 : 0;
-  const furnitureBonusSeconds = furnitureLuxuryActive ? furnitureLuxurySeconds * 0.09 : 0;
+  const chocolateBonusSeconds = chocolateLuxuryActive ? chocolateLuxurySeconds * 0.10 : 0;
+  const furnitureBonusSeconds = furnitureLuxuryActive ? furnitureLuxurySeconds * 0.10 : 0;
   body.colonistGrowthAccumulator += baseGrowthPerSecond * (delta + vehicleBonusSeconds + chocolateBonusSeconds + furnitureBonusSeconds);
   while (body.colonistGrowthAccumulator >= 1 && housingFree(id) > 0) {
     if (!addColonistToHousing(id)) break;
@@ -1647,7 +1653,7 @@ const researchTypes = {
   },
   researchSatellite: {
     name: 'Forschungssatellit', icon: '🛰️', category: 'Weltraumforschung', cost: 3500, time: 420,
-    text: 'Schaltet den Forschungssatelliten frei. Er erzeugt 1 Forschungspunkt/s ohne Stromverbrauch; pro Orbit ist maximal ein Satellit erlaubt.'
+    text: 'Schaltet den Forschungssatelliten frei. Er erzeugt 0,5 Forschungspunkte/s ohne Stromverbrauch; pro Orbit ist maximal ein Satellit erlaubt.'
   },
   solarSatellite: {
     name: 'Solar-Satellit', icon: '🛰️', category: 'Weltraumforschung', cost: 30000, time: 1800, chipCost: 5000,
@@ -2027,7 +2033,8 @@ function renderTasks() {
           ${key === 'company_start_name' && taskIsComplete(key) ? `<div class="hint">Firmenname: <strong>${escapeCompanyText(state.companyName)}</strong></div>` : ''}
           <div class="task-progress-text"><span>Fortschritt</span><strong>${displayProgress} / ${target} ${t.unit}</strong></div>
           <div class="task-progress"><i style="width:${Math.min(100, progress / t.target * 100)}%"></i></div>
-        </div>`;
+        </div>
+        </details>`;
       }).join('')}
     </div>`;
   panel.querySelectorAll('[data-task-group]').forEach(button => button.addEventListener('click', () => {
@@ -2055,7 +2062,7 @@ function taskProgressUpdate() {
 
 function researchLabCount() { return Number(getBuildingsOnPlanet('earth').researchLab || 0); }
 function researchSatelliteCount() { return Object.keys(bodies).reduce((sum, id) => sum + Number(getBuildingsOnPlanet(id).researchSatellite || 0), 0); }
-function researchPointProduction() { return researchLabCount() * 1 + researchSatelliteCount() * 1; }
+function researchPointProduction() { return researchLabCount() * 0.5 + researchSatelliteCount() * 0.5; }
 function researchAvailable() { return researchLabCount() > 0; }
 
 function formatResearchTime(seconds) {
@@ -2133,7 +2140,7 @@ function renderResearch() {
     const status = count > 0 ? 'Satellit vorhanden' : (completed.researchSatellite ? 'Orbit frei' : 'Forschung erforderlich');
     return `<button type="button" class="orbit-research-row" data-orbit-target="${id}">
       <span class="orbit-research-icon">🛰️</span><span class="orbit-research-name"><strong>${body.name}</strong><small>${status}</small></span>
-      <span class="orbit-research-rate ${count ? 'good' : ''}">${count ? '+1 FP/s' : '0 FP/s'}</span>
+      <span class="orbit-research-rate ${count ? 'good' : ''}">${count ? '+0,5 FP/s' : '0 FP/s'}</span>
     </button>`;
   }).join('');
   panel.innerHTML = `<div class="research-tabs" role="tablist" aria-label="Forschungsansicht">
@@ -2142,7 +2149,7 @@ function renderResearch() {
   </div><section class="orbit-research-overview">
     <h3>🛰️ Orbit-Forschungsübersicht</h3>
     <div class="orbit-research-global"><small>Globales Forschungskonto</small><strong>${Number(state.research.points || 0).toLocaleString('de-DE', {maximumFractionDigits: 0})} FP</strong><span>+${researchPointProduction().toFixed(2)} FP/s insgesamt</span></div>
-    <p class="hint">Jeder Forschungssatellit erzeugt dauerhaft 1 Forschungspunkt/s. Pro Orbit ist maximal ein Forschungssatellit erlaubt. Wähle einen Orbit, um dessen Ansicht zu öffnen.</p>
+    <p class="hint">Jeder Forschungssatellit erzeugt dauerhaft 0,5 Forschungspunkte/s. Pro Orbit ist maximal ein Forschungssatellit erlaubt. Wähle einen Orbit, um dessen Ansicht zu öffnen.</p>
     <div class="orbit-research-list">${orbitRows}</div>
   </section>
   <div class="research-overview">
@@ -2309,7 +2316,7 @@ function renderResearch() {
       <button class="research-button" data-research="orbitalCo2Extractor" ${researchAvailable() && !running && !completed.orbitalCo2Extractor && Number(state.research.points || 0) >= researchTypes.orbitalCo2Extractor.cost ? '' : 'disabled'}>${completed.orbitalCo2Extractor ? 'Abgeschlossen' : active?.key === 'orbitalCo2Extractor' ? 'Läuft …' : 'Forschen'}</button>
     </div>
     <div class="research-card ${!!completed.researchSatellite ? 'research-done' : ''}">
-      <div><strong>🛰️ Forschung: Forschungssatellit</strong><small>Erzeugt dauerhaft 1 Forschungspunkt/s ohne Stromverbrauch. Pro Orbit ist maximal ein Forschungssatellit erlaubt.</small><small>🧪 3.500 Forschungspunkte · ⏱️ 7:00 Minuten</small></div>
+      <div><strong>🛰️ Forschung: Forschungssatellit</strong><small>Erzeugt dauerhaft 0,5 Forschungspunkte/s ohne Stromverbrauch. Pro Orbit ist maximal ein Forschungssatellit erlaubt.</small><small>🧪 3.500 Forschungspunkte · ⏱️ 7:00 Minuten</small></div>
       <button class="research-button" data-research="researchSatellite" ${researchAvailable() && !running && !completed.researchSatellite && Number(state.research.points || 0) >= researchTypes.researchSatellite.cost ? '' : 'disabled'}>${completed.researchSatellite ? 'Abgeschlossen' : active?.key === 'researchSatellite' ? 'Läuft …' : 'Forschen'}</button>
     </div>
     <div class="research-card ${researchedSolarSatellite ? 'research-done' : ''}">
@@ -3383,7 +3390,14 @@ function setupSaveMenu() {
   });
   close.addEventListener('click', () => { saveMenu.hidden = true; });
   save.addEventListener('click', () => saveGame(true));
-  load.addEventListener('click', () => loadGame(true));
+  load.addEventListener('click', () => {
+    // Reload after a successful restore so every view, timer and cached UI is
+    // rebuilt from the loaded save instead of leaving stale runtime state visible.
+    if (loadGame(true)) {
+      restartingGame = true; // suppress pagehide autosave of stale runtime state
+      location.reload();
+    }
+  });
   restart.addEventListener('click', () => {
     if (confirm('Spiel wirklich neu starten? Der gespeicherte Spielstand wird gelöscht.')) restartGame();
   });
@@ -4423,7 +4437,7 @@ function isBuildingAllowed(key, planetId = state.selected) {
   if (key === 'moonBase' && ['sun', 'earth'].includes(planetId)) return false;
   if (planetId === 'sun') return false;
   if (key === 'landingPad') return state.viewMode !== 'orbit' && planetId !== 'sun';
-  if (key !== 'nuclearReactor' && key !== 'radioactiveStorageSurface' && key !== 'radioactiveStorageOrbit' && key !== 'orbitalCo2Extractor' && key !== 'researchSatellite' && key !== 'iceMine' && key !== 'iceProcessingPlant' && key !== 'algaeFoodProcessor' && key !== 'refinery' && key !== 'radioactiveStorageSurface' && key !== 'radioactiveStorageOrbit' && planetId !== 'earth' && key !== 'outpost' && key !== 'solarSail' && key !== 'warmingSail' && Number(getBuildingsOnPlanet(planetId).outpost || 0) < 1) return false;
+  if (key !== 'nuclearReactor' && key !== 'radioactiveStorageSurface' && key !== 'radioactiveStorageOrbit' && key !== 'orbitalCo2Extractor' && key !== 'researchSatellite' && key !== 'iceMine' && key !== 'iceProcessingPlant' && key !== 'algaeFoodProcessor' && key !== 'treeNursery' && key !== 'refinery' && key !== 'radioactiveStorageSurface' && key !== 'radioactiveStorageOrbit' && planetId !== 'earth' && key !== 'outpost' && key !== 'solarSail' && key !== 'warmingSail' && Number(getBuildingsOnPlanet(planetId).outpost || 0) < 1) return false;
   if (key === 'heliumExtractor' && !['luna','venus','jupiter'].includes(planetId)) return false;
    if (key === 'crudeOilPump' && planetId !== 'earth') return false;
   if (key === 'hydroelectricPlant' && planetId !== 'earth') return false;
@@ -4945,7 +4959,7 @@ function renderOrbitInfo(body) {
     <div class="stat"><span>Raketen im Orbit</span><strong>${orbitalLanded.length}</strong></div>
     <div class="stat"><span>Raketen auf Oberfläche</span><strong>${landed.length}</strong></div>
     <div class="stat"><span>Gesamt im Raumverkehr</span><strong>${orbitalRockets.length}</strong></div>
-    <div class="stat"><span>🛰️ Forschungssatellit</span><strong>${Number(getBuildingsOnPlanet(state.selected).researchSatellite || 0)}/1 · +${Number(getBuildingsOnPlanet(state.selected).researchSatellite || 0)} FP/s</strong></div>
+    <div class="stat"><span>🛰️ Forschungssatellit</span><strong>${Number(getBuildingsOnPlanet(state.selected).researchSatellite || 0)}/1 · +${(Number(getBuildingsOnPlanet(state.selected).researchSatellite || 0) * 0.5).toLocaleString('de-DE')} FP/s</strong></div>
     <hr>${renderAtmospherePanel(state.selected)}<h3>🚀 Raumverkehr</h3>${rocketList}
     <hr>`;
 }
@@ -7650,7 +7664,7 @@ function updateResources() {
   updateRockets(now);
   updateOrbitMissions(gameNow());
   // Forschungspunkte werden durch das Forschungslabor auf der Erde erzeugt.
-  // 1 Forschungspunkt pro Sekunde je Forschungslabor.
+  // 0,5 Forschungspunkte pro Sekunde je Forschungslabor und Forschungssatellit.
   const researchPointsDelta = researchPointProduction() * delta;
   if (researchPointsDelta > 0) {
     state.research.points = Number(state.research.points || 0) + researchPointsDelta;
@@ -7718,13 +7732,28 @@ function updateResources() {
 // ==========================================
 // NEUIGKEITEN & WIRTSCHAFT – Buttons
 // ==========================================
+function getColonistHourlyGrowthEstimate(id) {
+  const body = ensureColonistData(id);
+  const pop = colonistsOnPlanet(id);
+  const storage = getPlanetStorage(id);
+  if (!body || pop <= 0 || body.colonistGrowthPercent <= 0 || housingFree(id) <= 0 ||
+      Number(storage.food || 0) <= 0 || Number(storage.water || 0) <= 0 ||
+      !getColonistAtmosphereStatus(id).normalHousingAllowed) return 0;
+  const [count, interval] = pop >= 90000 ? [7, 60] : pop >= 50000 ? [5, 45] : pop >= 20000 ? [4, 45] : pop >= 10000 ? [2, 45] : [1, 45];
+  const activeBonuses = (body.vehicleLuxuryEnabled !== false && Number(storage.vehicles || 0) > 0 ? 1 : 0) +
+    (body.chocolateLuxuryEnabled !== false && Number(storage.chocolate || 0) > 0 ? 1 : 0) +
+    (body.furnitureLuxuryEnabled !== false && Number(storage.luxuryFurniture || 0) > 0 ? 1 : 0);
+  return count / interval * (body.colonistGrowthPercent / 100) * 3600 * (1 + activeBonuses * 0.1);
+}
+
 function renderColonistsPanel() {
   const panel = document.querySelector('#colonists-content');
   if (!panel) return;
-  const ids = Object.keys(bodies).filter(id => id !== 'sun');
+  const ids = Object.keys(bodies).filter(id => id !== 'sun').sort((a, b) => { const priority = id => id === 'earth' ? 0 : id === 'luna' ? 1 : 2; return priority(a) - priority(b) || String(bodies[a]?.name || a).localeCompare(String(bodies[b]?.name || b), 'de'); });
+  const openPlanetIds = new Set([...panel.querySelectorAll('.colonists-planet-card[open]')].map(card => card.dataset.planetId));
   const allColonists = ids.reduce((sum, id) => sum + colonistsOnPlanet(id), 0);
-  const foodNeed = allColonists * 0.00001;
-  const waterNeed = allColonists * 0.01;
+  const foodNeed = allColonists * (0.001 / 86400);
+  const waterNeed = allColonists * (2 / 86400);
   panel.innerHTML = `
     <div class="colonists-summary">
       <div class="colonists-summary-card"><span>👥 Kolonisten gesamt</span><strong data-colonists-total>${allColonists.toLocaleString('de-DE')}</strong></div>
@@ -7732,7 +7761,7 @@ function renderColonistsPanel() {
       <div class="colonists-summary-card"><span>🍲 Lebensmittelbedarf</span><strong data-food-need>${foodNeed.toLocaleString('de-DE',{maximumFractionDigits:6})} t/s</strong></div>
       <div class="colonists-summary-card"><span>💧 Wasserbedarf</span><strong data-water-need>${waterNeed.toLocaleString('de-DE',{maximumFractionDigits:4})} L/s</strong></div>
     </div>
-    <p class="hint">Kolonisten starten bei 0. Die ersten ziehen nach Abschluss eines später festgelegten Auftrags ein. Bei 100 % Wachstum entsteht durchschnittlich alle 30 Sekunden ein neuer Kolonist, sofern Wohnraum, Lebensmittel und Wasser vorhanden sind.</p>
+    <p class="hint">Kolonisten starten bei 0. Die ersten ziehen nach Abschluss eines später festgelegten Auftrags ein. Bei 100 % Wachstum: bis 10.000 Kolonisten 1 je 45 Sekunden, ab 10.000: 2, ab 20.000: 4, ab 50.000: 5 je 45 Sekunden; ab 90.000: 7 je Ingame-Minute. Wohnraum, Lebensmittel und Wasser erforderlich.</p>
     <div class="colonists-planet-list">
       ${ids.map(id => {
         const body = ensureColonistData(id);
@@ -7742,24 +7771,24 @@ function renderColonistsPanel() {
         const free = Math.max(0, capacity - pop);
         const supplied = pop <= 0 || (Number(storage.food || 0) > 0 && Number(storage.water || 0) > 0);
         const housingText = housingBuildingKeys.filter(key => Number(getBuildingsOnPlanet(id)[key] || 0) > 0).map(key => `${buildingTypes[key].name}: ${getBuildingsOnPlanet(id)[key]}`).join(' · ') || 'Keine Wohngebäude';
-        return `<article class="colonists-planet-card">
-          <div class="colonists-planet-head"><h3>${body.name}</h3><strong data-pop="${id}">${pop.toLocaleString('de-DE')} Kolonisten</strong></div>
+        return `<details class="colonists-planet-card" data-planet-id="${id}" ${openPlanetIds.has(id) ? 'open' : ''}>
+          <summary class="colonists-planet-head"><h3>${body.name}</h3><span><strong data-pop="${id}">${pop.toLocaleString('de-DE')} Kolonisten</strong><span class="colonists-expand-hint"> · Details</span></span></summary>
           <div class="stat"><span>Wohnraum</span><strong data-housing="${id}">${pop} / ${capacity} · ${free} frei</strong></div>
           <div class="stat"><span>Lebensmittel im Oberflächenlager</span><strong data-food="${id}">${Number(storage.food || 0).toLocaleString('de-DE',{maximumFractionDigits:4})} t</strong></div>
           <div class="stat"><span>Wasser im Oberflächenlager</span><strong data-water="${id}">${Number(storage.water || 0).toLocaleString('de-DE',{maximumFractionDigits:2})} L</strong></div>
           <div class="stat"><span>Fahrzeuge im Oberflächenlager</span><strong data-vehicles="${id}">${formatTons(Number(storage.vehicles || 0))}</strong></div>
-          <div class="stat"><span>Luxusgut Fahrzeuge</span><strong data-vehicle-luxury-status="${id}" class="${body.vehicleLuxuryEnabled ? 'good' : 'warn'}">${body.vehicleLuxuryEnabled ? 'Eingeschaltet' : 'Ausgeschaltet'} · ${Number(storage.vehicles || 0) > 0 ? '+10 % Populationseffekt' : 'kein Bonus (Lager leer)'}</strong></div>
-          <button type="button" data-toggle-vehicle-luxury="${id}" class="settings-toggle ${body.vehicleLuxuryEnabled ? '' : 'off'}">Fahrzeuge ${body.vehicleLuxuryEnabled ? 'ausschalten' : 'einschalten'}</button>
-          <div class="stat"><span>Luxusgut Schokolade</span><strong data-chocolate-luxury-status="${id}" class="${body.chocolateLuxuryEnabled ? 'good' : 'warn'}">${body.chocolateLuxuryEnabled ? 'Eingeschaltet' : 'Ausgeschaltet'} · ${Number(storage.chocolate || 0) > 1e-12 ? '+8 % Populationswachstum' : 'kein Bonus (Lager leer)'}</strong></div>
-          <button type="button" data-toggle-chocolate-luxury="${id}" class="settings-toggle ${body.chocolateLuxuryEnabled ? '' : 'off'}">Schokolade ${body.chocolateLuxuryEnabled ? 'ausschalten' : 'einschalten'}</button>
-          <div class="stat"><span>Luxusgut Luxusmöbel</span><strong data-furniture-luxury-status="${id}" class="${body.furnitureLuxuryEnabled ? 'good' : 'warn'}">${body.furnitureLuxuryEnabled ? 'Eingeschaltet' : 'Ausgeschaltet'} · ${Number(storage.luxuryFurniture || 0) > 1e-12 ? '+9 % Populationswachstum' : 'kein Bonus (Lager leer)'}</strong></div>
-          <button type="button" data-toggle-furniture-luxury="${id}" class="settings-toggle ${body.furnitureLuxuryEnabled ? '' : 'off'}">Luxusmöbel ${body.furnitureLuxuryEnabled ? 'ausschalten' : 'einschalten'}</button>
+          <div class="luxury-controls" aria-label="Luxusgüter für ${body.name}">
+            <div class="luxury-control"><button type="button" data-toggle-vehicle-luxury="${id}" class="luxury-switch ${body.vehicleLuxuryEnabled ? 'is-on' : 'is-off'}" aria-pressed="${body.vehicleLuxuryEnabled ? 'true' : 'false'}">🚗 Fahrzeuge<br><span>${body.vehicleLuxuryEnabled ? 'EIN' : 'AUS'}</span></button><small data-vehicle-luxury-status="${id}">${Number(storage.vehicles || 0) > 1e-12 ? 'Lager: ausreichend · +10 %' : 'Lager: leer · kein Bonus'}</small></div>
+            <div class="luxury-control"><button type="button" data-toggle-chocolate-luxury="${id}" class="luxury-switch ${body.chocolateLuxuryEnabled ? 'is-on' : 'is-off'}" aria-pressed="${body.chocolateLuxuryEnabled ? 'true' : 'false'}">🍫 Schokolade<br><span>${body.chocolateLuxuryEnabled ? 'EIN' : 'AUS'}</span></button><small data-chocolate-luxury-status="${id}">${Number(storage.chocolate || 0) > 1e-12 ? 'Lager: ausreichend · +10 %' : 'Lager: leer · kein Bonus'}</small></div>
+            <div class="luxury-control"><button type="button" data-toggle-furniture-luxury="${id}" class="luxury-switch ${body.furnitureLuxuryEnabled ? 'is-on' : 'is-off'}" aria-pressed="${body.furnitureLuxuryEnabled ? 'true' : 'false'}">🛋️ Luxusmöbel<br><span>${body.furnitureLuxuryEnabled ? 'EIN' : 'AUS'}</span></button><small data-furniture-luxury-status="${id}">${Number(storage.luxuryFurniture || 0) > 1e-12 ? 'Lager: ausreichend · +10 %' : 'Lager: leer · kein Bonus'}</small></div>
+          </div>
           <div class="stat"><span>Versorgungsstatus</span><strong data-supply="${id}" class="${supplied ? 'good' : 'warn'}">${pop === 0 ? 'Noch keine Kolonisten' : supplied ? 'Versorgung vorhanden' : 'Wachstum gestoppt: Nahrung oder Wasser fehlt'}</strong></div>
           <div class="stat"><span>Wohngebäude</span><strong>${housingText}</strong></div>
+          <div class="stat"><span>Zugewinn pro Stunde</span><strong data-growth-rate="${id}">${getColonistHourlyGrowthEstimate(id).toLocaleString('de-DE',{maximumFractionDigits:2})} Kolonisten</strong></div>
           <label class="colonists-growth-label" for="colonist-growth-${id}">Bevölkerungswachstum: <strong data-growth-value="${id}">${body.colonistGrowthPercent}%</strong></label>
           <input id="colonist-growth-${id}" class="colonist-growth-slider" type="range" min="0" max="100" step="1" value="${body.colonistGrowthPercent}" data-growth-planet="${id}">
           <div class="colonists-remove-row"><label for="colonist-remove-${id}">Kolonisten entfernen</label><input id="colonist-remove-${id}" type="number" min="1" max="${pop}" step="1" value="1" data-remove-amount="${id}" ${pop > 0 ? '' : 'disabled'}><button type="button" data-remove-colonists="${id}" ${pop > 0 ? '' : 'disabled'}>Entfernen</button></div>
-        </article>`;
+        </details>`;
       }).join('')}
     </div>`;
   panel.querySelectorAll('[data-growth-planet]').forEach(input => {
@@ -7822,45 +7851,46 @@ function refreshColonistsPanelLive() {
   if (planetCount) planetCount.textContent = colonistsOnPlanet(state.selected).toLocaleString('de-DE');
   setText('[data-colonists-total]', total.toLocaleString('de-DE'));
   setText('[data-colonists-income]', `${(total * 0.0002).toLocaleString('de-DE',{maximumFractionDigits:6})}/s`);
-  setText('[data-food-need]', `${(total * 0.00001).toLocaleString('de-DE',{maximumFractionDigits:6})} t/s`);
-  setText('[data-water-need]', `${(total * 0.01).toLocaleString('de-DE',{maximumFractionDigits:4})} L/s`);
+  setText('[data-food-need]', `${(total * (0.001 / 86400)).toLocaleString('de-DE',{maximumFractionDigits:8})} t/s`);
+  setText('[data-water-need]', `${(total * (2 / 86400)).toLocaleString('de-DE',{maximumFractionDigits:8})} L/s`);
   for (const id of ids) {
     const pop = colonistsOnPlanet(id), capacity = housingCapacity(id), storage = getPlanetStorage(id);
     const supplied = pop <= 0 || (Number(storage.food || 0) > 0 && Number(storage.water || 0) > 0);
     setText(`[data-pop="${id}"]`, `${pop.toLocaleString('de-DE')} Kolonisten`);
+    setText(`[data-growth-rate="${id}"]`, `${getColonistHourlyGrowthEstimate(id).toLocaleString('de-DE',{maximumFractionDigits:2})} Kolonisten`);
     setText(`[data-housing="${id}"]`, `${pop} / ${capacity} · ${Math.max(0,capacity-pop)} frei`);
     setText(`[data-food="${id}"]`, `${Number(storage.food || 0).toLocaleString('de-DE',{maximumFractionDigits:4})} t`);
     setText(`[data-water="${id}"]`, `${Number(storage.water || 0).toLocaleString('de-DE',{maximumFractionDigits:2})} L`);
     setText(`[data-vehicles="${id}"]`, formatTons(Number(storage.vehicles || 0)));
     const luxuryStatus = panel.querySelector(`[data-vehicle-luxury-status="${id}"]`);
-    if (luxuryStatus) { luxuryStatus.textContent = `${ensureColonistData(id).vehicleLuxuryEnabled ? 'Eingeschaltet' : 'Ausgeschaltet'} · ${ensureColonistData(id).vehicleLuxuryEnabled && Number(storage.vehicles || 0) > 1e-12 ? '+10 % Populationseffekt' : 'kein Bonus'}`; luxuryStatus.classList.toggle('good', ensureColonistData(id).vehicleLuxuryEnabled && Number(storage.vehicles || 0) > 1e-12); luxuryStatus.classList.toggle('warn', !ensureColonistData(id).vehicleLuxuryEnabled || Number(storage.vehicles || 0) <= 1e-12); }
+    if (luxuryStatus) { luxuryStatus.textContent = Number(storage.vehicles || 0) > 1e-12 ? 'Lager: ausreichend · +10 %' : 'Lager: leer · kein Bonus'; luxuryStatus.classList.toggle('good', ensureColonistData(id).vehicleLuxuryEnabled && Number(storage.vehicles || 0) > 1e-12); luxuryStatus.classList.toggle('warn', !ensureColonistData(id).vehicleLuxuryEnabled || Number(storage.vehicles || 0) <= 1e-12); }
     const luxuryToggle = panel.querySelector(`[data-toggle-vehicle-luxury="${id}"]`);
-    if (luxuryToggle) { luxuryToggle.textContent = `Luxusgut pro Kopf ${ensureColonistData(id).vehicleLuxuryEnabled ? 'ausschalten' : 'einschalten'}`; luxuryToggle.classList.toggle('off', !ensureColonistData(id).vehicleLuxuryEnabled); }
+    if (luxuryToggle) { const on = ensureColonistData(id).vehicleLuxuryEnabled; luxuryToggle.innerHTML = `🚗 Fahrzeuge<br><span>${on ? 'EIN' : 'AUS'}</span>`; luxuryToggle.classList.toggle('is-on', on); luxuryToggle.classList.toggle('is-off', !on); luxuryToggle.setAttribute('aria-pressed', String(on)); }
     const chocolateLuxuryEnabled = ensureColonistData(id).chocolateLuxuryEnabled !== false;
     const chocolateLuxuryStatus = panel.querySelector(`[data-chocolate-luxury-status="${id}"]`);
     if (chocolateLuxuryStatus) {
       const chocolateAvailable = Number(storage.chocolate || 0) > 1e-12;
-      chocolateLuxuryStatus.textContent = `${chocolateLuxuryEnabled ? 'Eingeschaltet' : 'Ausgeschaltet'} · ${chocolateAvailable ? '+8 % Populationswachstum' : 'kein Bonus (Lager leer)'}`;
+      chocolateLuxuryStatus.textContent = chocolateAvailable ? 'Lager: ausreichend · +10 %' : 'Lager: leer · kein Bonus';
       chocolateLuxuryStatus.classList.toggle('good', chocolateLuxuryEnabled && chocolateAvailable);
       chocolateLuxuryStatus.classList.toggle('warn', !chocolateLuxuryEnabled || !chocolateAvailable);
     }
     const chocolateLuxuryToggle = panel.querySelector(`[data-toggle-chocolate-luxury="${id}"]`);
     if (chocolateLuxuryToggle) {
-      chocolateLuxuryToggle.textContent = `Schokolade ${chocolateLuxuryEnabled ? 'ausschalten' : 'einschalten'}`;
-      chocolateLuxuryToggle.classList.toggle('off', !chocolateLuxuryEnabled);
+      chocolateLuxuryToggle.innerHTML = `🍫 Schokolade<br><span>${chocolateLuxuryEnabled ? 'EIN' : 'AUS'}</span>`;
+      chocolateLuxuryToggle.classList.toggle('is-on', chocolateLuxuryEnabled); chocolateLuxuryToggle.classList.toggle('is-off', !chocolateLuxuryEnabled); chocolateLuxuryToggle.setAttribute('aria-pressed', String(chocolateLuxuryEnabled));
     }
     const furnitureEnabled = ensureColonistData(id).furnitureLuxuryEnabled !== false;
     const furnitureAvailable = Number(storage.luxuryFurniture || 0) > 1e-12;
     const furnitureStatus = panel.querySelector(`[data-furniture-luxury-status="${id}"]`);
     if (furnitureStatus) {
-      furnitureStatus.textContent = `${furnitureEnabled ? 'Eingeschaltet' : 'Ausgeschaltet'} · ${furnitureAvailable ? '+9 % Populationswachstum' : 'kein Bonus (Lager leer)'}`;
+      furnitureStatus.textContent = furnitureAvailable ? 'Lager: ausreichend · +10 %' : 'Lager: leer · kein Bonus';
       furnitureStatus.classList.toggle('good', furnitureEnabled && furnitureAvailable);
       furnitureStatus.classList.toggle('warn', !furnitureEnabled || !furnitureAvailable);
     }
     const furnitureToggle = panel.querySelector(`[data-toggle-furniture-luxury="${id}"]`);
     if (furnitureToggle) {
-      furnitureToggle.textContent = `Luxusmöbel ${furnitureEnabled ? 'ausschalten' : 'einschalten'}`;
-      furnitureToggle.classList.toggle('off', !furnitureEnabled);
+      furnitureToggle.innerHTML = `🛋️ Luxusmöbel<br><span>${furnitureEnabled ? 'EIN' : 'AUS'}</span>`;
+      furnitureToggle.classList.toggle('is-on', furnitureEnabled); furnitureToggle.classList.toggle('is-off', !furnitureEnabled); furnitureToggle.setAttribute('aria-pressed', String(furnitureEnabled));
     }
     const status = panel.querySelector(`[data-supply="${id}"]`);
     if (status) {
@@ -9711,15 +9741,21 @@ document.querySelector('#colonists-complete-confirm')?.addEventListener('click',
 document.querySelector('#system-failure-story-close')?.addEventListener('click', closeSystemFailureStory);
 document.querySelector('#system-failure-story-confirm')?.addEventListener('click', closeSystemFailureStory);
 
-// Start-Intro: zwei Sekunden zeigen, danach das Updatefenster öffnen.
+// Startseite: Spieler entscheidet selbst, wann das Spiel beginnt oder die Updates gelesen werden.
 const startupIntro = document.querySelector('#startup-intro');
+const startupPlay = document.querySelector('#startup-play');
+const startupUpdates = document.querySelector('#startup-updates');
 const updatePopup = document.querySelector('#update-popup');
-if (startupIntro) {
-  window.setTimeout(() => {
-    startupIntro.hidden = true;
-    if (updatePopup) { updatePopup.hidden = false; updatePopup.setAttribute('aria-hidden', 'false'); }
-  }, 2000);
+if (startupPlay && startupIntro) {
+  startupPlay.addEventListener('click', () => { startupIntro.hidden = true; });
 }
+if (startupUpdates && startupIntro && updatePopup) {
+  startupUpdates.addEventListener('click', () => {
+    updatePopup.hidden = false;
+    updatePopup.setAttribute('aria-hidden', 'false');
+  });
+}
+
 // Updatefenster: erscheint bei jedem Seitenstart erneut und wird nur über X geschlossen.
 
 const updatePopupClose = document.querySelector('#update-popup-close');
