@@ -3391,12 +3391,22 @@ function setupSaveMenu() {
   close.addEventListener('click', () => { saveMenu.hidden = true; });
   save.addEventListener('click', () => saveGame(true));
   load.addEventListener('click', () => {
-    // Reload after a successful restore so every view, timer and cached UI is
-    // rebuilt from the loaded save instead of leaving stale runtime state visible.
-    if (loadGame(true)) {
-      restartingGame = true; // suppress pagehide autosave of stale runtime state
-      location.reload();
+    // Restore in-place. Reloading would show the startup overlay again and
+    // can run startup initialization over the restored state.
+    if (!loadGame(true)) return;
+    const startupIntro = document.querySelector('#startup-intro');
+    if (startupIntro) startupIntro.hidden = true;
+    const updatePopup = document.querySelector('#update-popup');
+    if (updatePopup) {
+      updatePopup.hidden = true;
+      updatePopup.setAttribute('aria-hidden', 'true');
     }
+    saveMenu.hidden = true;
+    const mainMenu = document.querySelector('#main-menu');
+    if (mainMenu) mainMenu.hidden = true;
+    renderSystem();
+    renderInfo();
+    renderTopResources();
   });
   restart.addEventListener('click', () => {
     if (confirm('Spiel wirklich neu starten? Der gespeicherte Spielstand wird gelöscht.')) restartGame();
