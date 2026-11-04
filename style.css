@@ -1627,3 +1627,17 @@ body > .planet-build-menu .planet-build-header {
 .luxury-switch.is-off{background:#7c2932;border-color:#b64a55}
 .luxury-control small{display:block;margin-top:6px;color:#b9c6d8;font-size:11px;line-height:1.35;overflow-wrap:anywhere}
 @media(max-width:360px){.luxury-controls{gap:4px}.luxury-switch{font-size:11px;padding:7px 2px}.luxury-control small{font-size:10px}}
+
+/* Aufgaben: einklappbare Questbereiche und Statusfarben */
+.task-quest-section{border:1px solid #263754;border-radius:12px;overflow:hidden;margin:10px 0;background:#0a1424}
+.task-quest-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px;background:#101e32;color:#e5edf9;border:0;font-size:16px;font-weight:800;text-align:left}
+.task-quest-content{padding:10px}
+.task-group-heading{margin:10px 0;font-size:15px;color:#c7d4e8}
+.task-card.task-pending{background:#351c25;border:1px solid #a94452}
+.task-card.task-done{background:#16452f;border:1px solid #3f9b68}
+
+/* Einzelne Aufgabenreihen innerhalb der Questbereiche einklappbar */
+.task-group-section{border:1px solid #263754;border-radius:10px;overflow:hidden;margin:8px 0;background:#0a1424}
+.task-group-toggle{width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 12px;background:#101e32;color:#dce7f6;border:0;border-radius:0;text-align:left;font-size:14px;font-weight:750}
+.task-group-toggle strong{white-space:nowrap;color:#aab8ce;font-size:12px}
+.task-group-section .tasks-list{padding:9px;}

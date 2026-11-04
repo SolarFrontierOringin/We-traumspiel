@@ -1998,47 +1998,61 @@ function renderTasks() {
   const panel = document.querySelector('#tasks-content');
   if (!panel) return;
   updateTasks();
-  const groups = [
-    { id: 'intro', label: '🎯 Einführung', keys: Object.keys(taskTypes).filter(key => !taskTypes[key].group) },
-    { id: 'companyStart', label: '🏢 Der Weg zur Firma', keys: Object.keys(taskTypes).filter(key => taskTypes[key].group === 'companyStart') },
-    { id: 'moon', label: '🌙 Griff nach dem Mond', keys: Object.keys(taskTypes).filter(key => taskTypes[key].group === 'moon') },
-    { id: 'lunaExpansion', label: '🌕 Die Welt ist nicht genug', keys: Object.keys(taskTypes).filter(key => taskTypes[key].group === 'lunaExpansion') },
-    { id: 'colonists', label: '👥 Die Kolonisten', keys: Object.keys(taskTypes).filter(key => taskTypes[key].group === 'colonists') }
+  const quests = [
+    { id: 'main', label: '📜 Hauptquest', groups: [
+      { id: 'intro', label: '🎯 Einführung', keys: Object.keys(taskTypes).filter(key => !taskTypes[key].group) },
+      { id: 'companyStart', label: '🏢 Der Weg zur Firma', keys: Object.keys(taskTypes).filter(key => taskTypes[key].group === 'companyStart') }
+    ]},
+    { id: 'side', label: '🧭 Nebenquest', groups: [
+      { id: 'moon', label: '🌙 Griff nach dem Mond', keys: Object.keys(taskTypes).filter(key => taskTypes[key].group === 'moon') },
+      { id: 'colonists', label: '👥 Die Kolonisten', keys: Object.keys(taskTypes).filter(key => taskTypes[key].group === 'colonists') }
+    ]}
   ];
-  const activeGroup = panel.dataset.activeTaskGroup || 'intro';
-  const keys = groups.find(group => group.id === activeGroup)?.keys || groups[0].keys;
+  const activeQuest = panel.dataset.activeQuest || 'main';
   panel.innerHTML = `
-    <div class="task-tabs" role="tablist" aria-label="Aufgabengruppen">
-      ${groups.map(group => {
-        const completedCount = group.keys.filter(taskIsComplete).length;
-        const allComplete = group.keys.length > 0 && completedCount === group.keys.length;
-        return `<button type="button" class="task-tab ${group.id === activeGroup ? 'active' : ''} ${allComplete ? 'task-tab-complete' : ''}" data-task-group="${group.id}" role="tab" aria-selected="${group.id === activeGroup}">
-          <span class="task-tab-label">${group.label}</span>
-          <span class="task-tab-count">${completedCount} / ${group.keys.length}</span>
-        </button>`;
-      }).join('')}
-    </div>
-    ${groups.map(group => `<div class="stat task-group-summary" ${group.id === activeGroup ? '' : 'hidden'}><span>${group.label}</span><strong>${group.keys.filter(taskIsComplete).length} / ${group.keys.length}</strong></div>`).join('')}
-    <div class="tasks-list">
-      ${keys.map(key => {
-        const t = taskTypes[key];
-        const progress = taskProgress(key);
-        const done = taskIsComplete(key);
-        const displayProgress = t.unit === 't' ? progress.toFixed(2) : progress.toFixed(0);
-        const target = t.unit === 't' ? t.target.toFixed(0) : t.target;
-        return `<div class="task-card ${done ? 'task-done' : ''}">
-          <div class="task-title"><strong>${done ? '✅' : '⬜'} ${t.name}</strong>${t.reward ? `<span class="task-reward">+${t.reward} Forschungspunkte</span>` : ''}</div>
-          <div class="hint">${t.description}</div>
-          ${key === 'company_start_name' && taskIsComplete('company_start_buildings') && !taskIsComplete(key) ? '<button type="button" class="small-button" data-task-company-name>🏢 Firmennamen eingeben</button>' : ''}
-          ${key === 'company_start_name' && taskIsComplete(key) ? `<div class="hint">Firmenname: <strong>${escapeCompanyText(state.companyName)}</strong></div>` : ''}
-          <div class="task-progress-text"><span>Fortschritt</span><strong>${displayProgress} / ${target} ${t.unit}</strong></div>
-          <div class="task-progress"><i style="width:${Math.min(100, progress / t.target * 100)}%"></i></div>
-        </div>
-        </details>`;
+    <div class="task-quest-sections">
+      ${quests.map(quest => {
+        const count = quest.groups.reduce((sum, group) => sum + group.keys.filter(taskIsComplete).length, 0);
+        const total = quest.groups.reduce((sum, group) => sum + group.keys.length, 0);
+        const open = panel.dataset['openQuest' + quest.id] !== 'false';
+        return `<section class="task-quest-section">
+          <button type="button" class="task-quest-toggle" data-task-quest="${quest.id}" aria-expanded="${open}">
+            <span>${open ? '▾' : '▸'} ${quest.label}</span><strong>${count} / ${total}</strong>
+          </button>
+          ${open ? `<div class="task-quest-content">${quest.groups.map(group => {
+            const groupStateKey = quest.id + '_' + group.id;
+            const groupOpen = panel.dataset['openGroup_' + groupStateKey] !== 'false';
+            const groupCount = group.keys.filter(taskIsComplete).length;
+            return `<section class="task-group-section">
+              <button type="button" class="task-group-toggle" data-task-group="${groupStateKey}" aria-expanded="${groupOpen}">
+                <span>${groupOpen ? '▾' : '▸'} ${group.label}</span><strong>${groupCount} / ${group.keys.length}</strong>
+              </button>
+              ${groupOpen ? `<div class="tasks-list">${group.keys.map(key => {
+              const t = taskTypes[key], progress = taskProgress(key), done = taskIsComplete(key);
+              const displayProgress = t.unit === 't' ? progress.toFixed(2) : progress.toFixed(0);
+              const target = t.unit === 't' ? t.target.toFixed(0) : t.target;
+              return `<div class="task-card ${done ? 'task-done' : 'task-pending'}">
+                <div class="task-title"><strong>${done ? '✅' : '⬜'} ${t.name}</strong>${t.reward ? `<span class="task-reward">+${t.reward} Forschungspunkte</span>` : ''}</div>
+                <div class="hint">${t.description}</div>
+                ${key === 'company_start_name' && taskIsComplete('company_start_buildings') && !done ? '<button type="button" class="small-button" data-task-company-name>🏢 Firmennamen eingeben</button>' : ''}
+                ${key === 'company_start_name' && done ? `<div class="hint">Firmenname: <strong>${escapeCompanyText(state.companyName)}</strong></div>` : ''}
+                <div class="task-progress-text"><span>Fortschritt</span><strong>${displayProgress} / ${target} ${t.unit}</strong></div>
+                <div class="task-progress"><i style="width:${Math.min(100, progress / t.target * 100)}%"></i></div>
+              </div>`;
+            }).join('')}</div>` : ''}
+            </section>`;
+          }).join('')}</div>` : ''}
+        </section>`;
       }).join('')}
     </div>`;
+  panel.querySelectorAll('[data-task-quest]').forEach(button => button.addEventListener('click', () => {
+    const id = button.dataset.taskQuest;
+    panel.dataset['openQuest' + id] = button.getAttribute('aria-expanded') === 'true' ? 'false' : 'true';
+    renderTasks();
+  }));
   panel.querySelectorAll('[data-task-group]').forEach(button => button.addEventListener('click', () => {
-    panel.dataset.activeTaskGroup = button.dataset.taskGroup;
+    const id = button.dataset.taskGroup;
+    panel.dataset['openGroup_' + id] = button.getAttribute('aria-expanded') === 'true' ? 'false' : 'true';
     renderTasks();
   }));
   panel.querySelector('[data-task-company-name]')?.addEventListener('click', () => {
