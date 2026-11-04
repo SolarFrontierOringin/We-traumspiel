@@ -672,7 +672,7 @@ function getRocketStockHome(preferredId) {
   return Object.keys(bodies).find(id => hasPlanetSurface(id) && Number(getBuildingsOnPlanet(id).landingPad || 0) > 0) || preferredId;
 }
 function addRocketToStock(type, preferredId, mode = 'surface') {
-  const stockByType = { hercules1: rocketStock, hercules2: rocketStock2, atlas1: rocketStockAtlas1, titan1: rocketStockTitan1, adler1: rocketStockAdler1, colonistShuttle: rocketStockColonistShuttle, mobileMiner: rocketStockMobileMiner };
+  const stockByType = { hercules1: rocketStock, hercules2: rocketStock2, atlas1: rocketStockAtlas1, titan1: rocketStockTitan1, adler1: rocketStockAdler1, colonistShuttle: rocketStockColonistShuttle, mobileMiner: rocketStockMobileMiner, tankRocket: rocketStockTankRocket };
   const stock = stockByType[type];
   if (!stock) return;
   const home = mode === 'orbit' ? preferredId : getRocketStockHome(preferredId);
@@ -9877,7 +9877,8 @@ document.addEventListener('visibilitychange', () => {
     if (e.touches.length >= 2 && gesture.kind==='pinch') {
       e.preventDefault();
       const a=point(e.touches[0]), b=point(e.touches[1]), m=mid(a,b);
-      const nextZoom=Math.max(0.6,Math.min(2.2,gesture.zoom*dist(a,b)/gesture.distance));
+      const minZoom=system.classList.contains('system2-expanded')?0.25:0.6;
+      const nextZoom=Math.max(minZoom,Math.min(2.2,gesture.zoom*dist(a,b)/gesture.distance));
       const ratio=nextZoom/gesture.zoom;
       zoom=nextZoom;
       system.style.zoom=String(zoom);
