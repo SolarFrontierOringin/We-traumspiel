@@ -9762,8 +9762,9 @@ document.querySelector('#colonists-complete-confirm')?.addEventListener('click',
 document.querySelector('#system-failure-story-close')?.addEventListener('click', closeSystemFailureStory);
 document.querySelector('#system-failure-story-confirm')?.addEventListener('click', closeSystemFailureStory);
 
-// Startseite: Spieler entscheidet selbst, wann das Spiel beginnt oder die Updates gelesen werden.
+// Startseite: bleibt beim Laden sichtbar, bis der Spieler eine Auswahl trifft.
 const startupIntro = document.querySelector('#startup-intro');
+if (startupIntro) startupIntro.hidden = false;
 const startupPlay = document.querySelector('#startup-play');
 const startupUpdates = document.querySelector('#startup-updates');
 const updatePopup = document.querySelector('#update-popup');
