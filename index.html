@@ -256,6 +256,7 @@
         <button id="ai-companies-button" class="menu-item">🤖 <span>KI-Unternehmen</span></button>
         <button id="company-headquarters-button" class="menu-item" hidden>🏢 <span>Unternehmenszentrale</span></button>
         <button id="colonists-button" class="menu-item">👥 <span>Kolonisten</span></button>
+        <button id="free-population-button" class="menu-item">🏘️ <span>Freie Bevölkerung</span></button>
         <button id="research-button" class="menu-item">🔬 <span>Forschung</span></button>
         <button id="asteroids-button" class="menu-item">☄️ <span>Asteroidenabbau</span></button>
         <button id="flight-center-button" class="menu-item">🚀 <span>Flugzentrale</span></button>
@@ -413,6 +414,11 @@
       <div id="colonists-content"></div>
     </section>
 
+    <section id="free-population-panel" class="colonists-panel" hidden>
+      <div class="colonists-head"><div><h2>🏘️ Freie Bevölkerung</h2><div class="hint">Planetare Kolonien, Freigabe und eigenständiges Wachstum</div></div><button id="free-population-close" class="icon-button">✕</button></div>
+      <div id="free-population-content"></div>
+    </section>
+
     <section id="company-panel" class="company-panel" hidden>
       <div class="company-head"><div><h2>🏢 Unternehmen</h2><div class="hint">Unternehmenswert, Ruf, Aufträge und Finanzen</div></div><button id="company-close" class="icon-button">✕</button></div>
       <div id="company-content"></div>
@@ -477,7 +483,12 @@
       <aside id="info-panel" class="panel"></aside>
     </section>
   </main>
-  <script src="game.js?v=startfenster-auswahl-20261104"></script>
+  <script src="game.js?v=split-20261105"></script>
+<script src="game-colonists.js?v=split-20261105"></script>
+<script src="game-ai.js?v=split-20261105"></script>
+<script src="game-company.js?v=split-20261105"></script>
+<script src="game-orders.js?v=split-20261105"></script>
+<script src="game-language-ui.js?v=split-20261105"></script>
   <script>if ("serviceWorker" in navigator) navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{});</script>
 </body>
 </html>

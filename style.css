@@ -1641,3 +1641,43 @@ body > .planet-build-menu .planet-build-header {
 .task-group-toggle{width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 12px;background:#101e32;color:#dce7f6;border:0;border-radius:0;text-align:left;font-size:14px;font-weight:750}
 .task-group-toggle strong{white-space:nowrap;color:#aab8ce;font-size:12px}
 .task-group-section .tasks-list{padding:9px;}
+
+
+/* Startseite: Layout an die vom Nutzer gezeigte Weltraum-Startseite angepasst */
+.startup-intro{
+  justify-content:center;
+  gap:clamp(16px,2.4vh,26px);
+  padding:clamp(20px,4vh,38px) 22px;
+  background:
+    radial-gradient(ellipse at 85% 18%,rgba(77,105,186,.38),transparent 24%),
+    radial-gradient(ellipse at 18% 28%,rgba(20,157,190,.32),transparent 27%),
+    radial-gradient(ellipse at 75% 78%,rgba(241,151,59,.24),transparent 20%),
+    radial-gradient(ellipse at 42% 58%,rgba(69,46,130,.38),transparent 38%),
+    radial-gradient(ellipse at 50% 45%,#102849 0%,#06101f 52%,#02050b 100%);
+}
+.startup-intro-stars{
+  background-image:
+    radial-gradient(#e7f2ff 1px,transparent 1.6px),
+    radial-gradient(rgba(120,196,255,.9) 1px,transparent 1.8px),
+    radial-gradient(rgba(255,255,255,.7) .7px,transparent 1.4px);
+  background-size:83px 79px,137px 121px,47px 53px;
+  background-position:12px 17px,42px 51px,7px 29px;
+  opacity:.6;
+}
+.startup-intro-art{width:min(94vw,560px);height:clamp(150px,25vh,240px);}
+.startup-intro-art svg{filter:drop-shadow(0 0 20px rgba(76,166,255,.32));}
+.startup-intro-kicker{font-size:clamp(.68rem,2.5vw,.9rem);letter-spacing:.16em;text-shadow:0 0 14px rgba(86,211,255,.35);}
+.startup-intro h1{font-size:clamp(2rem,8vw,3.5rem);letter-spacing:-.045em;text-shadow:0 3px 24px rgba(0,0,0,.65);}
+.startup-intro>p{max-width:560px;font-size:clamp(1rem,4vw,1.3rem);line-height:1.65;letter-spacing:.025em;text-shadow:0 2px 12px #02050b;}
+.startup-intro-actions{width:min(100%,560px);gap:14px;margin-top:8px;}
+.startup-intro-actions button{min-height:64px;border-radius:17px;font-size:1.05rem;box-shadow:0 8px 24px rgba(0,0,0,.28);}
+.startup-intro-actions button:first-child{background:linear-gradient(115deg,#1767a8,#1648a0);box-shadow:0 8px 28px rgba(28,112,205,.34),inset 0 1px 0 rgba(255,255,255,.18);}
+@media(min-width:560px){.startup-intro-actions{flex-direction:column;width:min(100%,560px)}.startup-intro-actions button{width:100%;}}
+@media(max-height:700px){.startup-intro{gap:12px;padding-top:16px;padding-bottom:16px}.startup-intro-art{height:clamp(100px,19vh,150px)}.startup-intro-actions button{min-height:52px}}
+
+.free-population-facilities{margin-top:8px;padding:9px;border:1px solid #315273;border-radius:9px;background:#0b1728;color:#c7d8ee}
+.colonists-release-row{display:grid;grid-template-columns:minmax(0,1fr) 80px auto;gap:7px;align-items:center;margin-top:12px;padding:10px;border:1px solid #315273;border-radius:10px;background:#0b1728}
+.colonists-release-row small{grid-column:1/-1;color:#aab8ce;line-height:1.4}
+.colonists-release-row input{width:100%;min-width:0;padding:8px;border:1px solid #344967;border-radius:8px;background:#eef2f7;color:#111}
+.colonists-release-row button{white-space:nowrap}
+@media(max-width:430px){.colonists-release-row{grid-template-columns:minmax(0,1fr) 70px}.colonists-release-row button{grid-column:1/-1}}
