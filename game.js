@@ -7026,6 +7026,7 @@ function updateResources() {
   updateMarket(now);
   updateCompanyOrders(now);
   updateAICompanies(now);
+  runAIExchange(now);
   updateStockMarket(now);
   updateStockDividends(now);
   updateSolarProbeFlights();

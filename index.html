@@ -68,12 +68,10 @@
         <div class="update-popup-kicker">📡 AKTUELLE SYSTEMMELDUNG</div>
         <h2 id="update-popup-title">Aktuelle Updates &amp; Fixes</h2>
         <div class="update-popup-message">
-          <h3>NEUERUNGEN◇♡£</h3>
+          <h3>◇♧◇♧ Dienstags - Mittwoch Update</h3>
           <p><strong>NEUERUNGEN</strong></p>
           <ul>
-            <li>- freie Bevölkerung eingefügt</li>
-            <li>Sind noch nicht ganz fertig, aktuell nur die übersicht.</li>
-            <li>werden mit der aktualisierung der Hilfe Frei geschalten :) </li>
+            <li>Forschungspunkte angepasst</li>
           </ul>
         </div>
         <div class="update-popup-footnote">Die vorherigen Ankündigungen findest du auf Seite 2 in der Chronik.</div>
@@ -257,8 +255,8 @@
         <button id="economy-button" class="menu-item">📊 <span>Wirtschaft</span></button>
         <button id="ai-companies-button" class="menu-item">🤖 <span>KI-Unternehmen</span></button>
         <button id="company-headquarters-button" class="menu-item" hidden>🏢 <span>Unternehmenszentrale</span></button>
-        <button id="colonists-button" class="menu-item">👥 <span>Kolonisten</span></button>
-        <button id="free-population-button" class="menu-item">🏘️ <span>Freie Bevölkerung</span></button>
+        <button id="colonists-button" class="menu-item">👥 <span>Bevölkerungszentrale</span></button>
+        
         <button id="research-button" class="menu-item">🔬 <span>Forschung</span></button>
         <button id="asteroids-button" class="menu-item">☄️ <span>Asteroidenabbau</span></button>
         <button id="flight-center-button" class="menu-item">🚀 <span>Flugzentrale</span></button>
@@ -283,7 +281,7 @@
         <div><h2>🛒 Dynamischer Marktplatz</h2><div class="hint">Gemeinsamer Markt · Einzelspieler · Auffüllung alle 3 Spielstunden</div></div>
         <button id="market-close" class="icon-button" type="button" aria-label="Markt schließen">✕</button>
       </div>
-      <div id="market-content"></div>
+      <div class="market-mode-switch"><button type="button" id="normal-market-tab" class="active">🛒 Normaler Markt</button><button type="button" id="ai-exchange-tab">🤖 KI-Handelsbörse</button></div><div id="market-content"></div><div id="ai-exchange-content" hidden></div>
     </section>
 
     <section id="news-panel" class="news-panel" hidden>
@@ -412,12 +410,20 @@
     </section>
 
     <section id="colonists-panel" class="colonists-panel" hidden>
-      <div class="colonists-head"><div><h2>👥 Kolonistenübersicht</h2><div class="hint">Bevölkerung, Wohnraum, Wachstum und Versorgung</div></div><button id="colonists-close" class="icon-button">✕</button></div>
+      <div class="colonists-head"><div><h2>👥 Bevölkerungszentrale</h2><div class="hint">Bevölkerung, Wohnraum, Wachstum und Versorgung</div></div><button id="colonists-close" class="icon-button">✕</button></div>
+      <div class="population-tabs" role="tablist" aria-label="Bevölkerungsbereich">
+        <button type="button" class="population-tab active" data-population-tab="colonists">👨‍🚀 Kolonisten</button>
+        <button type="button" class="population-tab" data-population-tab="free">🏘️ Freie Bevölkerung</button>
+      </div>
       <div id="colonists-content"></div>
     </section>
 
     <section id="free-population-panel" class="colonists-panel" hidden>
-      <div class="colonists-head"><div><h2>🏘️ Freie Bevölkerung</h2><div class="hint">Planetare Kolonien, Freigabe und eigenständiges Wachstum</div></div><button id="free-population-close" class="icon-button">✕</button></div>
+      <div class="colonists-head"><div><h2>👥 Bevölkerungszentrale</h2><div class="hint">Planetare Kolonien, Freigabe und eigenständiges Wachstum</div></div><button id="free-population-close" class="icon-button">✕</button></div>
+      <div class="population-tabs" role="tablist" aria-label="Bevölkerungsbereich">
+        <button type="button" class="population-tab" data-population-tab="colonists">👨‍🚀 Kolonisten</button>
+        <button type="button" class="population-tab active" data-population-tab="free">🏘️ Freie Bevölkerung</button>
+      </div>
       <div id="free-population-content"></div>
     </section>
 

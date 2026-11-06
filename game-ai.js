@@ -50,38 +50,13 @@ function aiLog(company, message) {
 }
 function aiInventory(company, key) { return Math.max(0, Number(company.inventory[key]) || 0); }
 function aiMarketTrade(company, side, key, amount) {
-  const config = MARKET_RESOURCES[key];
-  if (!config || !(amount > 0)) return false;
-  ensureMarketHistory();
-  const item = market.resources[key];
-  const price = marketPrice(key, side);
-  if (side === 'buy') {
-    const affordable = Math.min(amount, company.cash / Math.max(0.01, price), item.stock);
-    if (affordable < 0.01) return false;
-    const total = affordable * price;
-    company.cash -= total;
-    company.inventory[key] = aiInventory(company, key) + affordable;
-    item.stock = Math.max(0, item.stock - affordable);
-    item.demand = Math.max(0, Number(item.demand) || 0) + affordable / Math.max(1, config.capacity) * 100;
-    company.totalTrades = (Number(company.totalTrades) || 0) + 1;
-    recordMarketTrade('buy', key, affordable, price, total);
-    market.tradeHistory[0].name = `${company.name}: ${AI_RESOURCE_NAMES[key] || resourceNames[key] || key}`;
-    return true;
-  }
-  const available = aiInventory(company, key);
-  const sold = Math.min(amount, available, Math.max(0, config.capacity - item.stock));
-  if (sold < 0.01) return false;
-  const total = sold * price;
-  company.inventory[key] = available - sold;
-  company.cash += total;
-  item.stock = Math.min(config.capacity, item.stock + sold);
-  item.soldStock = Math.max(0, Number(item.soldStock) || 0) + sold;
-  item.supply = Math.max(0, Number(item.supply) || 0) + sold / Math.max(1, config.capacity) * 100;
-  company.totalTrades = (Number(company.totalTrades) || 0) + 1;
-  recordMarketTrade('sell', key, sold, price, total);
-  market.tradeHistory[0].name = `${company.name}: ${AI_RESOURCE_NAMES[key] || resourceNames[key] || key}`;
+  // KI-Unternehmen handeln ausschließlich über die separate KI-Handelsbörse.
+  const price = Number(MARKET_RESOURCES[key]?.base) || 1;
+  if (!AI_EXCHANGE_RESOURCES.includes(key)) return false;
+  exchangeAddOrder(company.id, side, key, Number(amount) || 0, price * (side === 'buy' ? 1.04 : 0.96));
   return true;
 }
+
 function aiTryBuy(company, key, target) {
   const missing = Math.max(0, target - aiInventory(company, key));
   if (missing < 1 || company.cash < 100) return false;
@@ -205,6 +180,101 @@ function updateAICompanies(now = gameNow()) {
     const stockValue = Object.entries(company.inventory).reduce((sum, [key, amount]) => sum + Math.max(0, Number(amount)||0) * (MARKET_RESOURCES[key]?.base || 1), 0);
     company.marketValue = Math.max(0, company.cash) + stockValue + Object.values(company.buildings).reduce((sum, count) => sum + Math.max(0, Number(count)||0) * 5000, 0) + company.planets.length * 50000;
   });
+}
+
+
+// ==========================================
+// KI-HANDELSBÖRSE – getrennte Auftragsbörse
+// KI-Firmen handeln mit ihren eigenen Beständen. Die freie Bevölkerung
+// handelt ausschließlich virtuell und verändert keine realen Warenlager.
+// ==========================================
+const AI_EXCHANGE_RESOURCES = ['iron','steel','stone','buildingMaterials','glass','electronics','silicon','chips','batteries','machines','copper'];
+const AI_EXCHANGE_TICK_MS = 5 * 60 * 1000;
+const AI_EXCHANGE_NAMES = {iron:'Eisen',steel:'Stahl',stone:'Stein',buildingMaterials:'Baustoffe',glass:'Glas',electronics:'Elektronik',silicon:'Silizium',chips:'Chips',batteries:'Batterien',machines:'Maschinen',copper:'Kupfer'};
+const FREE_EXCHANGE_PLANETS = [{id:'luna',name:'Freie Bevölkerung – Luna'},{id:'mars',name:'Freie Bevölkerung – Mars'},{id:'venus',name:'Freie Bevölkerung – Venus'}];
+function ensureAIExchange(){
+  state.aiExchange = state.aiExchange && typeof state.aiExchange==='object' ? state.aiExchange : {};
+  const ex=state.aiExchange;
+  if(!Array.isArray(ex.orders))ex.orders=[];
+  if(!Array.isArray(ex.history))ex.history=[];
+  if(!Number.isFinite(Number(ex.lastTick)))ex.lastTick=0;
+  if(!ex.virtualStocks || typeof ex.virtualStocks!=='object')ex.virtualStocks={};
+  FREE_EXCHANGE_PLANETS.forEach((x,i)=>{
+    if(!ex.virtualStocks[x.id]) ex.virtualStocks[x.id]=Object.fromEntries(AI_EXCHANGE_RESOURCES.map((k,j)=>[k,150+((i+2)*(j+7)*37)%650]));
+  });
+  ex.orders=ex.orders.filter(o=>o && o.status==='offen' && Number(o.amount)>0).slice(-150);
+  ex.history=ex.history.slice(0,100);
+  return ex;
+}
+function exchangeParticipant(id){
+  const cfg=AI_COMPANY_CONFIG.find(x=>x.id===id);
+  if(cfg){const c=ensureAICompanies()[id];return {id,name:cfg.name,cash:c.cash,inventory:c.inventory,virtual:false,company:c};}
+  const planet=FREE_EXCHANGE_PLANETS.find(x=>x.id===id); if(!planet)return null;
+  const body=ensureFreePopulationData(id); const stocks=ensureAIExchange().virtualStocks[id];
+  return {id,name:planet.name,cash:Number(body?.freePopulationCash)||0,inventory:stocks,virtual:true,body};
+}
+function exchangeSetCash(participant,value){if(participant.virtual)participant.body.freePopulationCash=Math.max(0,value);else participant.company.cash=Math.max(0,value);}
+function exchangeAddOrder(owner,side,key,amount,price){
+  const ex=ensureAIExchange(),p=exchangeParticipant(owner),cfg=MARKET_RESOURCES[key];
+  if(!p||!cfg||amount<1||price<=0)return;
+  const already=ex.orders.filter(o=>o.status==='offen'&&o.owner===owner&&o.side===side&&o.key===key);
+  const reserved=already.reduce((sum,o)=>sum+Math.max(0,Number(o.remaining)||0),0);
+  const reservedCash=already.filter(o=>o.side==='buy').reduce((sum,o)=>sum+Math.max(0,Number(o.remaining)||0)*Math.max(0,Number(o.price)||0),0);
+  const available=side==='sell'?Math.max(0,(Number(p.inventory[key])||0)-reserved):Math.max(0,(p.cash-reservedCash)/price);
+  amount=Math.min(amount,available,5000); if(amount<1)return;
+  // Pro Teilnehmer und Ressource bleibt höchstens ein offener Antrag je Handelsrichtung bestehen.
+  const existing=already[0];
+  if(existing){existing.remaining=Math.min(5000,existing.remaining+amount);existing.amount=existing.remaining;existing.price=side==='buy'?Math.max(existing.price,price):Math.min(existing.price,price);existing.expires=gameNow()+24*60*60*1000;return;}
+  ex.orders.push({id:`${Math.floor(gameNow())}-${owner}-${key}-${side}-${Math.floor(Math.random()*99999)}`,owner,ownerName:p.name,side,key,amount,remaining:amount,price,created:gameNow(),expires:gameNow()+24*60*60*1000,status:'offen'});
+}
+function exchangeExecute(buyOrder,sellOrder,amount){
+  const buyer=exchangeParticipant(buyOrder.owner),seller=exchangeParticipant(sellOrder.owner); if(!buyer||!seller||buyer.id===seller.id)return false;
+  const key=buyOrder.key,price=(Number(buyOrder.price)+Number(sellOrder.price))/2,total=amount*price;
+  if((Number(buyer.cash)||0)<total || (Number(seller.inventory[key])||0)<amount)return false;
+  // Nur KI-Unternehmen bewegen echte KI-Bestände; freie Bevölkerung nutzt virtuelle Bestände.
+  buyer.inventory[key]=(Number(buyer.inventory[key])||0)+amount;
+  seller.inventory[key]=(Number(seller.inventory[key])||0)-amount;
+  exchangeSetCash(buyer,Number(buyer.cash)-total); exchangeSetCash(seller,Number(seller.cash)+total);
+  buyOrder.remaining-=amount;sellOrder.remaining-=amount;
+  if(buyOrder.remaining<.01)buyOrder.status='erfüllt'; if(sellOrder.remaining<.01)sellOrder.status='erfüllt';
+  const ex=ensureAIExchange();ex.history.unshift({time:gameNow(),buyer:buyer.name,seller:seller.name,key,amount,price,total});ex.history=ex.history.slice(0,100);
+  if(!buyer.virtual)buyer.company.totalTrades=(Number(buyer.company.totalTrades)||0)+1;
+  if(!seller.virtual)seller.company.totalTrades=(Number(seller.company.totalTrades)||0)+1;
+  return true;
+}
+function runAIExchange(now=gameNow()){
+  const ex=ensureAIExchange();
+  if(now-ex.lastTick<AI_EXCHANGE_TICK_MS)return;
+  ex.lastTick=now;
+  // Virtuelle Handelsbestände der Bevölkerung entwickeln sich aus Einwohnerzahl und Zeit.
+  FREE_EXCHANGE_PLANETS.forEach(({id})=>{const pop=freePopulationOnPlanet(id);if(pop<=0)return;const stocks=ex.virtualStocks[id];AI_EXCHANGE_RESOURCES.forEach((k,i)=>{stocks[k]=Math.min(50000,Math.max(0,Number(stocks[k])||0)+pop*(i%3===0?.002:.001));});});
+  // KI-Unternehmen erzeugen Kauf- und Verkaufsanträge anhand ihrer echten Lagerbestände.
+  AI_COMPANY_CONFIG.forEach(cfg=>{const c=ensureAICompanies()[cfg.id];AI_EXCHANGE_RESOURCES.forEach((key,i)=>{
+    const stock=aiInventory(c,key),base=Number(MARKET_RESOURCES[key]?.base)||100;
+    if(stock<120 && c.cash>base*50) exchangeAddOrder(cfg.id,'buy',key,Math.min(250,350-stock),base*(1.02+(i%3)*.01));
+    else if(stock>900) exchangeAddOrder(cfg.id,'sell',key,Math.min(300,stock-650),base*(.96+(i%4)*.01));
+  });});
+  // Freie Bevölkerung handelt mit rein virtuellen Waren und dem jeweiligen Planetenkonto.
+  FREE_EXCHANGE_PLANETS.forEach(({id})=>{const p=exchangeParticipant(id);if(!p||freePopulationOnPlanet(id)<=0)return;AI_EXCHANGE_RESOURCES.forEach((key,i)=>{
+    const stock=Number(p.inventory[key])||0,base=Number(MARKET_RESOURCES[key]?.base)||100;
+    if(stock<120 && p.cash>base*30)exchangeAddOrder(id,'buy',key,Math.min(120,180-stock),base*(1.04+(i%2)*.01));
+    else if(stock>900)exchangeAddOrder(id,'sell',key,Math.min(150,stock-700),base*(.94+(i%3)*.01));
+  });});
+  // Gegenseitige Annahme: kompatible Kauf- und Verkaufsanträge werden automatisch ausgeführt.
+  const buys=ex.orders.filter(o=>o.status==='offen'&&o.side==='buy'&&o.expires>now).sort((a,b)=>b.price-a.price);
+  const sells=ex.orders.filter(o=>o.status==='offen'&&o.side==='sell'&&o.expires>now).sort((a,b)=>a.price-b.price);
+  buys.forEach(b=>{sells.forEach(s=>{if(b.status!=='offen'||s.status!=='offen'||b.key!==s.key||b.owner===s.owner||b.price<s.price)return;const amount=Math.min(b.remaining,s.remaining);if(amount>0)exchangeExecute(b,s,amount);});});
+  ex.orders=ex.orders.filter(o=>o.status==='offen'&&o.expires>now&&o.remaining>=.01).slice(-150);
+}
+function renderAIExchange(){
+  const panel=document.querySelector('#ai-exchange-content');if(!panel)return;const ex=ensureAIExchange();
+  const fmt=n=>Number(n||0).toLocaleString('de-DE',{maximumFractionDigits:2});
+  const open=ex.orders.filter(o=>o.status==='offen');
+  const rows=open.map(o=>`<div class="ai-exchange-order"><span><b>${o.side==='buy'?'🟢 Kaufgesuch':'🔴 Verkaufsangebot'}</b><br>${o.ownerName}</span><span>${AI_EXCHANGE_NAMES[o.key]||o.key}<br><b>${fmt(o.remaining)} t</b></span><span>${fmt(o.price)} GD/t<br><small>bis ${new Date(GAME_EPOCH_UTC+o.expires).toISOString().slice(0,16).replace('T',' ')}</small></span></div>`).join('')||'<p class="hint">Noch keine offenen Anträge. Die Teilnehmer stellen mit der Zeit eigene Angebote ein.</p>';
+  const history=ex.history.slice(0,30).map(h=>`<div class="market-history-row"><span>${h.seller} → ${h.buyer} · ${AI_EXCHANGE_NAMES[h.key]||h.key}</span><strong>${fmt(h.amount)} t</strong><small>${fmt(h.price)} GD/t · Gesamt ${fmt(h.total)} GD</small></div>`).join('')||'<p class="hint">Noch keine abgeschlossenen Geschäfte.</p>';
+  const participantList=[...AI_COMPANY_CONFIG.map(c=>({id:c.id,name:c.name,kind:'KI-Unternehmen'})),...FREE_EXCHANGE_PLANETS.filter(p=>freePopulationOnPlanet(p.id)>0).map(p=>({id:p.id,name:p.name,kind:'Virtueller Handel'}))];
+  const participants=participantList.map(x=>{const p=exchangeParticipant(x.id);return `<div class="ai-exchange-participant"><b>${x.name}</b><span>${x.kind}</span><strong>${fmt(p?.cash)} GD</strong></div>`;}).join('');
+  panel.innerHTML=`<div class="market-summary"><div><span>📑 Offene Anträge</span><strong>${open.length}</strong></div><div><span>🤝 Abgeschlossene Geschäfte</span><strong>${ex.history.length}</strong></div><div><span>👥 Teilnehmer</span><strong>${participantList.length}</strong></div></div><p class="hint">Hier handeln ausschließlich die vier KI-Unternehmen und die freie Bevölkerung auf Luna, Mars und Venus. Kauf- und Verkaufsanträge werden automatisch geprüft und bei passenden Preisen angenommen. Die Waren der freien Bevölkerung sind rein virtuell und verändern keine echten Spielerlager.</p><h3>📋 Offene Kauf- und Verkaufsanträge</h3><div class="ai-exchange-orders">${rows}</div><h3>🏢 Teilnehmer und Kontostände</h3><div class="ai-exchange-participants">${participants}</div><h3>🧾 Handelschronik</h3><div class="market-history">${history}</div>`;
 }
 
 const STOCK_COMPANY_CONFIG = {
@@ -875,6 +945,9 @@ function setupTopPanels() {
     }
   });
   if (marketClose && marketPanel) marketClose.addEventListener('click',()=>{marketPanel.hidden=true;});
+  const normalTab=document.querySelector('#normal-market-tab'),exchangeTab=document.querySelector('#ai-exchange-tab'),normalContent=document.querySelector('#market-content'),exchangeContent=document.querySelector('#ai-exchange-content');
+  const showMarketMode=(mode)=>{if(!normalContent||!exchangeContent)return;const normal=mode==='normal';normalContent.hidden=!normal;exchangeContent.hidden=normal;normalTab?.classList.toggle('active',normal);exchangeTab?.classList.toggle('active',!normal);if(normal)renderMarket();else renderAIExchange();};
+  normalTab?.addEventListener('click',()=>showMarketMode('normal'));exchangeTab?.addEventListener('click',()=>showMarketMode('exchange'));
 
   const economyPanel = document.querySelector('#economy-panel');
   const economyClose = document.querySelector('#economy-close');
@@ -904,6 +977,30 @@ function setupTopPanels() {
     }
   });
   if (freePopulationClose && freePopulationPanel) freePopulationClose.addEventListener('click',()=>{freePopulationPanel.hidden=true;});
+  const populationTabs = document.querySelectorAll('.population-tab');
+  function showPopulationSection(section) {
+    const showFree = section === 'free';
+    if (colonistsPanel) colonistsPanel.hidden = showFree;
+    if (freePopulationPanel) freePopulationPanel.hidden = !showFree;
+    populationTabs.forEach(tab => {
+      const active = tab.dataset.populationTab === section;
+      tab.classList.toggle('active', active);
+      tab.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+    if (showFree) renderFreePopulationPanel();
+    else renderColonistsPanel();
+  }
+  populationTabs.forEach(tab => tab.addEventListener('click', () => showPopulationSection(tab.dataset.populationTab)));
+  [colonistsPanel, freePopulationPanel].forEach(panel => {
+    if (!panel) return;
+    let touchStartX = 0;
+    panel.addEventListener('touchstart', event => { touchStartX = event.changedTouches[0]?.clientX || 0; }, { passive: true });
+    panel.addEventListener('touchend', event => {
+      const endX = event.changedTouches[0]?.clientX || 0;
+      const delta = endX - touchStartX;
+      if (Math.abs(delta) > 65) showPopulationSection(delta < 0 ? 'free' : 'colonists');
+    }, { passive: true });
+  });
   const colonistsClose = document.querySelector('#colonists-close');
   if (colonistsButton && colonistsPanel) colonistsButton.addEventListener('click', () => {
     colonistsPanel.hidden = !colonistsPanel.hidden;

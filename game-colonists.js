@@ -56,7 +56,7 @@ function renderColonistsPanel() {
           <div class="stat"><span>Zugewinn pro Stunde</span><strong data-growth-rate="${id}">${getColonistHourlyGrowthEstimate(id).toLocaleString('de-DE',{maximumFractionDigits:2})} Kolonisten</strong></div>
           <label class="colonists-growth-label" for="colonist-growth-${id}">Bevölkerungswachstum: <strong data-growth-value="${id}">${body.colonistGrowthPercent}%</strong></label>
           <input id="colonist-growth-${id}" class="colonist-growth-slider" type="range" min="0" max="100" step="1" value="${body.colonistGrowthPercent}" data-growth-planet="${id}">
-          <div class="colonists-release-row"><label for="colonist-release-${id}">In freie Bevölkerung freigeben</label><input id="colonist-release-${id}" type="number" min="1" max="${pop}" step="1" value="1" data-release-amount="${id}" ${pop > 0 && id !== 'earth' && canReleaseFreePopulation(id) ? '' : 'disabled'}><button type="button" data-release-colonists="${id}" ${pop > 0 && id !== 'earth' && canReleaseFreePopulation(id) ? '' : 'disabled'}>Freigeben</button><small>${id === 'earth' ? 'Erde ist vorerst ausgenommen.' : getFreePopulationReleaseStatus(id)}</small></div>
+          <div class="colonists-release-row"><label for="colonist-release-${id}">In freie Bevölkerung freigeben</label><input id="colonist-release-${id}" type="number" min="1" max="${pop}" step="1" value="1" data-release-amount="${id}" ${pop > 0 && FREE_POPULATION_PLANETS.has(id) && canReleaseFreePopulation(id) ? '' : 'disabled'}><button type="button" data-release-colonists="${id}" ${pop > 0 && FREE_POPULATION_PLANETS.has(id) && canReleaseFreePopulation(id) ? '' : 'disabled'}>Freigeben</button><small>${id === 'earth' ? 'Erde ist vorerst ausgenommen.' : getFreePopulationReleaseStatus(id)}</small></div>
           <div class="colonists-remove-row"><label for="colonist-remove-${id}">Kolonisten entfernen</label><input id="colonist-remove-${id}" type="number" min="1" max="${pop}" step="1" value="1" data-remove-amount="${id}" ${pop > 0 ? '' : 'disabled'}><button type="button" data-remove-colonists="${id}" ${pop > 0 ? '' : 'disabled'}>Entfernen</button></div>
         </details>`;
       }).join('')}
@@ -93,14 +93,13 @@ function renderColonistsPanel() {
     const id = button.dataset.releaseColonists;
     const input = panel.querySelector(`[data-release-amount="${id}"]`);
     const amount = Math.floor(Number(input?.value) || 0);
-    if (id === 'earth' || !canReleaseFreePopulation(id)) { alert(getFreePopulationReleaseStatus(id)); return; }
+    if (!FREE_POPULATION_PLANETS.has(id) || !canReleaseFreePopulation(id)) { alert(getFreePopulationReleaseStatus(id)); return; }
     const available = colonistsOnPlanet(id);
     if (amount < 1 || amount > available) { alert(`Bitte eine Zahl zwischen 1 und ${available} eingeben.`); return; }
     const removed = removeColonistsFromHousing(id, amount);
     if (removed > 0) {
       const body = ensureFreePopulationData(id);
       body.freePopulation += removed;
-      body.freePopulationFacilities ||= { farm: true, waterWell: true };
       saveGame(false);
       renderColonistsPanel();
       renderFreePopulationPanel();
@@ -197,24 +196,43 @@ function refreshColonistsPanelLive() {
 
 
 // Freie Bevölkerung: getrennt vom noch nicht freigegebenen Kolonistenbestand.
+const FREE_POPULATION_PLANETS = new Set(['luna', 'mars', 'venus']);
+const FREE_POPULATION_GAS_GIANTS = new Set(['jupiter', 'neptune', 'uranus']);
+const FREE_POPULATION_START_CAPITAL = 200000;
+const FREE_POPULATION_GROWTH_INTERVAL_SECONDS = 20 * 60; // 20 Ingame-Minuten
+
 function ensureFreePopulationData(id) {
   const body = bodies[id];
   if (!body || id === 'sun') return null;
+  if (!FREE_POPULATION_PLANETS.has(id)) {
+    body.freePopulation = 0;
+    body.freePopulationGrowthAccumulator = 0;
+    delete body.freePopulationFacilities;
+    delete body.freePopulationStorage;
+    return body;
+  }
   body.freePopulation = Math.max(0, Math.floor(Number(body.freePopulation) || 0));
   body.freePopulationGrowthAccumulator = Math.max(0, Number(body.freePopulationGrowthAccumulator) || 0);
-  if (body.freePopulationFacilities === undefined) body.freePopulationFacilities = { farm: false, waterWell: false };
+
+  // Nur ein Geldkonto pro Planet. Alte Gebäude- und Lagerdaten werden entfernt.
+  delete body.freePopulationFacilities;
+  delete body.freePopulationStorage;
+  if (body.freePopulationCash === undefined || !Number.isFinite(Number(body.freePopulationCash))) {
+    body.freePopulationCash = FREE_POPULATION_START_CAPITAL;
+  }
+  body.freePopulationCash = Math.max(0, Number(body.freePopulationCash) || 0);
   return body;
 }
 function freePopulationOnPlanet(id) { return Number(ensureFreePopulationData(id)?.freePopulation || 0); }
 function freePopulationConditionsMet(id) {
-  if (!id || id === 'earth' || id === 'sun' || !bodies[id]) return false;
+  if (!id || !FREE_POPULATION_PLANETS.has(id) || id === 'sun' || FREE_POPULATION_GAS_GIANTS.has(id) || !bodies[id]) return false;
   const temp = planetTemperatureCelsius(id);
   const atmosphere = getColonistAtmosphereStatus(id);
   return Number.isFinite(temp) && temp >= -10 && temp <= 50 && atmosphere.pressure >= 0.8 && atmosphere.pressure <= 2 && atmosphere.oxygenPercent >= 15 && atmosphere.oxygenPercent <= 25;
 }
-function canReleaseFreePopulation(id) { return id !== 'earth' && colonistsOnPlanet(id) > 0 && freePopulationConditionsMet(id); }
+function canReleaseFreePopulation(id) { return FREE_POPULATION_PLANETS.has(id) && colonistsOnPlanet(id) > 0 && freePopulationConditionsMet(id); }
 function getFreePopulationReleaseStatus(id) {
-  if (id === 'earth') return 'Erde: Bevölkerungszahl wird später separat eingeführt.';
+  if (!FREE_POPULATION_PLANETS.has(id)) return 'Freie Bevölkerung ist nur auf Luna, Mars und Venus möglich.';
   const temp = planetTemperatureCelsius(id);
   const atmosphere = getColonistAtmosphereStatus(id);
   if (temp < -10 || temp > 50) return `Temperatur muss −10 bis +50 °C betragen (aktuell ${temp.toFixed(0)} °C).`;
@@ -228,18 +246,45 @@ function freePopulationGrowthPerInterval(population) {
 }
 function processFreePopulation(id, delta) {
   const body = ensureFreePopulationData(id);
-  if (!body || id === 'earth' || body.freePopulation <= 0 || delta <= 0) return;
-  if (!freePopulationConditionsMet(id)) return; // population stays; only growth pauses
+  if (!body || !FREE_POPULATION_PLANETS.has(id) || body.freePopulation <= 0 || delta <= 0) return;
+
+  // Jeder freie Bewohner erwirtschaftet 0,001 GünniDollar pro Ingame-Sekunde.
+  body.freePopulationCash += body.freePopulation * 0.001 * delta;
+
+  // Keine Gebäude, Lager oder Versorgungsproduktion: nur die festgelegte Wachstumstabelle.
+  // Ungeeignete Lebensbedingungen pausieren das Wachstum, nicht die Bevölkerung oder Einnahmen.
+  if (!freePopulationConditionsMet(id)) return;
   body.freePopulationGrowthAccumulator += delta;
-  while (body.freePopulationGrowthAccumulator >= 20) {
+  while (body.freePopulationGrowthAccumulator >= FREE_POPULATION_GROWTH_INTERVAL_SECONDS) {
     body.freePopulation += freePopulationGrowthPerInterval(body.freePopulation);
-    body.freePopulationGrowthAccumulator -= 20;
+    body.freePopulationGrowthAccumulator -= FREE_POPULATION_GROWTH_INTERVAL_SECONDS;
   }
 }
 function renderFreePopulationPanel() {
   const content = document.querySelector('#free-population-content');
   if (!content) return;
-  const ids = Object.keys(bodies).filter(id => id !== 'sun').sort((a,b) => freePopulationOnPlanet(b)-freePopulationOnPlanet(a) || String(bodies[a].name).localeCompare(String(bodies[b].name),'de'));
+  const ids = ['luna', 'mars', 'venus'].filter(id => bodies[id]);
   const total = ids.reduce((sum,id)=>sum+freePopulationOnPlanet(id),0);
-  content.innerHTML = `<div class="colonists-summary"><div class="colonists-summary-card"><span>🏘️ Freie Bevölkerung gesamt</span><strong>${total.toLocaleString('de-DE')}</strong></div><div class="colonists-summary-card"><span>📈 Wachstum</span><strong>Alle 20 Ingame-Sekunden</strong></div></div><p class="hint">Planeten mit freier Bevölkerung stehen zuerst. Ab 500 / 1.000 / 5.000 / 8.000 / 12.000 / 15.000 Bewohnern steigen die Zuwächse je Intervall auf 2 / 3 / 4 / 5 / 6 / 7 Personen. Bei ungeeigneter Temperatur, Druck oder Sauerstoff pausiert nur das Wachstum.</p><div class="colonists-planet-list">${ids.map(id=>{ const pop=freePopulationOnPlanet(id); const body=ensureFreePopulationData(id); const status=id==='earth'?'Erde ist vorerst ausgenommen.':freePopulationConditionsMet(id)?'Lebensbedingungen geeignet · Wachstum aktiv':'Lebensbedingungen ungeeignet · Wachstum pausiert'; return `<article class="colonists-planet-card"><div class="colonists-planet-head"><h3>${bodies[id].name}</h3><strong>${pop.toLocaleString('de-DE')} freie Bevölkerung</strong></div><p class="hint">${status}</p>${pop>0?`<div class="free-population-facilities">🏡 Bauernhof: vorhanden · 💧 Wasserbrunnen: vorhanden</div>`:''}</article>`; }).join('')}</div>`;
+  const totalCash = ids.reduce((sum,id)=>sum+Number(ensureFreePopulationData(id).freePopulationCash || 0),0);
+  const totalIncome = total * 0.001;
+  content.innerHTML = `<div class="colonists-summary">
+    <div class="colonists-summary-card"><span>🏘️ Freie Bevölkerung gesamt</span><strong>${total.toLocaleString('de-DE')}</strong></div>
+    <div class="colonists-summary-card"><span>💰 Einnahmen gesamt</span><strong>${totalIncome.toLocaleString('de-DE',{maximumFractionDigits:3})} GünniDollar/s</strong></div>
+    <div class="colonists-summary-card"><span>🏦 Kontostände gesamt</span><strong>${totalCash.toLocaleString('de-DE',{maximumFractionDigits:2})} GünniDollar</strong></div>
+  </div>
+  <p class="hint">Die freie Bevölkerung auf Luna, Mars und Venus benötigt weder Wasser noch Lebensmittel, keine eigenen Gebäude und keine Lager. Sie wächst ausschließlich anhand ihrer aktuellen Einwohnerzahl gemäß der festgelegten Wachstumstabelle, sofern Temperatur (−10 bis +50 °C), Luftdruck (0,8–2 bar) und Sauerstoffanteil (15–25 %) stimmen. Jeder Bewohner erzeugt 0,001 GünniDollar pro Ingame-Sekunde. Das Wachstum folgt der festgelegten Tabelle: 1 Bewohner je 20 Ingame-Minuten, ab 500: 2, ab 1.000: 3, ab 5.000: 4, ab 8.000: 5, ab 12.000: 6 und ab 15.000: 7 Bewohner je 20 Ingame-Minuten. Bei ungeeigneter Temperatur, Druck oder Sauerstoff pausiert nur das Wachstum. Jeder Planet besitzt weiterhin ein eigenes Geldkonto.</p>
+  <div class="colonists-planet-list">${ids.map(id => {
+    const pop = freePopulationOnPlanet(id);
+    const body = ensureFreePopulationData(id);
+    const status = freePopulationConditionsMet(id) ? 'Lebensbedingungen geeignet · Wachstum aktiv' : 'Lebensbedingungen ungeeignet · Wachstum pausiert';
+    const cash = Number(body.freePopulationCash || 0).toLocaleString('de-DE',{maximumFractionDigits:2});
+    const income = (pop * 0.001).toLocaleString('de-DE',{maximumFractionDigits:3});
+    return `<article class="colonists-planet-card">
+      <div class="colonists-planet-head"><h3>${bodies[id].name}</h3><strong>${pop.toLocaleString('de-DE')} freie Bevölkerung</strong></div>
+      <p class="hint">${status}</p>
+      <div class="stat"><span>🏦 Eigenes Konto</span><strong>${cash} GünniDollar</strong></div>
+      <div class="stat"><span>💰 Einnahmen</span><strong>${income} GünniDollar/s</strong></div>
+      <div class="stat"><span>📈 Wachstum</span><strong>${FREE_POPULATION_GROWTH_INTERVAL_SECONDS / 60} Ingame-Minuten je Wachstumsschritt</strong></div>
+    </article>`;
+  }).join('')}</div>`;
 }

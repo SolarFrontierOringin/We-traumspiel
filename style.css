@@ -1681,3 +1681,100 @@ body > .planet-build-menu .planet-build-header {
 .colonists-release-row input{width:100%;min-width:0;padding:8px;border:1px solid #344967;border-radius:8px;background:#eef2f7;color:#111}
 .colonists-release-row button{white-space:nowrap}
 @media(max-width:430px){.colonists-release-row{grid-template-columns:minmax(0,1fr) 70px}.colonists-release-row button{grid-column:1/-1}}
+
+.free-population-storage{margin-top:9px;padding:9px;border:1px solid #315273;border-radius:9px;background:#091522}.free-population-storage>.stat:first-of-type{margin-top:5px}
+
+
+/* Gemeinsame Bevölkerungszentrale mit wischbaren Bereichen */
+.population-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:12px 0 14px;padding:5px;border:1px solid #263954;border-radius:14px;background:#07111f;touch-action:pan-y}
+.population-tab{min-width:0;min-height:44px;padding:10px 8px;border:1px solid transparent;border-radius:10px;background:transparent;color:#aebdd2;font:inherit;font-weight:700;font-size:.92rem;cursor:pointer;transition:background .18s,border-color .18s,color .18s}
+.population-tab.active{background:linear-gradient(135deg,#176fc0,#285fbd);border-color:#4b91dc;color:#fff;box-shadow:0 3px 12px rgba(20,100,190,.22)}
+@media(max-width:380px){.population-tab{font-size:.82rem;padding:9px 5px}}
+
+/* Bevölkerungszentrale: freundlichere Akzentfarben in Blau, Grün und Rot */
+#colonists-panel,
+#free-population-panel{
+  position:relative;
+  overflow:hidden;
+  border-color:rgba(91,160,211,.42);
+  background:
+    radial-gradient(ellipse at 8% 0%,rgba(56,145,215,.13),transparent 42%),
+    linear-gradient(155deg,#0c1a2c 0%,#091321 58%,#0a1724 100%);
+  box-shadow:0 12px 32px rgba(0,0,0,.28),inset 0 1px 0 rgba(190,225,255,.06);
+}
+#colonists-panel .colonists-head,
+#free-population-panel .colonists-head{align-items:center;padding-bottom:10px;border-bottom:1px solid rgba(123,170,213,.2)}
+#colonists-panel .colonists-head h2,
+#free-population-panel .colonists-head h2{color:#eaf5ff;text-shadow:0 0 18px rgba(80,165,235,.16)}
+#colonists-panel .colonists-head .hint,
+#free-population-panel .colonists-head .hint{color:#a9c4dd}
+.population-tabs{
+  gap:8px;
+  padding:6px;
+  border:1px solid rgba(126,170,207,.3);
+  border-radius:15px;
+  background:linear-gradient(110deg,rgba(13,31,51,.96),rgba(12,27,43,.96));
+  box-shadow:inset 0 1px 5px rgba(0,0,0,.25);
+}
+.population-tab{
+  min-height:49px;
+  border-radius:11px;
+  color:#b6c8d9;
+  background:rgba(255,255,255,.025);
+  font-weight:800;
+  letter-spacing:.005em;
+}
+.population-tab:first-child.active{
+  color:#f1f9ff;
+  border-color:#65b8f2;
+  background:linear-gradient(135deg,#267fc0,#2360a4);
+  box-shadow:0 4px 15px rgba(42,135,205,.27),inset 0 1px 0 rgba(255,255,255,.2);
+}
+.population-tab:last-child.active{
+  color:#f1fff6;
+  border-color:#72dba0;
+  background:linear-gradient(135deg,#269b70,#18734f);
+  box-shadow:0 4px 15px rgba(43,175,112,.24),inset 0 1px 0 rgba(255,255,255,.2);
+}
+.population-tab:focus-visible{outline:2px solid #a9e5ff;outline-offset:2px}
+#colonists-panel .colonists-summary-card,
+#free-population-panel .colonists-summary-card{
+  border-color:rgba(111,166,211,.32);
+  background:linear-gradient(145deg,rgba(23,49,74,.92),rgba(12,26,43,.96));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.045);
+}
+#colonists-panel .colonists-summary-card strong{color:#8fd0ff}
+#free-population-panel .colonists-summary-card strong{color:#8ce6b0}
+#colonists-panel .colonists-planet-card,
+#free-population-panel .colonists-planet-card{
+  border-color:rgba(103,157,198,.32);
+  background:linear-gradient(145deg,#10243a,#0b192a);
+}
+#colonists-panel .colonists-planet-card>summary{border-left:3px solid #4da5e4}
+#free-population-panel .colonists-planet-card>summary{border-left:3px solid #4cc58a}
+#colonists-panel .colonists-release-row,
+#free-population-panel .free-population-facilities,
+#free-population-panel .free-population-storage{
+  border-color:rgba(106,174,209,.4);
+  background:linear-gradient(145deg,rgba(18,43,61,.96),rgba(10,25,39,.98));
+}
+#colonists-panel .colonists-remove-row button,
+#colonists-panel button[data-remove-colonists],
+#free-population-panel button[data-reset-free-population]{
+  border-color:#c65d68;
+  background:linear-gradient(135deg,#963b48,#702b39);
+  color:#fff;
+}
+#colonists-panel .warn,
+#free-population-panel .warn,
+#colonists-panel .warning,
+#free-population-panel .warning{color:#ff9a9f}
+#colonists-panel .good,
+#free-population-panel .good{color:#8de5ad}
+@media(max-width:380px){
+  .population-tabs{gap:5px;padding:4px}
+  .population-tab{min-height:46px;font-size:.8rem}
+}
+
+/* KI-Handelsbörse */
+.market-mode-switch{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 14px}.market-mode-switch button{flex:1;min-width:145px;padding:10px;border:1px solid #31556a;border-radius:10px;background:#102838;color:#dceaf2;font-weight:700}.market-mode-switch button.active{background:linear-gradient(135deg,#176b82,#168b78);border-color:#55c9c0}.ai-exchange-orders,.ai-exchange-participants{display:grid;gap:8px;margin:10px 0 18px}.ai-exchange-order,.ai-exchange-participant{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px;align-items:center;padding:10px;border:1px solid #29485a;border-radius:10px;background:#0b202d}.ai-exchange-order small{color:#9db3c0}.ai-exchange-participant{grid-template-columns:1.4fr 1fr 1fr}.ai-exchange-participant span{color:#9db3c0;font-size:12px}.ai-exchange-participant strong{text-align:right}@media(max-width:520px){.ai-exchange-order{grid-template-columns:1fr 1fr}.ai-exchange-order span:last-child{grid-column:1/-1}.ai-exchange-participant{grid-template-columns:1fr 1fr}.ai-exchange-participant strong{grid-column:1/-1;text-align:left}}
