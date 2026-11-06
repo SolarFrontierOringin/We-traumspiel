@@ -1778,3 +1778,10 @@ body > .planet-build-menu .planet-build-header {
 
 /* KI-Handelsbörse */
 .market-mode-switch{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 14px}.market-mode-switch button{flex:1;min-width:145px;padding:10px;border:1px solid #31556a;border-radius:10px;background:#102838;color:#dceaf2;font-weight:700}.market-mode-switch button.active{background:linear-gradient(135deg,#176b82,#168b78);border-color:#55c9c0}.ai-exchange-orders,.ai-exchange-participants{display:grid;gap:8px;margin:10px 0 18px}.ai-exchange-order,.ai-exchange-participant{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px;align-items:center;padding:10px;border:1px solid #29485a;border-radius:10px;background:#0b202d}.ai-exchange-order small{color:#9db3c0}.ai-exchange-participant{grid-template-columns:1.4fr 1fr 1fr}.ai-exchange-participant span{color:#9db3c0;font-size:12px}.ai-exchange-participant strong{text-align:right}@media(max-width:520px){.ai-exchange-order{grid-template-columns:1fr 1fr}.ai-exchange-order span:last-child{grid-column:1/-1}.ai-exchange-participant{grid-template-columns:1fr 1fr}.ai-exchange-participant strong{grid-column:1/-1;text-align:left}}
+
+
+/* Entscheidungen für Anträge der KI-Handelsbörse */
+.ai-exchange-accept,.ai-exchange-reject{margin-top:6px;padding:7px 10px;border:0;border-radius:7px;font-weight:700;font-size:12px;cursor:pointer}
+.ai-exchange-accept{background:#1f8b55;color:#fff}
+.ai-exchange-reject{background:#a83b42;color:#fff}
+.ai-exchange-accept:active,.ai-exchange-reject:active{transform:scale(.97)}

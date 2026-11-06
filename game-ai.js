@@ -266,11 +266,34 @@ function runAIExchange(now=gameNow()){
   buys.forEach(b=>{sells.forEach(s=>{if(b.status!=='offen'||s.status!=='offen'||b.key!==s.key||b.owner===s.owner||b.price<s.price)return;const amount=Math.min(b.remaining,s.remaining);if(amount>0)exchangeExecute(b,s,amount);});});
   ex.orders=ex.orders.filter(o=>o.status==='offen'&&o.expires>now&&o.remaining>=.01).slice(-150);
 }
+
+function decideAIExchangeOrder(orderId, decision){
+  const ex=ensureAIExchange();
+  const order=ex.orders.find(o=>o.id===orderId && o.status==='offen');
+  if(!order)return;
+  if(decision==='accept'){
+    order.playerDecision='angenommen';
+    order.playerDecisionTime=gameNow();
+    showMarketToast(`Antrag von ${order.ownerName} angenommen.`);
+  }else if(decision==='reject'){
+    order.status='abgelehnt';
+    order.playerDecision='abgelehnt';
+    order.playerDecisionTime=gameNow();
+    ex.history.unshift({time:gameNow(),type:'decision',buyer:'—',seller:order.ownerName,key:order.key,amount:order.remaining,price:order.price,total:0,note:'Vom Spieler abgelehnt'});
+    ex.history=ex.history.slice(0,100);
+    showMarketToast(`Antrag von ${order.ownerName} abgelehnt.`);
+  }
+  saveGame(false);
+  renderAIExchange();
+}
+window.acceptAIExchangeOrder = function(id){ decideAIExchangeOrder(String(id),'accept'); };
+window.rejectAIExchangeOrder = function(id){ decideAIExchangeOrder(String(id),'reject'); };
+
 function renderAIExchange(){
   const panel=document.querySelector('#ai-exchange-content');if(!panel)return;const ex=ensureAIExchange();
   const fmt=n=>Number(n||0).toLocaleString('de-DE',{maximumFractionDigits:2});
   const open=ex.orders.filter(o=>o.status==='offen');
-  const rows=open.map(o=>`<div class="ai-exchange-order"><span><b>${o.side==='buy'?'🟢 Kaufgesuch':'🔴 Verkaufsangebot'}</b><br>${o.ownerName}</span><span>${AI_EXCHANGE_NAMES[o.key]||o.key}<br><b>${fmt(o.remaining)} t</b></span><span>${fmt(o.price)} GD/t<br><small>bis ${new Date(GAME_EPOCH_UTC+o.expires).toISOString().slice(0,16).replace('T',' ')}</small></span></div>`).join('')||'<p class="hint">Noch keine offenen Anträge. Die Teilnehmer stellen mit der Zeit eigene Angebote ein.</p>';
+  const rows=open.map(o=>`<div class="ai-exchange-order"><span><b>${o.side==='buy'?'🟢 Kaufgesuch':'🔴 Verkaufsangebot'}</b><br>${o.ownerName}<br><small>${o.playerDecision==='angenommen'?'✓ Von dir angenommen':'Wartet auf deine Entscheidung'}</small></span><span>${AI_EXCHANGE_NAMES[o.key]||o.key}<br><b>${fmt(o.remaining)} t</b></span><span>${fmt(o.price)} GD/t<br><small>bis ${new Date(GAME_EPOCH_UTC+o.expires).toISOString().slice(0,16).replace('T',' ')}</small><br><button type="button" class="ai-exchange-accept" onclick="acceptAIExchangeOrder('${String(o.id).replace(/'/g, '')}')">Annehmen</button> <button type="button" class="ai-exchange-reject" onclick="rejectAIExchangeOrder('${String(o.id).replace(/'/g, '')}')">Ablehnen</button></span></div>`).join('')||'<p class="hint">Noch keine offenen Anträge. Die Teilnehmer stellen mit der Zeit eigene Angebote ein.</p>';
   const history=ex.history.slice(0,30).map(h=>`<div class="market-history-row"><span>${h.seller} → ${h.buyer} · ${AI_EXCHANGE_NAMES[h.key]||h.key}</span><strong>${fmt(h.amount)} t</strong><small>${fmt(h.price)} GD/t · Gesamt ${fmt(h.total)} GD</small></div>`).join('')||'<p class="hint">Noch keine abgeschlossenen Geschäfte.</p>';
   const participantList=[...AI_COMPANY_CONFIG.map(c=>({id:c.id,name:c.name,kind:'KI-Unternehmen'})),...FREE_EXCHANGE_PLANETS.filter(p=>freePopulationOnPlanet(p.id)>0).map(p=>({id:p.id,name:p.name,kind:'Virtueller Handel'}))];
   const participants=participantList.map(x=>{const p=exchangeParticipant(x.id);return `<div class="ai-exchange-participant"><b>${x.name}</b><span>${x.kind}</span><strong>${fmt(p?.cash)} GD</strong></div>`;}).join('');
