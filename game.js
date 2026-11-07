@@ -3168,6 +3168,18 @@ function loadGame(showMessage = true) {
       });
       bodies.earth.resourceDepositUpgrade20261010 = true;
     }
+    // Erd-Rohölvorkommen einmalig auf 15.000.000 Liter erhöhen.
+    // Bereits abgefördertes Rohöl aus dem alten 6-Mio.-Liter-Vorkommen bleibt berücksichtigt.
+    if (bodies.earth?.resources && !bodies.earth.crudeOilDepositUpgrade20261107) {
+      const currentCrudeOil = Number(bodies.earth.resources.crudeOil);
+      if (!Number.isFinite(currentCrudeOil)) {
+        bodies.earth.resources.crudeOil = 15000000;
+      } else if (currentCrudeOil <= 6000000) {
+        const alreadyMined = Math.max(0, 6000000 - currentCrudeOil);
+        bodies.earth.resources.crudeOil = Math.max(0, 15000000 - alreadyMined);
+      }
+      bodies.earth.crudeOilDepositUpgrade20261107 = true;
+    }
     // Erd-Stein auf 20.000.000 t aktualisieren, ohne bekannte frühere Abbaumengen zu verlieren.
     if (bodies.earth?.resources && !bodies.earth.stoneDepositUpgrade20261010) {
       const currentStone = Number(bodies.earth.resources.stone);
