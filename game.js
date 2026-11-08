@@ -6220,8 +6220,8 @@ function renderRocketWindow(body) {
     const maxCapacity = isShuttle || isTankRocket ? 0 : r.type === 'adler1' ? 10000 : isTitan1 ? 1500 : isAtlas1 ? 500 : (isH2 ? 300 : 120);
     const cargo = r.deliveredCargo || r.cargo;
     const cargoText = isTankRocket ? `🛢️ ${Number(r.fuelCargoLiters||0).toLocaleString('de-DE')} L Treibstoff${r.fuelDelivered ? ' · geliefert' : ''}` : isShuttle ? `👥 ${Number(r.passengers||0)} Kolonisten · 🍲 ${Number(r.supplyCargo?.food||0).toLocaleString('de-DE')} t Lebensmittel · 💧 ${Number(r.supplyCargo?.water||0).toLocaleString('de-DE')} L Wasser` : Array.isArray(cargo)
-      ? (cargo.length ? cargo.map(c => `${resourceIcons[c.resource] || ''} ${resourceNames[c.resource] || c.resource}: ${c.amount.toFixed(2)} ${['crudeOil','water'].includes(c.resource) ? 'L' : 't'}`).join(' · ') : 'Keine Fracht')
-      : (cargo && cargo.amount > 0 ? `${resourceIcons[cargo.resource] || ''} ${resourceNames[cargo.resource] || cargo.resource}: ${cargo.amount.toFixed(2)} ${['crudeOil','water'].includes(cargo.resource) ? 'L' : 't'}` : 'Keine Fracht');
+      ? (cargo.length ? cargo.map(c => `${resourceIcons[c.resource] || ''} ${resourceNames[c.resource] || c.resource}: ${(Number(c.amount) || 0).toFixed(2)} ${['crudeOil','water'].includes(c.resource) ? 'L' : 't'}`).join(' · ') : 'Keine Fracht')
+      : (cargo && cargo.amount > 0 ? `${resourceIcons[cargo.resource] || ''} ${resourceNames[cargo.resource] || cargo.resource}: ${(Number(cargo.amount) || 0).toFixed(2)} ${['crudeOil','water'].includes(cargo.resource) ? 'L' : 't'}` : 'Keine Fracht');
 
     if (r.status === 'orbit' || r.status === 'landed') {
       const returnOptions = (isTankRocket ? [] : ['stone','ice','coal','gas','crudeOil','water','grain','vegetables','food','algaeBiomass','polymers','rubber','plastics','wood','biomass','vehicles','co2','carbon','oxygen','iron','silicon','lithium','copperOre','copper','batteries','buildingMaterials','machines','glass','electronics','uranium','processedUranium','nuclearFuel','steel','bauxite','aluminiumOxide','aluminium','titanium','nickelOre','graphite'])
