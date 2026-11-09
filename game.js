@@ -6204,7 +6204,14 @@ function renderRocketWindow(body) {
   if (!hasPlanetSurface(target)) rocketDestinationMode = 'orbit';
   const sec = flightDurationSeconds(target, rocketDestinationMode);
 
-  const active = rockets.filter(r => r.status !== 'returned' && (r.from === source || r.to === source));
+  // Alte Spielstände können einzelne unvollständige Flugdatensätze enthalten.
+  // Solche Einträge dürfen die komplette Flugzentrale nicht mehr am Rendern hindern.
+  const active = (Array.isArray(rockets) ? rockets : []).filter(r =>
+    r && typeof r === 'object' &&
+    r.status !== 'returned' &&
+    bodies[r.from] && bodies[r.to] &&
+    (r.from === source || r.to === source)
+  );
   const list = active.length ? active.map(r => {
     const now = gameNow();
     const elapsed = Math.max(0, (now - Number(r.started || now)) / 1000);
@@ -6218,7 +6225,8 @@ function renderRocketWindow(body) {
     const isShuttle = r.type === 'colonistShuttle';
     const isTankRocket = r.type === 'tankRocket';
     const maxCapacity = isShuttle || isTankRocket ? 0 : r.type === 'adler1' ? 10000 : isTitan1 ? 1500 : isAtlas1 ? 500 : (isH2 ? 300 : 120);
-    const cargo = r.deliveredCargo || r.cargo;
+    const cargoRaw = r.deliveredCargo || r.cargo;
+    const cargo = Array.isArray(cargoRaw) ? cargoRaw.filter(item => item && typeof item === 'object') : cargoRaw;
     const cargoText = isTankRocket ? `🛢️ ${Number(r.fuelCargoLiters||0).toLocaleString('de-DE')} L Treibstoff${r.fuelDelivered ? ' · geliefert' : ''}` : isShuttle ? `👥 ${Number(r.passengers||0)} Kolonisten · 🍲 ${Number(r.supplyCargo?.food||0).toLocaleString('de-DE')} t Lebensmittel · 💧 ${Number(r.supplyCargo?.water||0).toLocaleString('de-DE')} L Wasser` : Array.isArray(cargo)
       ? (cargo.length ? cargo.map(c => `${resourceIcons[c.resource] || ''} ${resourceNames[c.resource] || c.resource}: ${(Number(c.amount) || 0).toFixed(2)} ${['crudeOil','water'].includes(c.resource) ? 'L' : 't'}`).join(' · ') : 'Keine Fracht')
       : (cargo && cargo.amount > 0 ? `${resourceIcons[cargo.resource] || ''} ${resourceNames[cargo.resource] || cargo.resource}: ${(Number(cargo.amount) || 0).toFixed(2)} ${['crudeOil','water'].includes(cargo.resource) ? 'L' : 't'}` : 'Keine Fracht');
@@ -6234,7 +6242,7 @@ function renderRocketWindow(body) {
       const shuttleReturnButton = isShuttle ? `<button class="rocket-return" data-rocket-id="${r.id}">↩️ Shuttle zurück nach ${bodies[r.from].name}</button>` : '';
       return `<div class="rocket-flight arrived"><strong>🚀 ${r.name}</strong><span>📍 ${bodies[r.to].name} (${r.targetMode === 'orbit' ? 'Orbit' : 'Oberfläche erreichbar'}) · ${phase}</span><div class="rocket-cargo">${cargoState}: ${cargoText}</div>${landButton}${returnControls}${shuttleReturnButton}<small>${flightTimeLabel} · Rückflug ${bodies[r.to].name} → ${bodies[r.from].name}: ${flightDurationSeconds(r.from, r.fromMode === 'orbit' ? 'orbit' : 'surface')} Sekunden${isShuttle ? '' : ` · max. ${maxCapacity} t/L`}</small></div>`;
     }
-    if (r.status === 'returning') return `<div class="rocket-flight"><strong>🚀 ${r.name}</strong><span>↩️ ${bodies[r.fromReturn || r.from].name} → ${bodies[r.to].name}</span><div class="rocket-cargo">📦 Rückflug</div><div class="rocket-progress"><i style="width:${pct}%"></i></div><small>${flightTimeLabel}</small></div>`;
+    if (r.status === 'returning') return `<div class="rocket-flight"><strong>🚀 ${r.name}</strong><span>↩️ ${(bodies[r.fromReturn] || bodies[r.from]).name} → ${bodies[r.to].name}</span><div class="rocket-cargo">📦 Rückflug</div><div class="rocket-progress"><i style="width:${pct}%"></i></div><small>${flightTimeLabel}</small></div>`;
     return `<div class="rocket-flight"><strong>🚀 ${r.name}</strong><span>🚀 ${bodies[r.from].name} → ${bodies[r.to].name}</span><div class="rocket-cargo">📦 ${cargoText}</div><div class="rocket-progress"><i style="width:${pct}%"></i></div><small>${flightTimeLabel}</small></div>`;
   }).join('') : '<p class="hint">Keine aktiven Transporte mit diesem Planeten.</p>';
 
@@ -6256,7 +6264,13 @@ function renderRocketWindow(body) {
   const cargoOptions = ['stone','ice','coal','gas','crudeOil','water','grain','vegetables','food','algaeBiomass','polymers','rubber','plastics','wood','biomass','vehicles','co2','carbon','oxygen','iron','silicon','lithium','copperOre','copper','batteries','buildingMaterials','machines','glass','electronics','chips','uranium','processedUranium','nuclearFuel','steel','bauxite','aluminiumOxide','aluminium','titanium','nickelOre','graphite']
     .map(key => `<option value="${key}">${resourceIcons[key] || ''} ${resourceNames[key] || key}</option>`).join('');
 
-  rocketCargoSlots = rocketCargoSlots.slice(0, 20);
+  rocketCargoSlots = (Array.isArray(rocketCargoSlots) ? rocketCargoSlots : [])
+    .filter(slot => slot && typeof slot === 'object')
+    .slice(0, 20)
+    .map(slot => ({
+      resource: typeof slot.resource === 'string' && slot.resource ? slot.resource : 'stone',
+      amount: Number.isFinite(Number(slot.amount)) ? Math.max(0, Number(slot.amount)) : 0
+    }));
   if (!rocketCargoSlots.length) rocketCargoSlots.push({ resource: 'stone', amount: 0 });
   rocketCargoSlots.forEach(slot => {
     const available = Number(getLocationStorage(source, state.viewMode === 'orbit' ? 'orbit' : 'surface')[slot.resource] || 0);

@@ -855,7 +855,15 @@ function renderFlightCenter() {
   }
   const selectedBody = bodies[state.selected];
   const openDetails = captureDetailsOpenState(content);
-  content.innerHTML = `<div class="flight-center-command-banner"><div><span class="flight-center-kicker">MISSION CONTROL</span><h3>Flotten- und Flugmanagement</h3><p>Raketen verwalten, Transporte steuern und Produktion überwachen.</p></div><div class="flight-center-banner-actions"><button type="button" id="flight-tutorial-start" class="flight-tutorial-start">🎓 Schritt-für-Schritt-Tutorial</button><span class="flight-center-signal"><i></i> SYSTEM ONLINE</span></div></div>${renderRocketWindow(selectedBody)}`;
+  try {
+    content.innerHTML = `<div class="flight-center-command-banner"><div><span class="flight-center-kicker">MISSION CONTROL</span><h3>Flotten- und Flugmanagement</h3><p>Raketen verwalten, Transporte steuern und Produktion überwachen.</p></div><div class="flight-center-banner-actions"><button type="button" id="flight-tutorial-start" class="flight-tutorial-start">🎓 Schritt-für-Schritt-Tutorial</button><span class="flight-center-signal"><i></i> SYSTEM ONLINE</span></div></div>${renderRocketWindow(selectedBody)}`;
+  } catch (error) {
+    console.error('Fehler beim Rendern der Flugzentrale:', error);
+    content.innerHTML = `<div class="flight-center-command-banner"><div><span class="flight-center-kicker">MISSION CONTROL</span><h3>Flotten- und Flugmanagement</h3><p>Die Flugdaten enthalten einen fehlerhaften oder veralteten Eintrag. Die Flugzentrale wurde geschützt, damit das restliche Spiel weiterläuft.</p></div></div><button type="button" id="flight-center-retry" class="flight-tutorial-start">Flugzentrale erneut laden</button>`;
+    content.querySelector('#flight-center-retry')?.addEventListener('click', () => renderFlightCenter());
+    rocketControlRoot = content;
+    return;
+  }
   organizeFlightCenterTabs();
   restoreDetailsOpenState(content, openDetails);
   rocketControlRoot = content;
