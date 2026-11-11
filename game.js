@@ -3102,10 +3102,23 @@ function loadGame(showMessage = true) {
     if (!bodies.luna.atmosphere || typeof bodies.luna.atmosphere !== 'object') {
       bodies.luna.atmosphere = { totalGas: 0, oxygen: 0, gases: {} };
     }
-    orbitMissions.splice(0, orbitMissions.length, ...(Array.isArray(data.orbitMissions) ? data.orbitMissions : []));
+    // Alte/teilweise beschädigte Saves dürfen die Simulationsschleife nicht blockieren.
+    // Ungültige Missionseinträge werden nicht gelöscht: reparierbare Objekte bleiben erhalten
+    // und werden bei fehlenden Pflichtdaten pausiert, damit keine Fracht/Rakete verloren geht.
+    const savedMissions = Array.isArray(data.orbitMissions) ? data.orbitMissions : [];
+    const safeMissions = savedMissions.filter(m => m && typeof m === 'object' && !Array.isArray(m));
+    orbitMissions.splice(0, orbitMissions.length, ...safeMissions);
     orbitMissionCounter = Math.max(1, Number(data.orbitMissionCounter) || 1);
-    // Laufende Missionen werden aus gespeicherten Zeitstempeln rekonstruiert, nicht neu gestartet.
-    orbitMissions.forEach(m => { if (m.status === 'outbound' || m.status === 'returning') m.lastTick = gameNow(); });
+    orbitMissions.forEach(m => {
+      if (m.status === 'outbound' || m.status === 'returning') m.lastTick = gameNow();
+      if (!bodies[m.source] || !bodies[m.destination] || !rocketTypes[m.rocketType] || typeof m.resource !== 'string') {
+        m.status = 'paused';
+        m.message = 'Mission pausiert: gespeicherte Missionsdaten sind unvollständig. Bitte Quelle, Ziel, Rakete und Fracht prüfen.';
+      } else if (!['waiting', 'outbound', 'returning', 'paused', 'completed', 'deleted'].includes(m.status)) {
+        m.status = 'paused';
+        m.message = 'Mission pausiert: unbekannter Missionsstatus im Spielstand.';
+      }
+    });
     // Neue Rohstoffvorkommen aus späteren Spielversionen auch in alten Spielständen ergänzen.
     const defaultResources = {
       mercury: { stone: 20000, iron: 10000000, silicon: 8000000, lithium: 2000000, copperOre: 30000, uranium: 30000000, titanOre: 5000000, water: 2000000000 },
@@ -3308,7 +3321,24 @@ function loadGame(showMessage = true) {
     });
 
     rockets.length = 0;
-    (data.rockets || []).forEach(r => rockets.push(r));
+    const savedRockets = Array.isArray(data.rockets) ? data.rockets : [];
+    savedRockets.forEach(r => {
+      if (!r || typeof r !== 'object' || Array.isArray(r)) {
+        console.warn('Ungültiger Raketen-Datensatz im Spielstand übersprungen.');
+        return;
+      }
+      // Unbekannte oder unvollständige aktive Flüge isolieren, ohne sie aus dem Save zu löschen.
+      const validRocketStatuses = ['approach', 'error', 'landed', 'mining', 'orbit', 'outbound', 'paused', 'returned', 'returning', 'unloading', 'waiting'];
+      if (typeof r.status !== 'string' || !validRocketStatuses.includes(r.status)) {
+        r.status = 'error';
+        r.message = r.message || 'Rakete isoliert: gespeicherter Status fehlt oder ist unbekannt.';
+      } else if (['outbound', 'returning'].includes(r.status) &&
+          (!bodies[r.from] || !bodies[r.to] || !Number.isFinite(Number(r.started)) || !Number.isFinite(Number(r.duration)))) {
+        r.status = 'error';
+        r.message = r.message || 'Rakete isoliert: Start, Ziel oder Flugdauer im Spielstand ist unvollständig.';
+      }
+      rockets.push(r);
+    });
     Object.keys(rocketBuildQueue).forEach(k => delete rocketBuildQueue[k]);
     Object.assign(rocketBuildQueue, data.rocketBuildQueue || {});
     Object.keys(rocketBuildStarted).forEach(k => delete rocketBuildStarted[k]);
@@ -3339,7 +3369,19 @@ function loadGame(showMessage = true) {
     Object.keys(rocketBuildStartedAtlas1).forEach(k => delete rocketBuildStartedAtlas1[k]);
     Object.assign(rocketBuildStartedAtlas1, data.rocketBuildStartedAtlas1 || {});
     Object.keys(rocketFactoryQueue).forEach(k => delete rocketFactoryQueue[k]);
-    Object.assign(rocketFactoryQueue, data.rocketFactoryQueue || {});
+    Object.assign(rocketFactoryQueue, data.rocketFactoryQueue && typeof data.rocketFactoryQueue === 'object' ? data.rocketFactoryQueue : {});
+    Object.keys(rocketFactoryQueue).forEach(id => {
+      const queue = rocketFactoryQueue[id];
+      if (!Array.isArray(queue)) {
+        rocketFactoryQueue[id] = [];
+        return;
+      }
+      rocketFactoryQueue[id] = queue.filter(type => {
+        const valid = typeof type === 'string' && Object.prototype.hasOwnProperty.call(rocketTypes, type);
+        if (!valid) console.warn('Ungültiger Raketenfabrik-Warteschlangeneintrag übersprungen:', id, type);
+        return valid;
+      });
+    });
     Object.keys(rocketFactoryStarted).forEach(k => delete rocketFactoryStarted[k]);
     Object.assign(rocketFactoryStarted, data.rocketFactoryStarted || {});
     Object.keys(rocketFactoryBuildQueue).forEach(k => delete rocketFactoryBuildQueue[k]);
@@ -6402,8 +6444,17 @@ function bindOrbitMissionControls(root = rocketControlRoot) {
 
 function updateOrbitMissions(now = gameNow()) {
   let changed = false;
-  for (const m of [...orbitMissions]) {
-    if (m.status === 'paused') continue;
+  for (const m of (Array.isArray(orbitMissions) ? [...orbitMissions] : [])) {
+    if (!m || typeof m !== 'object' || Array.isArray(m)) continue;
+    if (!bodies[m.source] || !bodies[m.destination] || !rocketTypes[m.rocketType] || typeof m.resource !== 'string') {
+      if (m.status !== 'paused' || !m.message) {
+        m.status = 'paused';
+        m.message = 'Mission pausiert: gespeicherte Missionsdaten sind unvollständig. Bitte Quelle, Ziel, Rakete und Fracht prüfen.';
+        changed = true;
+      }
+      continue;
+    }
+    if (m.status === 'paused' || !['waiting', 'outbound', 'returning'].includes(m.status)) continue;
     if (m.status === 'waiting' && now >= Number(m.nextLaunchAt || 0)) {
       const storage = getLocationStorage(m.source, m.sourceMode === 'orbit' ? 'orbit' : 'surface');
       let fuelCost = rocketRoundTripFuelCost(m.rocketType, m.source, m.destination, m.sourceMode || 'surface', m.destinationMode || 'surface');
@@ -6760,8 +6811,18 @@ function updateRockets(now) {
     if (rocketBuildQueue2[id] > 0 && now - rocketBuildStarted2[id] >= 30000) { rocketStock2[id] += rocketBuildQueue2[id]; rocketBuildQueue2[id]=0; rocketBuildStarted2[id]=0; }
     if (rocketBuildQueueAtlas1[id] > 0 && now - rocketBuildStartedAtlas1[id] >= 30000) { rocketStockAtlas1[id] += rocketBuildQueueAtlas1[id]; rocketBuildQueueAtlas1[id]=0; rocketBuildStartedAtlas1[id]=0; }
   });
-  for (const rocket of rockets) {
-    if (rocket.status === 'returned') continue;
+  for (const rocket of (Array.isArray(rockets) ? rockets : [])) {
+    if (!rocket || typeof rocket !== 'object' || Array.isArray(rocket)) {
+      console.warn('Ungültiger Raketen-Datensatz während updateRockets isoliert.');
+      continue;
+    }
+    if (rocket.status === 'returned' || rocket.status === 'error') continue;
+    if (['outbound', 'returning'].includes(rocket.status) && (!bodies[rocket.from] || !bodies[rocket.to])) {
+      rocket.status = 'error';
+      rocket.message = rocket.message || 'Rakete isoliert: Start- oder Zielplanet ist nicht vorhanden.';
+      console.warn('Raketenflug wegen ungültiger Route isoliert:', rocket);
+      continue;
+    }
     if ((rocket.status === 'outbound' || rocket.status === 'returning') && now - rocket.started >= rocket.duration) {
       if (rocket.status === 'outbound') {
         rocket.arrivedAt = now;

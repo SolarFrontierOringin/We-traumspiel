@@ -675,7 +675,6 @@ function organizeFlightCenterTabs() {
   const content = document.querySelector('#flight-center-content');
   const rocketWindow = content?.querySelector('.rocket-window');
   if (!content || !rocketWindow || rocketWindow.dataset.tabbed === 'true') return;
-  rocketWindow.dataset.tabbed = 'true';
 
   const tabs = [
     { id: 'fleet', label: '🚀 Flotte', title: 'Raketenflotte' },
@@ -726,9 +725,15 @@ function organizeFlightCenterTabs() {
   const source = state.selected;
   const mode = state.viewMode === 'orbit' ? 'orbit' : 'surface';
   const available = stockTypes.reduce((sum, [type]) => sum + Math.max(0, Number(getRocketStockCount(type, source, type === 'colonistShuttle' ? 'surface' : mode)) || 0), 0);
-  const activeFlights = rockets.filter(rocket => rocket.status !== 'returned').length;
-  const activeMissions = orbitMissions.filter(mission => mission.status !== 'completed' && mission.status !== 'deleted').length;
-  const queue = Array.isArray(rocketFactoryQueue[source]) ? rocketFactoryQueue[source] : [];
+  const activeFlights = (Array.isArray(rockets) ? rockets : []).filter(rocket =>
+    rocket && typeof rocket === 'object' && rocket.status !== 'returned' && rocket.status !== 'error'
+  ).length;
+  const activeMissions = (Array.isArray(orbitMissions) ? orbitMissions : []).filter(mission =>
+    mission && typeof mission === 'object' && mission.status !== 'completed' && mission.status !== 'deleted'
+  ).length;
+  const queue = Array.isArray(rocketFactoryQueue[source]) ? rocketFactoryQueue[source].filter(type =>
+    typeof type === 'string' && Object.prototype.hasOwnProperty.call(rocketTypes, type)
+  ) : [];
   const overview = document.createElement('div');
   overview.className = 'flight-center-overview';
   overview.innerHTML = `
@@ -786,7 +791,11 @@ function organizeFlightCenterTabs() {
   });
   rocketWindow.append(tabBar);
   const active = tabs.some(tab => tab.id === flightCenterActiveTab) ? flightCenterActiveTab : 'fleet';
-  content.querySelector(`[data-flight-tab="${active}"]`)?.click();
+  const activeButton = content.querySelector(`[data-flight-tab="${active}"]`);
+  if (!activeButton) throw new Error('Flugzentrale-Tabs konnten nicht vollständig aufgebaut werden.');
+  activeButton.click();
+  // Erst nach vollständig erfolgreichem Aufbau als organisiert markieren.
+  rocketWindow.dataset.tabbed = 'true';
 }
 
 // Interaktive Flugzentrale-Einführung: zeigt jeweils das Feld, das der Spieler selbst bedienen soll.
@@ -857,20 +866,20 @@ function renderFlightCenter() {
   const openDetails = captureDetailsOpenState(content);
   try {
     content.innerHTML = `<div class="flight-center-command-banner"><div><span class="flight-center-kicker">MISSION CONTROL</span><h3>Flotten- und Flugmanagement</h3><p>Raketen verwalten, Transporte steuern und Produktion überwachen.</p></div><div class="flight-center-banner-actions"><button type="button" id="flight-tutorial-start" class="flight-tutorial-start">🎓 Schritt-für-Schritt-Tutorial</button><span class="flight-center-signal"><i></i> SYSTEM ONLINE</span></div></div>${renderRocketWindow(selectedBody)}`;
+    // Der Schutz umfasst den gesamten DOM-Aufbau, nicht nur das Erzeugen des HTML.
+    organizeFlightCenterTabs();
+    restoreDetailsOpenState(content, openDetails);
+    rocketControlRoot = content;
+    bindRocketControls();
+    const tutorialButton = content.querySelector('#flight-tutorial-start');
+    if (tutorialButton) tutorialButton.addEventListener('click', startFlightTutorial);
+    if (flightTutorialState.active) updateFlightTutorialTarget();
   } catch (error) {
-    console.error('Fehler beim Rendern der Flugzentrale:', error);
-    content.innerHTML = `<div class="flight-center-command-banner"><div><span class="flight-center-kicker">MISSION CONTROL</span><h3>Flotten- und Flugmanagement</h3><p>Die Flugdaten enthalten einen fehlerhaften oder veralteten Eintrag. Die Flugzentrale wurde geschützt, damit das restliche Spiel weiterläuft.</p></div></div><button type="button" id="flight-center-retry" class="flight-tutorial-start">Flugzentrale erneut laden</button>`;
+    console.error('Fehler beim vollständigen Aufbau der Flugzentrale:', error);
+    content.innerHTML = `<div class="flight-center-command-banner"><div><span class="flight-center-kicker">MISSION CONTROL</span><h3>Flotten- und Flugmanagement</h3><p>Die Flugzentrale konnte wegen eines fehlerhaften oder veralteten Datensatzes nicht vollständig aufgebaut werden. Das restliche Spiel bleibt davon getrennt.</p></div></div><button type="button" id="flight-center-retry" class="flight-tutorial-start">Flugzentrale erneut laden</button>`;
     content.querySelector('#flight-center-retry')?.addEventListener('click', () => renderFlightCenter());
     rocketControlRoot = content;
-    return;
   }
-  organizeFlightCenterTabs();
-  restoreDetailsOpenState(content, openDetails);
-  rocketControlRoot = content;
-  bindRocketControls();
-  const tutorialButton = content.querySelector('#flight-tutorial-start');
-  if (tutorialButton) tutorialButton.addEventListener('click', startFlightTutorial);
-  if (flightTutorialState.active) updateFlightTutorialTarget();
 }
 
 function renderCyclicMissionsPanel() {
@@ -882,10 +891,11 @@ function renderCyclicMissionsPanel() {
   const sourceOptions = planetEntries.map(([id, body]) => `<option value="${id}" ${id === state.selected ? 'selected' : ''}>${body.name}</option>`).join('');
   const resourceKeys = ['stone','ice','coal','gas','crudeOil','water','grain','vegetables','food','algaeBiomass','polymers','rubber','plastics','wood','biomass','vehicles','co2','carbon','oxygen','iron','silicon','lithium','copperOre','copper','batteries','buildingMaterials','machines','glass','electronics','chips','uranium','processedUranium','nuclearFuel','steel','bauxite','aluminiumOxide','aluminium','titanium','nickelOre','graphite'];
   const resourceOptions = resourceKeys.map(key => `<option value="${key}">${resourceIcons[key] || ''} ${resourceNames[key] || key}</option>`).join('');
-  const total = orbitMissions.length;
-  const active = orbitMissions.filter(m => ['waiting','outbound','returning'].includes(m.status)).length;
-  const waiting = orbitMissions.filter(m => m.status === 'waiting' && m.message).length;
-  const grouped = new Map(planetEntries.map(([id, body]) => [id, {body, missions: orbitMissions.filter(m => m.source === id)}]));
+  const safeMissions = (Array.isArray(orbitMissions) ? orbitMissions : []).filter(m => m && typeof m === 'object' && !Array.isArray(m));
+  const total = safeMissions.length;
+  const active = safeMissions.filter(m => ['waiting','outbound','returning'].includes(m.status)).length;
+  const waiting = safeMissions.filter(m => m.status === 'waiting' && m.message).length;
+  const grouped = new Map(planetEntries.map(([id, body]) => [id, {body, missions: safeMissions.filter(m => m.source === id)}]));
   const statusText = m => m.status === 'paused' ? 'Pausiert' : m.status === 'outbound' ? `Hinflug nach ${bodies[m.destination]?.name || m.destination}` : m.status === 'returning' ? 'Rückflug' : (m.message && /^Wartet auf|Orbit-Start- und Landevorrichtung fehlt/.test(m.message) ? m.message : `Nächster Start in ${Math.max(0, Math.ceil((Number(m.nextLaunchAt || 0) - gameNow()) / 1000))} s`);
   const missionCard = m => `<article class="cyclic-mission-card">
       <div class="cyclic-mission-card-head"><div class="cyclic-mission-rocket">🚀</div><div class="cyclic-mission-card-title"><strong>${rocketTypes[m.rocketType]?.name || m.rocketType} → ${bodies[m.destination]?.name || m.destination}</strong><small>${m.sourceMode === 'orbit' ? 'Orbit' : 'Oberfläche'} → ${m.destinationMode === 'orbit' ? 'Orbit' : 'Oberfläche'} · Mission #${m.id}</small></div><span class="cyclic-mission-status ${m.status === 'paused' ? 'is-paused' : m.message ? 'is-waiting' : m.status === 'outbound' || m.status === 'returning' ? 'is-active' : ''}">${m.status === 'paused' ? 'Pausiert' : m.status === 'outbound' ? 'Hinflug' : m.status === 'returning' ? 'Rückflug' : m.message ? 'Wartet' : 'Bereit'}</span></div>
