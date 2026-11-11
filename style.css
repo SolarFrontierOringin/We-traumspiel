@@ -1785,3 +1785,12 @@ body > .planet-build-menu .planet-build-header {
 .ai-exchange-accept{background:#1f8b55;color:#fff}
 .ai-exchange-reject{background:#a83b42;color:#fff}
 .ai-exchange-accept:active,.ai-exchange-reject:active{transform:scale(.97)}
+
+
+/* Einklappbare Informationen im Menü Freie Bevölkerung */
+.free-population-info{margin:12px 0;padding:0 12px;border:1px solid #315273;border-radius:12px;background:linear-gradient(120deg,#10243a,#0b1728)}
+.free-population-info summary{display:flex;align-items:center;min-height:46px;cursor:pointer;list-style:none;color:#b9d8f2;font-weight:700}
+.free-population-info summary::-webkit-details-marker{display:none}
+.free-population-info summary::after{content:"＋";margin-left:auto;color:#8fe0bd;font-size:20px}
+.free-population-info[open] summary::after{content:"−"}
+.free-population-info .hint{margin:0 0 12px;line-height:1.55}

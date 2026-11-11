@@ -7,15 +7,13 @@ const topResources = document.querySelector('#top-resources');
 const saveMenu = document.querySelector('#save-menu');
 const saveStatus = document.querySelector('#save-status');
 const SAVE_KEY = 'solarFrontierOriginsSave_v2';
-// Separater manueller Speicherpunkt: Der 5-Sekunden-Autosave darf ihn nicht überschreiben.
-const MANUAL_SAVE_KEY = 'solarFrontierOriginsManualSave_v1';
 const LEGACY_SAVE_KEY = 'weltraumGameSave_v1';
 const BACKUP_SAVE_KEY = 'solarFrontierOriginsSave_backup_v2';
 
 // Zweites Sonnensystem: Noxaris liegt auf der äußersten Umlaufbahn.
 const futureSolarSystem = {
   id: 'system2', name: 'Sonnensystem 2',
-  bodies: [{ id: 'noxaris', name: 'Noxaris', type: 'Mystischer Planet', className: 'noxaris', orbit: 1420, temperature: 'Unbekannt', resources: { iron: 2000000, stone: 1000000 }, storage: {} }]
+  bodies: [{ id: 'noxaris', name: 'Noxaris', type: 'Mystischer Planet', className: 'noxaris', orbit: 1420, temperature: 'Unbekannt', resources: { iron: 2000000, stone: 1000000, ionium: 500000 }, storage: {} }]
 };
 let activeSolarSystemId = 'system1';
 
@@ -658,7 +656,7 @@ function getRocketPlatformLimit() {
     .reduce((sum, id) => sum + Math.max(0, Number(getBuildingsOnPlanet(id).landingPad) || 0), 0);
 }
 function getActiveRocketCount() {
-  const manualFlights = rockets.filter(rocket => rocket.status !== 'returned').length;
+  const manualFlights = (Array.isArray(rockets) ? rockets : []).filter(rocket => rocket && typeof rocket === 'object' && rocket.status !== 'returned').length;
   // Eine zyklische Mission belegt dauerhaft einen Platz – auch während Wartezeit oder Pause.
   return manualFlights + orbitMissions.length;
 }
@@ -2488,7 +2486,7 @@ const ASTEROID_TYPES = [
   { key: 'uranium-metal', name: 'Uran-Metall-Asteroid', icon: '☢️', resources: [{ key: 'uranium', min: 60000, max: 160000 }, { key: 'iron', min: 240000, max: 240000 }] },
   { key: 'ionium', name: 'Ionium-Asteroid', icon: '☢️', resources: [{ key: 'ionium', min: 19000, max: 22000 }, { key: 'iron', min: 231000, max: 231000 }] }
 ];
-const ASTEROID_LIFETIME_MS = 2 * 24 * 60 * 60 * 1000;
+const ASTEROID_LIFETIME_MS = 5 * 24 * 60 * 60 * 1000;
 const ASTEROID_DISCOVERY_INTERVAL_MS = 2 * 60 * 60 * 1000;
 const ASTEROID_MAX_ACTIVE = 5;
 function asteroidTypeByKey(key) { return ASTEROID_TYPES.find(type => type.key === key) || ASTEROID_TYPES[0]; }
@@ -3008,10 +3006,7 @@ function saveGame(showMessage = true) {
     const previous = localStorage.getItem(SAVE_KEY);
     if (previous) localStorage.setItem(BACKUP_SAVE_KEY, previous);
     localStorage.setItem(SAVE_KEY, serialized);
-    // Nur ein ausdrücklich ausgelöster manueller Speichervorgang aktualisiert
-    // diesen Snapshot. saveGame(false) läuft auch beim Autosave und lässt ihn in Ruhe.
-    if (showMessage) localStorage.setItem(MANUAL_SAVE_KEY, serialized);
-    if (showMessage) showSaveStatus('Spielstand gespeichert.');
+    if (showMessage) showSaveStatus('Spielstand automatisch gespeichert.');
   } catch (error) {
     console.error(error);
     showSaveStatus('Speichern fehlgeschlagen.', false);
@@ -3020,9 +3015,8 @@ function saveGame(showMessage = true) {
 
 function loadGame(showMessage = true) {
   try {
-    // Den zuletzt manuell bestätigten Speicherpunkt bevorzugen. Ältere Installationen
-    // ohne manuellen Snapshot laden weiterhin den bisherigen Autosave/Backup.
-    let raw = localStorage.getItem(MANUAL_SAVE_KEY) || localStorage.getItem(SAVE_KEY);
+    // Immer den neuesten Autosave laden; bei Bedarf auf Legacy-Save/Backup zurückgreifen.
+    let raw = localStorage.getItem(SAVE_KEY);
     let migratedLegacy = false;
     if (!raw) {
       const legacy = localStorage.getItem(LEGACY_SAVE_KEY);
@@ -3411,8 +3405,6 @@ function restartGame() {
 function setupSaveMenu() {
   const toggle = document.querySelector('#save-menu-button');
   const close = document.querySelector('#save-menu-close');
-  const save = document.querySelector('#save-game');
-  const load = document.querySelector('#load-game');
   const restart = document.querySelector('#restart-game');
   if (!toggle) return;
 
@@ -3422,25 +3414,6 @@ function setupSaveMenu() {
     if (!saveMenu.hidden) showSaveStatus('');
   });
   close.addEventListener('click', () => { saveMenu.hidden = true; });
-  save.addEventListener('click', () => saveGame(true));
-  load.addEventListener('click', () => {
-    // Restore in-place. Reloading would show the startup overlay again and
-    // can run startup initialization over the restored state.
-    if (!loadGame(true)) return;
-    const startupIntro = document.querySelector('#startup-intro');
-    if (startupIntro) startupIntro.hidden = true;
-    const updatePopup = document.querySelector('#update-popup');
-    if (updatePopup) {
-      updatePopup.hidden = true;
-      updatePopup.setAttribute('aria-hidden', 'true');
-    }
-    saveMenu.hidden = true;
-    const mainMenu = document.querySelector('#main-menu');
-    if (mainMenu) mainMenu.hidden = true;
-    renderSystem();
-    renderInfo();
-    renderTopResources();
-  });
   restart.addEventListener('click', () => {
     if (confirm('Spiel wirklich neu starten? Der gespeicherte Spielstand wird gelöscht.')) restartGame();
   });
@@ -3652,7 +3625,7 @@ function renderSystem() {
     planet.appendChild(label);
     planet.addEventListener('click', () => {
       const noxaris = futureSolarSystem.bodies[0];
-      infoPanel.innerHTML = `<h2>🌌 Noxaris</h2><div class="stat"><span>Typ</span><strong>${noxaris.type}</strong></div><div class="stat"><span>Temperatur</span><strong>${noxaris.temperature}</strong></div><h3>🪨 Rohstoffvorkommen</h3><div class="stat"><span>Eisen</span><strong>${Number(noxaris.resources.iron || 0).toLocaleString('de-DE')} t</strong></div><div class="stat"><span>Stein</span><strong>${Number(noxaris.resources.stone || 0).toLocaleString('de-DE')} t</strong></div><p class="hint">Ein geheimnisvoller, dunkelblauer Planet, umgeben von violett-blauen kosmischen Nebeln.</p>`;
+      infoPanel.innerHTML = `<h2>🌌 Noxaris</h2><div class="stat"><span>Typ</span><strong>${noxaris.type}</strong></div><div class="stat"><span>Temperatur</span><strong>${noxaris.temperature}</strong></div><h3>🪨 Rohstoffvorkommen</h3><div class="stat"><span>Eisen</span><strong>${Number(noxaris.resources.iron || 0).toLocaleString('de-DE')} t</strong></div><div class="stat"><span>Stein</span><strong>${Number(noxaris.resources.stone || 0).toLocaleString('de-DE')} t</strong></div><div class="stat"><span>Ionium</span><strong>${Number(noxaris.resources.ionium || 0).toLocaleString('de-DE')} t</strong></div><p class="hint">Ein geheimnisvoller, dunkelblauer Planet, umgeben von violett-blauen kosmischen Nebeln.</p>`;
     });
     solarSystem.appendChild(planet);
     const buildMenuTriggerButton = document.querySelector('#open-build-menu-button');
@@ -6212,7 +6185,8 @@ function renderRocketWindow(body) {
     bodies[r.from] && bodies[r.to] &&
     (r.from === source || r.to === source)
   );
-  const list = active.length ? active.map(r => {
+  const list = active.length ? active.map((r, rocketIndex) => {
+    try {
     const now = gameNow();
     const elapsed = Math.max(0, (now - Number(r.started || now)) / 1000);
     const totalFlight = Math.max(0, Number(r.duration || 0) / 1000);
@@ -6243,7 +6217,13 @@ function renderRocketWindow(body) {
       return `<div class="rocket-flight arrived"><strong>🚀 ${r.name}</strong><span>📍 ${bodies[r.to].name} (${r.targetMode === 'orbit' ? 'Orbit' : 'Oberfläche erreichbar'}) · ${phase}</span><div class="rocket-cargo">${cargoState}: ${cargoText}</div>${landButton}${returnControls}${shuttleReturnButton}<small>${flightTimeLabel} · Rückflug ${bodies[r.to].name} → ${bodies[r.from].name}: ${flightDurationSeconds(r.from, r.fromMode === 'orbit' ? 'orbit' : 'surface')} Sekunden${isShuttle ? '' : ` · max. ${maxCapacity} t/L`}</small></div>`;
     }
     if (r.status === 'returning') return `<div class="rocket-flight"><strong>🚀 ${r.name}</strong><span>↩️ ${(bodies[r.fromReturn] || bodies[r.from]).name} → ${bodies[r.to].name}</span><div class="rocket-cargo">📦 Rückflug</div><div class="rocket-progress"><i style="width:${pct}%"></i></div><small>${flightTimeLabel}</small></div>`;
-    return `<div class="rocket-flight"><strong>🚀 ${r.name}</strong><span>🚀 ${bodies[r.from].name} → ${bodies[r.to].name}</span><div class="rocket-cargo">📦 ${cargoText}</div><div class="rocket-progress"><i style="width:${pct}%"></i></div><small>${flightTimeLabel}</small></div>`;
+    return `<div class="rocket-flight"><strong>🚀 ${r.name || r.type || `Rakete ${rocketIndex + 1}`}</strong><span>🚀 ${bodies[r.from].name} → ${bodies[r.to].name}</span><div class="rocket-cargo">📦 ${cargoText}</div><div class="rocket-progress"><i style="width:${pct}%"></i></div><small>${flightTimeLabel}</small></div>`;
+    } catch (rocketRenderError) {
+      console.error(`Rakete ${rocketIndex + 1} konnte in der Flugzentrale nicht angezeigt werden:`, rocketRenderError, r);
+      const fromName = bodies[r?.from]?.name || 'Unbekannter Startort';
+      const toName = bodies[r?.to]?.name || 'Unbekanntes Ziel';
+      return `<div class="rocket-flight"><strong>🚀 ${r?.name || r?.type || `Rakete ${rocketIndex + 1}`}</strong><span>${fromName} → ${toName}</span><div class="rocket-cargo">Flugdaten werden geprüft. Der Flug bleibt gespeichert.</div></div>`;
+    }
   }).join('') : '<p class="hint">Keine aktiven Transporte mit diesem Planeten.</p>';
 
   const buildRemaining1 = buildQueue1 ? Math.max(0, 30 - (gameNow() - buildStarted1)/1000) : 0;

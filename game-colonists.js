@@ -272,7 +272,10 @@ function renderFreePopulationPanel() {
     <div class="colonists-summary-card"><span>💰 Einnahmen gesamt</span><strong>${totalIncome.toLocaleString('de-DE',{maximumFractionDigits:3})} GünniDollar/s</strong></div>
     <div class="colonists-summary-card"><span>🏦 Kontostände gesamt</span><strong>${totalCash.toLocaleString('de-DE',{maximumFractionDigits:2})} GünniDollar</strong></div>
   </div>
-  <p class="hint">Die freie Bevölkerung auf Luna, Mars und Venus benötigt weder Wasser noch Lebensmittel, keine eigenen Gebäude und keine Lager. Sie wächst ausschließlich anhand ihrer aktuellen Einwohnerzahl gemäß der festgelegten Wachstumstabelle, sofern Temperatur (−10 bis +50 °C), Luftdruck (0,8–2 bar) und Sauerstoffanteil (15–25 %) stimmen. Jeder Bewohner erzeugt 0,001 GünniDollar pro Ingame-Sekunde. Das Wachstum folgt der festgelegten Tabelle: 1 Bewohner je 20 Ingame-Minuten, ab 500: 2, ab 1.000: 3, ab 5.000: 4, ab 8.000: 5, ab 12.000: 6 und ab 15.000: 7 Bewohner je 20 Ingame-Minuten. Bei ungeeigneter Temperatur, Druck oder Sauerstoff pausiert nur das Wachstum. Jeder Planet besitzt weiterhin ein eigenes Geldkonto.</p>
+  <details class="free-population-info">
+    <summary>ℹ️ Informationen zur freien Bevölkerung</summary>
+    <p class="hint">Die freie Bevölkerung auf Luna, Mars und Venus benötigt weder Wasser noch Lebensmittel, keine eigenen Gebäude und keine Lager. Sie wächst ausschließlich anhand ihrer aktuellen Einwohnerzahl gemäß der festgelegten Wachstumstabelle, sofern Temperatur (−10 bis +50 °C), Luftdruck (0,8–2 bar) und Sauerstoffanteil (15–25 %) stimmen. Jeder Bewohner erzeugt 0,001 GünniDollar pro Ingame-Sekunde. Das Wachstum folgt der festgelegten Tabelle: 1 Bewohner je 20 Ingame-Minuten, ab 500: 2, ab 1.000: 3, ab 5.000: 4, ab 8.000: 5, ab 12.000: 6 und ab 15.000: 7 Bewohner je 20 Ingame-Minuten. Bei ungeeigneter Temperatur, Druck oder Sauerstoff pausiert nur das Wachstum. Jeder Planet besitzt weiterhin ein eigenes Geldkonto.</p>
+  </details>
   <div class="colonists-planet-list">${ids.map(id => {
     const pop = freePopulationOnPlanet(id);
     const body = ensureFreePopulationData(id);
