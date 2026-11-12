@@ -539,8 +539,8 @@ const buildingTypes = {
   glassFactory: { name: 'Glasfabrik', icon: '🪟', resource: null, rate: 0, cost: 60, text: 'verbraucht 0,20 t Silizium/s + 0,10 t Stein/s · produziert 0,15 t Glas/s' },
   heliumExtractor: { name: 'Helium-Extraktor', icon: '🧪', resource: 'helium3', rate: 0.1, cost: 120, text: '0,1 t Helium-3/s · nur auf Luna, Venus und Jupiter' },
   fusionReactor: { name: 'Fusionsreaktor', icon: '⚛️', resource: null, rate: 0, cost: 250, text: 'verbraucht 0,02 t Helium-3/s · produziert 50 MW Strom/s' },
-  rocketFactory: { name: 'Raketenfabrik', icon: '🏭', resource: null, rate: 0, cost: 1000, text: '1.000 t Stahl · 2.000 t Baustoffe · 60 Sekunden Bauzeit · Voraussetzung für den Bau aller Raketen' },
-  landingPad: { name: 'Start- & Landerampe', icon: '🛬', resource: null, rate: 0, cost: 2000, text: '2.000 t Stahl · 3.000 t Baustoffe · 500 t Maschinen · 300 t Batterien · 1 Rampe je gleichzeitig möglichem Start/Landung' },
+  rocketFactory: { name: 'Raketenfabrik', icon: '🏭', resource: null, rate: 0, cost: 500, text: '500 t Stahl · 500 t Baustoffe · 60 Sekunden Bauzeit · Voraussetzung für den Bau aller Raketen' },
+  landingPad: { name: 'Start- & Landerampe', icon: '🛬', resource: null, rate: 0, cost: 500, text: '500 t Stahl · 500 t Baustoffe · 1 Rampe je gleichzeitig möglichem Start/Landung' },
   researchLab: { name: 'Forschungslabor', icon: '🔬', resource: null, rate: 0, cost: 0, text: 'nur auf der Erde · benötigt Baustoffe, Glas und Elektronik' },
   observatory: { name: 'Observatorium', icon: '🔭', resource: null, rate: 0, cost: 1000, text: 'Astronomische Beobachtungsanlage · nur auf der Erdoberfläche · Baukosten: 1.000 t Stahl, 800 t Baustoffe, 250 t Elektronik und 200 t Glas' },
   moonBase: { name: 'Mondbasis', icon: '🌙', resource: null, rate: 0, cost: 300, text: '300 t Stahl · 100 t Baustoffe · Forschung erforderlich' },
@@ -3872,9 +3872,9 @@ function renderSystem() {
       ${state.selected === 'earth' && state.viewMode === 'surface' ? buildButton('observatory') : ''}
       <div class="build-card"><div><strong>⚡ Kohlekraftwerk</strong><small>20 MW Strom/s · verbraucht 0,0002 t Kohle/s · 90 t Stahl</small></div><button class="build-resource" id="build-coal-power" ${Number(getPlanetStorage(state.selected).steel || 0) >= 90 ? '' : 'disabled'}>Bauen (${getBuildingsOnPlanet(state.selected).coalPowerPlant})</button></div>
       ${(() => { const mode=state.viewMode==='orbit'?'orbit':'surface'; const body=ensureLiquidTankData(state.selected); const key=liquidTankLocationKey(state.selected,mode); const capacity=liquidTankCapacity(state.selected,mode); const fuel=liquidFuelAmount(state.selected,mode); const pct=capacity>0?Math.min(100,fuel/capacity*100):0; const queued=Number(liquidTankBuildQueue[key]||0)>0; const remaining=queued?Math.max(0,30-(gameNow()-Number(liquidTankBuildStarted[key]||gameNow()))/1000):0; const storage=getLocationStorage(state.selected,mode); const affordable=Number(storage.buildingMaterials||0)>=500&&Number(storage.steel||0)>=500; return `<div class="build-card liquid-tank-card"><div><strong>🛢️ Flüssiglager</strong><small>10.000 Liter Kapazität je Tank · 500 t Baustoffe · 500 t Stahl · 30 Sekunden Bauzeit · keine Forschung · unbegrenzt baubar · ${mode==='orbit'?'Orbit':'Oberfläche'}</small><div class="liquid-tank-summary"><span>${fuel.toLocaleString('de-DE',{maximumFractionDigits:2})} / ${capacity.toLocaleString('de-DE')} L</span><strong>${pct.toFixed(1)} %</strong></div><div class="liquid-tank-progress"><i style="width:${pct}%"></i></div>${queued?`<small>Tank im Bau · noch ${remaining.toFixed(1)} Sekunden</small>`:''}</div><button class="build-resource" data-building="liquidStorage" ${queued||!affordable?'disabled':''}>${queued?'Im Bau':'Tank bauen'}</button></div>`; })()}
-      <div class="build-card rocket-factory-card"><div><strong>🏭 Raketenfabrik</strong><small>1.000 t Stahl · 2.000 t Baustoffe · 60 Sekunden Bauzeit · Voraussetzung für alle Raketen · Produktionswarteschlange</small>${rocketFactoryBuildQueue[state.selected] ? `<div class="rocket-progress"><i style="width:${Math.min(100,(gameNow()-(rocketFactoryBuildStarted[state.selected]||gameNow()))/60000*100)}%"></i></div><small>Fertigstellung: ${Math.max(0,60-(gameNow()-(rocketFactoryBuildStarted[state.selected]||gameNow()))/1000).toFixed(1)} s</small>` : ''}</div><button class="build-resource" id="build-rocket-factory" ${getBuildingsOnPlanet(state.selected).rocketFactory || rocketFactoryBuildQueue[state.selected] || !isBuildingAllowed('rocketFactory', state.selected) || Number(getPlanetStorage(state.selected).steel || 0) < 1000 || Number(getPlanetStorage(state.selected).buildingMaterials || 0) < 2000 ? 'disabled' : ''}>${getBuildingsOnPlanet(state.selected).rocketFactory ? 'Gebaut' : rocketFactoryBuildQueue[state.selected] ? 'Im Bau' : 'Bauen'}</button></div>
+      <div class="build-card rocket-factory-card"><div><strong>🏭 Raketenfabrik</strong><small>500 t Stahl · 500 t Baustoffe · 60 Sekunden Bauzeit · Voraussetzung für alle Raketen · Produktionswarteschlange</small>${rocketFactoryBuildQueue[state.selected] ? `<div class="rocket-progress"><i style="width:${Math.min(100,(gameNow()-(rocketFactoryBuildStarted[state.selected]||gameNow()))/60000*100)}%"></i></div><small>Fertigstellung: ${Math.max(0,60-(gameNow()-(rocketFactoryBuildStarted[state.selected]||gameNow()))/1000).toFixed(1)} s</small>` : ''}</div><button class="build-resource" id="build-rocket-factory" ${getBuildingsOnPlanet(state.selected).rocketFactory || rocketFactoryBuildQueue[state.selected] || !isBuildingAllowed('rocketFactory', state.selected) || Number(getPlanetStorage(state.selected).steel || 0) < 500 || Number(getPlanetStorage(state.selected).buildingMaterials || 0) < 500 ? 'disabled' : ''}>${getBuildingsOnPlanet(state.selected).rocketFactory ? 'Gebaut' : rocketFactoryBuildQueue[state.selected] ? 'Im Bau' : 'Bauen'}</button></div>
       ${state.viewMode === 'orbit' ? (() => { const orbitStore=getOrbitStorage(state.selected); const padCount=getOrbitLandingPadCount(state.selected); const used=getOrbitRocketSlotsUsed(state.selected); const costs={steel:2000,buildingMaterials:3000,machines:500,batteries:300}; const affordable=Object.entries(costs).every(([r,n])=>Number(orbitStore[r]||0)>=n); return `<div class="build-card orbit-landing-pad-card"><div><strong>🛰️ Orbit-Start- und Landevorrichtung</strong><small>1 Stellplatz für eine Rakete in einer zyklischen Orbitmission · Betankung aus dem Orbit-Flüssiglager · Baukosten: 2.000 t Stahl, 3.000 t Baustoffe, 500 t Maschinen, 300 t Batterien</small><small>Stellplätze belegt: ${used} / ${padCount}</small></div><button class="build-resource" id="build-orbit-landing-pad" ${!isBuildingAllowed('orbitLandingPad', state.selected) || !affordable ? 'disabled' : ''}>Bauen (${padCount})</button></div>`; })() : ''}
-       <div class="build-card landing-pad-card"><div><strong>🛬 Start- & Landerampe</strong><small>2.000 t Stahl · 3.000 t Baustoffe · 500 t Maschinen · 300 t Batterien · eine Rampe pro gleichzeitig möglichem Start/Landung · auf allen Planeten</small></div><button class="build-resource" id="build-landing-pad" ${!isBuildingAllowed('landingPad', state.selected) || Number(getPlanetStorage(state.selected).steel || 0) < 2000 || Number(getPlanetStorage(state.selected).buildingMaterials || 0) < 3000 || Number(getPlanetStorage(state.selected).machines || 0) < 500 || Number(getPlanetStorage(state.selected).batteries || 0) < 300 ? 'disabled' : ''}>Bauen (${getBuildingsOnPlanet(state.selected).landingPad || 0})</button></div>
+       <div class="build-card landing-pad-card"><div><strong>🛬 Start- & Landerampe</strong><small>500 t Stahl · 500 t Baustoffe · eine Rampe pro gleichzeitig möglichem Start/Landung · auf allen Planeten</small></div><button class="build-resource" id="build-landing-pad" ${!isBuildingAllowed('landingPad', state.selected) || Number(getPlanetStorage(state.selected).steel || 0) < 500 || Number(getPlanetStorage(state.selected).buildingMaterials || 0) < 500 ? 'disabled' : ''}>Bauen (${getBuildingsOnPlanet(state.selected).landingPad || 0})</button></div>
       <div class="build-card outpost-card"><div><strong>🛰️ Außenposten</strong><small>100 t Stahl · 60 Sekunden Bauzeit · maximal 1 pro Planet · Voraussetzung für weitere Gebäude auf allen Außenplaneten</small></div><button class="build-resource" id="build-outpost" ${getBuildingsOnPlanet(state.selected).outpost || outpostBuildQueue[state.selected] || Number(getPlanetStorage(state.selected).steel || 0) < 100 ? 'disabled' : ''}>Bauen (${getBuildingsOnPlanet(state.selected).outpost ? 'Gebaut' : 'Bauen'})</button></div>
       `;
     } catch (buildMenuError) {
@@ -5306,8 +5306,8 @@ function demolitionCostMap(key, planetId, currentCount) {
     greenhouse: { steel: 500, polymers: 20, buildingMaterials: 300 },
     foodFactory: { steel: 1900, aluminium: 400, chips: 140, glass: 80, buildingMaterials: 1300 },
     coalPowerPlant: { steel: 90 },
-    rocketFactory: { steel: 1000, buildingMaterials: 2000 },
-    landingPad: { steel: 2000, buildingMaterials: 3000, machines: 500, batteries: 300 },
+    rocketFactory: { steel: 500, buildingMaterials: 500 },
+    landingPad: { steel: 500, buildingMaterials: 500 },
     outpost: { steel: 100 },
     researchLab: {},
     observatory: { steel: 1000, buildingMaterials: 800, electronics: 250, glass: 200 },
@@ -5811,9 +5811,9 @@ function buildRocketFactory() {
   const bld = getBuildingsOnPlanet(id);
   const storage = getPlanetStorage(id);
   if (!isBuildingAllowed('rocketFactory', id) || bld.rocketFactory > 0 || rocketFactoryBuildQueue[id]) return;
-  if (Number(storage.steel || 0) < 1000 || Number(storage.buildingMaterials || 0) < 2000) return;
-  storage.steel -= 1000;
-  storage.buildingMaterials -= 2000;
+  if (Number(storage.steel || 0) < 500 || Number(storage.buildingMaterials || 0) < 500) return;
+  storage.steel -= 500;
+  storage.buildingMaterials -= 500;
   rocketFactoryBuildQueue[id] = 1;
   rocketFactoryBuildStarted[id] = gameNow();
   renderSystem(); renderInfo(); renderTopResources(); saveAfterBuild();
@@ -5824,8 +5824,8 @@ function buildLandingPad() {
   const bld = getBuildingsOnPlanet(id);
   const storage = getPlanetStorage(id);
   if (state.viewMode === 'orbit' || !isBuildingAllowed('landingPad', id)) return;
-  if (Number(storage.steel || 0) < 2000 || Number(storage.buildingMaterials || 0) < 3000 || Number(storage.machines || 0) < 500 || Number(storage.batteries || 0) < 300) return;
-  storage.steel -= 2000; storage.buildingMaterials -= 3000; storage.machines -= 500; storage.batteries -= 300;
+  if (Number(storage.steel || 0) < 500 || Number(storage.buildingMaterials || 0) < 500) return;
+  storage.steel -= 500; storage.buildingMaterials -= 500;
   bld.landingPad = Number(bld.landingPad || 0) + 1;
   playUiSound('build');
   renderSystem(); renderInfo(); renderTopResources(); saveAfterBuild();
@@ -6671,7 +6671,7 @@ function renderConstructionQueue() {
   }
   if (Number(rocketFactoryBuildQueue[id] || 0) > 0) {
     const elapsed = Math.max(0, now - Number(rocketFactoryBuildStarted[id] || now));
-    jobs.push({key:'rocketFactory', name:'Raketenfabrik', icon:'🚀', elapsed, duration:60000, costs:{steel:1000,buildingMaterials:2000}});
+    jobs.push({key:'rocketFactory', name:'Raketenfabrik', icon:'🚀', elapsed, duration:60000, costs:{steel:500,buildingMaterials:500}});
   }
   ensureAtmosphereRegulatorBuildQueue(id).forEach((item, index) => {
     const elapsed = Math.max(0, now - Number(item.started || now));

@@ -1794,3 +1794,143 @@ body > .planet-build-menu .planet-build-header {
 .free-population-info summary::after{content:"＋";margin-left:auto;color:#8fe0bd;font-size:20px}
 .free-population-info[open] summary::after{content:"−"}
 .free-population-info .hint{margin:0 0 12px;line-height:1.55}
+
+
+/* Updatefenster Redesign: Breaking News in Pink-Rot-Metallic */
+.update-popup-overlay{
+  background:
+    radial-gradient(ellipse at 50% 0%,rgba(154,22,66,.20),transparent 48%),
+    rgba(2,3,10,.90);
+  backdrop-filter:blur(9px);
+}
+.update-popup-card{
+  width:min(100%,560px);
+  max-height:90vh;
+  padding:20px;
+  border:1px solid rgba(255,75,125,.58);
+  border-radius:20px;
+  background:
+    linear-gradient(145deg,rgba(45,17,34,.98) 0%,rgba(17,13,25,.99) 42%,rgba(7,11,20,.99) 100%);
+  box-shadow:
+    0 0 0 1px rgba(255,110,155,.10),
+    0 0 34px rgba(255,35,95,.16),
+    0 26px 85px rgba(0,0,0,.72);
+}
+.update-popup-card::before{
+  content:"";
+  position:absolute;
+  top:0;left:18px;right:18px;height:2px;
+  background:linear-gradient(90deg,transparent,#ff3d78 18%,#ff8aa9 50%,#ff3d78 82%,transparent);
+  box-shadow:0 0 13px rgba(255,61,120,.8);
+}
+.update-popup-navigation{
+  border-bottom:1px solid rgba(255,83,130,.24);
+  background:rgba(17,12,24,.97);
+}
+.update-popup-page-button{
+  border:1px solid #573044;
+  background:linear-gradient(180deg,#211522,#130f1a);
+  color:#e7cbd6;
+  transition:background .18s ease,border-color .18s ease,box-shadow .18s ease;
+}
+.update-popup-page-button.active{
+  border-color:#ff5b8b;
+  background:linear-gradient(135deg,#a91e50,#5d173b);
+  color:#fff;
+  box-shadow:inset 0 1px rgba(255,255,255,.16),0 0 16px rgba(255,48,105,.22);
+}
+.update-popup-breaking{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:8px 11px;
+  margin:0 0 14px;
+  padding:10px 12px;
+  border:1px solid rgba(255,86,130,.62);
+  border-radius:12px;
+  background:
+    linear-gradient(105deg,rgba(128,16,57,.96),rgba(55,17,43,.98) 58%,rgba(27,17,34,.98));
+  box-shadow:inset 0 1px rgba(255,255,255,.12),0 7px 22px rgba(0,0,0,.25),0 0 18px rgba(255,45,105,.12);
+}
+.update-popup-breaking-live{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:4px 7px;
+  border-radius:5px;
+  background:#f5e8ed;
+  color:#8f123f;
+  font-size:9px;
+  font-weight:950;
+  letter-spacing:1.1px;
+}
+.update-popup-breaking-live::before{
+  content:"";
+  width:6px;height:6px;border-radius:50%;
+  background:#ed245d;
+  box-shadow:0 0 7px #ed245d;
+}
+.update-popup-breaking strong{
+  color:#fff;
+  font-size:clamp(19px,5vw,25px);
+  font-weight:950;
+  letter-spacing:1.4px;
+  line-height:1;
+  text-shadow:0 2px 14px rgba(255,65,120,.38);
+}
+.update-popup-breaking-sub{
+  flex-basis:100%;
+  color:#e8a9bd;
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:1.25px;
+}
+.update-popup-art{
+  height:92px;
+  margin:0 0 14px;
+  border:1px solid rgba(255,93,143,.25);
+  background:
+    radial-gradient(ellipse at 75% 50%,rgba(133,31,75,.45),transparent 55%),
+    linear-gradient(110deg,#160e1b,#0a101c);
+}
+.update-popup-art svg{height:92px}
+.update-popup-kicker{
+  color:#ff82a8;
+  font-size:10px;
+  letter-spacing:1.8px;
+}
+.update-popup-card h2{
+  margin-top:6px;
+  color:#fff0f5;
+  text-shadow:0 0 18px rgba(255,75,130,.17);
+}
+.update-popup-message{
+  border:1px solid rgba(255,91,139,.20);
+  border-left:3px solid #f0447b;
+  border-radius:11px;
+  background:linear-gradient(135deg,rgba(39,20,36,.94),rgba(14,17,28,.96));
+  color:#e9dce4;
+  box-shadow:inset 0 1px rgba(255,255,255,.035),0 5px 15px rgba(0,0,0,.14);
+}
+.update-popup-message h3{color:#ffb0c7}
+.update-popup-message strong{color:#fff0f5}
+.update-popup-card ul{color:#e8dce4}
+.update-popup-card li::marker{color:#ff6d99}
+.update-popup-close{
+  border:1px solid #a74468;
+  background:linear-gradient(145deg,#792342,#35172c);
+  box-shadow:0 0 13px rgba(255,52,110,.18);
+}
+.update-popup-close:hover{background:linear-gradient(145deg,#a52c55,#571b39)}
+.update-popup-footnote{border-top-color:rgba(255,91,139,.22);color:#c3a7b4}
+@media(max-width:430px){
+  .update-popup-card{padding:16px}
+  .update-popup-breaking{gap:7px;margin-bottom:11px;padding:9px}
+  .update-popup-breaking strong{font-size:19px}
+  .update-popup-breaking-sub{font-size:8px;letter-spacing:1px}
+  .update-popup-art,.update-popup-art svg{height:78px}
+  .update-popup-art{margin-bottom:11px}
+}
+@media(prefers-reduced-motion:reduce){
+  .update-popup-page-button{transition:none}
+}
