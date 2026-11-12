@@ -2078,6 +2078,18 @@ function renderTasks() {
         </section>`;
       }).join('')}
     </div>`;
+  const introGroup = panel.querySelector('[data-task-group="main_intro"]')?.parentElement;
+  if (introGroup) {
+    const replay = document.createElement('div');
+    replay.className = 'task-card task-pending breaking-news-task';
+    replay.innerHTML = '<div class="task-title"><strong>📺 Einführung – Die globale Rohstoffkrise</strong><button type="button" class="small-button" data-replay-breaking-news>Info</button></div><div class="hint">Die erste Breaking-News-Sendung über die Rohstoffkrise und SPACEYs Mission jederzeit erneut ansehen.</div>';
+    const groupContent = introGroup.querySelector('.tasks-list');
+    if (groupContent) groupContent.prepend(replay);
+    else {
+      const toggle = introGroup.querySelector('.task-group-toggle');
+      if (toggle) toggle.insertAdjacentElement('afterend', replay);
+    }
+  }
   panel.querySelectorAll('[data-task-quest]').forEach(button => button.addEventListener('click', () => {
     const id = button.dataset.taskQuest;
     panel.dataset['openQuest' + id] = button.getAttribute('aria-expanded') === 'true' ? 'false' : 'true';

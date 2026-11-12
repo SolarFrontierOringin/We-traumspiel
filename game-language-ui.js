@@ -69,22 +69,26 @@ if(languageSelect){
 }
 
 
-// Story-Einführung nur beim ersten Spielstart anzeigen; die Chronik bleibt im Menü erreichbar.
-const STORY_INTRO_SEEN_KEY = 'solarFrontierOriginsStoryIntroSeen_v1';
-const storyIntroPopup = document.querySelector('#story-intro-popup');
-const storyIntroClose = document.querySelector('#story-intro-close');
-const storyIntroStart = document.querySelector('#story-intro-start');
-function closeStoryIntro() {
-  if (storyIntroPopup) storyIntroPopup.hidden = true;
-  try { localStorage.setItem(STORY_INTRO_SEEN_KEY, '1'); } catch {}
+// Breaking News: beim Start eines neuen Spielablaufs einmalig zeigen, danach über Aufgaben erneut abspielbar.
+const BREAKING_NEWS_SEEN_KEY = 'solarFrontierOriginsBreakingNewsSeen_v1';
+const breakingNewsPopup = document.querySelector('#breaking-news-popup');
+function openBreakingNews() {
+  if (!breakingNewsPopup) return;
+  breakingNewsPopup.hidden = false;
+  breakingNewsPopup.setAttribute('aria-hidden', 'false');
 }
-if (storyIntroPopup) {
-  let storyIntroSeen = false;
-  try { storyIntroSeen = localStorage.getItem(STORY_INTRO_SEEN_KEY) === '1'; } catch {}
-  if (!storyIntroSeen) storyIntroPopup.hidden = false;
-  storyIntroClose?.addEventListener('click', closeStoryIntro);
-  storyIntroStart?.addEventListener('click', closeStoryIntro);
+function closeBreakingNews() {
+  if (breakingNewsPopup) {
+    breakingNewsPopup.hidden = true;
+    breakingNewsPopup.setAttribute('aria-hidden', 'true');
+  }
+  try { localStorage.setItem(BREAKING_NEWS_SEEN_KEY, '1'); } catch {}
 }
+document.querySelector('#breaking-news-close')?.addEventListener('click', closeBreakingNews);
+document.querySelector('#breaking-news-start')?.addEventListener('click', closeBreakingNews);
+document.addEventListener('click', event => {
+  if (event.target.closest('[data-replay-breaking-news]')) openBreakingNews();
+});
 
 // Navigation zwischen den beiden Sonnensystemen.
 function updateSolarSystemSelector() {
@@ -95,12 +99,38 @@ function updateSolarSystemSelector() {
   upcoming.classList.toggle('active', activeSolarSystemId === 'system2');
   current.setAttribute('aria-current', activeSolarSystemId === 'system1' ? 'true' : 'false');
   upcoming.setAttribute('aria-current', activeSolarSystemId === 'system2' ? 'true' : 'false');
+  const activeLabel = document.querySelector('#active-solar-system-label');
+  if (activeLabel) activeLabel.textContent = activeSolarSystemId === 'system2' ? 'Sonnensystem 2 · Vorschau' : 'Sonnensystem 1';
 }
 function setupSolarSystemSelector() {
   const current = document.querySelector('.solar-system-selector-current');
   const upcoming = document.querySelector('.solar-system-selector-upcoming');
-  current?.addEventListener('click', () => { activeSolarSystemId = 'system1'; state.buildMenuOpen = false; renderSystem(); renderInfo(); });
-  upcoming?.addEventListener('click', () => { activeSolarSystemId = 'system2'; state.buildMenuOpen = false; renderSystem(); });
+  const dialog = document.querySelector('#solar-system-selector-dialog');
+  const openButton = document.querySelector('#open-solar-system-selector');
+  const closeButton = document.querySelector('#close-solar-system-selector');
+  const closeDialog = () => {
+    if (dialog) dialog.hidden = true;
+    openButton?.setAttribute('aria-expanded', 'false');
+  };
+  openButton?.addEventListener('click', () => {
+    if (dialog) dialog.hidden = false;
+    openButton.setAttribute('aria-expanded', 'true');
+  });
+  closeButton?.addEventListener('click', closeDialog);
+  dialog?.addEventListener('click', event => { if (event.target === dialog) closeDialog(); });
+  current?.addEventListener('click', () => {
+    activeSolarSystemId = 'system1';
+    state.buildMenuOpen = false;
+    renderSystem();
+    renderInfo();
+    closeDialog();
+  });
+  upcoming?.addEventListener('click', () => {
+    activeSolarSystemId = 'system2';
+    state.buildMenuOpen = false;
+    renderSystem();
+    closeDialog();
+  });
   updateSolarSystemSelector();
 }
 
@@ -149,7 +179,12 @@ const startupPlay = document.querySelector('#startup-play');
 const startupUpdates = document.querySelector('#startup-updates');
 const updatePopup = document.querySelector('#update-popup');
 if (startupPlay && startupIntro) {
-  startupPlay.addEventListener('click', () => { startupIntro.hidden = true; });
+  startupPlay.addEventListener('click', () => {
+    startupIntro.hidden = true;
+    let seen = false;
+    try { seen = localStorage.getItem(BREAKING_NEWS_SEEN_KEY) === '1'; } catch {}
+    if (!seen) openBreakingNews();
+  });
 }
 if (startupUpdates && startupIntro && updatePopup) {
   startupUpdates.addEventListener('click', () => {

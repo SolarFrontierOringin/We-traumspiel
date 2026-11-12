@@ -209,6 +209,26 @@
     </article>
   </section>
 
+  <!-- Breaking News: Prolog beim ersten Spielstart und jederzeit über Aufgaben > Einführung abrufbar -->
+  <section id="breaking-news-popup" class="update-popup-overlay breaking-news-overlay" role="dialog" aria-modal="true" aria-labelledby="breaking-news-title" hidden>
+    <article class="update-popup-card story-intro-card breaking-news-card">
+      <button id="breaking-news-close" class="update-popup-close" type="button" aria-label="Breaking News schließen">✕</button>
+      <div class="breaking-news-banner"><span class="breaking-news-live">● LIVE</span><strong>BREAKING NEWS</strong><small>NACHRICHTENZENTRALE · 01.01.2027</small></div>
+      <div class="breaking-news-earth" aria-hidden="true"><div class="breaking-news-earth-glow"></div><div class="breaking-news-earth-planet"></div></div>
+      <div class="update-popup-kicker">SONDERBERICHT · GLOBALE ROHSTOFFKRISE</div>
+      <h2 id="breaking-news-title">Die Rohstoffe der Erde gehen zur Neige</h2>
+      <div class="story-text">
+        <p><strong>01. Januar 2027.</strong> Weltweit werden die Rohstoffvorkommen der Erde immer knapper. Immer mehr Fördergebiete erschöpfen sich, Lieferketten geraten unter Druck und ganze Industriezweige kämpfen um ihre Versorgung.</p>
+        <p>Inmitten dieser Krise hat sich das Unternehmen <strong>SPACEY</strong> der Herausforderung angeschlossen. Mit Forschung, moderner Raumfahrttechnik und der Erschließung außerirdischer Rohstoffquellen will SPACEY neue Perspektiven für die Menschheit schaffen.</p>
+        <p>Die Mission ist klar: neue Welten erschließen, Ressourcen verantwortungsvoll nutzen und die Zukunft der Erde sichern. Der Aufbruch ins All beginnt jetzt.</p>
+        <h3>Die Zukunft braucht neue Perspektiven.</h3>
+        <p><strong>SPACEY – Unsere Zukunft liegt im All.</strong></p>
+      </div>
+      <div class="breaking-news-ticker"><span>BREAKING NEWS</span> · ROHSTOFFKRISE AUF DER ERDE · SPACEY STARTET ZUKUNFTSMISSION · DER AUFBRUCH INS ALL BEGINNT</div>
+      <button id="breaking-news-start" class="story-start-button" type="button">🚀 Zurück ins Spiel</button>
+    </article>
+  </section>
+
   <!-- Einmalige Story-Einführung beim ersten Spielstart -->
   <section id="story-intro-popup" class="update-popup-overlay" role="dialog" aria-modal="true" aria-labelledby="story-intro-title" hidden>
     <article class="update-popup-card story-intro-card">
@@ -257,6 +277,30 @@
         <small id="game-clock-speed-label">x1</small>
       </div>
     </details>
+
+    <button id="open-solar-system-selector" class="solar-system-open-button" type="button" aria-expanded="false" aria-controls="solar-system-selector-dialog">
+      🌌 Sonnensysteme
+      <span id="active-solar-system-label">Sonnensystem 1</span>
+    </button>
+
+    <section id="solar-system-selector-dialog" class="solar-system-selector-dialog" hidden aria-label="Sonnensystem auswählen">
+      <div class="solar-system-selector-dialog-card">
+        <div class="solar-system-selector-dialog-head">
+          <div><strong>🌌 Sonnensysteme</strong><small>System auswählen oder Vorschau ansehen</small></div>
+          <button id="close-solar-system-selector" class="icon-button" type="button" aria-label="Schließen">✕</button>
+        </div>
+        <div class="solar-system-selector">
+          <button type="button" class="solar-system-selector-current">
+            ☀️ Sonnensystem 1
+            <span>Unser Heimatsystem · Betreten</span>
+          </button>
+          <button type="button" class="solar-system-selector-upcoming">
+            🌌 Sonnensystem 2
+            <span>Dieses Sonnensystem wird später erschlossen.</span>
+          </button>
+        </div>
+      </div>
+    </section>
 
     <section id="main-menu" class="main-menu" hidden>
       <div class="main-menu-head">
@@ -510,10 +554,6 @@
 
     <section class="game-layout">
       <div class="solar-system-column">
-        <section class="solar-system-selector" aria-label="Sonnensysteme">
-          <button type="button" class="solar-system-selector-current" aria-current="true">☀️ Sonnensystem 1 <span>Unser Heimatsystem</span></button>
-          <button type="button" class="solar-system-selector-upcoming" aria-current="false">🌌 Sonnensystem 2 <span>Noxaris · unerforscht</span></button>
-        </section>
         <div id="solar-system-viewport" class="solar-system-viewport" aria-label="Sonnensystem scrollbarer Bereich"><div id="solar-system" class="solar-system" aria-label="Sonnensystem"></div></div>
         <button id="open-build-menu-button" class="open-build-menu-button" type="button" disabled>🏗️ Erst einen Planeten auswählen</button>
       </div>
