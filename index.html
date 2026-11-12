@@ -70,20 +70,45 @@
         </svg>
       </div>
       <section class="update-popup-page" data-update-page-content="1">
-        <div class="update-popup-kicker">ZENTRALE FUNKMELDUNG</div>
-        <h2 id="update-popup-title">Aktuelle Nachrichten</h2>
+        <div class="update-popup-kicker">UPDATE · 12. NOVEMBER 2026</div>
+        <h2 id="update-popup-title">12.11. Update</h2>
         <div class="update-popup-message">
-          <p>Ich arbeite gerade an vielen neuer Änderungen. Diese benötigen etwas zeit.</p>
-          <p><strong>Betroffen:</strong></p>
-          <ul>
-            <li>Gebäude</li>
-            <li>Aufgaben</li>
+          <h3>🏭 Neue Gebäude</h3>
+          <ul class="update-checklist">
+            <li>☑ Goldmine</li>
+            <li>☑ Goldfabrik</li>
+            <li>☑ MegaChipFabrik</li>
+          </ul>
+        </div>
+        <div class="update-popup-message">
+          <h3>🪨 Neue Rohstoffe</h3>
+          <ul class="update-checklist">
+            <li>☑ Gold</li>
+            <li>☑ Golderz</li>
+            <li>☑ Mikrochip</li>
+          </ul>
+        </div>
+        <div class="update-popup-message">
+          <h3>🛠️ Fixes &amp; Anpassungen</h3>
+          <ul class="update-checklist">
+            <li>☑ Flugzentrale kann jetzt Fehlercodes erzeugen</li>
+            <li>☑ Anpassung einiger Menüpunkte</li>
+            <li>☑ Neuer Spieleinstieg: <strong>Breaking News</strong></li>
           </ul>
         </div>
       </section>
       <section class="update-popup-page" data-update-page-content="2" hidden>
         <div class="update-popup-kicker">ARCHIVIERTE FUNKMELDUNGEN</div>
         <h2>Update-Chronik</h2>
+        <div class="update-popup-message">
+          <h3>📡 Frühere Meldung – 12. November 2026</h3>
+          <p>Die Entwicklung von Solar Frontier: Origins geht weiter. Neue Änderungen und Verbesserungen werden Schritt für Schritt umgesetzt.</p>
+          <p><strong>Damals angekündigte Arbeitsbereiche:</strong></p>
+          <ul>
+            <li>Überarbeitung und Erweiterung von Gebäuden</li>
+            <li>Überarbeitung der Aufgaben</li>
+          </ul>
+        </div>
         <div class="update-popup-message">
           <h3>◇♧◇♧ Dienstags - Mittwoch Update</h3>
           <p><strong>NEUERUNGEN</strong></p>
@@ -277,30 +302,6 @@
         <small id="game-clock-speed-label">x1</small>
       </div>
     </details>
-
-    <button id="open-solar-system-selector" class="solar-system-open-button" type="button" aria-expanded="false" aria-controls="solar-system-selector-dialog">
-      🌌 Sonnensysteme
-      <span id="active-solar-system-label">Sonnensystem 1</span>
-    </button>
-
-    <section id="solar-system-selector-dialog" class="solar-system-selector-dialog" hidden aria-label="Sonnensystem auswählen">
-      <div class="solar-system-selector-dialog-card">
-        <div class="solar-system-selector-dialog-head">
-          <div><strong>🌌 Sonnensysteme</strong><small>System auswählen oder Vorschau ansehen</small></div>
-          <button id="close-solar-system-selector" class="icon-button" type="button" aria-label="Schließen">✕</button>
-        </div>
-        <div class="solar-system-selector">
-          <button type="button" class="solar-system-selector-current">
-            ☀️ Sonnensystem 1
-            <span>Unser Heimatsystem · Betreten</span>
-          </button>
-          <button type="button" class="solar-system-selector-upcoming">
-            🌌 Sonnensystem 2
-            <span>Dieses Sonnensystem wird später erschlossen.</span>
-          </button>
-        </div>
-      </div>
-    </section>
 
     <section id="main-menu" class="main-menu" hidden>
       <div class="main-menu-head">
@@ -554,6 +555,10 @@
 
     <section class="game-layout">
       <div class="solar-system-column">
+        <section class="solar-system-selector" aria-label="Sonnensysteme">
+          <button type="button" class="solar-system-selector-current" aria-current="true">☀️ Sonnensystem 1 <span>Unser Heimatsystem</span></button>
+          <button type="button" class="solar-system-selector-upcoming" aria-current="false">🌌 Sonnensystem 2 <span>Noxaris · unerforscht</span></button>
+        </section>
         <div id="solar-system-viewport" class="solar-system-viewport" aria-label="Sonnensystem scrollbarer Bereich"><div id="solar-system" class="solar-system" aria-label="Sonnensystem"></div></div>
         <button id="open-build-menu-button" class="open-build-menu-button" type="button" disabled>🏗️ Erst einen Planeten auswählen</button>
       </div>
