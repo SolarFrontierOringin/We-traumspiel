@@ -2201,3 +2201,8 @@ body > .planet-build-menu .planet-build-header {
 .update-popup-page .update-checklist li{padding:5px 0;color:#dceaff;line-height:1.4}
 .update-popup-page .update-checklist li::first-letter{color:#62e6a5}
 .update-popup-page .update-popup-message h3{margin-top:0}
+
+/* Sichtbarkeit der Sonnensystem-Auswahl auch bei konkurrierenden Alt-Regeln sicherstellen */
+#solar-system-selector-dialog.is-open{display:flex!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important}
+#solar-system-selector-dialog[hidden]{display:none!important}
+#open-solar-system-selector{position:relative;z-index:5;display:flex!important;visibility:visible!important;pointer-events:auto!important}

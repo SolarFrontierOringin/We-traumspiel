@@ -583,5 +583,29 @@
 <script src="game-orders.js?v=split-20261105"></script>
 <script src="game-language-ui.js?v=split-20261105"></script>
   <script>if ("serviceWorker" in navigator) navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{});</script>
+
+<script>
+/* Robuste Sonnensystem-Auswahl: unabhängig vom initialen Setup-Handler. */
+(function () {
+  document.addEventListener('click', function (event) {
+    const open = event.target.closest('#open-solar-system-selector');
+    const close = event.target.closest('#close-solar-system-selector');
+    const dialog = document.getElementById('solar-system-selector-dialog');
+    if (open && dialog) {
+      dialog.hidden = false;
+      dialog.classList.add('is-open');
+      open.setAttribute('aria-expanded', 'true');
+      return;
+    }
+    if (!dialog) return;
+    if (close || event.target === dialog) {
+      dialog.hidden = true;
+      dialog.classList.remove('is-open');
+      document.getElementById('open-solar-system-selector')?.setAttribute('aria-expanded', 'false');
+    }
+  });
+})();
+</script>
+
 </body>
 </html>
