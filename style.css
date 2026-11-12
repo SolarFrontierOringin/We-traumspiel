@@ -2190,3 +2190,8 @@ body > .planet-build-menu .planet-build-header {
 .solar-system-selector-dialog .solar-system-selector{grid-template-columns:1fr}
 .solar-system-selector-dialog .solar-system-selector-current,.solar-system-selector-dialog .solar-system-selector-upcoming{min-height:82px;text-align:left;font-size:16px;cursor:pointer}
 .solar-system-selector-dialog .solar-system-selector-upcoming{cursor:default}
+
+/* Themepatin – eigener kupferfarbener Gesteinsplanet im zweiten Sonnensystem */
+.orbit.themepatin-orbit{border-color:rgba(205,139,83,.42);box-shadow:0 0 18px rgba(190,112,55,.12)}
+.body.themepatin{width:42px;height:42px;border:1px solid rgba(232,174,116,.9);border-radius:50%;background:radial-gradient(circle at 30% 25%,#f2d3a0 0%,#b97845 25%,#75452f 58%,#30201d 100%);box-shadow:inset -7px -6px 10px rgba(0,0,0,.65),inset 3px 2px 7px rgba(255,218,165,.35),0 0 14px rgba(207,133,76,.55),0 0 30px rgba(178,93,48,.22);overflow:visible}
+.body.themepatin::before{content:"";position:absolute;inset:-5px;border:1px solid rgba(220,154,99,.25);border-radius:50%;pointer-events:none}
