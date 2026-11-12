@@ -472,13 +472,29 @@
 
     <section id="save-menu" class="save-menu" hidden>
       <div class="save-menu-head">
-        <strong>Spiel</strong>
-        <button id="save-menu-close" class="icon-button">✕</button>
+        <strong>Spielstände</strong>
+        <button id="save-menu-close" class="icon-button" type="button" aria-label="Speichermenü schließen">✕</button>
+      </div>
+      <p class="hint">Wähle einen deiner zwei unabhängigen Speicherplätze.</p>
+      <div id="active-save-slot-title" class="active-save-slot-title">Aktiver Speicherplatz: 1</div>
+      <div class="save-slot-grid">
+        <button type="button" class="save-slot-card" data-save-slot="1" aria-pressed="true">
+          <span class="save-slot-number">SPEICHERPLATZ 01</span>
+          <strong>Spielstand 1</strong>
+          <small class="save-slot-status">Wird geprüft …</small>
+          <span class="save-slot-current" hidden>AKTIV</span>
+        </button>
+        <button type="button" class="save-slot-card" data-save-slot="2" aria-pressed="false">
+          <span class="save-slot-number">SPEICHERPLATZ 02</span>
+          <strong>Spielstand 2</strong>
+          <small class="save-slot-status">Wird geprüft …</small>
+          <span class="save-slot-current" hidden>AKTIV</span>
+        </button>
       </div>
       <div class="save-buttons">
-        <button id="restart-game" class="danger">Neustart</button>
+        <button id="restart-game" class="danger" type="button">Aktiven Spielstand neu starten</button>
       </div>
-      <div id="save-status" class="save-status"></div>
+      <div id="save-status" class="save-status" role="status" aria-live="polite"></div>
     </section>
 
     <section id="construction-queue-panel" class="construction-queue-panel" aria-label="Bauwarteschlange">

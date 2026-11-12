@@ -853,6 +853,100 @@ function stopFlightTutorial() {
   const box = document.querySelector('#flight-tutorial-box'); if (box) box.hidden = true;
 }
 
+
+// ==========================================
+// FLUGZENTRALE – PERSISTENTES DIAGNOSEPROTOKOLL
+// Speichert technische Fehler lokal, ohne Spielmechaniken zu verändern.
+// ==========================================
+const FLIGHT_DIAG_STORAGE_KEY = 'solarFrontierFlightDiagnostics_v1';
+function recordFlightDiagnostic(type, message, details = '') {
+  try {
+    let entries = [];
+    try {
+      const saved = JSON.parse(localStorage.getItem(FLIGHT_DIAG_STORAGE_KEY) || '[]');
+      if (Array.isArray(saved)) entries = saved;
+    } catch (_) {}
+    const safeText = value => String(value ?? '').slice(0, 5000);
+    let gameTime = '';
+    try { gameTime = typeof gameNow === 'function' ? new Date(gameNow()).toISOString() : ''; } catch (_) {}
+    let planet = '';
+    try { planet = typeof state !== 'undefined' ? String(state.selected || '') : ''; } catch (_) {}
+    let slot = '';
+    try { slot = localStorage.getItem('solarFrontierOriginsActiveSlot_v1') || '1'; } catch (_) { slot = 'unbekannt'; }
+    entries.push({
+      timestamp: new Date().toISOString(),
+      gameTime,
+      slot,
+      planet,
+      area: 'Flugzentrale',
+      type: safeText(type),
+      message: safeText(message),
+      details: safeText(details)
+    });
+    entries = entries.slice(-100);
+    localStorage.setItem(FLIGHT_DIAG_STORAGE_KEY, JSON.stringify(entries));
+  } catch (storageError) {
+    console.warn('Flugzentrale-Diagnose konnte nicht gespeichert werden:', storageError);
+  }
+}
+function getFlightDiagnostics() {
+  try {
+    const value = JSON.parse(localStorage.getItem(FLIGHT_DIAG_STORAGE_KEY) || '[]');
+    return Array.isArray(value) ? value : [];
+  } catch (_) { return []; }
+}
+function exportFlightDiagnostics() {
+  const payload = {
+    exportedAt: new Date().toISOString(),
+    game: 'Solar Frontier: Origins',
+    diagnostics: getFlightDiagnostics()
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `Solar-Frontier-Flugzentrale-Diagnose-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+function renderFlightDiagnostics() {
+  const entries = getFlightDiagnostics().slice(-12).reverse();
+  if (!entries.length) return '<p class="hint">Noch keine Fehler protokolliert. Das Diagnose-System ist bereit.</p>';
+  return entries.map(entry => `<div class="flight-diagnostic-entry"><strong>${String(entry.type || 'Fehler').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}</strong><small>${String(entry.timestamp || '')} · Planet: ${String(entry.planet || 'unbekannt')} · Spielstand: ${String(entry.slot || '?')}</small><p>${String(entry.message || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}</p></div>`).join('');
+}
+function bindFlightDiagnostics(content) {
+  const toggle = content.querySelector('#flight-diagnostics-toggle');
+  const box = content.querySelector('#flight-diagnostics-box');
+  const output = content.querySelector('#flight-diagnostics-output');
+  const exportButton = content.querySelector('#flight-diagnostics-export');
+  const clearButton = content.querySelector('#flight-diagnostics-clear');
+  if (toggle && box) toggle.addEventListener('click', () => {
+    box.hidden = !box.hidden;
+    if (output) output.innerHTML = renderFlightDiagnostics();
+  });
+  if (exportButton) exportButton.addEventListener('click', exportFlightDiagnostics);
+  if (clearButton) clearButton.addEventListener('click', () => {
+    try { localStorage.removeItem(FLIGHT_DIAG_STORAGE_KEY); } catch (_) {}
+    if (output) output.innerHTML = renderFlightDiagnostics();
+  });
+}
+if (typeof window !== 'undefined' && !window.__solarFlightDiagnosticsInstalled) {
+  window.__solarFlightDiagnosticsInstalled = true;
+  window.addEventListener('error', event => {
+    if (document.querySelector('#flight-center-panel')?.hidden) return;
+    recordFlightDiagnostic('JavaScript-Fehler', event.message || 'Unbekannter Fehler',
+      `${event.filename || ''}:${event.lineno || 0}:${event.colno || 0}\n${event.error?.stack || ''}`);
+  });
+  window.addEventListener('unhandledrejection', event => {
+    if (document.querySelector('#flight-center-panel')?.hidden) return;
+    const reason = event.reason;
+    recordFlightDiagnostic('Nicht behandelter Promise-Fehler',
+      reason?.message || String(reason || 'Unbekannter Promise-Fehler'), reason?.stack || '');
+  });
+}
+
 function renderFlightCenter() {
   const panel = document.querySelector('#flight-center-panel');
   const content = document.querySelector('#flight-center-content');
@@ -865,18 +959,21 @@ function renderFlightCenter() {
   const selectedBody = bodies[state.selected];
   const openDetails = captureDetailsOpenState(content);
   try {
-    content.innerHTML = `<div class="flight-center-command-banner"><div><span class="flight-center-kicker">MISSION CONTROL</span><h3>Flotten- und Flugmanagement</h3><p>Raketen verwalten, Transporte steuern und Produktion überwachen.</p></div><div class="flight-center-banner-actions"><button type="button" id="flight-tutorial-start" class="flight-tutorial-start">🎓 Schritt-für-Schritt-Tutorial</button><span class="flight-center-signal"><i></i> SYSTEM ONLINE</span></div></div>${renderRocketWindow(selectedBody)}`;
+    content.innerHTML = `<div class="flight-center-command-banner"><div><span class="flight-center-kicker">MISSION CONTROL</span><h3>Flotten- und Flugmanagement</h3><p>Raketen verwalten, Transporte steuern und Produktion überwachen.</p></div><div class="flight-center-banner-actions"><button type="button" id="flight-tutorial-start" class="flight-tutorial-start">🎓 Schritt-für-Schritt-Tutorial</button><button type="button" id="flight-diagnostics-toggle" class="flight-diagnostics-button">🛠 Diagnoseprotokoll (${getFlightDiagnostics().length})</button><span class="flight-center-signal"><i></i> SYSTEM ONLINE</span></div></div><section id="flight-diagnostics-box" class="flight-diagnostics-box" hidden><div class="flight-diagnostics-head"><strong>Technisches Diagnoseprotokoll</strong><div><button type="button" id="flight-diagnostics-export">Protokoll exportieren</button><button type="button" id="flight-diagnostics-clear">Protokoll löschen</button></div></div><p class="hint">Fehler werden lokal auf diesem Gerät gespeichert (maximal 100 Einträge). Beim Export entsteht eine JSON-Datei, die du mir schicken kannst.</p><div id="flight-diagnostics-output">${renderFlightDiagnostics()}</div></section>${renderRocketWindow(selectedBody)}`;
     // Der Schutz umfasst den gesamten DOM-Aufbau, nicht nur das Erzeugen des HTML.
     organizeFlightCenterTabs();
     restoreDetailsOpenState(content, openDetails);
     rocketControlRoot = content;
     bindRocketControls();
+    bindFlightDiagnostics(content);
     const tutorialButton = content.querySelector('#flight-tutorial-start');
     if (tutorialButton) tutorialButton.addEventListener('click', startFlightTutorial);
     if (flightTutorialState.active) updateFlightTutorialTarget();
   } catch (error) {
+    recordFlightDiagnostic('Renderfehler Flugzentrale', error?.message || String(error), error?.stack || '');
     console.error('Fehler beim vollständigen Aufbau der Flugzentrale:', error);
-    content.innerHTML = `<div class="flight-center-command-banner"><div><span class="flight-center-kicker">MISSION CONTROL</span><h3>Flotten- und Flugmanagement</h3><p>Die Flugzentrale konnte wegen eines fehlerhaften oder veralteten Datensatzes nicht vollständig aufgebaut werden. Das restliche Spiel bleibt davon getrennt.</p></div></div><button type="button" id="flight-center-retry" class="flight-tutorial-start">Flugzentrale erneut laden</button>`;
+    content.innerHTML = `<div class="flight-center-command-banner"><div><span class="flight-center-kicker">MISSION CONTROL</span><h3>Flotten- und Flugmanagement</h3><p>Die Flugzentrale konnte wegen eines fehlerhaften oder veralteten Datensatzes nicht vollständig aufgebaut werden. Das restliche Spiel bleibt davon getrennt.</p></div></div><section class="flight-diagnostics-box"><strong>Fehler wurde gespeichert.</strong><div id="flight-diagnostics-output">${renderFlightDiagnostics()}</div><button type="button" id="flight-diagnostics-export">Protokoll exportieren</button><button type="button" id="flight-center-retry" class="flight-tutorial-start">Flugzentrale erneut laden</button></section>`;
+    content.querySelector('#flight-diagnostics-export')?.addEventListener('click', exportFlightDiagnostics);
     content.querySelector('#flight-center-retry')?.addEventListener('click', () => renderFlightCenter());
     rocketControlRoot = content;
   }

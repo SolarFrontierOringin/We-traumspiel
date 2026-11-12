@@ -6,9 +6,24 @@ const infoPanel = document.querySelector('#info-panel');
 const topResources = document.querySelector('#top-resources');
 const saveMenu = document.querySelector('#save-menu');
 const saveStatus = document.querySelector('#save-status');
-const SAVE_KEY = 'solarFrontierOriginsSave_v2';
+// Zwei vollständig getrennte lokale Spielstände.
+const ACTIVE_SAVE_SLOT_KEY = 'solarFrontierOriginsActiveSlot_v1';
 const LEGACY_SAVE_KEY = 'weltraumGameSave_v1';
-const BACKUP_SAVE_KEY = 'solarFrontierOriginsSave_backup_v2';
+const LEGACY_SAVE_KEY_V2 = 'solarFrontierOriginsSave_v2';
+const LEGACY_BACKUP_SAVE_KEY = 'solarFrontierOriginsSave_backup_v2';
+let activeSaveSlot = (() => {
+  try {
+    const value = Number(localStorage.getItem(ACTIVE_SAVE_SLOT_KEY) || 1);
+    return value === 2 ? 2 : 1;
+  } catch (_) { return 1; }
+})();
+function getSaveSlotKeys(slot = activeSaveSlot) {
+  const id = slot === 2 ? 2 : 1;
+  return {
+    save: `solarFrontierOriginsSave_slot${id}_v1`,
+    backup: `solarFrontierOriginsSave_slot${id}_backup_v1`
+  };
+}
 
 // Zweites Sonnensystem: Noxaris liegt auf der äußersten Umlaufbahn.
 const futureSolarSystem = {
@@ -3003,31 +3018,43 @@ function getSaveData() {
 function saveGame(showMessage = true) {
   try {
     const serialized = JSON.stringify(getSaveData());
-    const previous = localStorage.getItem(SAVE_KEY);
-    if (previous) localStorage.setItem(BACKUP_SAVE_KEY, previous);
-    localStorage.setItem(SAVE_KEY, serialized);
-    if (showMessage) showSaveStatus('Spielstand automatisch gespeichert.');
+    const keys = getSaveSlotKeys();
+    const previous = localStorage.getItem(keys.save);
+    if (previous) localStorage.setItem(keys.backup, previous);
+    localStorage.setItem(keys.save, serialized);
+
+    // Nach erfolgreicher Übernahme in Slot 1 alte Einzelspeicher entfernen,
+    // damit ein späterer Neustart den alten Stand nicht versehentlich zurückholt.
+    if (activeSaveSlot === 1) {
+      localStorage.removeItem(LEGACY_SAVE_KEY_V2);
+      localStorage.removeItem(LEGACY_SAVE_KEY);
+      localStorage.removeItem(LEGACY_BACKUP_SAVE_KEY);
+    }
+    if (showMessage) showSaveStatus(`Spielstand ${activeSaveSlot} automatisch gespeichert.`);
+    return true;
   } catch (error) {
     console.error(error);
     showSaveStatus('Speichern fehlgeschlagen.', false);
+    return false;
   }
 }
 
 function loadGame(showMessage = true) {
   try {
-    // Immer den neuesten Autosave laden; bei Bedarf auf Legacy-Save/Backup zurückgreifen.
-    let raw = localStorage.getItem(SAVE_KEY);
+    const keys = getSaveSlotKeys();
+    // Zuerst den gewählten Slot laden. Nur Slot 1 übernimmt einmalig den
+    // bisherigen Einzelspielstand aus älteren Versionen.
+    let raw = localStorage.getItem(keys.save);
     let migratedLegacy = false;
-    if (!raw) {
-      const legacy = localStorage.getItem(LEGACY_SAVE_KEY);
-      if (legacy) { raw = legacy; migratedLegacy = true; }
+    if (!raw && activeSaveSlot === 1) {
+      raw = localStorage.getItem(LEGACY_SAVE_KEY_V2);
+      if (!raw) raw = localStorage.getItem(LEGACY_SAVE_KEY);
+      if (!raw) raw = localStorage.getItem(LEGACY_BACKUP_SAVE_KEY);
+      if (raw) migratedLegacy = true;
     }
+    if (!raw) raw = localStorage.getItem(keys.backup);
     if (!raw) {
-      const backup = localStorage.getItem(BACKUP_SAVE_KEY);
-      if (backup) raw = backup;
-    }
-    if (!raw) {
-      if (showMessage) showSaveStatus('Kein Spielstand vorhanden.', false);
+      if (showMessage) showSaveStatus(`Spielstand ${activeSaveSlot} ist noch leer. Ein neues Universum wird gestartet.`);
       return false;
     }
     const data = JSON.parse(raw);
@@ -3419,7 +3446,7 @@ function loadGame(showMessage = true) {
     renderInfo();
     renderTopResources();
     if (migratedLegacy) saveGame(false);
-    if (showMessage) showSaveStatus(migratedLegacy ? 'Alter Spielstand übernommen und neu gespeichert.' : 'Spielstand geladen.');
+    if (showMessage) showSaveStatus(migratedLegacy ? 'Bisheriger Spielstand wurde in Speicherplatz 1 übernommen.' : `Spielstand ${activeSaveSlot} geladen.`);
     return true;
   } catch (error) {
     console.error(error);
@@ -3430,14 +3457,69 @@ function loadGame(showMessage = true) {
 
 let restartingGame = false;
 
-function restartGame() {
-  // Verhindert, dass pagehide/visibilitychange beim Neuladen den alten Stand
-  // direkt wieder in localStorage schreibt.
-  restartingGame = true;
+function getSaveSlotSummary(slot) {
+  const keys = getSaveSlotKeys(slot);
+  let raw = null;
+  try { raw = localStorage.getItem(keys.save); } catch (_) {}
+  if (!raw && slot === 1) {
+    try { raw = localStorage.getItem(LEGACY_SAVE_KEY_V2) || localStorage.getItem(LEGACY_SAVE_KEY) || localStorage.getItem(LEGACY_BACKUP_SAVE_KEY); } catch (_) {}
+  }
+  if (!raw) return 'Noch nicht begonnen';
   try {
-    localStorage.removeItem(SAVE_KEY);
-    localStorage.removeItem(LEGACY_SAVE_KEY);
-    localStorage.removeItem(BACKUP_SAVE_KEY);
+    const data = JSON.parse(raw);
+    const date = data.savedAt ? new Date(data.savedAt) : null;
+    return date && !Number.isNaN(date.getTime())
+      ? `Gespeichert: ${date.toLocaleString('de-DE')}`
+      : 'Spielstand vorhanden';
+  } catch (_) { return 'Spielstand vorhanden'; }
+}
+
+function refreshSaveSlotMenu() {
+  document.querySelectorAll('[data-save-slot]').forEach(button => {
+    const slot = Number(button.dataset.saveSlot);
+    const active = slot === activeSaveSlot;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-pressed', active ? 'true' : 'false');
+    const status = button.querySelector('.save-slot-status');
+    if (status) status.textContent = getSaveSlotSummary(slot);
+    const current = button.querySelector('.save-slot-current');
+    if (current) current.hidden = !active;
+  });
+  const title = document.querySelector('#active-save-slot-title');
+  if (title) title.textContent = `Aktiver Speicherplatz: ${activeSaveSlot}`;
+}
+
+function selectSaveSlot(slot) {
+  const next = Number(slot) === 2 ? 2 : 1;
+  if (next === activeSaveSlot) {
+    showSaveStatus(`Speicherplatz ${next} ist bereits aktiv.`);
+    return;
+  }
+  // Vor dem Wechsel den bisherigen Slot sichern. Der andere Slot wird erst
+  // nach dem Neuladen geladen und kann daher keine Daten überschreiben.
+  if (saveGame(false) === false) return;
+  try {
+    localStorage.setItem(ACTIVE_SAVE_SLOT_KEY, String(next));
+    location.reload();
+  } catch (error) {
+    console.error('Speicherplatzwechsel fehlgeschlagen:', error);
+    showSaveStatus('Speicherplatz konnte nicht gewechselt werden.', false);
+  }
+}
+
+function restartGame() {
+  // Nur den aktuell ausgewählten Slot löschen; der andere bleibt unangetastet.
+  restartingGame = true;
+  const keys = getSaveSlotKeys();
+  try {
+    localStorage.removeItem(keys.save);
+    localStorage.removeItem(keys.backup);
+    // Alte Einzel-Speicher nur dann entfernen, wenn Slot 1 zurückgesetzt wird.
+    if (activeSaveSlot === 1) {
+      localStorage.removeItem(LEGACY_SAVE_KEY_V2);
+      localStorage.removeItem(LEGACY_SAVE_KEY);
+      localStorage.removeItem(LEGACY_BACKUP_SAVE_KEY);
+    }
   } catch (error) {
     console.error('Spielstand konnte nicht vollständig gelöscht werden:', error);
   }
@@ -3453,11 +3535,17 @@ function setupSaveMenu() {
   toggle.addEventListener('click', () => {
     saveMenu.hidden = !saveMenu.hidden;
     const mainMenu=document.querySelector('#main-menu'); if(!saveMenu.hidden && mainMenu) mainMenu.hidden=true;
-    if (!saveMenu.hidden) showSaveStatus('');
+    if (!saveMenu.hidden) {
+      showSaveStatus('');
+      refreshSaveSlotMenu();
+    }
   });
   close.addEventListener('click', () => { saveMenu.hidden = true; });
+  document.querySelectorAll('[data-save-slot]').forEach(button => {
+    button.addEventListener('click', () => selectSaveSlot(button.dataset.saveSlot));
+  });
   restart.addEventListener('click', () => {
-    if (confirm('Spiel wirklich neu starten? Der gespeicherte Spielstand wird gelöscht.')) restartGame();
+    if (confirm(`Spielstand ${activeSaveSlot} wirklich neu starten? Nur dieser Speicherplatz wird gelöscht.`)) restartGame();
   });
 }
 

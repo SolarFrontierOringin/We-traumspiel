@@ -1934,3 +1934,78 @@ body > .planet-build-menu .planet-build-header {
 @media(prefers-reduced-motion:reduce){
   .update-popup-page-button{transition:none}
 }
+
+
+/* Zwei voneinander getrennte Spielstand-Slots */
+.active-save-slot-title{margin:10px 0 8px;padding:9px 11px;border:1px solid #315273;border-radius:10px;background:#0b1a2c;color:#b9d9ff;font-size:13px;font-weight:800}
+.save-slot-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:10px 0}
+.save-slot-card{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:7px;min-width:0;min-height:118px;padding:12px;border:1px solid #344967;border-radius:13px;background:linear-gradient(145deg,#101d30,#091321);color:#eef4ff;text-align:left}
+.save-slot-card strong{font-size:16px}
+.save-slot-card .save-slot-number{color:#9db2ce;font-size:10px;font-weight:900;letter-spacing:1px}
+.save-slot-card .save-slot-status{color:#aab8ce;font-size:11px;line-height:1.35;overflow-wrap:anywhere}
+.save-slot-card .save-slot-current{margin-top:auto;padding:4px 7px;border-radius:5px;background:#a82b67;color:#fff;font-size:10px;font-weight:900;letter-spacing:.7px}
+.save-slot-card.active{border-color:#f05a9b;background:linear-gradient(145deg,#35172b,#111525);box-shadow:0 0 0 1px rgba(240,90,155,.2),0 8px 22px rgba(0,0,0,.22)}
+.save-slot-card:not(.active):hover{border-color:#7b8eaa;background:#142238}
+#restart-game{width:100%;margin-top:3px}
+@media(max-width:430px){.save-slot-grid{gap:7px}.save-slot-card{padding:10px;min-height:112px}.save-slot-card strong{font-size:14px}}
+
+.save-menu .save-buttons{grid-template-columns:1fr}
+
+
+/* Flugzentrale: lokal gespeicherte Fehlerdiagnose */
+.flight-diagnostics-button {
+  border: 1px solid rgba(255, 105, 180, .55);
+  background: linear-gradient(135deg, rgba(115, 35, 91, .32), rgba(70, 35, 75, .22));
+  color: #ffd7ee;
+  border-radius: 9px;
+  padding: 8px 11px;
+  font: inherit;
+  cursor: pointer;
+}
+.flight-diagnostics-box {
+  margin: 12px 0 16px;
+  padding: 14px;
+  border: 1px solid rgba(255, 105, 180, .35);
+  border-radius: 12px;
+  background: rgba(32, 18, 39, .72);
+}
+.flight-diagnostics-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.flight-diagnostics-head > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.flight-diagnostics-box button {
+  border: 1px solid rgba(255, 255, 255, .18);
+  border-radius: 7px;
+  padding: 7px 10px;
+  color: inherit;
+  background: rgba(255, 255, 255, .07);
+  cursor: pointer;
+  font: inherit;
+}
+.flight-diagnostic-entry {
+  padding: 9px 0;
+  border-top: 1px solid rgba(255, 255, 255, .10);
+  overflow-wrap: anywhere;
+}
+.flight-diagnostic-entry strong,
+.flight-diagnostic-entry small {
+  display: block;
+}
+.flight-diagnostic-entry small {
+  opacity: .68;
+  margin-top: 3px;
+}
+.flight-diagnostic-entry p {
+  margin: 5px 0 0;
+  color: #ffc5dc;
+  white-space: pre-wrap;
+}
