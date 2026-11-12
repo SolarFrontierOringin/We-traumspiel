@@ -99,12 +99,38 @@ function updateSolarSystemSelector() {
   upcoming.classList.toggle('active', activeSolarSystemId === 'system2');
   current.setAttribute('aria-current', activeSolarSystemId === 'system1' ? 'true' : 'false');
   upcoming.setAttribute('aria-current', activeSolarSystemId === 'system2' ? 'true' : 'false');
+  const activeLabel = document.querySelector('#active-solar-system-label');
+  if (activeLabel) activeLabel.textContent = activeSolarSystemId === 'system2' ? 'Sonnensystem 2 · Vorschau' : 'Sonnensystem 1';
 }
 function setupSolarSystemSelector() {
   const current = document.querySelector('.solar-system-selector-current');
   const upcoming = document.querySelector('.solar-system-selector-upcoming');
-  current?.addEventListener('click', () => { activeSolarSystemId = 'system1'; state.buildMenuOpen = false; renderSystem(); renderInfo(); });
-  upcoming?.addEventListener('click', () => { activeSolarSystemId = 'system2'; state.buildMenuOpen = false; renderSystem(); });
+  const dialog = document.querySelector('#solar-system-selector-dialog');
+  const openButton = document.querySelector('#open-solar-system-selector');
+  const closeButton = document.querySelector('#close-solar-system-selector');
+  const closeDialog = () => {
+    if (dialog) dialog.hidden = true;
+    openButton?.setAttribute('aria-expanded', 'false');
+  };
+  openButton?.addEventListener('click', () => {
+    if (dialog) dialog.hidden = false;
+    openButton.setAttribute('aria-expanded', 'true');
+  });
+  closeButton?.addEventListener('click', closeDialog);
+  dialog?.addEventListener('click', event => { if (event.target === dialog) closeDialog(); });
+  current?.addEventListener('click', () => {
+    activeSolarSystemId = 'system1';
+    state.buildMenuOpen = false;
+    renderSystem();
+    renderInfo();
+    closeDialog();
+  });
+  upcoming?.addEventListener('click', () => {
+    activeSolarSystemId = 'system2';
+    state.buildMenuOpen = false;
+    renderSystem();
+    closeDialog();
+  });
   updateSolarSystemSelector();
 }
 

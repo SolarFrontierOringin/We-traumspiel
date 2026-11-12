@@ -28,7 +28,10 @@ function getSaveSlotKeys(slot = activeSaveSlot) {
 // Zweites Sonnensystem: Noxaris liegt auf der äußersten Umlaufbahn.
 const futureSolarSystem = {
   id: 'system2', name: 'Sonnensystem 2',
-  bodies: [{ id: 'noxaris', name: 'Noxaris', type: 'Mystischer Planet', className: 'noxaris', orbit: 1420, temperature: 'Unbekannt', resources: { iron: 2000000, stone: 1000000, ionium: 500000 }, storage: {} }]
+  bodies: [
+    { id: 'themepatin', name: 'Themepatin', type: 'Gesteinsplanet', className: 'themepatin', orbit: 1120, temperature: 'Unbekannt', resources: { stone: 1000000, copperOre: 2000000, uranium: 10000000 }, storage: {} },
+    { id: 'noxaris', name: 'Noxaris', type: 'Mystischer Planet', className: 'noxaris', orbit: 1420, temperature: 'Unbekannt', resources: { iron: 2000000, stone: 1000000, ionium: 500000 }, storage: {} }
+  ]
 };
 let activeSolarSystemId = 'system1';
 
@@ -3764,38 +3767,47 @@ function renderSystem() {
   solarSystem.innerHTML = '';
   if (activeSolarSystemId === 'system2') {
     solarSystem.classList.remove('building-menu-open');
-    const orbit = document.createElement('div');
-    orbit.className = 'orbit noxaris-orbit';
-    orbit.style.width = `${futureSolarSystem.bodies[0].orbit}px`;
-    orbit.style.height = `${futureSolarSystem.bodies[0].orbit}px`;
-    solarSystem.appendChild(orbit);
-
     const star = document.createElement('div');
     star.className = 'system2-star';
     star.setAttribute('aria-label', 'Unbekannter Stern');
     star.title = 'Unbekannter Stern';
     solarSystem.appendChild(star);
 
-    const planet = document.createElement('button');
-    planet.type = 'button';
-    planet.className = 'body noxaris';
-    planet.setAttribute('aria-label', 'Noxaris');
-    planet.title = 'Noxaris';
-    planet.style.left = `calc(50% + ${Math.cos(230 * Math.PI / 180) * futureSolarSystem.bodies[0].orbit / 2}px)`;
-    planet.style.top = `calc(50% + ${Math.sin(230 * Math.PI / 180) * futureSolarSystem.bodies[0].orbit / 2}px)`;
-    const label = document.createElement('span');
-    label.className = 'body-label';
-    label.textContent = 'Noxaris';
-    planet.appendChild(label);
-    planet.addEventListener('click', () => {
-      const noxaris = futureSolarSystem.bodies[0];
-      infoPanel.innerHTML = `<h2>🌌 Noxaris</h2><div class="stat"><span>Typ</span><strong>${noxaris.type}</strong></div><div class="stat"><span>Temperatur</span><strong>${noxaris.temperature}</strong></div><h3>🪨 Rohstoffvorkommen</h3><div class="stat"><span>Eisen</span><strong>${Number(noxaris.resources.iron || 0).toLocaleString('de-DE')} t</strong></div><div class="stat"><span>Stein</span><strong>${Number(noxaris.resources.stone || 0).toLocaleString('de-DE')} t</strong></div><div class="stat"><span>Ionium</span><strong>${Number(noxaris.resources.ionium || 0).toLocaleString('de-DE')} t</strong></div><p class="hint">Ein geheimnisvoller, dunkelblauer Planet, umgeben von violett-blauen kosmischen Nebeln.</p>`;
+    futureSolarSystem.bodies.forEach((body, index) => {
+      const orbit = document.createElement('div');
+      orbit.className = `orbit ${body.className}-orbit`;
+      orbit.style.width = `${body.orbit}px`;
+      orbit.style.height = `${body.orbit}px`;
+      solarSystem.appendChild(orbit);
+
+      const angle = (index === 0 ? 145 : 230) * Math.PI / 180;
+      const planet = document.createElement('button');
+      planet.type = 'button';
+      planet.className = `body ${body.className}`;
+      planet.setAttribute('aria-label', body.name);
+      planet.title = body.name;
+      planet.style.left = `calc(50% + ${Math.cos(angle) * body.orbit / 2}px)`;
+      planet.style.top = `calc(50% + ${Math.sin(angle) * body.orbit / 2}px)`;
+      const label = document.createElement('span');
+      label.className = 'body-label';
+      label.textContent = body.name;
+      planet.appendChild(label);
+      planet.addEventListener('click', () => {
+        const resourceRows = Object.entries(body.resources).map(([key, amount]) => {
+          const names = { stone: 'Stein', copperOre: 'Kupfererz', uranium: 'Uran', iron: 'Eisen', ionium: 'Ionium' };
+          return `<div class="stat"><span>${names[key] || key}</span><strong>${Number(amount || 0).toLocaleString('de-DE')} t</strong></div>`;
+        }).join('');
+        const description = body.id === 'themepatin'
+          ? 'Ein innerer Gesteinsplanet mit bedeutenden Kupfererz- und Uranvorkommen.'
+          : 'Ein geheimnisvoller, dunkelblauer Planet, umgeben von violett-blauen kosmischen Nebeln.';
+        infoPanel.innerHTML = `<h2>🪐 ${body.name}</h2><div class="stat"><span>Typ</span><strong>${body.type}</strong></div><div class="stat"><span>Temperatur</span><strong>${body.temperature}</strong></div><h3>🪨 Rohstoffvorkommen</h3>${resourceRows}<p class="hint">${description}</p>`;
+      });
+      solarSystem.appendChild(planet);
     });
-    solarSystem.appendChild(planet);
     const buildMenuTriggerButton = document.querySelector('#open-build-menu-button');
-    if (buildButton) { buildMenuTriggerButton.disabled = true; buildMenuTriggerButton.textContent = '🔒 Noxaris ist noch nicht erschlossen'; }
-    infoPanel.innerHTML = `<h2>🌌 Sonnensystem 2</h2><p class="hint">Ein bislang unerforschtes System. Noxaris befindet sich auf der äußersten Umlaufbahn.</p><p>Wähle Noxaris aus, um mehr über den mystischen Planeten zu erfahren.</p>`;
-    updateSolarSystemSelector();
+    if (buildMenuTriggerButton) { buildMenuTriggerButton.disabled = true; buildMenuTriggerButton.textContent = '🔒 Sonnensystem 2 ist noch nicht erschlossen'; }
+    infoPanel.innerHTML = `<h2>🌌 Sonnensystem 2</h2><p class="hint">Ein bislang unerforschtes System mit zwei Planeten. Themepatin liegt auf der inneren, Noxaris auf der äußeren Umlaufbahn.</p><p>Wähle einen Planeten aus, um mehr über seine Rohstoffe zu erfahren.</p>`;
+  updateSolarSystemSelector();
     return;
   }
   updateSolarSystemSelector();
