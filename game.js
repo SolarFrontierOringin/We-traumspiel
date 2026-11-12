@@ -1047,6 +1047,9 @@ function ensureVehicleFactoryQueue(id) {
   return bodies[id].vehicleFactoryBuildQueue;
 }
 function getPlanetStorage(id) {
+  // Ungültige oder veraltete Planet-IDs dürfen die Ressourcenabfrage nicht
+  // zum Absturz bringen. Ein fehlender Planet besitzt kein Spielerlager.
+  if (!id || !bodies[id] || typeof bodies[id] !== 'object') return {};
   if (id === 'earth') {
     delete state.potassium; delete state.sodium; delete state.sulfurDioxide;
     return state;
@@ -6483,7 +6486,7 @@ function renderRocketWindow(body) {
     <details class="rocket-type-card"><summary>🏗️ Atlas 1 · Bau <span>500 t/L · Bestand: ${stockAtlas1}</span></summary><div class="rocket-type-content"><div class="rocket-build-box atlas1-box"><strong>🚀 Atlas 1</strong><small>340 t Stahl + 150 t Chips + 200 t Batterien + 100 t Aluminium · 30 Sekunden Bauzeit · 500 t/L Kapazität · 3 Frachtabteilungen · Forschung erforderlich</small><button id="build-atlas1" ${!rocketFactoryHasCapacity(source) || localSteel < 340 || localChips < 150 || localBatteries < 200 || localAluminium < 100 || !state.research?.completed?.atlas1 ? 'disabled' : ''}>🚀 Atlas 1 bauen – 340 t Stahl + 150 t Chips + 200 t Batterien + 100 t Aluminium</button></div>
     <div class="rocket-stock">Atlas 1 verfügbar: <strong>${stockAtlas1}</strong></div></div></details>
 
-    <details class="rocket-type-card"><summary>🏗️ Titan 1 · Bau <span>1.500 t/L · Bestand: ${stockTitan1}</span></summary><div class="rocket-type-content"><div class="rocket-build-box titan1-box"><strong>🚀 Titan 1</strong><small>2.000 t Stahl + 300 t Aluminium + 250 t Chips + 200 t Batterien + 120 t Titan · 120 Sekunden Bauzeit · 1.500 t/L Kapazität · Forschung Schwerlastraketen erforderlich</small><button id="build-titan1" ${!rocketFactoryHasCapacity(source) || localSteel < 2000 || localAluminium < 300 || localChips < 250 || localBatteries < 200 || getPlayerResourceAmount('titanium','nickelOre',source) < 120 || !state.research?.completed?.titan1 ? 'disabled' : ''}>🚀 Titan 1 bauen</button></div>
+    <details class="rocket-type-card"><summary>🏗️ Titan 1 · Bau <span>1.500 t/L · Bestand: ${stockTitan1}</span></summary><div class="rocket-type-content"><div class="rocket-build-box titan1-box"><strong>🚀 Titan 1</strong><small>2.000 t Stahl + 300 t Aluminium + 250 t Chips + 200 t Batterien + 120 t Titan · 120 Sekunden Bauzeit · 1.500 t/L Kapazität · Forschung Schwerlastraketen erforderlich</small><button id="build-titan1" ${!rocketFactoryHasCapacity(source) || localSteel < 2000 || localAluminium < 300 || localChips < 250 || localBatteries < 200 || getPlayerResourceAmount('titanium',source) < 120 || !state.research?.completed?.titan1 ? 'disabled' : ''}>🚀 Titan 1 bauen</button></div>
     <div class="rocket-stock">Titan 1 verfügbar: <strong>${stockTitan1}</strong></div></div></details>
     <details class="rocket-type-card"><summary>🏗️ Adler 1 · Bau <span>10.000 t/L · Bestand: ${getRocketStockCount('adler1',source,sourceModeForStock)}</span></summary><div class="rocket-type-content"><div class="rocket-build-box"><strong>🚀 Adler 1</strong><small>2.500 t Stahl + 250 t Glas + 400 t Chips + 100 t Elektronik · 1 Ingame-Stunde Bauzeit · 10.000 t/L Kapazität</small><button id="build-adler1" ${!rocketFactoryHasCapacity(source) || localSteel < 2500 || localGlass < 250 || localChips < 400 || localElectronics < 100 ? 'disabled' : ''}>🚀 Adler 1 bauen</button></div><div class="rocket-stock">Adler 1 verfügbar: <strong>${getRocketStockCount('adler1',source,sourceModeForStock)}</strong></div></div></details>
 
