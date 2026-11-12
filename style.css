@@ -2009,3 +2009,142 @@ body > .planet-build-menu .planet-build-header {
   color: #ffc5dc;
   white-space: pre-wrap;
 }
+
+
+/* Wirtschafts-Dashboard: eigenständige Energieansicht */
+.economy-tabs {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 5px;
+  border: 1px solid rgba(120, 150, 170, .22);
+  border-radius: 13px;
+  background: rgba(20, 34, 48, .72);
+}
+.economy-tab {
+  flex: 1 1 0;
+  min-height: 42px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text, #dce8f2);
+  font-weight: 700;
+  cursor: pointer;
+}
+.economy-tab.active {
+  color: #eaf8ff;
+  border-color: rgba(72, 190, 220, .5);
+  background: linear-gradient(135deg, rgba(26, 113, 119, .55), rgba(38, 79, 130, .58));
+  box-shadow: inset 0 0 0 1px rgba(130, 220, 235, .08);
+}
+.economy-tab-panel[hidden] { display: none !important; }
+.energy-system-overview {
+  margin: 0 0 16px;
+  padding: 15px;
+  border: 1px solid rgba(67, 178, 207, .3);
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(15, 73, 78, .35), rgba(22, 48, 79, .42));
+}
+.energy-system-heading,
+.energy-storage-head,
+.energy-planet-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.energy-system-heading strong { display: block; font-size: 1.05rem; }
+.energy-system-heading small,
+.energy-system-overview > small { display: block; margin-top: 4px; color: var(--muted, #9eacba); }
+.energy-system-kpis,
+.energy-planet-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+  margin: 14px 0 10px;
+}
+.energy-system-kpis > div,
+.energy-planet-kpis > div {
+  min-width: 0;
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(5, 15, 27, .34);
+}
+.energy-system-kpis span,
+.energy-planet-kpis span,
+.energy-storage-meta {
+  display: block;
+  color: var(--muted, #aab7c4);
+  font-size: .78rem;
+}
+.energy-system-kpis strong,
+.energy-planet-kpis strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 1rem;
+  overflow-wrap: anywhere;
+}
+.energy-planet-list { display: grid; gap: 13px; }
+.energy-planet-card {
+  padding: 14px;
+  border: 1px solid rgba(105, 143, 172, .25);
+  border-radius: 14px;
+  background: rgba(14, 27, 42, .48);
+}
+.energy-planet-card-head { margin-bottom: 8px; }
+.energy-planet-card-head h3 { margin: 0; font-size: 1.05rem; }
+.energy-planet-card-head > span { font-size: .82rem; font-weight: 700; }
+.energy-storage-block {
+  margin: 10px 0 12px;
+  padding: 11px;
+  border: 1px solid rgba(65, 165, 210, .2);
+  border-radius: 10px;
+  background: rgba(15, 47, 67, .28);
+}
+.energy-storage-head strong { font-size: .9rem; }
+.energy-storage-head > span { font-size: .84rem; font-weight: 700; text-align: right; }
+.energy-storage-block .dashboard-battery-track { margin: 9px 0 7px; }
+.energy-storage-meta { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 5px 12px; }
+.energy-planet-card .planet-electricity-panel { margin-top: 8px; }
+@media (max-width: 520px) {
+  .energy-system-kpis, .energy-planet-kpis { gap: 6px; }
+  .energy-system-kpis > div, .energy-planet-kpis > div { padding: 8px 6px; }
+  .energy-system-kpis strong, .energy-planet-kpis strong { font-size: .88rem; }
+  .energy-storage-head { align-items: flex-start; flex-direction: column; gap: 4px; }
+}
+
+/* Energie-Dashboard: sortierte, standardmäßig geschlossene Planetenkarten */
+.energy-planet-card { padding: 0; overflow: hidden; }
+.energy-planet-card > summary { list-style: none; cursor: pointer; }
+.energy-planet-card > summary::-webkit-details-marker { display: none; }
+.energy-planet-card-summary {
+  display: grid;
+  grid-template-columns: minmax(92px, .8fr) minmax(0, 2fr) 18px;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 14px;
+  min-height: 62px;
+}
+.energy-planet-card-summary:hover { background: rgba(70, 135, 170, .10); }
+.energy-planet-card-title { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.energy-planet-card-title strong { font-size: 1rem; }
+.energy-planet-card-title small { font-size: .76rem; font-weight: 700; }
+.energy-planet-summary-values { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.energy-planet-summary-values > span { display: flex; flex-direction: column; gap: 3px; color: var(--muted, #aab7c4); font-size: .7rem; }
+.energy-planet-summary-values strong { color: var(--text, #dce8f2); font-size: .82rem; overflow-wrap: anywhere; }
+.energy-planet-chevron { color: var(--muted, #aab7c4); font-size: 1.2rem; transition: transform .18s ease; }
+.energy-planet-card[open] .energy-planet-chevron { transform: rotate(180deg); }
+.energy-planet-card-content { padding: 0 14px 14px; border-top: 1px solid rgba(105, 143, 172, .18); }
+.energy-planet-card-content .energy-planet-kpis { margin-top: 12px; }
+@media (max-width: 600px) {
+  .energy-planet-card-summary { grid-template-columns: minmax(76px, .7fr) minmax(0, 2fr) 14px; gap: 7px; padding: 11px 10px; }
+  .energy-planet-summary-values { gap: 4px; }
+  .energy-planet-summary-values > span { font-size: .64rem; }
+  .energy-planet-summary-values strong { font-size: .72rem; }
+  .energy-planet-card-title strong { font-size: .9rem; }
+}
+@media (max-width: 390px) {
+  .energy-planet-card-summary { grid-template-columns: 1fr 14px; }
+  .energy-planet-summary-values { grid-column: 1 / 2; grid-row: 2; }
+  .energy-planet-chevron { grid-column: 2; grid-row: 1 / 3; }
+}

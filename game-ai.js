@@ -535,30 +535,14 @@ function renderAICompaniesPanel() {
     <div class="ai-company-log"><strong>📡 Unternehmensmeldungen</strong><ul>${logs}</ul><p class="hint">Die KI läuft lokal in deinem Spiel. Sie hat eigene Lager und Konten; nur ihre Handelsaktionen beeinflussen den gemeinsamen Markt. Forschung und Expansion werden simuliert und verändern nicht deinen Spielstand.</p></div>`;
 }
 function setupAICompanies() {
-  const button = document.querySelector('#ai-companies-button');
+  // KI-Unternehmen ist ein Unterbereich der gemeinsamen Unternehmenszentrale.
   const panel = document.querySelector('#ai-companies-panel');
-  const close = document.querySelector('#ai-companies-close');
-  button?.addEventListener('click', () => {
-    if (!panel) return;
-    panel.hidden = !panel.hidden;
-    if (!panel.hidden) {
-      ['#news-panel','#economy-panel','#research-panel','#tasks-panel','#introduction-panel','#colonists-panel','#settings-panel','#market-panel','#company-panel','#flight-center-panel','#cyclic-missions-panel','#company-headquarters-panel'].forEach(sel => {
-        const el = document.querySelector(sel); if (el) el.hidden = true;
-      });
-      const menu = document.querySelector('#main-menu'); if (menu) menu.hidden = true;
-      renderAICompaniesPanel();
-    }
-  });
-  close?.addEventListener('click', () => { if (panel) panel.hidden = true; });
   panel?.addEventListener('click', event => {
     const button = event.target.closest('[data-stock-action]');
     if (!button) return;
     const companyId = button.dataset.companyId;
     const quantity = panel.querySelector(`#stock-qty-${companyId}`)?.value;
     tradeCompanyShares(companyId, button.dataset.stockAction, quantity);
-  });
-  ['market-button','news-button','economy-button','company-button','colonists-button','research-button','tasks-button','introduction-button','settings-button','save-menu-button','flight-center-button','asteroids-button','cyclic-missions-button'].forEach(id => {
-    document.getElementById(id)?.addEventListener('click', () => { if (panel) panel.hidden = true; });
   });
 }
 
@@ -1115,7 +1099,10 @@ function setupTopPanels() {
     }
   });
   if (freePopulationClose && freePopulationPanel) freePopulationClose.addEventListener('click',()=>{freePopulationPanel.hidden=true;});
-  const populationTabs = document.querySelectorAll('.population-tab');
+  // Nur Tabs innerhalb der Bevölkerungszentrale dürfen die Bevölkerungsansichten umschalten.
+  // Unternehmens-Tabs verwenden ebenfalls .population-tab für das Styling, gehören aber
+  // ausschließlich zur Unternehmensnavigation und dürfen keine Kolonistenansicht öffnen.
+  const populationTabs = document.querySelectorAll('.colonists-panel [data-population-tab]');
   function showPopulationSection(section) {
     const showFree = section === 'free';
     if (colonistsPanel) colonistsPanel.hidden = showFree;

@@ -352,8 +352,9 @@ function escapeCompanyText(value) {
 function updateCompanyHeadquartersMenu() {
   const button = document.querySelector('#company-headquarters-button');
   if (!button) return;
-  const built = Number(getBuildingsOnPlanet('earth').companyHeadquarters || 0) > 0;
-  button.hidden = !built;
+  // Der gemeinsame Menüpunkt bleibt sichtbar, damit auch KI-Unternehmen
+  // unabhängig vom Bau der eigenen Unternehmenszentrale erreichbar sind.
+  button.hidden = false;
 }
 
 function renderCompanyHeadquarters() {
@@ -425,14 +426,28 @@ function setupCompanyHeadquarters() {
   const button = document.querySelector('#company-headquarters-button');
   const panel = document.querySelector('#company-headquarters-panel');
   const close = document.querySelector('#company-headquarters-close');
+  const tabs = panel ? [...panel.querySelectorAll('[data-company-tab]')] : [];
+  const setCompanyTab = tab => {
+    tabs.forEach(item => {
+      const active = item.dataset.companyTab === tab;
+      item.classList.toggle('active', active);
+      item.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+    panel?.querySelectorAll('[data-company-view]').forEach(view => {
+      view.hidden = view.dataset.companyView !== tab;
+    });
+    if (tab === 'ai') renderAICompaniesPanel();
+    else renderCompanyHeadquarters();
+  };
+  tabs.forEach(tab => tab.addEventListener('click', () => setCompanyTab(tab.dataset.companyTab)));
   updateCompanyHeadquartersMenu();
   button?.addEventListener('click', () => {
-    if (!panel || Number(getBuildingsOnPlanet('earth').companyHeadquarters || 0) < 1) return;
+    if (!panel) return;
     panel.hidden = !panel.hidden;
     if (!panel.hidden) {
-      ['#news-panel','#economy-panel','#research-panel','#tasks-panel','#introduction-panel','#colonists-panel','#settings-panel','#market-panel','#asteroids-panel','#company-panel','#ai-companies-panel','#flight-center-panel','#cyclic-missions-panel'].forEach(sel => { const el = document.querySelector(sel); if (el) el.hidden = true; });
+      ['#news-panel','#economy-panel','#research-panel','#tasks-panel','#introduction-panel','#colonists-panel','#settings-panel','#market-panel','#asteroids-panel','#company-panel','#flight-center-panel','#cyclic-missions-panel'].forEach(sel => { const el = document.querySelector(sel); if (el) el.hidden = true; });
       const menu = document.querySelector('#main-menu'); if (menu) menu.hidden = true;
-      renderCompanyHeadquarters();
+      setCompanyTab('headquarters');
     }
   });
   close?.addEventListener('click', () => { if (panel) panel.hidden = true; });
@@ -472,9 +487,9 @@ function renderEconomy() {
   const gunniDollarIncome = colonistCount * 0.0002;
   const gunniDollarBalance = Math.max(0, Number(state.gunniDollar || 0));
   const formatGunniDollar = value => `${Number(value || 0).toLocaleString('de-DE', { maximumFractionDigits: 2 })} GünniDollar`;
-  const resources = [['stone','🪨','Stein'],['ice','🧊','Eis'],['coal','⚫','Kohle'],['gas','🔥','Gas'],['co2','🌫️','CO₂'],['carbon','⚫','Kohlenstoff'],['oxygen','🫧','Sauerstoff'],['hydrogen','💧','Wasserstoff'],['helium','🎈','Helium'],['crudeOil','🛢️','Rohöl'],['liquidFuel','⛽','Treibstoff'],['polymers','🧬','Polymere'],['rubber','⚫','Gummi'],['plastics','🧴','Kunststoff'],['wood','🪵','Bretter'],['biomass','🌿','Biomasse'],['trees','🌳','Baumbestand'],['iron','🧲','Eisen'],['steel','🔩','Stahl'],['silicon','🔷','Silizium'],['lithium','🔋','Lithium'],['copperOre','🟠','Kupfererz'],['copper','🟤','Kupfer'],['batteries','🔋','Batterien'],['buildingMaterials','🧱','Baustoffe'],['machines','⚙️','Maschinen'],['glass','🪟','Glas'],['electronics','💻','Elektronik'],['uranium','☢️','Uran'],['processedUranium','🧪','Aufbereitetes Uran'],['nuclearFuel','⚛️','Kernbrennstoff'],['ionium','☢️','Ionium'],['chips','💾','Chips'],['helium3','🧪','Helium-3'],['bauxite','🪨','Bauxit'],['aluminiumOxide','⚗️','Aluminiumoxid'],['aluminium','🥈','Aluminium'],['water','💧','Wasser'],['grain','🌾','Getreide'],['vegetables','🥦','Gemüse'],['food','🥫','Lebensmittel'],['algaeBiomass','🪴','Algenbiomasse'],['cocoaBeans','🫘','Kakaobohnen'],['chocolate','🍫','Schokolade'],['graphite','⚫','Graphit'],['titanOre','🪨','Titanerz'],['processedTitan','⚗️','Aufbereitetes Titan'],['titanium','nickelOre','🥈','Titan'],['vehicles','🚗','Fahrzeuge'],['luxuryFurniture','🛋️','Luxusmöbel']];
+  const resources = [['stone','🪨','Stein'],['ice','🧊','Eis'],['coal','⚫','Kohle'],['gas','🔥','Gas'],['co2','🌫️','CO₂'],['carbon','⚫','Kohlenstoff'],['oxygen','🫧','Sauerstoff'],['hydrogen','💧','Wasserstoff'],['helium','🎈','Helium'],['crudeOil','🛢️','Rohöl'],['liquidFuel','⛽','Treibstoff'],['polymers','🧬','Polymere'],['rubber','⚫','Gummi'],['plastics','🧴','Kunststoff'],['wood','🪵','Bretter'],['biomass','🌿','Biomasse'],['trees','🌳','Baumbestand'],['iron','🧲','Eisen'],['goldOre','🟨','Golderz'],['gold','🪙','Gold'],['steel','🔩','Stahl'],['silicon','🔷','Silizium'],['lithium','🔋','Lithium'],['copperOre','🟠','Kupfererz'],['copper','🟤','Kupfer'],['batteries','🔋','Batterien'],['buildingMaterials','🧱','Baustoffe'],['machines','⚙️','Maschinen'],['glass','🪟','Glas'],['electronics','💻','Elektronik'],['uranium','☢️','Uran'],['processedUranium','🧪','Aufbereitetes Uran'],['nuclearFuel','⚛️','Kernbrennstoff'],['ionium','☢️','Ionium'],['chips','💾','Chips'],['helium3','🧪','Helium-3'],['bauxite','🪨','Bauxit'],['aluminiumOxide','⚗️','Aluminiumoxid'],['aluminium','🥈','Aluminium'],['water','💧','Wasser'],['grain','🌾','Getreide'],['vegetables','🥦','Gemüse'],['food','🥫','Lebensmittel'],['algaeBiomass','🪴','Algenbiomasse'],['cocoaBeans','🫘','Kakaobohnen'],['chocolate','🍫','Schokolade'],['graphite','⚫','Graphit'],['titanOre','🪨','Titanerz'],['processedTitan','⚗️','Aufbereitetes Titan'],['titanium','nickelOre','🥈','Titan'],['vehicles','🚗','Fahrzeuge'],['luxuryFurniture','🛋️','Luxusmöbel']];
   const rows = resources.map(([key, icon, name]) => {
-    const amount = key === 'liquidFuel' ? Object.keys(bodies).filter(id => id !== 'sun').reduce((sum,id) => sum + liquidFuelAmount(id,'surface') + liquidFuelAmount(id,'orbit'), 0) : key === 'trees' ? Object.keys(bodies).filter(id => id !== 'sun').reduce((sum, id) => sum + Number(bodies[id].resources?.trees || 0), 0) : ['ice','co2','cocoaBeans','chocolate','wood','biomass','ionium','graphite'].includes(key) ? Object.keys(bodies).filter(id => id !== 'sun').reduce((sum, id) => sum + Number(getPlanetStorage(id)[key] || 0) + Number(getOrbitStorage(id)[key] || 0), 0) : getPlayerResourceAmount(key, 'earth');
+    const amount = key === 'liquidFuel' ? Object.keys(bodies).filter(id => id !== 'sun').reduce((sum,id) => sum + liquidFuelAmount(id,'surface') + liquidFuelAmount(id,'orbit'), 0) : key === 'trees' ? Object.keys(bodies).filter(id => id !== 'sun').reduce((sum, id) => sum + Number(bodies[id].resources?.trees || 0), 0) : ['ice','co2','cocoaBeans','chocolate','wood','biomass','ionium','graphite','goldOre','gold'].includes(key) ? Object.keys(bodies).filter(id => id !== 'sun').reduce((sum, id) => sum + Number(getPlanetStorage(id)[key] || 0) + Number(getOrbitStorage(id)[key] || 0), 0) : getPlayerResourceAmount(key, 'earth');
     let production = 0, consumption = 0;
     if (key === 'ice') {
       production = Object.keys(bodies).filter(id => id !== 'sun').reduce((sum, id) => sum + Number(getOperationalBuildingsOnPlanet(id).iceMine || 0) * 0.2, 0);
@@ -494,6 +509,17 @@ function renderEconomy() {
     if (key === 'rubber') { production = rubberProduction('earth'); consumption = plasticRubberUse('earth'); }
     if (key === 'plastics') { production = plasticProduction('earth'); consumption = 0; }
     if (key === 'iron') { production = ironProduction('earth'); consumption = ironUse('earth'); }
+    if (key === 'stone') {
+      production = Object.keys(bodies).filter(id => id !== 'sun').reduce((sum,id) => { const b=getOperationalBuildingsOnPlanet(id), st=getPlanetStorage(id); return sum + Number(b.goldRefinery || 0) * 0.1 * newBuildingPowerFactor(id) * (Number(st.goldOre || 0) > 0 ? 1 : 0); }, 0);
+    }
+    if (key === 'goldOre') {
+      production = Object.keys(bodies).filter(id => id !== 'sun').reduce((sum,id) => sum + Number(getOperationalBuildingsOnPlanet(id).goldMine || 0) * 0.05 * newBuildingPowerFactor(id) * (Number(bodies[id].resources?.goldOre || 0) > 0 ? 1 : 0), 0);
+      consumption = Object.keys(bodies).filter(id => id !== 'sun').reduce((sum,id) => sum + Number(getOperationalBuildingsOnPlanet(id).goldRefinery || 0) * 0.1 * newBuildingPowerFactor(id) * (Number(getPlanetStorage(id).goldOre || 0) > 0 ? 1 : 0), 0);
+    }
+    if (key === 'gold') {
+      production = Object.keys(bodies).filter(id => id !== 'sun').reduce((sum,id) => { const b=getOperationalBuildingsOnPlanet(id), st=getPlanetStorage(id); return sum + Number(b.goldRefinery || 0) * 0.09 * newBuildingPowerFactor(id) * (Number(st.goldOre || 0) > 0 ? 1 : 0); }, 0);
+      consumption = 0;
+    }
     if (key === 'steel') production = steelProduction('earth');
     if (key === 'silicon') production = siliconProduction('earth');
     if (key === 'lithium') { production = lithiumProduction('earth'); consumption = lithiumRefineryLithiumUse('earth') + chipFactoryLithiumUse('earth') + electronicsFactoryLithiumUse('earth'); }
@@ -628,18 +654,89 @@ function renderEconomy() {
     return `<article class="forest-planet-card"><div class="forest-planet-head"><strong>🌳 ${bodies[id].name}</strong><span>${forestNumber(treeStock)} t Bäume</span></div><div class="stat"><span>Natürliche Regeneration</span><strong>${forestNumber(canRegenerate ? naturalPerHour : 0)} t/h</strong></div><div class="stat"><span>Atmosphärenbonus (${(pressureBonus * 100).toLocaleString('de-DE',{maximumFractionDigits:1})} %)</span><strong>+${forestNumber(pressurePerHour)} t/h</strong></div><div class="stat"><span>Försterbonus (${(foresterBonus * 100).toLocaleString('de-DE',{maximumFractionDigits:1})} %)</span><strong>+${forestNumber(foresterPerHour)} t/h</strong></div><div class="stat forest-total"><span>Gesamtregeneration</span><strong>${forestNumber(totalPerHour)} t/h</strong></div><div class="forest-bonus-total">Verbesserung gegenüber der natürlichen Regeneration: +${totalBonusPercent.toLocaleString('de-DE',{maximumFractionDigits:2})} %</div>${status}</article>`;
   }).join('');
   const forestOverview = `<details class="economy-section forest-overview"><summary>🌳 Forstübersicht <span>${forestPlanets.length} Planeten mit Waldbestand</span></summary><div class="economy-section-content">${forestRows || '<p class="hint">Aktuell hat kein Planet einen Waldbestand.</p>'}</div></details>`;
+
+  const energyPlanetOrder = ['earth', 'luna', 'mercury', 'venus', 'mars', 'ceres', 'jupiter', 'io', 'saturn', 'uranus', 'neptune', 'pluto', 'nivaris'];
+  const energyPlanetIds = energyPlanetOrder.filter(id => bodies[id] && id !== 'sun');
+  Object.keys(bodies).forEach(id => { if (id !== 'sun' && !energyPlanetIds.includes(id)) energyPlanetIds.push(id); });
+  const energyPlanetCards = energyPlanetIds.map(id => {
+    const production = electricityProduction(id);
+    const consumption = electricityConsumption(id);
+    const balance = production - consumption;
+    const batteryCount = Math.max(0, Number(getBuildingsOnPlanet(id).batteryStorage) || 0);
+    const batteryData = ensureBatteryStorageData(id);
+    const capacity = batteryCount * 100;
+    const stored = Math.min(capacity, Math.max(0, Number(batteryData.chargeMWh) || 0));
+    const percent = capacity ? stored / capacity * 100 : 0;
+    const statusClass = balance < 0 ? 'bad' : 'good';
+    const statusText = balance < 0 ? 'Strommangel' : balance === 0 ? 'Ausgeglichen' : 'Überschuss';
+    return `<details class="energy-planet-card">
+      <summary class="energy-planet-card-summary">
+        <span class="energy-planet-card-title"><strong>${bodies[id]?.name || id}</strong><small class="${statusClass}">${statusText}</small></span>
+        <span class="energy-planet-summary-values"><span>Erzeugung <strong class="good">${formatElectricPower(production)}</strong></span><span>Verbrauch <strong>${formatElectricPower(consumption)}</strong></span><span>Bilanz <strong class="${statusClass}">${balance > 0 ? '+' : ''}${formatElectricPower(balance)}</strong></span></span>
+        <span class="energy-planet-chevron" aria-hidden="true">⌄</span>
+      </summary>
+      <div class="energy-planet-card-content">
+        <div class="energy-planet-kpis">
+          <div><span>Produktion</span><strong class="good">${formatElectricPower(production)}</strong></div>
+          <div><span>Verbrauch</span><strong>${formatElectricPower(consumption)}</strong></div>
+          <div><span>Bilanz</span><strong class="${statusClass}">${balance > 0 ? '+' : ''}${formatElectricPower(balance)}</strong></div>
+        </div>
+        <div class="energy-storage-block">
+          <div class="energy-storage-head"><strong>🔋 Batteriespeicher</strong><span>${stored.toLocaleString('de-DE',{maximumFractionDigits:2})} / ${capacity.toLocaleString('de-DE')} MWh</span></div>
+          <div class="dashboard-battery-track"><i style="width:${percent}%"></i></div>
+          <div class="energy-storage-meta"><span>${percent.toLocaleString('de-DE',{maximumFractionDigits:1})} % geladen</span><span>${batteryCount} Speicher · ${formatElectricPower(batteryCount * 10)} Lade-/Entladeleistung</span></div>
+          ${batteryCount ? '' : '<small class="hint">Noch kein Batteriespeicher auf diesem Planeten.</small>'}
+        </div>
+        ${renderElectricityPanel(id)}
+      </div>
+    </details>`;
+  }).join('');
+  const totalEnergyProduction = Object.keys(bodies).filter(id => id !== 'sun').reduce((sum,id) => sum + electricityProduction(id), 0);
+  const totalEnergyConsumption = Object.keys(bodies).filter(id => id !== 'sun').reduce((sum,id) => sum + electricityConsumption(id), 0);
+  const totalEnergyBalance = totalEnergyProduction - totalEnergyConsumption;
+  const totalEnergyClass = totalEnergyBalance < 0 ? 'bad' : 'good';
   panel.innerHTML = `
-    <div class="economy-quick-overview">
-      <div class="economy-quick-card"><span>Gebäude im Sonnensystem</span><strong>${total}</strong></div>
-      <div class="economy-quick-card"><span>💵 GünniDollar</span><strong>${formatGunniDollar(gunniDollarBalance)}</strong><small>${gunniDollarIncome.toLocaleString('de-DE', { maximumFractionDigits: 2 })} GünniDollar/s Einnahmen</small></div>
+    <div class="economy-tabs" role="tablist" aria-label="Wirtschafts-Dashboard">
+      <button type="button" class="economy-tab active" data-economy-tab="overview" role="tab" aria-selected="true">📊 Übersicht</button>
+      <button type="button" class="economy-tab" data-economy-tab="energy" role="tab" aria-selected="false">⚡ Energie</button>
     </div>
-    <details class="economy-section"><summary>📦 Rohstoffe & Lager <span>Bestände aller Rohstoffe</span></summary><div class="economy-section-content">${stockRows}</div></details>
-    <details class="economy-section"><summary>🏭 Produktion & Verbrauch <span>Förderung und Materialflüsse</span></summary><div class="economy-section-content">${productionRows}</div></details>
-    <details class="economy-section"><summary>💎 Luxusgüter <span>Fahrzeuge im Oberflächen- und Orbitlager</span></summary><div class="economy-section-content">${luxuryRows}</div></details>
-    <details class="economy-section"><summary>⚡ Energie <span>Erde · ${formatElectricPower(energyBalance)}</span></summary><div class="economy-section-content">${batterySummary}${renderElectricityPanel('earth')}</div></details>
-    <details class="economy-section"><summary>🏢 Gebäude im Sonnensystem <span>${total} Gebäude</span></summary><div class="economy-section-content">${buildingRows}</div></details>
-    <details class="economy-section"><summary>🚀 Raketen & Transport <span>Transportübersicht</span></summary><div class="economy-section-content"><p class="hint">Öffne die Raketen- und Orbitansicht für Flüge, Fracht und Raketenbestände.</p></div></details>
-    ${forestOverview}`;
+    <section class="economy-tab-panel" data-economy-panel="overview">
+      <div class="economy-quick-overview">
+        <div class="economy-quick-card"><span>Gebäude im Sonnensystem</span><strong>${total}</strong></div>
+        <div class="economy-quick-card"><span>💵 GünniDollar</span><strong>${formatGunniDollar(gunniDollarBalance)}</strong><small>${gunniDollarIncome.toLocaleString('de-DE', { maximumFractionDigits: 2 })} GünniDollar/s Einnahmen</small></div>
+      </div>
+      <details class="economy-section"><summary>📦 Rohstoffe & Lager <span>Bestände aller Rohstoffe</span></summary><div class="economy-section-content">${stockRows}</div></details>
+      <details class="economy-section"><summary>🏭 Produktion & Verbrauch <span>Förderung und Materialflüsse</span></summary><div class="economy-section-content">${productionRows}</div></details>
+      <details class="economy-section"><summary>💎 Luxusgüter <span>Fahrzeuge im Oberflächen- und Orbitlager</span></summary><div class="economy-section-content">${luxuryRows}</div></details>
+      <details class="economy-section"><summary>🏢 Gebäude im Sonnensystem <span>${total} Gebäude</span></summary><div class="economy-section-content">${buildingRows}</div></details>
+      <details class="economy-section"><summary>🚀 Raketen & Transport <span>Transportübersicht</span></summary><div class="economy-section-content"><p class="hint">Öffne die Raketen- und Orbitansicht für Flüge, Fracht und Raketenbestände.</p></div></details>
+      ${forestOverview}
+    </section>
+    <section class="economy-tab-panel" data-economy-panel="energy" hidden>
+      <div class="energy-system-overview">
+        <div class="energy-system-heading"><div><strong>⚡ Energieversorgung des Sonnensystems</strong><small>Jeder Planet besitzt ein eigenes Stromnetz.</small></div><span class="${totalEnergyClass}">${totalEnergyBalance > 0 ? '+' : ''}${formatElectricPower(totalEnergyBalance)}</span></div>
+        <div class="energy-system-kpis">
+          <div><span>Gesamtproduktion</span><strong class="good">${formatElectricPower(totalEnergyProduction)}</strong></div>
+          <div><span>Gesamtverbrauch</span><strong>${formatElectricPower(totalEnergyConsumption)}</strong></div>
+          <div><span>Gesamtbilanz</span><strong class="${totalEnergyClass}">${totalEnergyBalance > 0 ? '+' : ''}${formatElectricPower(totalEnergyBalance)}</strong></div>
+        </div>
+        <small>Die Gesamtwerte dienen nur der Übersicht. Überschüsse werden nicht zwischen Planeten übertragen.</small>
+      </div>
+      <div class="energy-planet-list">${energyPlanetCards}</div>
+    </section>`;
+  panel.querySelectorAll('[data-economy-tab]').forEach(button => {
+    button.addEventListener('click', () => {
+      const selectedTab = button.dataset.economyTab;
+      panel.querySelectorAll('[data-economy-tab]').forEach(tab => {
+        const active = tab.dataset.economyTab === selectedTab;
+        tab.classList.toggle('active', active);
+        tab.setAttribute('aria-selected', active ? 'true' : 'false');
+      });
+      panel.querySelectorAll('[data-economy-panel]').forEach(tabPanel => {
+        tabPanel.hidden = tabPanel.dataset.economyPanel !== selectedTab;
+      });
+    });
+  });
 
 }
 

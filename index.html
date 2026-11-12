@@ -71,10 +71,13 @@
       </div>
       <section class="update-popup-page" data-update-page-content="1">
         <div class="update-popup-kicker">ZENTRALE FUNKMELDUNG</div>
-        <h2 id="update-popup-title"></h2>
+        <h2 id="update-popup-title">Aktuelle Nachrichten</h2>
         <div class="update-popup-message">
-          <p><strong>Fehler in der Flugzebtrale geben jetzt einen Fehlerspeicher aus</strong></p>
-          <li>□ Neue Gebäude und Wirschaftszweig (Gold)</li>
+          <p>Ich arbeite gerade an vielen neuer Änderungen. Diese benötigen etwas zeit.</p>
+          <p><strong>Betroffen:</strong></p>
+          <ul>
+            <li>Gebäude</li>
+            <li>Aufgaben</li>
           </ul>
         </div>
       </section>
@@ -262,8 +265,7 @@
       </div>
       <div class="main-menu-items">
         <button id="economy-button" class="menu-item">📊 <span>Wirtschaft</span></button>
-        <button id="ai-companies-button" class="menu-item">🤖 <span>KI-Unternehmen</span></button>
-        <button id="company-headquarters-button" class="menu-item" hidden>🏢 <span>Unternehmenszentrale</span></button>
+        <button id="company-headquarters-button" class="menu-item" hidden>🏢 <span>Unternehmen</span></button>
         <button id="colonists-button" class="menu-item">👥 <span>Bevölkerungszentrale</span></button>
         
         <button id="research-button" class="menu-item">🔬 <span>Forschung</span></button>
@@ -441,17 +443,21 @@
       <div id="company-content"></div>
     </section>
 
-    <section id="ai-companies-panel" class="ai-companies-panel" hidden>
-      <div class="ai-companies-head">
-        <div><h2>🤖 KI-Unternehmen</h2><div class="hint">Drei KI-Unternehmen · Börsenhandel · eigene Entwicklung</div></div>
-        <button id="ai-companies-close" class="icon-button" type="button" aria-label="KI-Unternehmen schließen">✕</button>
-      </div>
-      <div id="ai-companies-content"></div>
-    </section>
-
     <section id="company-headquarters-panel" class="flight-center-panel company-headquarters-panel" hidden>
-      <div class="flight-center-head"><div><h2>🏢 Unternehmenszentrale</h2><div class="hint">Unternehmensstufe und Finanzen</div></div><button id="company-headquarters-close" class="icon-button" type="button">✕</button></div>
-      <div id="company-headquarters-content"></div>
+      <div class="flight-center-head"><div><h2>🏢 Unternehmen</h2><div class="hint">Unternehmenszentrale · KI-Unternehmen · Finanzen</div></div><button id="company-headquarters-close" class="icon-button" type="button">✕</button></div>
+      <div class="population-tabs company-tabs" role="tablist" aria-label="Unternehmensbereiche">
+        <button type="button" class="population-tab active" data-company-tab="headquarters" role="tab" aria-selected="true">🏢 Unternehmenszentrale</button>
+        <button type="button" class="population-tab" data-company-tab="ai" role="tab" aria-selected="false">🤖 KI-Unternehmen</button>
+      </div>
+      <div id="company-headquarters-view" data-company-view="headquarters">
+        <div id="company-headquarters-content"></div>
+      </div>
+      <div id="ai-companies-panel" class="ai-companies-panel" data-company-view="ai" hidden>
+        <div class="ai-companies-head">
+          <div><h2>🤖 KI-Unternehmen</h2><div class="hint">Drei KI-Unternehmen · Börsenhandel · eigene Entwicklung</div></div>
+        </div>
+        <div id="ai-companies-content"></div>
+      </div>
     </section>
 
     <section id="economy-panel" class="economy-panel" hidden>
