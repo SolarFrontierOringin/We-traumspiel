@@ -56,7 +56,7 @@ function renderColonistsPanel() {
           <div class="stat"><span>Zugewinn pro Stunde</span><strong data-growth-rate="${id}">${getColonistHourlyGrowthEstimate(id).toLocaleString('de-DE',{maximumFractionDigits:2})} Kolonisten</strong></div>
           <label class="colonists-growth-label" for="colonist-growth-${id}">Bevölkerungswachstum: <strong data-growth-value="${id}">${body.colonistGrowthPercent}%</strong></label>
           <input id="colonist-growth-${id}" class="colonist-growth-slider" type="range" min="0" max="100" step="1" value="${body.colonistGrowthPercent}" data-growth-planet="${id}">
-          <div class="colonists-release-row"><label for="colonist-release-${id}">In freie Bevölkerung freigeben</label><input id="colonist-release-${id}" type="number" min="1" max="${pop}" step="1" value="1" data-release-amount="${id}" ${pop > 0 && FREE_POPULATION_PLANETS.has(id) && canReleaseFreePopulation(id) ? '' : 'disabled'}><button type="button" data-release-colonists="${id}" ${pop > 0 && FREE_POPULATION_PLANETS.has(id) && canReleaseFreePopulation(id) ? '' : 'disabled'}>Freigeben</button><small>${id === 'earth' ? 'Erde ist vorerst ausgenommen.' : getFreePopulationReleaseStatus(id)}</small></div>
+          <div class="colonists-release-row"><label for="colonist-release-${id}">In freie Bevölkerung freigeben</label><input id="colonist-release-${id}" type="number" min="1" max="${pop}" step="1" value="1" data-release-amount="${id}" ${pop > 0 && FREE_POPULATION_PLANETS.has(id) && canReleaseFreePopulation(id) ? '' : 'disabled'}><button type="button" data-release-colonists="${id}" ${pop > 0 && FREE_POPULATION_PLANETS.has(id) && canReleaseFreePopulation(id) ? '' : 'disabled'}>Freigeben</button><small>${getFreePopulationReleaseStatus(id)}</small></div>
           <div class="colonists-remove-row"><label for="colonist-remove-${id}">Kolonisten entfernen</label><input id="colonist-remove-${id}" type="number" min="1" max="${pop}" step="1" value="1" data-remove-amount="${id}" ${pop > 0 ? '' : 'disabled'}><button type="button" data-remove-colonists="${id}" ${pop > 0 ? '' : 'disabled'}>Entfernen</button></div>
         </details>`;
       }).join('')}
@@ -196,8 +196,10 @@ function refreshColonistsPanelLive() {
 
 
 // Freie Bevölkerung: getrennt vom noch nicht freigegebenen Kolonistenbestand.
-const FREE_POPULATION_PLANETS = new Set(['luna', 'mars', 'venus']);
-const FREE_POPULATION_GAS_GIANTS = new Set(['jupiter', 'neptune', 'uranus']);
+const FREE_POPULATION_GAS_GIANTS = new Set(Object.keys(bodies).filter(id => String(bodies[id]?.type || '').toLowerCase() === 'gasplanet'));
+// Freie Bevölkerung kann auf geeigneten festen Planeten entstehen. Nur die Erde
+// startet mit Einwohnern; auf allen anderen Planeten muss der Spieler sie zuerst freigeben.
+const FREE_POPULATION_PLANETS = new Set(Object.keys(bodies).filter(id => id !== 'sun' && !FREE_POPULATION_GAS_GIANTS.has(id)));
 const FREE_POPULATION_START_CAPITAL = 200000;
 const FREE_POPULATION_GROWTH_INTERVAL_SECONDS = 20 * 60; // 20 Ingame-Minuten
 
@@ -210,6 +212,14 @@ function ensureFreePopulationData(id) {
     delete body.freePopulationFacilities;
     delete body.freePopulationStorage;
     return body;
+  }
+  // Einmalige, save-kompatible Startbevölkerung: bestehende Spielstände erhalten
+  // genau einmal 10.000 freie Einwohner auf der Erde. Danach wird der Bestand nie
+  // automatisch zurückgesetzt oder aufgefüllt.
+  if (id === 'earth' && state.freePopulationEarthSeeded !== true) {
+    body.freePopulation = 10000;
+    body.freePopulationGrowthAccumulator = 0;
+    state.freePopulationEarthSeeded = true;
   }
   body.freePopulation = Math.max(0, Math.floor(Number(body.freePopulation) || 0));
   body.freePopulationGrowthAccumulator = Math.max(0, Number(body.freePopulationGrowthAccumulator) || 0);
@@ -232,7 +242,7 @@ function freePopulationConditionsMet(id) {
 }
 function canReleaseFreePopulation(id) { return FREE_POPULATION_PLANETS.has(id) && colonistsOnPlanet(id) > 0 && freePopulationConditionsMet(id); }
 function getFreePopulationReleaseStatus(id) {
-  if (!FREE_POPULATION_PLANETS.has(id)) return 'Freie Bevölkerung ist nur auf Luna, Mars und Venus möglich.';
+  if (!FREE_POPULATION_PLANETS.has(id)) return 'Freie Bevölkerung ist auf diesem Himmelskörper nicht möglich.';
   const temp = planetTemperatureCelsius(id);
   const atmosphere = getColonistAtmosphereStatus(id);
   if (temp < -10 || temp > 50) return `Temperatur muss −10 bis +50 °C betragen (aktuell ${temp.toFixed(0)} °C).`;
@@ -263,7 +273,7 @@ function processFreePopulation(id, delta) {
 function renderFreePopulationPanel() {
   const content = document.querySelector('#free-population-content');
   if (!content) return;
-  const ids = ['luna', 'mars', 'venus'].filter(id => bodies[id]);
+  const ids = [...FREE_POPULATION_PLANETS].filter(id => bodies[id]).sort((a, b) => { const priority = id => id === 'earth' ? 0 : id === 'luna' ? 1 : 2; return priority(a) - priority(b) || String(bodies[a]?.name || a).localeCompare(String(bodies[b]?.name || b), 'de'); });
   const total = ids.reduce((sum,id)=>sum+freePopulationOnPlanet(id),0);
   const totalCash = ids.reduce((sum,id)=>sum+Number(ensureFreePopulationData(id).freePopulationCash || 0),0);
   const totalIncome = total * 0.001;
@@ -274,7 +284,7 @@ function renderFreePopulationPanel() {
   </div>
   <details class="free-population-info">
     <summary>ℹ️ Informationen zur freien Bevölkerung</summary>
-    <p class="hint">Die freie Bevölkerung auf Luna, Mars und Venus benötigt weder Wasser noch Lebensmittel, keine eigenen Gebäude und keine Lager. Sie wächst ausschließlich anhand ihrer aktuellen Einwohnerzahl gemäß der festgelegten Wachstumstabelle, sofern Temperatur (−10 bis +50 °C), Luftdruck (0,8–2 bar) und Sauerstoffanteil (15–25 %) stimmen. Jeder Bewohner erzeugt 0,001 GünniDollar pro Ingame-Sekunde. Das Wachstum folgt der festgelegten Tabelle: 1 Bewohner je 20 Ingame-Minuten, ab 500: 2, ab 1.000: 3, ab 5.000: 4, ab 8.000: 5, ab 12.000: 6 und ab 15.000: 7 Bewohner je 20 Ingame-Minuten. Bei ungeeigneter Temperatur, Druck oder Sauerstoff pausiert nur das Wachstum. Jeder Planet besitzt weiterhin ein eigenes Geldkonto.</p>
+    <p class="hint">Die Erde startet mit 10.000 freien Einwohnern. Auf anderen geeigneten festen Planeten beginnt die freie Bevölkerung bei 0 und muss vom Spieler zunächst durch Freigabe von Kolonisten aufgebaut werden. Sie benötigt weder Wasser noch Lebensmittel, keine eigenen Gebäude und keine Lager. Sie wächst ausschließlich anhand ihrer aktuellen Einwohnerzahl gemäß der festgelegten Wachstumstabelle, sofern Temperatur (−10 bis +50 °C), Luftdruck (0,8–2 bar) und Sauerstoffanteil (15–25 %) stimmen. Jeder Bewohner erzeugt 0,001 GünniDollar pro Ingame-Sekunde. Das Wachstum folgt der festgelegten Tabelle: 1 Bewohner je 20 Ingame-Minuten, ab 500: 2, ab 1.000: 3, ab 5.000: 4, ab 8.000: 5, ab 12.000: 6 und ab 15.000: 7 Bewohner je 20 Ingame-Minuten. Bei ungeeigneter Temperatur, Druck oder Sauerstoff pausiert nur das Wachstum. Jeder Planet besitzt weiterhin ein eigenes Geldkonto.</p>
   </details>
   <div class="colonists-planet-list">${ids.map(id => {
     const pop = freePopulationOnPlanet(id);

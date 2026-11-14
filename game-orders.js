@@ -362,6 +362,8 @@ function renderCompanyHeadquarters() {
   if (!panel) return;
   if (Number(getBuildingsOnPlanet('earth').companyHeadquarters || 0) < 1) {
     panel.innerHTML = '<p class="hint">Die Unternehmenszentrale muss zuerst auf der Erde gebaut werden.</p>';
+    const recruitmentPanel = document.querySelector('#hq-recruitment-content');
+    if (recruitmentPanel) recruitmentPanel.innerHTML = '';
     return;
   }
   const companyValue = calculateCompanyValue();
@@ -420,6 +422,9 @@ function renderCompanyHeadquarters() {
   const destination = document.querySelector('#hq-company-details');
   if (source && destination) {
     while (source.firstChild) destination.appendChild(source.firstChild);
+  }
+  if (typeof globalThis.SolarFrontierRecruitment?.renderPanel === 'function') {
+    globalThis.SolarFrontierRecruitment.renderPanel();
   }
 }
 function setupCompanyHeadquarters() {

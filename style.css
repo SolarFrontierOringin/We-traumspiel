@@ -2282,3 +2282,14 @@ body > .planet-build-menu .planet-build-header {
 .electricity-priority-control select{min-width:175px}
 .electricity-priority-control select:disabled{opacity:.75}
 @media(max-width:560px){.electricity-consumer-row{grid-template-columns:1fr;gap:2px}.electricity-priority-control{justify-content:space-between}.electricity-priority-control select{flex:1;max-width:70%}}
+
+
+/* Personalbeschaffung in der Unternehmenszentrale */
+.recruitment-section{margin:14px 0;padding:14px;border:1px solid #28506c;border-radius:13px;background:linear-gradient(145deg,rgba(12,35,55,.94),rgba(7,17,30,.96));}
+.recruitment-title{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:6px;margin-bottom:12px}
+.recruitment-title h3{margin:0;color:#d9efff}.recruitment-title small,.recruitment-form small{color:#9eb8cc;line-height:1.45}
+.recruitment-form{display:grid;gap:7px;padding:12px;border:1px solid rgba(105,159,194,.22);border-radius:10px;background:rgba(4,13,24,.56)}
+.recruitment-form label{font-weight:700;color:#c7d9e9}.recruitment-form select,.recruitment-form input{width:100%;min-height:40px;padding:8px 10px;border:1px solid #365673;border-radius:8px;background:#0b1a2b;color:#eef7ff}
+.recruitment-cost{display:flex;justify-content:space-between;gap:8px;padding:9px 0;border-top:1px solid rgba(125,164,193,.18);color:#a9c4d9}.recruitment-cost strong{color:#f0c878}
+.recruitment-form button{min-height:42px;margin-top:4px}.recruitment-planet-list{display:grid;gap:8px;margin-top:12px}.recruitment-planet-card{padding:10px;border:1px solid rgba(105,159,194,.2);border-radius:9px;background:rgba(5,15,26,.55)}
+.recruitment-planet-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px;margin-bottom:6px}.recruitment-planet-head strong{color:#e0f1ff}.recruitment-planet-head span,.recruitment-planet-card small{color:#9eb8cc;font-size:.84rem}.recruitment-status{display:inline-block;color:#b7c9d8;font-size:.88rem}.recruitment-status.active{color:#8ce6b0}.recruitment-status.locked{color:#f0c878}.recruitment-progress{height:7px;margin:8px 0;border-radius:99px;overflow:hidden;background:#1b2c3e}.recruitment-progress i{display:block;height:100%;background:#35b879;border-radius:99px}

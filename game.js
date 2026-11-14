@@ -388,6 +388,8 @@ const state = {
   gas: 0,
   co2: 1000000,
   earthCo2StockV1Added: true,
+  freePopulationEarthSeeded: false,
+  recruitment: { planets: {} },
   carbon: 0,
   oxygen: 0,
   crudeOil: 0,
@@ -8072,6 +8074,9 @@ function updateResources() {
     if (id === 'sun') return;
     processColonists(id, delta);
     processFreePopulation(id, delta);
+    if (globalThis.SolarFrontierRecruitment && typeof globalThis.SolarFrontierRecruitment.process === 'function') {
+      globalThis.SolarFrontierRecruitment.process(id, delta, now);
+    }
     const habitatCount = Math.max(0, Number(getBuildingsOnPlanet(id).habitat) || 0);
     const upkeepDue = habitatCount * (88 / 3600) * delta;
     if (upkeepDue > 0) {
