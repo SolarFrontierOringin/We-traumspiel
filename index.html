@@ -6,7 +6,7 @@
   <title>Solar Frontier: Origins</title>
   <meta name="theme-color" content="#02050b">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=popup-update-20261030">
+  <link rel="stylesheet" href="style.css?v=electricity-priority-20261114">
 </head>
 <body>
 
@@ -35,7 +35,7 @@
     <p>Baue dein Sonnensystem auf. Erkunde neue Welten. Schreibe deine eigene Geschichte.</p>
     <div class="startup-intro-actions">
       <button id="startup-play" type="button">Spiel starten <span aria-hidden="true">➜</span></button>
-      <button id="startup-updates" type="button">Neuigkeiten &amp; Updates</button>
+      <button id="startup-updates" type="button">Update-Chronik</button>
     </div>
   </section>
 
@@ -485,8 +485,10 @@
       <div class="population-tabs" role="tablist" aria-label="Bevölkerungsbereich">
         <button type="button" class="population-tab active" data-population-tab="colonists">👨‍🚀 Kolonisten</button>
         <button type="button" class="population-tab" data-population-tab="free">🏘️ Freie Bevölkerung</button>
+        <button type="button" class="population-tab" data-population-tab="workforce">🧑‍🏭 Arbeitskräfte</button>
       </div>
       <div id="colonists-content"></div>
+      <div id="workforce-content" hidden></div>
     </section>
 
     <section id="free-population-panel" class="colonists-panel" hidden>
@@ -494,6 +496,7 @@
       <div class="population-tabs" role="tablist" aria-label="Bevölkerungsbereich">
         <button type="button" class="population-tab" data-population-tab="colonists">👨‍🚀 Kolonisten</button>
         <button type="button" class="population-tab active" data-population-tab="free">🏘️ Freie Bevölkerung</button>
+        <button type="button" class="population-tab" data-population-tab="workforce">🧑‍🏭 Arbeitskräfte</button>
       </div>
       <div id="free-population-content"></div>
     </section>
@@ -576,7 +579,11 @@
       <aside id="info-panel" class="panel"></aside>
     </section>
   </main>
-  <script src="game.js?v=flight-storage-fix-20261112"></script>
+  <script src="game-co2.js?v=co2-split-20261113"></script>
+  <script src="game-energy.js?v=central-energy-20261114"></script>
+  <script src="game-buildings.js?v=buildings-split-20261114"></script>
+  <script src="game.js?v=workforce-powerlink-20261114"></script>
+  <script src="game-workforce.js?v=workforce-powerlink-20261114"></script>
 <script src="game-colonists.js?v=split-20261105"></script>
 <script src="game-ai.js?v=split-20261105"></script>
 <script src="game-company.js?v=split-20261105"></script>

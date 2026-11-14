@@ -172,12 +172,24 @@ document.querySelector('#colonists-complete-confirm')?.addEventListener('click',
 document.querySelector('#system-failure-story-close')?.addEventListener('click', closeSystemFailureStory);
 document.querySelector('#system-failure-story-confirm')?.addEventListener('click', closeSystemFailureStory);
 
-// Startseite: bleibt beim Laden sichtbar, bis der Spieler eine Auswahl trifft.
+// Startseite: bleibt sichtbar, bis der Spieler ausdrücklich "Spiel starten" wählt.
 const startupIntro = document.querySelector('#startup-intro');
 if (startupIntro) startupIntro.hidden = false;
 const startupPlay = document.querySelector('#startup-play');
 const startupUpdates = document.querySelector('#startup-updates');
 const updatePopup = document.querySelector('#update-popup');
+
+// Jede veröffentlichte Update-Ausgabe wird beim ersten Öffnen einmal automatisch gezeigt.
+// Für eine neue Ausgabe muss nur diese Versionskennung geändert werden.
+const STARTUP_UPDATE_VERSION = '2026-11-14';
+const STARTUP_UPDATE_SEEN_KEY = `solarFrontierStartupUpdateSeen_${STARTUP_UPDATE_VERSION}`;
+function openStartupUpdate() {
+  if (!updatePopup) return;
+  updatePopup.hidden = false;
+  updatePopup.setAttribute('aria-hidden', 'false');
+  const firstPageButton = updatePopup.querySelector('[data-update-page="1"]');
+  firstPageButton?.click();
+}
 if (startupPlay && startupIntro) {
   startupPlay.addEventListener('click', () => {
     startupIntro.hidden = true;
@@ -187,13 +199,20 @@ if (startupPlay && startupIntro) {
   });
 }
 if (startupUpdates && startupIntro && updatePopup) {
-  startupUpdates.addEventListener('click', () => {
-    updatePopup.hidden = false;
-    updatePopup.setAttribute('aria-hidden', 'false');
-  });
+  startupUpdates.addEventListener('click', openStartupUpdate);
 }
 
-// Updatefenster: erscheint bei jedem Seitenstart erneut und wird nur über X geschlossen.
+// Das Update erscheint etwa eine Sekunde nach dem Aufbau der Startseite.
+// Nach dem Schließen bleibt der Spieler auf der Startseite und muss selbst starten.
+if (startupIntro && updatePopup) {
+  let updateAlreadySeen = false;
+  try { updateAlreadySeen = localStorage.getItem(STARTUP_UPDATE_SEEN_KEY) === '1'; } catch {}
+  if (!updateAlreadySeen) {
+    window.setTimeout(() => {
+      if (!startupIntro.hidden) openStartupUpdate();
+    }, 1000);
+  }
+}
 
 const updatePopupClose = document.querySelector('#update-popup-close');
 if (updatePopup) {
@@ -216,6 +235,7 @@ if (updatePopup && updatePopupClose) {
   updatePopupClose.addEventListener('click', () => {
     updatePopup.hidden = true;
     updatePopup.setAttribute('aria-hidden', 'true');
+    try { localStorage.setItem(STARTUP_UPDATE_SEEN_KEY, '1'); } catch {}
   });
 }
 

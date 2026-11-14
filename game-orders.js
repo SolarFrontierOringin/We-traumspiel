@@ -573,6 +573,10 @@ function renderEconomy() {
     if (key === 'food') production = foodFactoryProduction('earth') * newBuildingPowerFactor('earth');
     if (key === 'steel') consumption = Object.keys(bodies).filter(id => id !== 'sun').reduce((sum,id) => sum + vehicleFactorySteelUse(id), 0);
     if (key === 'silicon') consumption = 0;
+    if (key === 'lithiumBatteries') {
+      production = Object.keys(bodies).filter(id => id !== 'sun').reduce((sum,id) => sum + Number(getOperationalBuildingsOnPlanet(id).lithiumBatteryFactory || 0) * 0.005 * getBuildingPowerFactor(id, 'lithiumBatteryFactory'), 0);
+      consumption = 0;
+    }
     if (key === 'vehicles') {
       production = Object.keys(bodies).filter(id => id !== 'sun').reduce((sum,id) => sum + vehicleFactoryProduction(id), 0);
       consumption = Object.keys(bodies).filter(id => id !== 'sun').reduce((sum,id) => { const body = ensureColonistData(id); return sum + (body?.vehicleLuxuryEnabled !== false && Number(getPlanetStorage(id).vehicles || 0) > 1e-12 ? colonistsOnPlanet(id) * 0.00002 : 0); }, 0);
@@ -588,6 +592,7 @@ function renderEconomy() {
     const unit = liquidResource ? 'L/s' : 't/s';
     return `<div class="stat economy-resource-row ${balanceClass}" data-economy-resource="${key}"><span class="economy-resource-name">${icon} ${name}</span><strong class="economy-stock">${liquidResource ? amount.toLocaleString('de-DE', {maximumFractionDigits:2}) + ' L' : key === 'co2' ? formatLargeTons(amount) : formatTons(amount)}</strong><span class="economy-flow-value"><small>Produktion</small><strong>${production.toFixed(liquidResource ? 2 : 4)} ${unit}</strong></span><span class="economy-flow-value"><small>Verbrauch</small><strong>${consumption.toFixed(liquidResource ? 2 : 4)} ${unit}</strong></span></div>`;
   }).join('');
+  const totalLithiumBatteryStock = Object.keys(bodies).filter(id => id !== 'sun').reduce((sum,id) => sum + Number(getPlanetStorage(id).lithiumBatteries || 0) + Number(getOrbitStorage(id).lithiumBatteries || 0), 0);
   const totalVehicleStock = Object.keys(bodies).filter(id => id !== 'sun').reduce((sum, id) => sum + Number(getPlanetStorage(id).vehicles || 0) + Number(getOrbitStorage(id).vehicles || 0), 0);
   const totalVehicleProduction = Object.keys(bodies).filter(id => id !== 'sun').reduce((sum, id) => sum + vehicleFactoryProduction(id), 0);
   const totalVehicleConsumption = Object.keys(bodies).filter(id => id !== 'sun').reduce((sum, id) => { const body = ensureColonistData(id); return sum + (body?.vehicleLuxuryEnabled !== false && Number(getPlanetStorage(id).vehicles || 0) > 1e-12 ? colonistsOnPlanet(id) * 0.00002 : 0); }, 0);

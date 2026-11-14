@@ -2206,3 +2206,79 @@ body > .planet-build-menu .planet-build-header {
 #solar-system-selector-dialog.is-open{display:flex!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important}
 #solar-system-selector-dialog[hidden]{display:none!important}
 #open-solar-system-selector{position:relative;z-index:5;display:flex!important;visibility:visible!important;pointer-events:auto!important}
+
+/* Zentrale CO2-Verwaltung innerhalb der planetaren Atmosphaerenanzeige */
+.co2-management-panel{margin:12px 0;padding:11px;border:1px solid #6b3d72;border-radius:12px;background:linear-gradient(135deg,rgba(92,35,91,.22),rgba(20,28,48,.55))}
+.co2-management-panel h4{margin:0 0 8px;color:#f0a5df;font-size:14px}
+.co2-management-panel .hint{margin:8px 0 0}
+
+
+/* Zentrale Arbeitskräfteübersicht */
+.workforce-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 14px 0;
+}
+.workforce-summary-card {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 13px;
+  border: 1px solid var(--border, rgba(255,255,255,.14));
+  border-radius: 12px;
+  background: var(--panel-card, rgba(255,255,255,.035));
+}
+.workforce-summary-card span {
+  color: var(--muted, #aaa);
+  font-size: .82rem;
+}
+.workforce-summary-card strong {
+  font-size: 1.35rem;
+  font-variant-numeric: tabular-nums;
+}
+.workforce-note { margin: 8px 0 14px; }
+.workforce-planet-list { display: grid; gap: 9px; }
+.workforce-planet-card {
+  border: 1px solid var(--border, rgba(255,255,255,.14));
+  border-radius: 11px;
+  padding: 0 12px;
+  background: var(--panel-card, rgba(255,255,255,.025));
+}
+.workforce-planet-card > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 48px;
+  cursor: pointer;
+  list-style: none;
+}
+.workforce-planet-card > summary::-webkit-details-marker { display: none; }
+.workforce-planet-card > summary span {
+  color: var(--muted, #aaa);
+  font-size: .82rem;
+  text-align: right;
+}
+.workforce-planet-stats { padding: 0 0 12px; }
+@media (max-width: 520px) {
+  .workforce-summary { grid-template-columns: 1fr; }
+  .workforce-summary-card { flex-direction: row; align-items: center; justify-content: space-between; }
+}
+
+
+/* Rethroxid: roter Gesteinsplanet auf der gegenüberliegenden Seite von Themepatins Umlaufbahn. */
+.orbit.rethroxid-orbit{border-color:rgba(235,86,66,.42);box-shadow:0 0 18px rgba(220,55,42,.13)}
+.body.rethroxid{width:46px;height:46px;border:1px solid rgba(255,142,112,.95);border-radius:50%;background:radial-gradient(circle at 29% 24%,#ffb09a 0%,#e45a43 25%,#9f3029 57%,#42151b 100%);box-shadow:inset -8px -7px 11px rgba(0,0,0,.68),inset 4px 3px 8px rgba(255,183,154,.38),0 0 15px rgba(239,75,55,.65),0 0 32px rgba(183,38,34,.3);overflow:visible}
+.body.rethroxid::before{content:"";position:absolute;inset:-6px;border:1px solid rgba(255,115,91,.28);border-radius:50%;pointer-events:none}
+
+
+/* Planetare Stromprioritäten */
+.electricity-priority-settings{margin:8px 0 12px;padding:10px;border:1px solid var(--border-color,rgba(255,255,255,.12));border-radius:10px;background:rgba(127,127,127,.06)}
+.electricity-priority-settings .stat{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.electricity-priority-settings select,.electricity-priority-control select{max-width:100%;min-width:145px;padding:6px 8px;border-radius:8px}
+.electricity-consumer-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid rgba(127,127,127,.12)}
+.electricity-priority-control{display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--muted,#999)}
+.electricity-priority-control select{min-width:175px}
+.electricity-priority-control select:disabled{opacity:.75}
+@media(max-width:560px){.electricity-consumer-row{grid-template-columns:1fr;gap:2px}.electricity-priority-control{justify-content:space-between}.electricity-priority-control select{flex:1;max-width:70%}}

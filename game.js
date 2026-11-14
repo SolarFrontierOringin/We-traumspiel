@@ -29,8 +29,9 @@ function getSaveSlotKeys(slot = activeSaveSlot) {
 const futureSolarSystem = {
   id: 'system2', name: 'Sonnensystem 2',
   bodies: [
-    { id: 'themepatin', name: 'Themepatin', type: 'Gesteinsplanet', className: 'themepatin', orbit: 1120, temperature: 'Unbekannt', resources: { stone: 1000000, copperOre: 2000000, uranium: 10000000 }, storage: {} },
-    { id: 'noxaris', name: 'Noxaris', type: 'Mystischer Planet', className: 'noxaris', orbit: 1420, temperature: 'Unbekannt', resources: { iron: 2000000, stone: 1000000, ionium: 500000 }, storage: {} }
+    { id: 'themepatin', name: 'Themepatin', type: 'Gesteinsplanet', className: 'themepatin', orbit: 1120, temperature: 'Unbekannt', resources: { stone: 1000000, copperOre: 2000000, uranium: 10000000 }, storage: {}, orbitStorage: {} },
+    { id: 'rethroxid', name: 'Rethroxid', type: 'Roter Gesteinsplanet', className: 'rethroxid', orbit: 1120, temperature: 'Unbekannt', resources: { copperOre: 10000000, germanium: 2000000 }, storage: {}, orbitStorage: {} },
+    { id: 'noxaris', name: 'Noxaris', type: 'Mystischer Planet', className: 'noxaris', orbit: 1420, temperature: 'Unbekannt', resources: { iron: 2000000, stone: 1000000, ionium: 500000, germanium: 1000000 }, storage: {}, orbitStorage: {} }
   ]
 };
 let activeSolarSystemId = 'system1';
@@ -150,7 +151,7 @@ const MARKET_RESOURCES = {
  polymers:{base:40,capacity:15000,initial:12000,unit:'t'}, rubber:{base:55,capacity:12000,initial:8000,unit:'t'}, plastics:{base:65,capacity:10000,initial:6000,unit:'t'}, wood:{base:8,capacity:100000,initial:50000,unit:'t'}, biomass:{base:7,capacity:12000,initial:9000,unit:'t'}, iron:{base:10,capacity:100000,initial:100000,unit:'t'},
  steel:{base:25,capacity:50000,initial:40000,unit:'t'}, silicon:{base:12,capacity:50000,initial:45000,unit:'t'},
  lithium:{base:45,capacity:20000,initial:15000,unit:'t'}, copperOre:{base:12,capacity:30000,initial:30000,unit:'t'},
- copper:{base:24,capacity:20000,initial:15000,unit:'t'}, batteries:{base:70,capacity:12000,initial:8000,unit:'t'},
+ copper:{base:24,capacity:20000,initial:15000,unit:'t'}, batteries:{base:70,capacity:12000,initial:8000,unit:'t'}, lithiumBatteries:{base:950,capacity:1200,initial:0,unit:'t'},
  buildingMaterials:{base:8,capacity:60000,initial:60000,unit:'t'}, machines:{base:90,capacity:10000,initial:6000,unit:'t'},
  glass:{base:20,capacity:20000,initial:16000,unit:'t'}, electronics:{base:100,capacity:10000,initial:6000,unit:'t'},
  hydrogen:{base:12,capacity:20000,initial:16000,unit:'t'}, helium:{base:30,capacity:10000,initial:7000,unit:'t'},
@@ -167,7 +168,7 @@ const MARKET_RESOURCES = {
   cocoaBeans:{base:80,capacity:10000,initial:5000,unit:'t'}, chocolate:{base:160,capacity:5000,initial:2000,unit:'t'},
   luxuryFurniture:{base:300,capacity:4000,initial:1000,unit:'t'},
   liquidFuel:{base:4,capacity:100000,initial:50000,unit:'L'},
-  nickelOre:{base:35,capacity:5000,initial:5000,unit:'t'}, graphite:{base:45,capacity:10000,initial:5000,unit:'t'}, goldOre:{base:250,capacity:20000,initial:5000,unit:'t'}, gold:{base:2500,capacity:5000,initial:1000,unit:'t'}, microchip:{base:8000,capacity:2000,initial:200,unit:'t'}
+  nickelOre:{base:35,capacity:5000,initial:5000,unit:'t'}, graphite:{base:45,capacity:10000,initial:5000,unit:'t'}, goldOre:{base:250,capacity:20000,initial:5000,unit:'t'}, gold:{base:2500,capacity:5000,initial:1000,unit:'t'}, microchip:{base:8000,capacity:2000,initial:200,unit:'t'}, germanium:{base:15000,capacity:500,initial:50,unit:'t'}
 };
 let market = {budget:MARKET_START_BUDGET,lastRestockSlot:0,lastPriceUpdateMs:0,
  resources:Object.fromEntries(Object.entries(MARKET_RESOURCES).map(([k,c])=>[k,{stock:c.initial,soldStock:0,price:c.base,demand:0,supply:0}]))};
@@ -443,6 +444,7 @@ const state = {
     megaChipFactory: 0,
     nickelMine: 0,
     graphiteMine: 0,
+    lithiumBatteryFactory: 0,
     syntheticGraphitePlant: 0,
     lithiumMine: 0,
     copperMine: 0,
@@ -518,89 +520,6 @@ const state = {
     companyOrdersCompleted: 0,
     companyNameChosen: false
   }
-};
-
-const buildingTypes = {
-  companyHeadquarters: { name: 'Unternehmenszentrale', icon: '🏢', resource: null, rate: 0, cost: 2000, text: 'Zentrales Firmengebäude · nur auf der Erde an der Oberfläche · Freischaltung nach „Gründe deine eigene Firma“ · Baukosten: 2.000 t Stahl, 1.000 t Baustoffe und 250 t Glas' },
-  steelworks: { name: 'Stahlwerk', icon: '🏭', resource: null, rate: 0.2, cost: 0, text: 'Produziert 0,2 t Stahl/s und verbraucht 0,2 t Eisen/s · Baukosten abhängig von der Anzahl vorhandener Stahlwerke' },
-  gasCarbonStorage: { name: 'Gas- und Kohlenstofflager', icon: '🛢️', resource: null, rate: 0, cost: 200, text: '100.000 t Kapazität je Rohstoff und Lagergebäude für Sauerstoff, CO₂, Wasserstoff und Gas · Oberfläche und Orbit · CO₂ kann nur in diesem Lager gespeichert werden · kein Stromverbrauch · keine Forschung · unbegrenzt baubar' },
-  atmosphereRegulator: { name: 'Atmosphären-Regulator', icon: '🌐', resource: null, rate: 0, cost: 200, text: 'Gibt automatisch bis zu 0,2 t CO₂ pro Ingame-Sekunde aus dem lokalen Oberflächenlager in die Atmosphäre ab · gibt bei geringerem Lagerbestand nur die verfügbare Menge frei · pausiert bei leerem Lager und setzt automatisch fort, sobald CO₂ verfügbar ist · ohne Forschung · auf allen Planetenoberflächen außer der Sonne baubar · Bauzeit 10 Ingame-Sekunden · Baukosten: 200 t Stahl und 200 t Baustoffe' },
-  gasRemoval: { name: 'Gasentfernungsanlage', icon: '🌫️', resource: null, rate: 0, cost: 200, text: 'Entfernt bis zu 0,05 t/s des ausgewählten atmosphärischen Gases · ohne Lagerung · auf Planetenoberflächen außer der Sonne baubar' },
-  waterElectrolysis: { name: 'Wasserelektrolyseanlage', icon: '⚗️', resource: null, rate: 0, cost: 200, text: 'Verbraucht 0,2 Liter Wasser/s und 1 MW Strom · produziert Wasserstoff und Sauerstoff · auf Planetenoberflächen außer der Sonne baubar · Baukosten: 200 t Stahl und 200 t Baustoffe' },
-  treeNursery: { name: 'Baumschule I', icon: '🌱', resource: null, rate: 1 / 10800, cost: 150, text: 'Produziert 1 t Bäume pro 3 Ingame-Stunden · benötigt 1 MW Strom · kein Wasserverbrauch · auf Planetenoberflächen mit geeigneter Oberfläche baubar · Baukosten: 150 t Stahl, 100 t Glas und 200 t Baustoffe' },
-  woodcutter: { name: 'Sägewerk', icon: '🪵', resource: null, rate: 0, cost: 0, text: 'Verbraucht 1 MW Strom und 0,01 t Bäume/s · produziert 0,009 t Biomasse/s und 0,009 t Bretter/s · ohne Forschung · auf allen Planetenoberflächen baubar' },
-  nickelMining: { name: 'Grabung nach Nickelerz', icon: '⛏️', category: 'Tiefengrabung', cost: 200, time: 2 * 60 * 60, text: 'Schaltet Nickelerz global frei: Abbau auf allen Planeten und nickelhaltigen Asteroiden sowie Handel und Transport werden erst nach Abschluss dieser Forschung ermöglicht.' },
-  forester: { name: 'Förster', icon: '🌳', resource: null, rate: 0, cost: 0, text: 'Erhöht die lokale Regeneration der Bäume um 0,5 % je gebautem, mit Strom versorgtem Förster · benötigt 2 MW · Bauzeit 2 Ingame-Minuten · Baukosten: 290 t Stahl, 100 t Polymere, 150 t Chips, 100 t Glas · nur auf Planeten unter 50 °C · unbegrenzt baubar' },
-  residentialHouse: { name: 'Wohnhaus', icon: '🏠', resource: null, rate: 0, cost: 1900, text: '100 Wohnplätze · 1.900 t Stahl · 900 t Baustoffe · auf Planetenoberflächen bei −10 °C bis +50 °C baubar · Kolonisten benötigen 0,8–2,0 bar und 15–25 % Sauerstoff' },
-  mediumResidentialHouse: { name: 'Mittleres Wohnhaus', icon: '🏘️', resource: null, rate: 0, cost: 180, text: '150 Wohnplätze · 180 t Stahl · 250 t Baustoffe · 40 t Glas · auf Planetenoberflächen bei −10 °C bis +50 °C baubar · Kolonisten benötigen 0,8–2,0 bar und 15–25 % Sauerstoff' },
-  residentialComplex: { name: 'Wohnkomplex', icon: '🏢', resource: null, rate: 0, cost: 600, text: '500 Wohnplätze · 600 t Stahl · 800 t Baustoffe · 150 t Glas · auf Planetenoberflächen bei −10 °C bis +50 °C baubar · Kolonisten benötigen 0,8–2,0 bar und 15–25 % Sauerstoff' },
-  habitat: { name: 'Habitat', icon: '🛖', resource: null, rate: 0, cost: 200, text: '150 Wohnplätze · 200 t Stahl · 250 t Baustoffe · auf allen Planetenoberflächen außer der Sonne baubar · unabhängig von der Planetentemperatur durch Spezialisolierung · bewohnbar bei 0–30 bar Außendruck und unabhängig von der äußeren Sauerstoffmischung' },
-  stoneQuarry: { name: 'Steinbruch', icon: '🪨', resource: 'stone', rate: 0.1, cost: 30, text: 'Kein Verbrauch · produziert 0,1 t Stein/s pro Gebäude' },
-  buildingMaterialsFactory: { name: 'Baustofffabrik', icon: '🧱', resource: null, rate: 0, cost: 40, text: 'verbraucht 0,20 t Stein/s · produziert 0,15 t Baustoffe/s' },
-  coalMine: { name: 'Kohlemine', icon: '⛏️', resource: 'coal', rate: 0.5, cost: 15, text: '0,5 t Kohle/s' },
-  gasPlant: { name: 'Gasförderanlage', icon: '🔥', resource: 'gas', rate: 0.25, cost: 25, text: '0,25 t Gas/s' },
-  co2Extraction: { name: 'CO₂-Extraktionsanlage', icon: '🌫️', resource: 'co2', rate: 0.25, cost: 25, text: 'extrahiert 0,25 t CO₂/s aus der Atmosphäre · nur auf Venus' },
-  co2ProcessingPlant: { name: 'CO₂-Verarbeitung', icon: '⚗️', resource: null, rate: 0, cost: 50, text: 'verarbeitet 0,2 t CO₂/s → 0,1 t Kohlenstoff + 0,1 t Sauerstoff · auf allen Planeten außer der Sonne' },
-  orbitalCo2Extractor: { name: 'CO₂-Orbit-Extraktor', icon: '🛰️', resource: null, rate: 0, cost: 0, text: 'Fördert 0,2 t CO₂/s · kein Stromverbrauch · lagert CO₂ im jeweiligen Orbit-Lager ein · nur im Orbit' },
-  researchSatellite: { name: 'Forschungssatellit', icon: '🛰️', resource: null, rate: 0, cost: 800, text: 'Erzeugt 0,5 Forschungspunkte/s · kein Stromverbrauch · maximal 1 Forschungssatellit pro Orbit · Baukosten: 800 t Stahl, 120 t Elektronik, 80 t Chips, 100 t Glas' },
-  ironMine: { name: 'Eisenmine', icon: '🧲', resource: 'iron', rate: 0.1, cost: 20, text: '0,1 t Eisen/s' },
-  goldMine: { name: 'Goldmine', icon: '🪙', resource: 'goldOre', rate: 0.05, cost: 300, text: 'Fördert 0,05 t Golderz/s aus dem lokalen Planetenvorkommen · benötigt 2 MW Strom · Baukosten: 300 t Stahl, 400 t Baustoffe und 40 t Chips · auf allen Planetenoberflächen baubar' },
-  goldRefinery: { name: 'Scheideanstalt', icon: '🏭', resource: null, rate: 0, cost: 0, text: 'Verbraucht 0,1 t Golderz/s · produziert 0,09 t Gold/s und 0,1 t Stein/s · benötigt 2 MW Strom · auf allen Planetenoberflächen baubar, auch ohne lokales Gold- oder Golderzvorkommen' },
-  megaChipFactory: { name: 'MegaChipFabrik', icon: '💠', resource: 'microchip', rate: 0.01, cost: 0, text: 'Verbraucht 0,005 t Gold, 0,025 t Kupfer und 0,05 t Silizium/s · produziert 0,01 t Mikrochip/s · benötigt bis zu 50 MW Strom · Produktion und Rohstoffverbrauch sinken proportional bei Strommangel · kein Arbeiterbedarf · Baukosten: 300 t Stahl, 300 t Baustoffe und 200 t Maschinen' },
-  nickelMine: { name: 'Nickelmine', icon: '🪨', resource: 'nickelOre', rate: 0.1, cost: 30, text: '0,1 t Nickelerz/s · benötigt 1 MW Strom · Baukosten: 30 t Stahl · nur auf Planetenoberflächen mit Nickelerzvorkommen und nach Abschluss der Forschung „Grabung nach Nickelerz“' },
-  graphiteMine: { name: 'Graphitmine', icon: '⚫', resource: 'graphite', rate: 0.05, cost: 0, text: '0,05 t Graphit/s · benötigt 5 MW Strom · Baukosten: 800 t Stahl, 1.100 t Baustoffe und 100 t Glas · keine Forschung · nur auf Erde, Luna, Mars und Io mit Graphitvorkommen' },
-  batteryStorage: { name: 'Batteriespeicher I', icon: '🔋', resource: null, rate: 0, cost: 0, text: '100 MWh Speicherkapazität je Gebäude · 10 MW maximale Lade- und Entladeleistung je Gebäude · Mindestreserve 30 % · Hybridbetrieb mit automatischen Regeln und manueller Steuerung · keine Forschung · unbegrenzt baubar' },
-  syntheticGraphitePlant: { name: 'Synthetische Graphitproduktion', icon: '⚗️', resource: null, rate: 0.05, cost: 0, text: 'Produziert 0,05 t Graphit/s · verbraucht 0,7 L Rohöl/s und benötigt 10 MW Strom · Baukosten: 1.400 t Stahl, 1.600 t Baustoffe, 200 t Glas und 159 t Graphit · kein lokales Rohölvorkommen erforderlich; Rohöl kann per Rakete angeliefert werden · keine Forschung' },
-  titanMine: { name: 'Titanmine', icon: '⛏️', resource: 'titanOre', rate: 0.2, cost: 150, text: '0,2 t Titanerz/s · 150 t Stahl, 50 t Maschinen, 30 t Elektronik · auf allen Planetenoberflächen baubar; fördert lokales Titanerzvorkommen' },
-  titanProcessing: { name: 'Titanaufbereitung', icon: '⚗️', resource: null, rate: 0, cost: 250, text: 'verbraucht 0,2 t Titanerz/s · produziert 0,1 t aufbereitetes Titan/s · 250 t Stahl, 100 t Maschinen, 50 t Elektronik' },
-  titanRefinery: { name: 'Titanraffinerie', icon: '🏭', resource: null, rate: 0, cost: 400, text: 'verbraucht 0,1 t aufbereitetes Titan/s · produziert 0,05 t Titan/s · 400 t Stahl, 150 t Maschinen, 100 t Elektronik' },
-  bauxiteMine: { name: 'Bauxitmine', icon: '⛏️', resource: 'bauxite', rate: 0.5, cost: 40, text: '0,5 t Bauxit/s · kein Verbrauch · nur Erde, Luna und Mars' },
-  aluminiumOxideRefinery: { name: 'Aluminiumoxidraffinerie', icon: '⚗️', resource: null, rate: 0, cost: 100, text: 'verbraucht 0,5 t Bauxit/s · produziert 0,25 t Aluminiumoxid/s' },
-  aluminiumSmelter: { name: 'Aluminiumhütte', icon: '🏭', resource: null, rate: 0, cost: 200, text: 'verbraucht 0,25 t Aluminiumoxid/s · produziert 0,125 t Aluminium/s' },
-  siliconMine: { name: 'Siliziummine', icon: '🔷', resource: 'silicon', rate: 0.3, cost: 30, text: '0,3 t Silizium/s' },
-  lithiumMine: { name: 'Lithiummine', icon: '🔋', resource: 'lithium', rate: 0.05, cost: 30, text: '0,05 t Lithium/s pro Gebäude' },
-  copperMine: { name: 'Kupfermine', icon: '🟠', resource: 'copperOre', rate: 0.05, cost: 30, text: '0,05 t Kupfererz/s pro Gebäude' },
-  copperSmelter: { name: 'Kupferschmelze', icon: '🔥', resource: null, rate: 0, cost: 50, text: 'verbraucht 0,10 t Kupfererz/s · produziert 0,08 t Kupfer/s' },
-  lithiumRefinery: { name: 'Lithiumraffinerie', icon: '🔋', resource: null, rate: 0, cost: 80, text: 'verbraucht 0,3 t Lithium/s + 0,3 t Kupfer/s · produziert 0,1 t Batterien/s' },
-  machineFactory: { name: 'Maschinenfabrik', icon: '⚙️', resource: null, rate: 0, cost: 100, text: 'verbraucht 0,10 t Stahl/s + 0,05 t Kupfer/s · produziert 0,05 t Maschinen/s' },
-  glassFactory: { name: 'Glasfabrik', icon: '🪟', resource: null, rate: 0, cost: 60, text: 'verbraucht 0,20 t Silizium/s + 0,10 t Stein/s · produziert 0,15 t Glas/s' },
-  heliumExtractor: { name: 'Helium-Extraktor', icon: '🧪', resource: 'helium3', rate: 0.1, cost: 120, text: '0,1 t Helium-3/s · nur auf Luna, Venus und Jupiter' },
-  fusionReactor: { name: 'Fusionsreaktor', icon: '⚛️', resource: null, rate: 0, cost: 250, text: 'verbraucht 0,02 t Helium-3/s · produziert 50 MW Strom/s' },
-  rocketFactory: { name: 'Raketenfabrik', icon: '🏭', resource: null, rate: 0, cost: 500, text: '500 t Stahl · 500 t Baustoffe · 60 Sekunden Bauzeit · Voraussetzung für den Bau aller Raketen' },
-  landingPad: { name: 'Start- & Landerampe', icon: '🛬', resource: null, rate: 0, cost: 500, text: '500 t Stahl · 500 t Baustoffe · 1 Rampe je gleichzeitig möglichem Start/Landung' },
-  researchLab: { name: 'Forschungslabor', icon: '🔬', resource: null, rate: 0, cost: 0, text: 'nur auf der Erde · benötigt Baustoffe, Glas und Elektronik' },
-  observatory: { name: 'Observatorium', icon: '🔭', resource: null, rate: 0, cost: 1000, text: 'Astronomische Beobachtungsanlage · nur auf der Erdoberfläche · Baukosten: 1.000 t Stahl, 800 t Baustoffe, 250 t Elektronik und 200 t Glas' },
-  moonBase: { name: 'Mondbasis', icon: '🌙', resource: null, rate: 0, cost: 300, text: '300 t Stahl · 100 t Baustoffe · Forschung erforderlich' },
-  solarPlant: { name: 'Solaranlage', icon: '☀️', resource: null, rate: 0, cost: 30, text: '20 MW Strom/s · 30 t Stahl · 10 t Baustoffe · 20 t Elektronik · Forschung erforderlich' },
-  crudeOilPump: { name: 'Rohölpumpe', icon: '🛢️', resource: 'crudeOil', rate: 0.01, cost: 40, text: '0,01 Liter Rohöl/s · verbraucht 2 MW/s · nur auf der Erde' },
-  refinery: { name: 'Raffinerie', icon: '🏭', resource: null, rate: 0, cost: 0, text: 'Verbraucht 0,2 L Rohöl/s · produziert 0,4 L Treibstoff/s · keine Forschung · nur auf Planetenoberflächen unter 50 °C · Treibstoff wird ausschließlich im Flüssiglager gespeichert' },
-  polymerFactory: { name: 'Polymerfabrik', icon: '🧪', resource: null, rate: 0, cost: 500, text: 'verbraucht 0,001 L Rohöl/s · produziert 0,0005 t Polymere/s · 500 t Stahl · 500 t Baustoffe · 200 t Elektronik · Forschung erforderlich' },
-  rubberFactory: { name: 'Gummifabrik', icon: '⚫', resource: null, rate: 0, cost: 500, text: 'verbraucht 0,1 L Rohöl/s · produziert 0,1 t Gummi/s · 500 t Stahl · 50 t Chips · 100 t Glas · 800 t Baustoffe · keine Forschung erforderlich · auf allen Planeten baubar' },
-  plasticFactory: { name: 'Kunststofffabrik', icon: '🧴', resource: null, rate: 0, cost: 400, text: 'verbraucht 0,1 t Gummi/s · produziert 0,05 t Kunststoff/s · 400 t Stahl · 40 t Chips · 80 t Glas · 600 t Baustoffe · keine Forschung erforderlich · auf allen Planeten baubar' },
-  vehicleFactory: { name: 'Fahrzeugfabrik', icon: '🚗', resource: null, rate: 0, cost: 500, text: 'Produziert 0,003 t Fahrzeuge/s · verbraucht 0,1 t Stahl/s, 0,1 t Kunststoff/s, 0,05 t Gummi/s, 0,3 t Glas/s und 0,2 t Chips/s · benötigt 4 MW Strom · 500 t Stahl, 250 t Baustoffe, 100 t Elektronik, 200 t Chips · 120 Sekunden Bauzeit · Forschung erforderlich · auf allen Planeten außer der Sonne baubar' },
-  electronicsFactory: { name: 'Elektronikfabrik', icon: '💻', resource: null, rate: 0, cost: 500, text: 'verbraucht 0,05 t Kupfer/s + 0,07 t Chips/s + 0,02 t Lithium/s · produziert 0,03 t Elektronik/s · 500 t Stahl · 300 t Baustoffe' },
-  uraniumMine: { name: 'Uranmine', icon: '☢️', resource: 'uranium', rate: 0.01, cost: 300, text: '0,01 t Uran/s' },
-  ioniumMine: { name: 'Ionium-Mine', icon: '☢️', resource: 'ionium', rate: 0.01, cost: 300, text: '0,01 t Ionium/s · nur auf Io · benötigt ein Radioaktivstofflager zur sicheren Lagerung · 300 t Stahl · 200 t Baustoffe' },
-  uraniumProcessingPlant: { name: 'Uranaufbereitungsanlage', icon: '⚗️', resource: null, rate: 0, cost: 500, text: 'verbraucht 0,02 t Uran/s · produziert 0,015 t aufbereitetes Uran/s · 500 t Stahl · 300 t Baustoffe' },
-  nuclearFuelPlant: { name: 'Kernbrennstoffanlage', icon: '☢️', resource: null, rate: 0, cost: 1000, text: 'verbraucht 0,01 t aufbereitetes Uran/s · produziert 0,008 t Kernbrennstoff/s · 1.000 t Stahl · 600 t Baustoffe · 100 t Elektronik' },
-  nuclearReactor: { name: 'Kernreaktor', icon: '☢️', resource: null, rate: 0, cost: 5000, text: 'verbraucht 0,01 t Kernbrennstoff/s · erzeugt 1.000 MW Strom/s · 5.000 t Stahl · 7.000 t Baustoffe · 2.000 t Elektronik' },
-  radioactiveStorageSurface: { name: 'Radioaktivstofflager', icon: '☢️', resource: null, rate: 0, cost: 500, text: 'Lagert bis zu 10.000 t radioaktive Materialien · Baukosten: 500 t Stahl, 500 t Baustoffe, 200 t Glas und 100 t Elektronik · nur auf der Oberfläche' },
-  radioactiveStorageOrbit: { name: 'Radioaktivstofflager', icon: '☢️', resource: null, rate: 0, cost: 500, text: 'Lagert bis zu 10.000 t radioaktive Materialien · Baukosten: 500 t Stahl, 500 t Baustoffe, 200 t Glas und 100 t Elektronik · nur im Orbit' },
-  chipFactory: { name: 'Chipfabrik', icon: '💾', resource: null, rate: 0, cost: 1000, text: 'verbraucht 0,1 t Lithium/s + 0,3 t Kupfer/s · produziert 0,015 t Chips/s · Baukosten: 2.000 t Baustoffe' },
-  solarSail: { name: 'Sonnensegel', icon: '☀️', resource: null, rate: 0, cost: 100, text: 'ausschließlich im Orbit baubar · Baukosten: 100 t Stahl und 100 t Baustoffe' },
-  warmingSail: { name: 'Planetare Wärmesegel', icon: '🌞', resource: null, rate: 0, cost: 100, text: 'ausschließlich im Orbit baubar · Baukosten: 100 t Stahl und 100 t Baustoffe' },
-  solarSatellite: { name: 'Solar-Satellit', icon: '🛰️', resource: null, rate: 0, cost: 20000, text: 'wird auf der Erde gebaut und anschließend mit einer Sonnensonde in den Sonnenorbit gebracht · 20.000 t Stahl · 20.000 t Baustoffe · 10.000 t Glas · 5.000 t Elektronik · 5.000 t Batterien' },
-  solarProbe: { name: 'Sonnensonde', icon: '🚀', resource: null, rate: 0, cost: 15000, text: 'transportiert Solar-Satelliten von der Erde in den Sonnenorbit · 15.000 t Stahl · 5.000 t Elektronik · 2.000 t Batterien' },
-  hydroelectricPlant: { name: 'Wasserkraftwerk', icon: '💧', resource: null, rate: 0, cost: 700, text: 'verbraucht 3 MW Strom · erzeugt 0,1 Liter Wasser/s aus dem Wasservorkommen der Erde · 700 t Stahl · 100 t Maschinen · 50 t Elektronik · Forschung erforderlich' },
-  cocoaPlantation: { name: 'Kakao-Plantage', icon: '🌱', resource: null, rate: 0, cost: 500, text: 'Erzeugt 0,1 t Kakaobohnen/s · verbraucht 0,2 Liter Wasser/s · benötigt 5 MW Strom · 500 t Stahl und 300 t Baustoffe · Forschung erforderlich · auf allen Planetenoberflächen außer der Sonne baubar' },
-  luxuryFurnitureFactory: { name: 'Luxusmöbelfabrik', icon: '🛋️', resource: null, rate: 0, cost: 1200, text: 'Verbraucht 5 MW Strom, 0,03 t Kunststoff/s und 0,006 t Bretter/s · produziert 0,02 t Luxusmöbel/s · Baukosten: 1.200 t Stahl, 800 t Baustoffe, 250 t Glas, 100 t Chips und 150 t Elektronik · Forschung erforderlich' },
-  chocolateFactory: { name: 'Schokoladenfabrik', icon: '🍫', resource: null, rate: 0, cost: 500, text: 'Verbraucht 0,02 t Kakaobohnen/s · produziert 0,05 t Schokolade/s · benötigt 5 MW Strom · kein Wasserverbrauch · 500 t Stahl und 300 t Baustoffe · Forschung erforderlich · auf allen Planetenoberflächen außer der Sonne baubar' },
-  greenhouse: { name: 'Gewächshaus', icon: '🌱', resource: null, rate: 0, cost: 500, text: 'verbraucht 2 MW Strom und 0,01 Liter Wasser/s · produziert 0,2 t Getreide/s und 0,2 t Gemüse/s · 500 t Stahl · 20 t Polymere · 300 t Baustoffe · Forschung erforderlich' },
-  foodFactory: { name: 'Lebensmittelfabrik', icon: '🥫', resource: null, rate: 0, cost: 1900, text: 'verbraucht 5 MW Strom, 0,1 t Getreide/s und 0,05 L Wasser/s · produziert 0,08 t Lebensmittel/s · Forschung erforderlich' },
-  iceMine: { name: 'Eismine', icon: '🧊', resource: 'ice', rate: 0.2, cost: 100, text: 'Fördert 0,2 t Eis/s · keine Forschung erforderlich · nur auf Planeten mit Eisvorkommen' },
-  iceProcessingPlant: { name: 'Eisverarbeitungsanlage', icon: '🧊', resource: null, rate: 0, cost: 100, text: 'verbraucht 0,1 t Eis/s aus dem lokalen Lager · produziert 0,2 L Wasser/s · kein Stromverbrauch · auf allen Planeten außer der Sonne · Forschung erforderlich' },
-  algaeFarm: { name: 'Algenfarm', icon: '🪴', resource: null, rate: 0, cost: 300, text: 'verbraucht 0,05 t Wasser/s (50 L/s) aus dem lokalen Lager · produziert 0,2 t Algenbiomasse/s · kein zusätzlicher Stromverbrauch · Forschung erforderlich' },
-  algaeFoodProcessor: { name: 'Algenverarbeitungsanlage', icon: '🥫', resource: null, rate: 0, cost: 800, text: 'verbraucht 0,1 t Algenbiomasse/s · produziert 0,12 t Lebensmittel/s · Forschung erforderlich' }
 };
 
 const rocketTypes = {
@@ -776,8 +695,8 @@ const bodies = {
   io: { name: 'Io', type: 'Mond des Jupiter', className: 'io', temperature: 'ca. -110 °C Durchschnitt', resources: { iron: 20000000, silicon: 15000000, copperOre: 20000000, graphite: 70000000, bauxite: 19000000, ionium: 1000000 }, storage: {}, orbit: 570, moonOf: 'jupiter' }
 };
 
-const resourceNames = { ice: 'Eis', titanOre: 'Titanerz', processedTitan: 'Aufbereitetes Titan', titanium: 'Titan', bauxite: 'Bauxit', aluminiumOxide: 'Aluminiumoxid', aluminium: 'Aluminium', co2: 'CO₂', carbon: 'Kohlenstoff', oxygen: 'Sauerstoff', stone: 'Stein', coal: 'Kohle', gas: 'Gas', iron: 'Eisen', goldOre: 'Golderz', gold: 'Gold', microchip: 'Mikrochip', silicon: 'Silizium', lithium: 'Lithium', copperOre: 'Kupfererz', copper: 'Kupfer', batteries: 'Batterien', buildingMaterials: 'Baustoffe', machines: 'Maschinen', glass: 'Glas', electronics: 'Elektronik', steel: 'Stahl', hydrogen: 'Wasserstoff', helium: 'Helium', helium3: 'Helium-3', crudeOil: 'Rohöl', polymers: 'Polymere', rubber: 'Gummi', plastics: 'Kunststoff', wood: 'Bretter', biomass: 'Biomasse', vehicles: 'Fahrzeuge', cocoaBeans: 'Kakaobohnen', chocolate: 'Schokolade', luxuryFurniture: 'Luxusmöbel', nickelOre: 'Nickelerz', graphite: 'Graphit', liquidFuel: 'Treibstoff', trees: 'Bäume', uranium: 'Uran', processedUranium: 'Aufbereitetes Uran', nuclearFuel: 'Kernbrennstoff', ionium: 'Ionium', chips: 'Chips', water: 'Wasser', grain: 'Getreide', vegetables: 'Gemüse', food: 'Lebensmittel', algaeBiomass: 'Algenbiomasse' };
-const resourceIcons = { ice: '🧊', titanOre: '⚙️', processedTitan: '⚗️', titanium: '🔩', bauxite: '🪨', aluminiumOxide: '⚗️', aluminium: '🥈', co2: '🌫️', carbon: '⚫', oxygen: '🫧', stone: '🪨', coal: '⚫', gas: '🔥', iron: '🧲', goldOre: '🟨', gold: '🪙', microchip: '💠', silicon: '🔷', lithium: '🔋', copperOre: '🟠', copper: '🟤', batteries: '🔋', buildingMaterials: '🧱', machines: '⚙️', glass: '🪟', electronics: '💻', steel: '🔩', hydrogen: '💨', helium: '💨', helium3: '🧪', crudeOil: '🛢️', polymers: '🧬', rubber: '⚫', plastics: '🧴', wood: '🪵', biomass: '🌿', vehicles: '🚗', cocoaBeans: '🫘', chocolate: '🍫', luxuryFurniture: '🛋️', nickelOre: '🪨', graphite: '⚫', liquidFuel: '🛢️', trees: '🌳', uranium: '☢️', processedUranium: '🧪', nuclearFuel: '⚛️', ionium: '☢️', chips: '💾', water: '💧', grain: '🌾', vegetables: '🥦', food: '🥫', algaeBiomass: '🪴' };
+const resourceNames = { ice: 'Eis', titanOre: 'Titanerz', processedTitan: 'Aufbereitetes Titan', titanium: 'Titan', bauxite: 'Bauxit', aluminiumOxide: 'Aluminiumoxid', aluminium: 'Aluminium', co2: 'CO₂', carbon: 'Kohlenstoff', oxygen: 'Sauerstoff', stone: 'Stein', coal: 'Kohle', gas: 'Gas', iron: 'Eisen', goldOre: 'Golderz', gold: 'Gold', microchip: 'Mikrochip', silicon: 'Silizium', lithium: 'Lithium', copperOre: 'Kupfererz', copper: 'Kupfer', batteries: 'Batterien', lithiumBatteries: 'Lithium-Batterien', buildingMaterials: 'Baustoffe', machines: 'Maschinen', glass: 'Glas', electronics: 'Elektronik', steel: 'Stahl', hydrogen: 'Wasserstoff', helium: 'Helium', helium3: 'Helium-3', crudeOil: 'Rohöl', polymers: 'Polymere', rubber: 'Gummi', plastics: 'Kunststoff', wood: 'Bretter', biomass: 'Biomasse', vehicles: 'Fahrzeuge', cocoaBeans: 'Kakaobohnen', chocolate: 'Schokolade', luxuryFurniture: 'Luxusmöbel', nickelOre: 'Nickelerz', graphite: 'Graphit', liquidFuel: 'Treibstoff', trees: 'Bäume', uranium: 'Uran', processedUranium: 'Aufbereitetes Uran', nuclearFuel: 'Kernbrennstoff', ionium: 'Ionium', germanium: 'Germanium', chips: 'Chips', water: 'Wasser', grain: 'Getreide', vegetables: 'Gemüse', food: 'Lebensmittel', algaeBiomass: 'Algenbiomasse' };
+const resourceIcons = { ice: '🧊', titanOre: '⚙️', processedTitan: '⚗️', titanium: '🔩', bauxite: '🪨', aluminiumOxide: '⚗️', aluminium: '🥈', co2: '🌫️', carbon: '⚫', oxygen: '🫧', stone: '🪨', coal: '⚫', gas: '🔥', iron: '🧲', goldOre: '🟨', gold: '🪙', microchip: '💠', silicon: '🔷', lithium: '🔋', copperOre: '🟠', copper: '🟤', batteries: '🔋', lithiumBatteries: '🔋', buildingMaterials: '🧱', machines: '⚙️', glass: '🪟', electronics: '💻', steel: '🔩', hydrogen: '💨', helium: '💨', helium3: '🧪', crudeOil: '🛢️', polymers: '🧬', rubber: '⚫', plastics: '🧴', wood: '🪵', biomass: '🌿', vehicles: '🚗', cocoaBeans: '🫘', chocolate: '🍫', luxuryFurniture: '🛋️', nickelOre: '🪨', graphite: '⚫', liquidFuel: '🛢️', trees: '🌳', uranium: '☢️', processedUranium: '🧪', nuclearFuel: '⚛️', ionium: '☢️', germanium: '💎', chips: '💾', water: '💧', grain: '🌾', vegetables: '🥦', food: '🥫', algaeBiomass: '🪴' };
 
 function formatTons(value) { return `${value.toFixed(2)} t`; }
 function formatLargeTons(value) {
@@ -925,6 +844,13 @@ function renderAtmospherePanel(planetId) {
     <div class="planet-atmosphere-content">
       <div class="stat"><span>Atmosphärendruck</span><strong>${pressure.toFixed(3)} bar</strong></div>
       <div class="stat"><span>Gasmenge gesamt</span><strong>${formatAtmosphereTons(atmosphere.totalGas)}</strong></div>
+      <div class="co2-management-panel">
+        <h4>CO₂-Verwaltung · ${bodies[planetId]?.name || planetId}</h4>
+        <div class="stat"><span>CO₂ in der Atmosphäre</span><strong>${formatAtmosphereTons(gasAmount('co2'))}</strong></div>
+        <div class="stat"><span>Aktueller CO₂-Ausstoß</span><strong>${(Number(getPlanetCO2Management(planetId)?.lastRate) || 0).toLocaleString('de-DE', { maximumFractionDigits: 7 })} t/s</strong></div>
+        <div class="stat"><span>CO₂ insgesamt ausgestoßen</span><strong>${formatAtmosphereTons(getPlanetCO2Management(planetId)?.emittedTotal || 0)}</strong></div>
+        <p class="hint">Alle registrierten Gebäude geben CO₂ direkt an diese Planetenatmosphäre ab. Weitere Gebäude können zentral ergänzt werden.</p>
+      </div>
       <div class="stat"><span>🫧 Sauerstoffanteil</span><strong>${oxygenShare.toLocaleString('de-DE', { maximumFractionDigits: 4 })} %</strong></div>
       <p class="hint atmosphere-status">${atmosphereStatus}</p>
       ${colonistStatusHtml}
@@ -1011,7 +937,7 @@ const PERFORMANCE_CONTROLLED_BUILDINGS = new Set([
   'waterElectrolysis','foodFactory','iceMine','iceProcessingPlant','algaeFarm','algaeFoodProcessor','cocoaPlantation',
   'chocolateFactory','luxuryFurnitureFactory','crudeOilPump','refinery','uraniumMine','ioniumMine','uraniumProcessingPlant',
   'nuclearFuelPlant','nuclearReactor','gasRemoval','chipFactory','electronicsFactory','polymerFactory','rubberFactory','plasticFactory',
-  'syntheticGraphitePlant','vehicleFactory','titanMine','titanProcessing','titanRefinery'
+  'syntheticGraphitePlant','lithiumBatteryFactory','vehicleFactory','titanMine','titanProcessing','titanRefinery'
 ]);
 
 function getBuildingPerformancePercent(planetId, buildingKey) {
@@ -1027,6 +953,14 @@ function setBuildingPerformancePercent(planetId, buildingKey, value) {
   if (!body || !PERFORMANCE_CONTROLLED_BUILDINGS.has(buildingKey)) return;
   if (!body.buildingPerformance || typeof body.buildingPerformance !== 'object') body.buildingPerformance = {};
   body.buildingPerformance[buildingKey] = Math.max(0, Math.min(100, Math.round((Number(value) || 0) / 5) * 5));
+
+  // Produktionsänderungen sofort an die Arbeitskräfteverwaltung melden.
+  const workforce = globalThis.SolarFrontierWorkforce;
+  if (workforce && typeof workforce.syncBuildings === 'function') {
+    workforce.syncBuildings(planetId, body, getBuildingsOnPlanet(planetId), body.buildingPerformance || {}, electricityPriorityAllocation(planetId));
+    if (typeof workforce.syncPowerFactors === 'function') workforce.syncPowerFactors(planetId, body, electricityPriorityAllocation(planetId));
+    if (typeof workforce.renderPanel === 'function') workforce.renderPanel();
+  }
 }
 
 function getOperationalBuildingsOnPlanet(planetId) {
@@ -1059,6 +993,7 @@ function getPlanetStorage(id) {
   if (bodies[id].storage.glass === undefined) bodies[id].storage.glass = 0;
   if (bodies[id].storage.wood === undefined) bodies[id].storage.wood = 0;
   if (bodies[id].storage.biomass === undefined) bodies[id].storage.biomass = 0;
+  if (bodies[id].storage.lithiumBatteries === undefined) bodies[id].storage.lithiumBatteries = 0;
   return bodies[id].storage;
 }
 function getOrbitStorage(id) {
@@ -1068,6 +1003,7 @@ function getOrbitStorage(id) {
   if (bodies[id].orbitStorage.glass === undefined) bodies[id].orbitStorage.glass = 0;
   if (bodies[id].orbitStorage.wood === undefined) bodies[id].orbitStorage.wood = 0;
   if (bodies[id].orbitStorage.biomass === undefined) bodies[id].orbitStorage.biomass = 0;
+  if (bodies[id].orbitStorage.lithiumBatteries === undefined) bodies[id].orbitStorage.lithiumBatteries = 0;
   return bodies[id].orbitStorage;
 }
 // Gaslagerkapazität wird getrennt für Oberfläche und Orbit geführt.
@@ -1125,7 +1061,7 @@ function refreshPlanetStorageDisplay() {
 function formatStorage(id) {
   const mode = state.viewMode === 'orbit' ? 'orbit' : 'surface';
   const st = mode === 'orbit' ? getOrbitStorage(id) : getPlanetStorage(id);
-  const keys = ['stone','ice','coal','crudeOil','polymers','rubber','plastics','wood','biomass','iron','goldOre','gold','microchip','silicon','lithium','copperOre','copper','batteries','buildingMaterials','machines','glass','electronics','steel','helium3','chips','bauxite','aluminiumOxide','aluminium','titanOre','processedTitan','titanium','nickelOre','graphite','water','grain','vegetables','food','algaeBiomass','cocoaBeans','chocolate'];
+  const keys = ['stone','ice','coal','crudeOil','polymers','rubber','plastics','wood','biomass','iron','goldOre','gold','microchip','silicon','lithium','copperOre','copper','batteries','buildingMaterials','machines','glass','electronics','steel','helium3','chips','germanium','bauxite','aluminiumOxide','aluminium','titanOre','processedTitan','titanium','nickelOre','graphite','water','grain','vegetables','food','algaeBiomass','cocoaBeans','chocolate'];
   const rows = keys.filter(k => Number(st[k] || 0) > 0.000001).map(k => `<div class="stat"><span>${resourceIcons[k] || ''} ${resourceNames[k] || k}</span><strong>${k === 'water' ? Number(st[k]).toLocaleString('de-DE', { maximumFractionDigits: 2 }) + ' L' : formatTons(st[k])}</strong></div>`);
   const gasCapacity = gasCarbonStorageCapacity(id, mode);
   const gasKeys = ATMOSPHERIC_STORAGE_GASES;
@@ -1390,9 +1326,90 @@ function foodFactoryGrainUse(id = state.selected) { return Number(getOperational
 function foodFactoryWaterUse(id = state.selected) { return Number(getOperationalBuildingsOnPlanet(id).foodFactory || 0) * 0.05; }
 function foodFactoryProduction(id = state.selected) { return Number(getOperationalBuildingsOnPlanet(id).foodFactory || 0) * 0.08; }
 function foodFactoryElectricityUse(id = state.selected) { return Number(getOperationalBuildingsOnPlanet(id).foodFactory || 0) * 5; }
+
+// Zentrale, planetare Strompriorisierung. Stufe 1 hat Vorrang vor Stufe 5.
+// Prioritäten und Verbraucherdefinitionen liegen im separaten Modul game-energy.js.
+const ELECTRICITY_AUTO_PRIORITIES = window.SF_ENERGY_AUTO_PRIORITIES || {
+  hydroelectricPlant: 1, greenhouse: 1, waterElectrolysis: 1, foodFactory: 2,
+  crudeOilPump: 3, nickelMine: 3, goldMine: 3, goldRefinery: 3, graphiteMine: 3,
+  woodcutter: 3, forester: 3, treeNursery: 3, cocoaPlantation: 3,
+  syntheticGraphitePlant: 4, vehicleFactory: 5, chocolateFactory: 5,
+  luxuryFurnitureFactory: 5, megaChipFactory: 4
+};
+function ensureElectricityPrioritySettings(id = state.selected) {
+  if (!state.electricityPrioritySettings || typeof state.electricityPrioritySettings !== 'object') state.electricityPrioritySettings = {};
+  if (!state.electricityPrioritySettings[id]) state.electricityPrioritySettings[id] = { mode: 'auto', priorities: {} };
+  const cfg = state.electricityPrioritySettings[id];
+  if (!['auto','manual'].includes(cfg.mode)) cfg.mode = 'auto';
+  if (!cfg.priorities || typeof cfg.priorities !== 'object') cfg.priorities = {};
+  return cfg;
+}
+function getElectricityPriority(id, key) {
+  const cfg = ensureElectricityPrioritySettings(id);
+  if (cfg.mode === 'auto') return ELECTRICITY_AUTO_PRIORITIES[key] || 3;
+  const n = Number(cfg.priorities[key]);
+  return Number.isFinite(n) ? Math.max(1, Math.min(5, Math.round(n))) : (ELECTRICITY_AUTO_PRIORITIES[key] || 3);
+}
+function syncPlanetWorkforcePower(id = state.selected) {
+  const planet = bodies?.[id];
+  const workforce = globalThis.SolarFrontierWorkforce;
+  if (!planet || id === 'sun' || !workforce) return;
+  const buildings = getBuildingsOnPlanet(id);
+  const factors = electricityPriorityAllocation(id);
+  if (typeof workforce.syncBuildings === 'function') {
+    workforce.syncBuildings(id, planet, buildings, planet.buildingPerformance || {}, factors);
+  }
+  if (typeof workforce.syncPowerFactors === 'function') {
+    workforce.syncPowerFactors(id, planet, factors);
+  }
+  if (typeof workforce.renderPanel === 'function') workforce.renderPanel();
+}
+
+function setElectricityPriorityMode(id, mode) {
+  const cfg = ensureElectricityPrioritySettings(id);
+  cfg.mode = mode === 'manual' ? 'manual' : 'auto';
+  syncPlanetWorkforcePower(id);
+  saveGame(false); renderInfo();
+}
+function setElectricityPriority(id, key, value) {
+  const cfg = ensureElectricityPrioritySettings(id);
+  cfg.priorities[key] = Math.max(1, Math.min(5, Math.round(Number(value) || 3)));
+  cfg.mode = 'manual';
+  syncPlanetWorkforcePower(id);
+  saveGame(false); renderInfo();
+}
+function electricityPriorityAllocation(id = state.selected) {
+  const consumers = electricityConsumptionBreakdown(id);
+  let available = Math.max(0, electricityProduction(id));
+  const factors = {};
+  const tiers = [1,2,3,4,5];
+  for (const tier of tiers) {
+    const group = consumers.filter(item => getElectricityPriority(id, item.key) === tier);
+    const demand = group.reduce((sum, item) => sum + item.mw, 0);
+    const ratio = demand > 0 ? Math.min(1, available / demand) : 1;
+    group.forEach(item => { factors[item.key] = ratio; });
+    available = Math.max(0, available - demand * ratio);
+  }
+  return factors;
+}
+function getBuildingPowerFactor(id, key) {
+  const allocation = electricityPriorityAllocation(id);
+  return allocation[key] === undefined ? 1 : allocation[key];
+}
+function electricityPriorityControlsHtml(id, item) {
+  const cfg = ensureElectricityPrioritySettings(id);
+  const priority = getElectricityPriority(id, item.key);
+  const options = [1,2,3,4,5].map(n => `<option value="${n}" ${priority===n?'selected':''}>${n} · ${['Lebensnotwendig','Sehr wichtig','Normal','Niedrig','Luxus'][n-1]}</option>`).join('');
+  return `<label class="electricity-priority-control">${cfg.mode==='auto'?'Auto':'Prio'} <select aria-label="Strompriorität ${item.name}" onchange="setElectricityPriority('${id}','${item.key}',this.value)" ${cfg.mode==='auto'?'disabled':''}>${options}</select></label>`;
+}
+function electricityPrioritySettingsHtml(id) {
+  const cfg = ensureElectricityPrioritySettings(id);
+  return `<div class="electricity-priority-settings"><div class="stat"><span><strong>Stromverteilung</strong></span><select aria-label="Prioritätsmodus" onchange="setElectricityPriorityMode('${id}',this.value)"><option value="auto" ${cfg.mode==='auto'?'selected':''}>Automatische Priorität</option><option value="manual" ${cfg.mode==='manual'?'selected':''}>Manuell einstellen</option></select></div><p class="hint">Priorität 1 wird zuerst versorgt. Gebäude gleicher Priorität teilen die verfügbare Leistung anteilig. Im Automatikmodus gelten sinnvolle Standardprioritäten; im manuellen Modus kannst du jede Gebäudekategorie selbst einstellen.</p></div>`;
+}
+
 function newBuildingPowerFactor(id = state.selected) {
   const b = getOperationalBuildingsOnPlanet(id);
-  const demand = Number(b.hydroelectricPlant || 0) * 3 + Number(b.greenhouse || 0) * 2 + Number(b.cocoaPlantation || 0) * 5 + Number(b.chocolateFactory || 0) * 5 + Number(b.luxuryFurnitureFactory || 0) * 5 + Number(b.forester || 0) * 2 + Number(b.woodcutter || 0) * 1 + Number(b.waterElectrolysis || 0) * 1 + Number(b.treeNursery || 0) * 1 + Number(b.nickelMine || 0) * 1 + Number(b.goldMine || 0) * 2 + Number(b.goldRefinery || 0) * 2 + Number(b.megaChipFactory || 0) * 50 + Number(b.graphiteMine || 0) * 5 + Number(b.syntheticGraphitePlant || 0) * 10 + foodFactoryElectricityUse(id) + crudeOilElectricityUse(id) + vehicleFactoryElectricityUse(id);
+  const demand = Number(b.hydroelectricPlant || 0) * 3 + Number(b.greenhouse || 0) * 2 + Number(b.cocoaPlantation || 0) * 5 + Number(b.chocolateFactory || 0) * 5 + Number(b.luxuryFurnitureFactory || 0) * 5 + Number(b.forester || 0) * 2 + Number(b.woodcutter || 0) * 1 + Number(b.waterElectrolysis || 0) * 1 + Number(b.treeNursery || 0) * 1 + Number(b.nickelMine || 0) * 1 + Number(b.goldMine || 0) * 2 + Number(b.goldRefinery || 0) * 2 + Number(b.megaChipFactory || 0) * 50 + Number(b.graphiteMine || 0) * 5 + Number(b.syntheticGraphitePlant || 0) * 10 + Number(b.lithiumBatteryFactory || 0) * 10 + foodFactoryElectricityUse(id) + crudeOilElectricityUse(id) + vehicleFactoryElectricityUse(id);
   // Bei Strommangel wird die verfügbare Leistung anteilig auf strompflichtige
   // Gebäude verteilt, statt sämtliche Produktion abrupt auf null zu setzen.
   if (demand <= 0) return 1;
@@ -1400,12 +1417,15 @@ function newBuildingPowerFactor(id = state.selected) {
 }
 function solarSatelliteElectricityProduction() { return Number(bodies.sun?.buildings?.solarSatellite || 0) * 10000; }
 function baseElectricityProduction(id = state.selected) {
-  // Lokale Stromnetze: Nur Kraftwerke auf diesem Planeten versorgen seine Gebäude.
+  // Lokales Stromnetz: Kraftwerke dieses Planeten versorgen nur diesen Planeten.
   const b = getOperationalBuildingsOnPlanet(id);
-  return Number(b.coalPowerPlant || 0) * 20
-    + fusionElectricityProduction(id)
-    + solarElectricityProduction(id)
-    + nuclearReactorElectricityProduction(id);
+  const generators = window.SF_ENERGY_GENERATORS || [
+    { key:'coalPowerPlant', perBuilding:20 },
+    { key:'solarPlant', perBuilding:20 },
+    { key:'fusionReactor', perBuilding:50 },
+    { key:'nuclearReactor', perBuilding:1000 }
+  ];
+  return generators.reduce((sum, source) => sum + Number(b[source.key] || 0) * source.perBuilding, 0);
 }
 function batteryDischargePower(id = state.selected) {
   const count = Math.max(0, Number(getBuildingsOnPlanet(id).batteryStorage) || 0);
@@ -1424,34 +1444,44 @@ function electricityProduction(id = state.selected) {
 }
 function electricityProductionBreakdown(id = state.selected) {
   const b = getOperationalBuildingsOnPlanet(id);
-  return [
-    { key: 'coalPowerPlant', name: 'Kohlekraftwerk', icon: '🏭', mw: Number(b.coalPowerPlant || 0) * 20 },
-    { key: 'solarPlant', name: 'Solaranlage', icon: '☀️', mw: solarElectricityProduction(id) },
-    { key: 'fusionReactor', name: 'Fusionsreaktor', icon: '☢️', mw: fusionElectricityProduction(id) },
-    { key: 'nuclearReactor', name: 'Kernkraftwerk', icon: '⚛️', mw: nuclearReactorElectricityProduction(id) }
-  ].concat([{ key: 'batteryStorage', name: 'Batteriespeicher (Entladung)', icon: '🔋', mw: batteryDischargePower(id) }]).filter(source => source.mw > 0);
+  const generators = window.SF_ENERGY_GENERATORS || [];
+  return generators.map(source => ({
+    key: source.key,
+    name: source.name,
+    icon: source.icon || '⚡',
+    mw: Number(b[source.key] || 0) * source.perBuilding
+  })).concat([
+    { key: 'batteryStorage', name: 'Batteriespeicher (Entladung)', icon: '🔋', mw: batteryDischargePower(id) }
+  ]).filter(source => source.mw > 0);
 }
 function electricityConsumptionBreakdown(id = state.selected) {
   const b = getOperationalBuildingsOnPlanet(id);
-  return [
-    { name: 'Wasserkraftwerk', count: Number(b.hydroelectricPlant || 0), perBuilding: 3 },
-    { name: 'Gewächshaus', count: Number(b.greenhouse || 0), perBuilding: 2 },
-    { name: 'Kakao-Plantage', count: Number(b.cocoaPlantation || 0), perBuilding: 5 },
-    { name: 'Schokoladenfabrik', count: Number(b.chocolateFactory || 0), perBuilding: 5 },
-    { name: 'Luxusmöbel-Fabrik', count: Number(b.luxuryFurnitureFactory || 0), perBuilding: 5 },
-    { name: 'Förster', count: Number(b.forester || 0), perBuilding: 2 },
-    { name: 'Holzfäller', count: Number(b.woodcutter || 0), perBuilding: 1 },
-    { name: 'Wasserelektrolyseanlage', count: Number(b.waterElectrolysis || 0), perBuilding: 1 },
-    { name: 'Nickelmine', count: Number(b.nickelMine || 0), perBuilding: 1 },
-    { name: 'Goldmine', count: Number(b.goldMine || 0), perBuilding: 2 },
-    { name: 'Scheideanstalt', count: Number(b.goldRefinery || 0), perBuilding: 2 },
-    { name: 'MegaChipFabrik', count: Number(b.megaChipFactory || 0), perBuilding: 50 },
-    { name: 'Graphitmine', count: Number(b.graphiteMine || 0), perBuilding: 5 },
-    { name: 'Synthetische Graphitproduktion', count: Number(b.syntheticGraphitePlant || 0), perBuilding: 10 },
-    { name: 'Lebensmittelfabrik', count: Number(b.foodFactory || 0), perBuilding: 5 },
-    { name: 'Rohölpumpe', count: Number(b.crudeOilPump || 0), perBuilding: 2 },
-    { name: 'Fahrzeugfabrik', count: vehicleFactoryCount(id), perBuilding: 4 }
-  ].filter(item => item.count > 0).map(item => ({ ...item, mw: item.count * item.perBuilding }));
+  const definitions = window.SF_ENERGY_CONSUMERS || [
+    { key:'hydroelectricPlant', name:'Wasserkraftwerk', perBuilding:3 },
+    { key:'greenhouse', name:'Gewächshaus', perBuilding:2 },
+    { key:'cocoaPlantation', name:'Kakao-Plantage', perBuilding:5 },
+    { key:'chocolateFactory', name:'Schokoladenfabrik', perBuilding:5 },
+    { key:'luxuryFurnitureFactory', name:'Luxusmöbel-Fabrik', perBuilding:5 },
+    { key:'forester', name:'Förster', perBuilding:2 },
+    { key:'woodcutter', name:'Sägewerk', perBuilding:1 },
+    { key:'waterElectrolysis', name:'Wasserelektrolyseanlage', perBuilding:1 },
+    { key:'treeNursery', name:'Baumschule I', perBuilding:1 },
+    { key:'nickelMine', name:'Nickelmine', perBuilding:1 },
+    { key:'goldMine', name:'Goldmine', perBuilding:2 },
+    { key:'goldRefinery', name:'Scheideanstalt', perBuilding:2 },
+    { key:'megaChipFactory', name:'MegaChipFabrik', perBuilding:50 },
+    { key:'graphiteMine', name:'Graphitmine', perBuilding:5 },
+    { key:'syntheticGraphitePlant', name:'Synthetische Graphitproduktion', perBuilding:10 },
+    { key:'foodFactory', name:'Lebensmittelfabrik', perBuilding:5 },
+    { key:'crudeOilPump', name:'Rohölpumpe', perBuilding:2 },
+    { key:'vehicleFactory', name:'Fahrzeugfabrik', perBuilding:4, countType:'vehicleFactory' }
+  ];
+  return definitions.map(item => {
+    const count = item.countType === 'vehicleFactory'
+      ? vehicleFactoryCount(id)
+      : Number(b[item.key] || 0);
+    return { ...item, count, mw: count * item.perBuilding };
+  }).filter(item => item.count > 0);
 }
 function electricityConsumption(id = state.selected) {
   return electricityConsumptionBreakdown(id).reduce((total, item) => total + item.mw, 0);
@@ -1559,7 +1589,7 @@ function renderElectricityPanel(id = state.selected) {
     ? sources.map(item => `<div class="stat"><span>${item.icon} ${item.name}</span><strong>${formatElectricPower(item.mw)}</strong></div>`).join('')
     : '<p class="hint">Noch keine Stromerzeugung auf diesem Planeten.</p>';
   const consumerRows = consumers.length
-    ? consumers.map(item => `<div class="stat"><span>${item.name} · ${item.count} Gebäude</span><strong>${formatElectricPower(item.mw)}</strong></div>`).join('')
+    ? consumers.map(item => `<div class="electricity-consumer-row"><div class="stat"><span>${item.name} · ${item.count} Gebäude</span><strong>${formatElectricPower(item.mw)}</strong></div>${electricityPriorityControlsHtml(id,item)}</div>`).join('')
     : '<p class="hint">Aktuell kein erfasster Stromverbrauch.</p>';
   const status = balance < 0 ? 'bad' : 'good';
   const statusText = balance < 0 ? 'Strommangel' : balance === 0 ? 'Ausgeglichen' : 'Überschuss';
@@ -1573,7 +1603,7 @@ function renderElectricityPanel(id = state.selected) {
         <div class="electricity-summary-card"><span>Status</span><strong class="${status}">${statusText}</strong></div>
       </div>
       <h4>⚡ Stromerzeugung nach Quelle</h4>${sourceRows}
-      <h4>🔌 Stromverbrauch nach Gebäude</h4>${consumerRows}\n      ${batteryStorageControlsHtml(id)}
+      <h4>🔌 Stromverbrauch & Prioritäten</h4>${electricityPrioritySettingsHtml(id)}${consumerRows}\n      ${batteryStorageControlsHtml(id)}
       <p class="hint electricity-note">Eigenes Stromnetz für ${bodies[id]?.name || id}. Strom anderer Planeten und Solar-Satelliten im Sonnenorbit werden nicht eingerechnet.</p>
     </div>
   </details>`;
@@ -3783,7 +3813,8 @@ function renderSystem() {
       orbit.style.height = `${body.orbit}px`;
       solarSystem.appendChild(orbit);
 
-      const angle = (index === 0 ? 145 : 230) * Math.PI / 180;
+      // Rethroxid teilt sich Themepatins Umlaufbahn, liegt aber genau auf der Gegenseite.
+      const angle = ({ themepatin: 145, rethroxid: 325, noxaris: 230 }[body.id] ?? 230) * Math.PI / 180;
       const planet = document.createElement('button');
       planet.type = 'button';
       planet.className = `body ${body.className}`;
@@ -3800,16 +3831,19 @@ function renderSystem() {
           const names = { stone: 'Stein', copperOre: 'Kupfererz', uranium: 'Uran', iron: 'Eisen', ionium: 'Ionium' };
           return `<div class="stat"><span>${names[key] || key}</span><strong>${Number(amount || 0).toLocaleString('de-DE')} t</strong></div>`;
         }).join('');
-        const description = body.id === 'themepatin'
-          ? 'Ein innerer Gesteinsplanet mit bedeutenden Kupfererz- und Uranvorkommen.'
-          : 'Ein geheimnisvoller, dunkelblauer Planet, umgeben von violett-blauen kosmischen Nebeln.';
-        infoPanel.innerHTML = `<h2>🪐 ${body.name}</h2><div class="stat"><span>Typ</span><strong>${body.type}</strong></div><div class="stat"><span>Temperatur</span><strong>${body.temperature}</strong></div><h3>🪨 Rohstoffvorkommen</h3>${resourceRows}<p class="hint">${description}</p>`;
+        const descriptions = {
+          themepatin: 'Ein innerer Gesteinsplanet mit bedeutenden Kupfererz- und Uranvorkommen.',
+          rethroxid: 'Ein roter Gesteinsplanet auf Themepatins Umlaufbahn, genau auf der gegenüberliegenden Seite. Oberfläche und Orbit besitzen jeweils ein eigenes Lager.',
+          noxaris: 'Ein geheimnisvoller, dunkelblauer Planet, umgeben von violett-blauen kosmischen Nebeln.'
+        };
+        const description = descriptions[body.id] || 'Ein bislang unerforschter Planet.';
+        infoPanel.innerHTML = `<h2>🪐 ${body.name}</h2><div class="stat"><span>Typ</span><strong>${body.type}</strong></div><div class="stat"><span>Temperatur</span><strong>${body.temperature}</strong></div><h3>🪨 Rohstoffvorkommen</h3>${resourceRows}<h3>📦 Lager</h3><div class="stat"><span>Oberflächenlager</span><strong>Eigenes Lager</strong></div><div class="stat"><span>Orbitlager</span><strong>Eigenes Lager</strong></div><p class="hint">${description}</p>`;
       });
       solarSystem.appendChild(planet);
     });
     const buildMenuTriggerButton = document.querySelector('#open-build-menu-button');
     if (buildMenuTriggerButton) { buildMenuTriggerButton.disabled = true; buildMenuTriggerButton.textContent = '🔒 Sonnensystem 2 ist noch nicht erschlossen'; }
-    infoPanel.innerHTML = `<h2>🌌 Sonnensystem 2</h2><p class="hint">Ein bislang unerforschtes System mit zwei Planeten. Themepatin liegt auf der inneren, Noxaris auf der äußeren Umlaufbahn.</p><p>Wähle einen Planeten aus, um mehr über seine Rohstoffe zu erfahren.</p>`;
+    infoPanel.innerHTML = `<h2>🌌 Sonnensystem 2</h2><p class="hint">Ein bislang unerforschtes System mit drei Planeten. Rethroxid liegt auf der gegenüberliegenden Seite von Themepatins Umlaufbahn; Noxaris befindet sich weiter außen.</p><p>Wähle einen Planeten aus, um mehr über seine Rohstoffe zu erfahren.</p>`;
   updateSolarSystemSelector();
     return;
   }
@@ -4034,7 +4068,7 @@ function renderSystem() {
       { title: '🏠 Wohnraum & Kolonisten', keys: ['residentialHouse','mediumResidentialHouse','residentialComplex','habitat'] },
       { title: '🌱 Landwirtschaft & Versorgung', keys: ['greenhouse','hydroelectricPlant','cocoaPlantation','woodcutter'] },
       { title: '🍫 Kolonistenversorgung', keys: ['chocolateFactory','luxuryFurnitureFactory'] },
-      { title: '🏭 Verarbeitung & Industrie', keys: ['syntheticGraphitePlant','titanProcessing','titanRefinery','goldRefinery','megaChipFactory','steelworks','buildingMaterialsFactory','co2ProcessingPlant','aluminiumOxideRefinery','aluminiumSmelter','copperSmelter','lithiumRefinery','machineFactory','glassFactory','electronicsFactory','chipFactory','polymerFactory','rubberFactory','plasticFactory','vehicleFactory','foodFactory','iceProcessingPlant','algaeFarm','algaeFoodProcessor','uraniumProcessingPlant','nuclearFuelPlant','radioactiveStorageSurface','radioactiveStorageOrbit'] },
+      { title: '🏭 Verarbeitung & Industrie', keys: ['lithiumBatteryFactory','syntheticGraphitePlant','titanProcessing','titanRefinery','goldRefinery','megaChipFactory','steelworks','buildingMaterialsFactory','co2ProcessingPlant','aluminiumOxideRefinery','aluminiumSmelter','copperSmelter','lithiumRefinery','machineFactory','glassFactory','electronicsFactory','chipFactory','polymerFactory','rubberFactory','plasticFactory','vehicleFactory','foodFactory','iceProcessingPlant','algaeFarm','algaeFoodProcessor','uraniumProcessingPlant','nuclearFuelPlant','radioactiveStorageSurface','radioactiveStorageOrbit'] },
       { title: '⚡ Energie & Forschung', keys: ['batteryStorage','coalPowerPlant','solarPlant','fusionReactor','nuclearReactor','researchLab','observatory'] },
       { title: '📦 Lager', keys: ['gasCarbonStorage','liquidStorage'] },
       { title: '🚀 Raumfahrt & Infrastruktur', keys: ['co2Extraction','moonBase','solarSail','warmingSail','outpost','rocketFactory','landingPad','solarSatellite','solarProbe'] },
@@ -4557,6 +4591,7 @@ function planetTemperatureCelsius(planetId) {
 }
 
 function isBuildingAllowed(key, planetId = state.selected) {
+  if (key === 'lithiumBatteryFactory') return state.viewMode === 'surface' && planetId !== 'sun' && !!bodies[planetId];
   if (key === 'batteryStorage') return state.viewMode === 'surface' && planetId !== 'sun' && !!bodies[planetId];
   if (key === 'gasCarbonStorage') return planetId !== 'sun' && !!bodies[planetId] && ['surface','orbit'].includes(state.viewMode);
   // Orbit-Bauten werden unabhängig von Temperatur und Atmosphärendruck geprüft.
@@ -4706,6 +4741,15 @@ function buildButtonUnsafe(key) {
   const b = buildingTypes[key];
   const count = key === 'solarSail' && state.viewMode === 'orbit' ? orbitalSolarSailCount(state.selected) : getBuildingsOnPlanet(state.selected)[key];
   const storage = (['gasCarbonStorage','solarSail','warmingSail','orbitalCo2Extractor','radioactiveStorageOrbit'].includes(key) && state.viewMode === 'orbit') ? getOrbitStorage(state.selected) : getPlanetStorage(state.selected);
+
+  if (key === 'lithiumBatteryFactory') {
+    const b = buildingTypes[key];
+    const count = Number(getBuildingsOnPlanet(state.selected).lithiumBatteryFactory || 0);
+    const storage = getPlanetStorage(state.selected);
+    const costs = { steel: 400, buildingMaterials: 500, copper: 100, electronics: 200, chips: 150 };
+    const affordable = isBuildingAllowed(key, state.selected) && Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount);
+    return `<div class="build-card lithium-battery-factory-card"><div><strong>${b.icon} ${b.name}</strong><small>${b.text}</small><small>Baukosten: 400 t Stahl · 500 t Baustoffe · 100 t Kupfer · 200 t Elektronik · 150 t Chips</small></div><button class="build-resource" data-building="lithiumBatteryFactory" ${affordable ? '' : 'disabled'}>Bauen (${count})</button></div>`;
+  }
 
   if (key === 'syntheticGraphitePlant') {
     const costs = { steel: 1400, buildingMaterials: 1600, glass: 200, graphite: 159 };
@@ -4879,6 +4923,12 @@ function buildButtonUnsafe(key) {
     const affordable = researched && isBuildingAllowed(key, state.selected) && Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount);
     const status = researched ? '' : ' · Voraussetzung: Vertrag „Kolonistenversorgung“ und Forschung (6.000 FP, 12 Ingame-Stunden)';
     return `<div class="build-card"><div><strong>🛋️ Luxusmöbelfabrik</strong><small>${b.text}${status} · Baukosten: 1.200 t Stahl, 800 t Baustoffe, 250 t Glas, 100 t Chips, 150 t Elektronik</small></div><button class="build-resource" data-building="${key}" ${affordable ? '' : 'disabled'}>Bauen (${count || 0})</button></div>`;
+  }
+
+  if (key === 'lithiumBatteryFactory') {
+    const costs = { steel: 400, buildingMaterials: 500, copper: 100, electronics: 200, chips: 150 };
+    const affordable = isBuildingAllowed(key, state.selected) && Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount);
+    return `<div class="build-card lithium-battery-factory-card"><div><strong>🔋 Lithium-Batteriefabrik</strong><small>Produktion 0,005 t/s · 10 MW Strom · 30 Arbeiter · Verbrauch: 0,08 t Lithium, 0,04 t Kupfer, 0,02 t Kunststoff, 0,01 t Elektronik und 0,01 t Graphit je Sekunde</small></div><button class="build-resource" data-building="lithiumBatteryFactory" ${affordable ? '' : 'disabled'}>Bauen (${Number(count || 0)})</button></div>`;
   }
 
   if (key === 'vehicleFactory') {
@@ -5439,6 +5489,7 @@ function demolitionCostMap(key, planetId, currentCount) {
     rubberFactory: { steel: 500, chips: 50, glass: 100, buildingMaterials: 800 },
     plasticFactory: { steel: 400, chips: 40, glass: 80, buildingMaterials: 600 },
     vehicleFactory: { steel: 500, buildingMaterials: 250, electronics: 100, chips: 200 },
+    lithiumBatteryFactory: { steel: 400, buildingMaterials: 500, copper: 100, electronics: 200, chips: 150 },
     luxuryFurnitureFactory: { steel: 1200, buildingMaterials: 800, glass: 250, chips: 100, electronics: 150 },
     moonBase: { steel: 300, buildingMaterials: 100 },
     uraniumMine: { steel: Number(buildingTypes.uraniumMine?.cost || 0), buildingMaterials: 200 },
@@ -5659,6 +5710,15 @@ function buildResourceBuilding(key) {
     for (const [r, amount] of Object.entries(costs)) storage[r] = Number(storage[r] || 0) - amount;
     bld.batteryStorage = Number(bld.batteryStorage || 0) + 1;
     ensureBatteryStorageData(planetId);
+    playUiSound('build');
+    renderSystem(); renderInfo(); renderTopResources(); saveAfterBuild();
+    return;
+  }
+  if (key === 'lithiumBatteryFactory') {
+    const costs = { steel: 400, buildingMaterials: 500, copper: 100, electronics: 200, chips: 150 };
+    if (!isBuildingAllowed(key, planetId) || !Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount)) return;
+    for (const [r, amount] of Object.entries(costs)) storage[r] = Math.max(0, Number(storage[r] || 0) - amount);
+    bld.lithiumBatteryFactory = Number(bld.lithiumBatteryFactory || 0) + 1;
     playUiSound('build');
     renderSystem(); renderInfo(); renderTopResources(); saveAfterBuild();
     return;
@@ -5916,6 +5976,10 @@ function buildResourceBuilding(key) {
   } else if (key === 'luxuryFurnitureFactory') {
     const costs = { steel: 1200, buildingMaterials: 800, glass: 250, chips: 100, electronics: 150 };
     if (!ensureResearchOrders().completed.kolonistenversorgung || !state.research?.completed?.luxuryFurnitureFactory || !isBuildingAllowed(key, planetId) || !Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount)) return;
+    for (const [r, amount] of Object.entries(costs)) storage[r] -= amount;
+  } else if (key === 'lithiumBatteryFactory') {
+    const costs = { steel: 400, buildingMaterials: 500, copper: 100, electronics: 200, chips: 150 };
+    if (!isBuildingAllowed(key, planetId) || !Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount)) return;
     for (const [r, amount] of Object.entries(costs)) storage[r] -= amount;
   } else if (key === 'chocolateFactory') {
     const costs = { steel: 500, buildingMaterials: 300 };
@@ -6413,7 +6477,7 @@ function renderRocketWindow(body) {
       : (cargo && cargo.amount > 0 ? `${resourceIcons[cargo.resource] || ''} ${resourceNames[cargo.resource] || cargo.resource}: ${(Number(cargo.amount) || 0).toFixed(2)} ${['crudeOil','water'].includes(cargo.resource) ? 'L' : 't'}` : 'Keine Fracht');
 
     if (r.status === 'orbit' || r.status === 'landed') {
-      const returnOptions = (isTankRocket ? [] : ['stone','ice','coal','gas','crudeOil','water','grain','vegetables','food','algaeBiomass','polymers','rubber','plastics','wood','biomass','vehicles','co2','carbon','oxygen','iron','goldOre','gold','silicon','lithium','copperOre','copper','batteries','buildingMaterials','machines','glass','electronics','uranium','processedUranium','nuclearFuel','steel','bauxite','aluminiumOxide','aluminium','titanium','nickelOre','graphite'])
+      const returnOptions = (isTankRocket ? [] : ['stone','ice','coal','gas','crudeOil','water','grain','vegetables','food','algaeBiomass','polymers','rubber','plastics','wood','biomass','vehicles','co2','carbon','oxygen','iron','goldOre','gold','silicon','lithium','copperOre','copper','batteries','buildingMaterials','machines','glass','electronics','uranium','processedUranium','nuclearFuel','steel','germanium','bauxite','aluminiumOxide','aluminium','titanium','nickelOre','graphite'])
         .filter(k => Number(getLocationStorage(r.to, r.status === 'landed' ? 'surface' : 'orbit')[k] || 0) > 0.000001)
         .map(k => `<option value="${k}">${resourceIcons[k] || ''} ${resourceNames[k] || k}</option>`).join('');
       const phase = r.status === 'orbit' ? '🛰️ im Orbit' : '🛬 auf der Oberfläche';
@@ -7117,7 +7181,7 @@ function updateVehicleFactoryConstruction(now = gameNow()) {
 
 function poweredForestersOnPlanet(planetId) {
   const count = Math.max(0, Number(getOperationalBuildingsOnPlanet(planetId).forester) || 0);
-  return count * newBuildingPowerFactor(planetId);
+  return count * getBuildingPowerFactor(planetId, 'forester');
 }
 
 function updateForestRegeneration(delta) {
@@ -7253,6 +7317,7 @@ function updateAtmosphereRegulators(planetId, storage, buildings, delta) {
   }
 }
 
+
 function updateResources() {
   const now = gameNow();
   updateMarket(now);
@@ -7271,7 +7336,25 @@ function updateResources() {
 
   Object.entries(bodies).forEach(([id, planet]) => {
     if (id === 'sun') return;
+    // Nur Kolonisten sind Arbeitskräfte; freie Bevölkerung bleibt davon getrennt.
+    if (globalThis.SolarFrontierWorkforce) {
+      globalThis.SolarFrontierWorkforce.syncColonistPopulation(id, planet);
+      if (typeof globalThis.SolarFrontierWorkforce.syncBuildings === 'function') {
+        globalThis.SolarFrontierWorkforce.syncBuildings(
+          id,
+          planet,
+          getBuildingsOnPlanet(id),
+          planet.buildingPerformance || {},
+          electricityPriorityAllocation(id)
+        );
+        if (typeof globalThis.SolarFrontierWorkforce.syncPowerFactors === 'function') {
+          globalThis.SolarFrontierWorkforce.syncPowerFactors(id, planet, electricityPriorityAllocation(id));
+        }
+      }
+    }
     const bld = getOperationalBuildingsOnPlanet(id);
+    // CO₂-Ausstoß wird unabhängig von Lagern direkt der lokalen Atmosphäre zugeführt.
+    updatePlanetCO2Management(id, bld, delta);
     enforceCO2StorageCapacity(id);
     const storage = getPlanetStorage(id);
     updateBatteryStorage(id, delta);
@@ -7298,7 +7381,7 @@ function updateResources() {
     // nicht im Rohstofflager gespeichert. Atmosphärische Gaswerte sind in Tonnen.
     if (Number(bld.waterElectrolysis || 0) > 0 && delta > 0) {
       const count = Number(bld.waterElectrolysis || 0);
-      const powerFactor = newBuildingPowerFactor(id);
+      const powerFactor = getBuildingPowerFactor(id, 'waterElectrolysis');
       const waterAvailable = Math.max(0, Number(storage.water || 0));
       const requestedWater = 0.2 * count * delta * powerFactor;
       const waterUsed = Math.min(waterAvailable, requestedWater);
@@ -7335,7 +7418,7 @@ function updateResources() {
     // die zuerst ausgeführten Produktionsblöcke das Kupfer vollständig aufbrauchen.
     // Baumschule I: erzeugt lokale Bäume ohne Wasserverbrauch; Strom bestimmt die Produktionsquote.
     if (Number(bld.treeNursery || 0) > 0 && delta > 0) {
-      const powerFactor = newBuildingPowerFactor(id);
+      const powerFactor = getBuildingPowerFactor(id, 'treeNursery');
       if (powerFactor > 0) {
         if (!Number.isFinite(Number(planet.resources?.trees))) planet.resources.trees = 0;
         planet.resources.trees = Math.max(0, Number(planet.resources.trees) || 0) + (1 / 10800) * Number(bld.treeNursery) * delta * powerFactor;
@@ -7343,7 +7426,7 @@ function updateResources() {
     }
     // Sägewerk: verbraucht lokale Bäume und Strom; Biomasse und Bretter landen im Oberflächenlager.
     if (Number(bld.woodcutter || 0) > 0) {
-      const powerFactor = newBuildingPowerFactor(id);
+      const powerFactor = getBuildingPowerFactor(id, 'woodcutter');
       const treesAvailable = Math.max(0, Number(planet.resources?.trees || 0));
       const neededTrees = 0.01 * Number(bld.woodcutter) * delta;
       const treeFactor = neededTrees > 0 ? Math.min(1, treesAvailable / neededTrees) : 0;
@@ -7356,7 +7439,7 @@ function updateResources() {
     }
     // Kakao-Plantage: nur mit Strom und lokal vorhandenem Wasser; Erzeugung in Kakaobohnen.
     if (Number(bld.cocoaPlantation || 0) > 0) {
-      const powerFactor = newBuildingPowerFactor(id);
+      const powerFactor = getBuildingPowerFactor(id, 'cocoaPlantation');
       const waterNeed = 0.2 * Number(bld.cocoaPlantation) * delta;
       const availableWater = Math.max(0, Number(storage.water || 0));
       const waterFactor = waterNeed > 0 ? Math.min(1, availableWater / waterNeed) : 0;
@@ -7369,7 +7452,7 @@ function updateResources() {
     // Schokoladenfabrik: wandelt lokale Kakaobohnen mit Strom in Schokolade um.
     if (Number(bld.chocolateFactory || 0) > 0) {
       const factories = Number(bld.chocolateFactory || 0);
-      const poweredFactories = factories * newBuildingPowerFactor(id);
+      const poweredFactories = factories * getBuildingPowerFactor(id, 'chocolateFactory');
       const cocoaNeed = 0.02 * poweredFactories * delta;
       const cocoaAvailable = Math.max(0, Number(storage.cocoaBeans || 0));
       const factor = cocoaNeed > 0 ? Math.min(1, cocoaAvailable / cocoaNeed) : 0;
@@ -7381,7 +7464,7 @@ function updateResources() {
     // Luxusmöbelfabrik: verarbeitet Kunststoff und Bretter mit Strom zu Luxusmöbeln.
     if (Number(bld.luxuryFurnitureFactory || 0) > 0) {
       const factories = Number(bld.luxuryFurnitureFactory || 0);
-      const powerFactor = newBuildingPowerFactor(id);
+      const powerFactor = getBuildingPowerFactor(id, 'luxuryFurnitureFactory');
       const plasticNeed = 0.03 * factories * delta;
       const woodNeed = 0.006 * factories * delta;
       const plasticAvailable = Math.max(0, Number(storage.plastics || 0));
@@ -7397,7 +7480,7 @@ function updateResources() {
 
     // Graphitmine: fördert Graphit aus den lokalen Vorkommen, sofern sie mit Strom versorgt wird.
     if (Number(bld.graphiteMine || 0) > 0 && ['earth','luna','mars','io'].includes(id)) {
-      const powerFactor = newBuildingPowerFactor(id);
+      const powerFactor = getBuildingPowerFactor(id, 'graphiteMine');
       const availableGraphite = Math.max(0, Number(planet.resources.graphite || 0));
       const minedGraphite = Math.min(availableGraphite, 0.05 * Number(bld.graphiteMine) * delta * powerFactor);
       if (minedGraphite > 0) {
@@ -7446,7 +7529,7 @@ function updateResources() {
     // Goldmine: fördert Golderz ausschließlich aus dem lokalen Planetenvorkommen.
     // Die Scheideanstalt verarbeitet anschließend das lokale Lager; beide Gebäude benötigen je 2 MW.
     if (Number(bld.goldMine || 0) > 0 && delta > 0) {
-      const powerFactor = newBuildingPowerFactor(id);
+      const powerFactor = getBuildingPowerFactor(id, 'goldMine');
       const availableGoldOre = Math.max(0, Number(planet.resources.goldOre || 0));
       const minedGoldOre = Math.min(availableGoldOre, 0.05 * Number(bld.goldMine) * delta * powerFactor);
       if (minedGoldOre > 0) {
@@ -7457,7 +7540,7 @@ function updateResources() {
     // Scheideanstalt: 0,1 t Golderz -> 0,09 t Gold + 0,1 t Stein je Sekunde.
     // Sie benötigt kein lokales Vorkommen; angeliefertes Golderz genügt.
     if (Number(bld.goldRefinery || 0) > 0 && delta > 0) {
-      const powerFactor = newBuildingPowerFactor(id);
+      const powerFactor = getBuildingPowerFactor(id, 'goldRefinery');
       const requestedOre = 0.1 * Number(bld.goldRefinery) * delta * powerFactor;
       const availableOre = Math.max(0, Number(storage.goldOre || 0));
       const processedOre = Math.min(availableOre, requestedOre);
@@ -7472,7 +7555,7 @@ function updateResources() {
     // MegaChipFabrik: Strommangel reduziert Produktion UND Rohstoffverbrauch proportional.
     // Die Produktion wird zusätzlich durch den jeweils knappsten Rohstoff begrenzt.
     if (Number(bld.megaChipFactory || 0) > 0 && delta > 0) {
-      const powerFactor = newBuildingPowerFactor(id);
+      const powerFactor = getBuildingPowerFactor(id, 'megaChipFactory');
       const count = Number(bld.megaChipFactory);
       const requested = {
         gold: 0.005 * count * delta * powerFactor,
@@ -7495,7 +7578,7 @@ function updateResources() {
 
     // Nickelabbau: 0,1 t/s je Mine, begrenzt durch das lokale Vorkommen und die Stromversorgung.
     if (Number(bld.nickelMine || 0) > 0 && state.research?.completed?.nickelMining && id !== 'sun') {
-      const powerFactor = newBuildingPowerFactor(id);
+      const powerFactor = getBuildingPowerFactor(id, 'nickelMine');
       const availableNickel = Math.max(0, Number(planet.resources.nickelOre || 0));
       const minedNickel = Math.min(availableNickel, 0.1 * Number(bld.nickelMine) * delta * powerFactor);
       if (minedNickel > 0) {
@@ -7579,7 +7662,7 @@ function updateResources() {
 
     // Wasserkraftwerk: fördert Wasser aus dem endlichen Wasservorkommen der Erde ins lokale Lager.
     if (Number(bld.hydroelectricPlant || 0) > 0 && id === 'earth') {
-      const powerFactor = newBuildingPowerFactor(id);
+      const powerFactor = getBuildingPowerFactor(id, 'hydroelectricPlant');
       const availableWater = Number(planet.resources.water || 0);
       const produced = Math.min(availableWater, hydroelectricWaterProduction(id) * delta * powerFactor);
       if (produced > 0) {
@@ -7591,7 +7674,7 @@ function updateResources() {
 
     // Gewächshaus: benötigt Strom und Wasser, um Getreide und Gemüse zu produzieren.
     if (Number(bld.greenhouse || 0) > 0) {
-      const powerFactor = newBuildingPowerFactor(id);
+      const powerFactor = getBuildingPowerFactor(id, 'greenhouse');
       const neededWater = greenhouseWaterUse(id) * delta * powerFactor;
       const availableWater = Number(storage.water || 0);
       const waterFactor = neededWater > 0 ? Math.min(1, availableWater / neededWater) : 0;
@@ -7605,7 +7688,7 @@ function updateResources() {
 
     // Lebensmittelfabrik: verarbeitet Getreide und Wasser, skaliert mit Stromversorgung.
     if (Number(bld.foodFactory || 0) > 0) {
-      const powerFactor = newBuildingPowerFactor(id);
+      const powerFactor = getBuildingPowerFactor(id, 'foodFactory');
       const grainNeeded = foodFactoryGrainUse(id) * delta * powerFactor;
       const waterNeeded = foodFactoryWaterUse(id) * delta * powerFactor;
       const grainAvailable = Number(storage.grain || 0);
@@ -7677,7 +7760,7 @@ function updateResources() {
     if (bld.crudeOilPump > 0) {
       const neededPower = crudeOilElectricityUse(id) * delta;
       const availablePower = electricityProduction(id);
-      const powerFactor = newBuildingPowerFactor(id);
+      const powerFactor = getBuildingPowerFactor(id, 'crudeOilPump');
       const availableOil = Number(planet.resources.crudeOil || 0);
       const amount = Math.min(availableOil, crudeOilProduction(id) * delta * powerFactor);
       if (amount > 0) { planet.resources.crudeOil -= amount; storage.crudeOil = Number(storage.crudeOil || 0) + amount; }
@@ -7777,7 +7860,7 @@ function updateResources() {
     // Synthetische Graphitproduktion: Rohöl aus dem lokalen Lager wird mit Strom zu Graphit verarbeitet.
     // Importiertes Rohöl aus Raketen funktioniert genauso wie lokal gefördertes Rohöl.
     if (Number(bld.syntheticGraphitePlant || 0) > 0 && syntheticGraphiteNeededOil > 0) {
-      const powerFactor = newBuildingPowerFactor(id);
+      const powerFactor = getBuildingPowerFactor(id, 'syntheticGraphitePlant');
       const factor = Math.min(sharedOilFactor, powerFactor);
       const oilUsed = syntheticGraphiteNeededOil * factor;
       storage.crudeOil = Math.max(0, Number(storage.crudeOil || 0) - oilUsed);
@@ -7796,12 +7879,30 @@ function updateResources() {
       }
     }
 
-    // Fahrzeugfabrik: Verbrauch und Produktion skalieren linear mit der Anzahl fertiger Fabriken.
-    // Jede Fabrik benötigt 4 MW; bei unzureichender Gesamtleistung pausieren alle Fahrzeugfabriken dieses Körpers.
+    // Lithium-Batteriefabrik: eigenständiges Produkt, lokale Inputs und lokale Lagerung.
+    const batteryFactories = Number(bld.lithiumBatteryFactory || 0);
+    const poweredBatteryFactories = batteryFactories * getBuildingPowerFactor(id, 'lithiumBatteryFactory');
+    if (poweredBatteryFactories > 0 && delta > 0) {
+      const inputs = [
+        ['lithium', poweredBatteryFactories * 0.08],
+        ['copper', poweredBatteryFactories * 0.04],
+        ['plastics', poweredBatteryFactories * 0.02],
+        ['electronics', poweredBatteryFactories * 0.01],
+        ['graphite', poweredBatteryFactories * 0.01]
+      ];
+      const factor = inputs.reduce((current, [key, rate]) => {
+        const needed = rate * delta;
+        return needed > 0 ? Math.min(current, Math.max(0, Number(storage[key] || 0)) / needed) : current;
+      }, 1);
+      if (factor > 0) {
+        inputs.forEach(([key, rate]) => { storage[key] = Math.max(0, Number(storage[key] || 0) - rate * delta * factor); });
+        storage.lithiumBatteries = Number(storage.lithiumBatteries || 0) + poweredBatteryFactories * 0.005 * delta * factor;
+      }
+    }
+
+    // Fahrzeugfabrik: Strommangel drosselt Verbrauch und Produktion proportional.
     const vehicleFactories = vehicleFactoryCount(id);
-    // Fahrzeugfabriken laufen wie alle anderen strompflichtigen Gebäude nur,
-    // wenn die komplette lokale Stromnachfrage gedeckt ist.
-    const poweredVehicleFactories = newBuildingPowerFactor(id) > 0 ? vehicleFactories : 0;
+    const poweredVehicleFactories = vehicleFactories * getBuildingPowerFactor(id, 'vehicleFactory');
     if (poweredVehicleFactories > 0 && delta > 0) {
       const inputs = [
         ['steel', poweredVehicleFactories * 0.1],
