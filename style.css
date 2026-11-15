@@ -2293,3 +2293,11 @@ body > .planet-build-menu .planet-build-header {
 .recruitment-cost{display:flex;justify-content:space-between;gap:8px;padding:9px 0;border-top:1px solid rgba(125,164,193,.18);color:#a9c4d9}.recruitment-cost strong{color:#f0c878}
 .recruitment-form button{min-height:42px;margin-top:4px}.recruitment-planet-list{display:grid;gap:8px;margin-top:12px}.recruitment-planet-card{padding:10px;border:1px solid rgba(105,159,194,.2);border-radius:9px;background:rgba(5,15,26,.55)}
 .recruitment-planet-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px;margin-bottom:6px}.recruitment-planet-head strong{color:#e0f1ff}.recruitment-planet-head span,.recruitment-planet-card small{color:#9eb8cc;font-size:.84rem}.recruitment-status{display:inline-block;color:#b7c9d8;font-size:.88rem}.recruitment-status.active{color:#8ce6b0}.recruitment-status.locked{color:#f0c878}.recruitment-progress{height:7px;margin:8px 0;border-radius:99px;overflow:hidden;background:#1b2c3e}.recruitment-progress i{display:block;height:100%;background:#35b879;border-radius:99px}
+
+
+/* Prolog-Bild und Audio der Breaking-News-Ausstrahlung */
+.breaking-news-visual{width:100%;overflow:hidden;border-radius:12px;margin:4px 0 12px;border:1px solid rgba(239,68,68,.42);background:#050914}
+.breaking-news-visual img{display:block;width:100%;height:auto;max-height:260px;object-fit:cover}
+.breaking-news-audio{padding:11px 12px;margin:0 0 14px;border:1px solid rgba(160,185,220,.2);border-radius:12px;background:rgba(8,15,29,.82)}
+.breaking-news-audio-label{font-size:12px;font-weight:800;letter-spacing:.5px;margin-bottom:8px;color:#f5d6da}
+.breaking-news-audio audio{display:block;width:100%;height:40px}

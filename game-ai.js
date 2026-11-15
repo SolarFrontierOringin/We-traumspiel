@@ -7,7 +7,10 @@ const AI_COMPANY_CONFIG = [
   { id: 'helios', name: 'Helios Industries', style: 'Industrie & Produktion', color: 'blue', focus: 'Produktion' },
   { id: 'nova', name: 'Nova Dynamics', style: 'Forschung & Expansion', color: 'violet', focus: 'Expansion' },
   { id: 'nasga', name: 'Nasga', style: 'Rohstoffe & Handel', color: 'green', focus: 'Handel' },
-  { id: 'spacey', name: 'SpaceY', style: 'Raumfahrt & Technologie', color: 'blue', focus: 'Raumfahrt' }
+  { id: 'spacey', name: 'SpaceY', style: 'Raumfahrt & Technologie', color: 'blue', focus: 'Raumfahrt' },
+  { id: 'chinaSpace', name: 'China space AG', style: 'Raumfahrt & Großproduktion', color: 'red', focus: 'Raumfahrt und Industrie' },
+  { id: 'germanIndustries', name: 'German industries', style: 'Maschinenbau & Industrie', color: 'blue', focus: 'Maschinenbau und Produktion' },
+  { id: 'ilonMinski', name: 'USA- Ilon Minski AG', style: 'Raumfahrt & Technologie', color: 'violet', focus: 'Raumfahrt und Technologie' }
 ];
 const AI_TICK_INTERVAL_MS = 5 * 60 * 1000; // fünf Spielminuten zwischen strategischen Entscheidungen
 const AI_RESOURCE_NAMES = {
@@ -297,14 +300,17 @@ function renderAIExchange(){
   const history=ex.history.slice(0,30).map(h=>`<div class="market-history-row"><span>${h.seller} → ${h.buyer} · ${AI_EXCHANGE_NAMES[h.key]||h.key}</span><strong>${fmt(h.amount)} t</strong><small>${fmt(h.price)} GD/t · Gesamt ${fmt(h.total)} GD</small></div>`).join('')||'<p class="hint">Noch keine abgeschlossenen Geschäfte.</p>';
   const participantList=[...AI_COMPANY_CONFIG.map(c=>({id:c.id,name:c.name,kind:'KI-Unternehmen'})),...FREE_EXCHANGE_PLANETS.filter(p=>freePopulationOnPlanet(p.id)>0).map(p=>({id:p.id,name:p.name,kind:'Virtueller Handel'}))];
   const participants=participantList.map(x=>{const p=exchangeParticipant(x.id);return `<div class="ai-exchange-participant"><b>${x.name}</b><span>${x.kind}</span><strong>${fmt(p?.cash)} GD</strong></div>`;}).join('');
-  panel.innerHTML=`<div class="market-summary"><div><span>📑 Offene Anträge</span><strong>${open.length}</strong></div><div><span>🤝 Abgeschlossene Geschäfte</span><strong>${ex.history.length}</strong></div><div><span>👥 Teilnehmer</span><strong>${participantList.length}</strong></div></div><p class="hint">Hier handeln ausschließlich die vier KI-Unternehmen und die freie Bevölkerung auf Luna, Mars und Venus. Kauf- und Verkaufsanträge werden automatisch geprüft und bei passenden Preisen angenommen. Die Waren der freien Bevölkerung sind rein virtuell und verändern keine echten Spielerlager.</p><h3>📋 Offene Kauf- und Verkaufsanträge</h3><div class="ai-exchange-orders">${rows}</div><h3>🏢 Teilnehmer und Kontostände</h3><div class="ai-exchange-participants">${participants}</div><h3>🧾 Handelschronik</h3><div class="market-history">${history}</div>`;
+  panel.innerHTML=`<div class="market-summary"><div><span>📑 Offene Anträge</span><strong>${open.length}</strong></div><div><span>🤝 Abgeschlossene Geschäfte</span><strong>${ex.history.length}</strong></div><div><span>👥 Teilnehmer</span><strong>${participantList.length}</strong></div></div><p class="hint">Hier handeln alle sieben KI-Unternehmen und die freie Bevölkerung auf Luna, Mars und Venus. Kauf- und Verkaufsanträge werden automatisch geprüft und bei passenden Preisen angenommen. Die Waren der freien Bevölkerung sind rein virtuell und verändern keine echten Spielerlager.</p><h3>📋 Offene Kauf- und Verkaufsanträge</h3><div class="ai-exchange-orders">${rows}</div><h3>🏢 Teilnehmer und Kontostände</h3><div class="ai-exchange-participants">${participants}</div><h3>🧾 Handelschronik</h3><div class="market-history">${history}</div>`;
 }
 
 const STOCK_COMPANY_CONFIG = {
   helios: { startPrice: 100, policy: 'Industrie priorisieren: Produktionsanlagen und stabile Umsätze ausbauen.' },
   nova: { startPrice: 80, policy: 'Forschung priorisieren: Technologie entwickeln und neue Welten erschließen.' },
   nasga: { startPrice: 60, policy: 'Rohstoffe und Handel priorisieren: Lagerbestände und Marktchancen nutzen.' },
-  spacey: { startPrice: 120, totalShares: 30000, policy: 'Raumfahrt priorisieren: Raketen, Transporte und neue Technologien entwickeln.' }
+  spacey: { startPrice: 120, totalShares: 30000, policy: 'Raumfahrt priorisieren: Raketen, Transporte und neue Technologien entwickeln.' },
+  chinaSpace: { startPrice: 95, totalShares: 400000, policy: 'Raumfahrt und industrielle Großproduktion priorisieren.' },
+  germanIndustries: { startPrice: 90, totalShares: 400000, policy: 'Maschinenbau, Industrieanlagen und effiziente Produktion priorisieren.' },
+  ilonMinski: { startPrice: 110, totalShares: 400000, policy: 'Raumfahrt, Antriebstechnologie und fortgeschrittene Elektronik priorisieren.' }
 };
 function ensureStockMarket() {
   if (!state.stockMarket || typeof state.stockMarket !== 'object') state.stockMarket = {};
@@ -474,7 +480,7 @@ function renderStockExchange() {
       return `${x},${y}`;
     }).join(' ');
     return `<article class="stock-card">
-      <div class="stock-card-head"><div><h3>${({helios:'🔷',nova:'🟣',nasga:'🟢',spacey:'🚀'}[cfg.id] || '🏢')} ${cfg.name}</h3><span class="hint">${cfg.style}</span></div><div class="stock-price-wrap"><strong class="stock-price">${stockMoney(stock.price)}</strong><span class="stock-change ${trendClass}">${trendLabel} ${changePercent > 0 ? '+' : ''}${changePercent.toLocaleString('de-DE',{maximumFractionDigits:2})}%</span></div></div>
+      <div class="stock-card-head"><div><h3>${({helios:'🔷',nova:'🟣',nasga:'🟢',spacey:'🚀',chinaSpace:'🛰️',germanIndustries:'🏭',ilonMinski:'🚀'}[cfg.id] || '🏢')} ${cfg.name}</h3><span class="hint">${cfg.style}</span></div><div class="stock-price-wrap"><strong class="stock-price">${stockMoney(stock.price)}</strong><span class="stock-change ${trendClass}">${trendLabel} ${changePercent > 0 ? '+' : ''}${changePercent.toLocaleString('de-DE',{maximumFractionDigits:2})}%</span></div></div>
       <div class="stock-chart-wrap"><svg class="stock-chart ${trendClass}" viewBox="0 0 100 32" preserveAspectRatio="none" role="img" aria-label="Kursverlauf der letzten 24 Spielstunden"><polyline points="${polyline}" fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round"/></svg><small>Letzte 24 Spielstunden · Aktualisierung alle 10 Spielminuten</small></div>
       <div class="stock-metrics">
         <div><span>Aktienwert / Börsenwert</span><strong>${stockMoney(marketCap)}</strong></div>

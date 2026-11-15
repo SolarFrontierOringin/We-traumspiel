@@ -76,11 +76,23 @@ function openBreakingNews() {
   if (!breakingNewsPopup) return;
   breakingNewsPopup.hidden = false;
   breakingNewsPopup.setAttribute('aria-hidden', 'false');
+  const audio = document.querySelector('#breaking-news-audio');
+  if (audio) {
+    audio.pause();
+    audio.currentTime = 0;
+    const playback = audio.play();
+    if (playback && typeof playback.catch === 'function') playback.catch(() => {});
+  }
 }
 function closeBreakingNews() {
   if (breakingNewsPopup) {
     breakingNewsPopup.hidden = true;
     breakingNewsPopup.setAttribute('aria-hidden', 'true');
+  }
+  const audio = document.querySelector('#breaking-news-audio');
+  if (audio) {
+    audio.pause();
+    audio.currentTime = 0;
   }
   try { localStorage.setItem(BREAKING_NEWS_SEEN_KEY, '1'); } catch {}
 }
