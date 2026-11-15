@@ -2121,6 +2121,22 @@ function renderTasks() {
     const replay = document.createElement('div');
     replay.className = 'task-card task-pending breaking-news-task';
     replay.innerHTML = '<div class="task-title"><strong>📺 Einführung – Die globale Rohstoffkrise</strong><button type="button" class="small-button" data-replay-breaking-news>Info</button></div><div class="hint">Die erste Breaking-News-Sendung über die Rohstoffkrise und SPACEYs Mission jederzeit erneut ansehen.</div>';
+    // Direkter Handler am dynamisch erzeugten Info-Button: funktioniert auch dann,
+    // wenn ein Browser einen älteren delegierten UI-Handler im Cache hält.
+    replay.querySelector('[data-replay-breaking-news]')?.addEventListener('click', event => {
+      event.stopPropagation();
+      const popup = document.querySelector('#breaking-news-popup');
+      if (!popup) return;
+      popup.hidden = false;
+      popup.setAttribute('aria-hidden', 'false');
+      const audio = document.querySelector('#breaking-news-audio');
+      if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+        const playback = audio.play();
+        if (playback && typeof playback.catch === 'function') playback.catch(() => {});
+      }
+    });
     const groupContent = introGroup.querySelector('.tasks-list');
     if (groupContent) groupContent.prepend(replay);
     else {
