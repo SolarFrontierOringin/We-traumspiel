@@ -571,6 +571,50 @@
         <button id="restart-game" class="danger" type="button">Aktiven Spielstand neu starten</button>
       </div>
       <div id="save-status" class="save-status" role="status" aria-live="polite"></div>
+
+      <section id="cloud-save-panel" class="cloud-save-panel" aria-labelledby="cloud-save-title">
+        <div class="cloud-panel-heading">
+          <div>
+            <h3 id="cloud-save-title">☁️ Cloud-Speicher</h3>
+            <p class="hint">Melde dich an, um dieses Konto mit bis zu drei Geräten zu verbinden.</p>
+          </div>
+          <span class="cloud-phase-label">Cloud-Konto</span>
+        </div>
+        <div id="cloud-account-status" class="cloud-account-status">Anmeldestatus wird geprüft …</div>
+        <form id="cloud-auth-form" class="cloud-auth-form">
+          <label for="cloud-email">E-Mail-Adresse</label>
+          <input id="cloud-email" name="email" type="email" autocomplete="email" placeholder="name@beispiel.de" required>
+          <label for="cloud-password">Passwort</label>
+          <input id="cloud-password" name="password" type="password" autocomplete="current-password" minlength="6" placeholder="Mindestens 6 Zeichen" required>
+          <div class="cloud-auth-mode">
+            <label><input type="radio" name="cloud-auth-mode" value="login" checked> Anmelden</label>
+            <label><input type="radio" name="cloud-auth-mode" value="register"> Neues Konto erstellen</label>
+          </div>
+          <button class="cloud-primary-button" type="submit">Mit E-Mail fortfahren</button>
+        </form>
+        <button id="cloud-google-login" class="cloud-google-button" type="button">
+          <span aria-hidden="true">G</span> Mit Google anmelden
+        </button>
+        <button id="cloud-logout" class="small-button cloud-logout-button" type="button">Abmelden</button>
+        <div id="cloud-status" class="cloud-status" role="status" aria-live="polite">Deine lokalen Spielstände bleiben unabhängig von der Cloud erhalten.</div>
+        <div class="cloud-sync-controls">
+          <div class="cloud-sync-meta">
+            <span>Aktiver Speicherplatz: <strong id="cloud-active-slot">1</strong></span>
+            <span id="cloud-last-sync">Noch nicht in der Cloud gespeichert</span>
+          </div>
+          <button id="cloud-upload-now" class="cloud-primary-button cloud-upload-button" type="button" disabled>☁️ Jetzt in Cloud speichern</button>
+          <button id="cloud-restore-now" class="cloud-secondary-button cloud-upload-button" type="button" disabled>☁️ Cloud-Spielstand wiederherstellen</button>
+          <p class="cloud-sync-note">Automatische Cloud-Sicherung alle 5 Minuten. Du kannst jederzeit zusätzlich manuell speichern. Es wird nur der aktuell ausgewählte Speicherplatz hochgeladen.</p>
+        </div>
+        <div class="cloud-devices-heading">
+          <strong>Deine registrierten Geräte</strong>
+          <span>Maximal 3</span>
+        </div>
+        <div id="cloud-device-list" class="cloud-device-list">
+          <p class="hint">Melde dich an, um deine Geräte zu verwalten.</p>
+        </div>
+        <p class="cloud-sync-note">Deine lokalen Spielstände bleiben erhalten. Cloud-Sicherungen werden getrennt nach Speicherplatz abgelegt.</p>
+      </section>
     </section>
 
     <section id="construction-queue-panel" class="construction-queue-panel" aria-label="Bauwarteschlange">
@@ -589,9 +633,14 @@
       <aside id="info-panel" class="panel"></aside>
     </section>
   </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="cloud-sync.js?v=cloud-save-upload-20261116"></script>
   <script src="game-co2.js?v=co2-split-20261113"></script>
   <script src="game-energy.js?v=central-energy-20261114"></script>
   <script src="game-buildings.js?v=buildings-split-20261114"></script>
+  <script src="resource-registry.js?v=resource-registry-20261115-v2"></script>
+  <script src="building-registry.js?v=building-registry-20261115-v2"></script>
+  <script src="game-save.js?v=save-registry-migration-20261115-v2"></script>
   <script src="game.js?v=pc-info-fix-20261115"></script>
   <script src="game-workforce.js?v=workforce-powerlink-20261114"></script>
 <script src="game-colonists.js?v=recruitment-20261114"></script>
