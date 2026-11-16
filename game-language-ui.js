@@ -281,13 +281,15 @@ requestAnimationFrame(updateResources);
 // pagehide funktioniert auch bei Navigation/Neuladen; visibilitychange sichert,
 // wenn der Browser-Tab in den Hintergrund wechselt. beforeunload ist ein zusätzlicher Fallback.
 function saveGameOnExit() {
-  if (restartingGame) return;
+  // Bei einer Cloud-Wiederherstellung darf der alte Laufzeitstand
+  // den bereits heruntergeladenen lokalen Cloud-Spielstand nicht überschreiben.
+  if (restartingGame || window.SFOCloudRestoreInProgress) return;
   saveGame(false);
 }
 window.addEventListener('pagehide', saveGameOnExit);
 window.addEventListener('beforeunload', saveGameOnExit);
 document.addEventListener('visibilitychange', () => {
-  if (!restartingGame && document.visibilityState === 'hidden') saveGame(false);
+  if (!restartingGame && !window.SFOCloudRestoreInProgress && document.visibilityState === 'hidden') saveGame(false);
 });
 
 

@@ -284,6 +284,9 @@
         revision: cloudSave.revision || null
       }));
       setStatus('Cloud-Spielstand ' + slot + ' (Version ' + (cloudSave.revision || '?') + ') wurde geladen. Das Spiel wird neu gestartet.', false);
+      // Verhindert, dass pagehide/beforeunload den alten In-Memory-Spielstand
+      // beim Neuladen über die soeben wiederhergestellten Cloud-Daten schreibt.
+      global.SFOCloudRestoreInProgress = true;
       stopAutoSync();
       global.location.reload();
       return true;
