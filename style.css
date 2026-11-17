@@ -2496,3 +2496,31 @@ body > .planet-build-menu .planet-build-header {
 .cloud-secondary-button:disabled { opacity: .48; cursor: not-allowed; }
 .cloud-upload-button:disabled { opacity: .48; cursor: not-allowed; }
 .cloud-sync-controls .cloud-sync-note { margin: 0; }
+
+
+/* Pyrophor: rot-rosafarbener Planet auf derselben Umlaufbahn wie Noxaris. */
+.orbit.pyrophor-orbit{border-color:rgba(255,112,153,.42);box-shadow:0 0 18px rgba(255,83,135,.16)}
+.body.pyrophor{width:46px;height:46px;border:1px solid rgba(255,177,197,.95);border-radius:50%;background:radial-gradient(circle at 29% 24%,#ffd0dc 0%,#f0789e 25%,#c83e70 57%,#55172f 100%);box-shadow:inset -8px -7px 11px rgba(0,0,0,.68),inset 4px 3px 8px rgba(255,218,230,.42),0 0 15px rgba(255,91,145,.68),0 0 32px rgba(204,45,105,.34);overflow:visible}
+.body.pyrophor::before{content:"";position:absolute;inset:-7px;border:1px solid rgba(255,142,177,.32);border-radius:50%;pointer-events:none}
+
+/* Startseiten-Gebäudeübersicht: nur gebaute Gebäude, keine Produktionswerte. */
+.planet-building-summary {
+  padding: 0 12px 10px;
+}
+.planet-building-summary-row {
+  min-height: 38px;
+}
+.planet-building-summary-row:last-child {
+  border-bottom: 0;
+}
+
+/* Einheitliches Lager-Raster: zwei Rohstoffe pro Zeile und vier Produktklassen */
+.planet-storage-grid,.resource-tile-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.planet-storage-grid .stat{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;min-width:0;padding:9px;border:1px solid rgba(255,255,255,.08);border-radius:9px}
+.resource-tile{border-bottom:0!important}
+.resource-ore{background:#263b30!important;border-color:#42634e!important;color:#d7f0df}
+.resource-finished{background:#263a59!important;border-color:#405d85!important;color:#d8e7ff}
+.resource-luxury{background:#49345f!important;border-color:#6a4c89!important;color:#eee0ff}
+.resource-intermediate{background:#594323!important;border-color:#806437!important;color:#ffebc4}
+.planet-resource-value{display:block;min-width:0;overflow-wrap:anywhere}
+@media(max-width:360px){.planet-storage-grid,.resource-tile-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}.planet-resource-value{font-size:11px;padding:5px 6px}}
