@@ -4,10 +4,15 @@ Venus | 7.200 km  | 0 Bar
 Erde | 6.370 km | 1,0 Bar 20% Sauerstoff Anteil 
 Luna | 1.738 km | 0 Bar
 Mars | 3.390 km | 0 Bar
-Jupiter| 69.911km | 90 Bar 0% Sauerstof 
+Jupiter| 69.911km | 90 Bar 0% Sauerstof 40
 Saturn | 58.232 km | 45 Bar 0% 
 Uranus | 25.326 km | 40 Bar 0% Sauersoff 
 Neptun | 24.622 km | 60 Bar
 Pluto | 1.919 Km | 0 Bar
 Ceres | 582 km | 0 Bar
 Io | 3.643 km | 0 Bar 
+Nivaris | 9.842 km | 0 Bar
+Noxaris | 6.400 km | 0 Bat 
+Themepatin | 5.190 Km | 0 Bar 
+Pyrophor | 3.942 km | 0 Bar 
+Rethroxid | 1.988 km | 0 Bar 
