@@ -1,14 +1,14 @@
 # Solar Frontier – Aufgaben
 
-## Atmosphärensystem
+## Atmosphäre 
+- [ ] gase prüfen und anpassen
+- [ ] vereinfachtes lagersystem
+- [ ] 4t regel einführung
 
-- [ ] Gaskatalog erstellen
-- [ ] Argon hinzufügen
-- [ ] Atmosphärenwerte festlegen
-- [ ] Planeten aktualisieren
 
-## Flugzentrale
+## Planeten
+- [ ] Planeten Tabelle mit Größe erstelle
+- [ ] sonnenystem 2 fertig stellen
 
-- [ ] Raketenübersicht überarbeiten
-- [ ] Transporter integrieren
-- [ ] Flugübersicht gestalten
+## Einzigartige Gebäude 
+- [ ] planen 
