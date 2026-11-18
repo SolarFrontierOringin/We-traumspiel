@@ -1,7 +1,7 @@
 # Solar Frontier – Aufgaben
 
 ## Atmosphäre 
-- [ ] gase prüfen und anpassen
+- [x] gase prüfen und anpassen
 - [ ] vereinfachtes lagersystem
 - [ ] 4t regel einführung
 
