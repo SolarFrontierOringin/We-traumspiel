@@ -29,10 +29,10 @@ function getSaveSlotKeys(slot = activeSaveSlot) {
 const futureSolarSystem = {
   id: 'system2', name: 'Sonnensystem 2',
   bodies: [
-    { id: 'themepatin', name: 'Themepatin', type: 'Gesteinsplanet', className: 'themepatin', orbit: 1120, temperature: 'Unbekannt', resources: { stone: 1000000, copperOre: 2000000, uranium: 10000000 }, storage: {}, orbitStorage: {} },
-    { id: 'rethroxid', name: 'Rethroxid', type: 'Roter Gesteinsplanet', className: 'rethroxid', orbit: 1120, temperature: 'Unbekannt', resources: { copperOre: 10000000, germanium: 2000000 }, storage: {}, orbitStorage: {} },
-    { id: 'noxaris', name: 'Noxaris', type: 'Mystischer Planet', className: 'noxaris', orbit: 1420, temperature: 'Unbekannt', resources: { iron: 2000000, stone: 1000000, ionium: 500000, germanium: 1000000 }, storage: {}, orbitStorage: {} },
-    { id: 'pyrophor', name: 'Pyrophor', type: 'Vulkanischer Gesteinsplanet', className: 'pyrophor', orbit: 1420, temperature: '1.200 °C', resources: { uranium: 8000000, stone: 12000000, ionium: 2000000 }, storage: {}, orbitStorage: {} }
+    { id: 'themepatin', name: 'Themepatin', diameterKm: 5190, type: 'Gesteinsplanet', className: 'themepatin', orbit: 1120, temperature: 'Unbekannt', resources: { stone: 1000000, copperOre: 2000000, uranium: 10000000 }, storage: {}, orbitStorage: {} },
+    { id: 'rethroxid', name: 'Rethroxid', diameterKm: 1988, type: 'Roter Gesteinsplanet', className: 'rethroxid', orbit: 1120, temperature: 'Unbekannt', resources: { copperOre: 10000000, germanium: 2000000 }, storage: {}, orbitStorage: {} },
+    { id: 'noxaris', name: 'Noxaris', diameterKm: 6400, type: 'Mystischer Planet', className: 'noxaris', orbit: 1420, temperature: 'Unbekannt', resources: { iron: 2000000, stone: 1000000, ionium: 500000, germanium: 1000000 }, storage: {}, orbitStorage: {} },
+    { id: 'pyrophor', name: 'Pyrophor', diameterKm: 3942, type: 'Vulkanischer Gesteinsplanet', className: 'pyrophor', orbit: 1420, temperature: '1.200 °C', resources: { uranium: 8000000, stone: 12000000, ionium: 2000000 }, storage: {}, orbitStorage: {} }
   ]
 };
 let activeSolarSystemId = 'system1';
@@ -146,7 +146,7 @@ const MARKET_START_BUDGET = 10000000;
 const MARKET_RESTOCK_INTERVAL_MS = 3 * 60 * 60 * 1000;
 const MARKET_RESOURCES = {
  stone:{base:2,capacity:100000,initial:100000,unit:'t'}, ice:{base:8,capacity:30000,initial:20000,unit:'t'},
- coal:{base:5,capacity:60000,initial:60000,unit:'t'}, gas:{base:7,capacity:60000,initial:50000,unit:'t'},
+ coal:{base:5,capacity:60000,initial:60000,unit:'t'},
  co2:{base:3,capacity:50000,initial:50000,unit:'t'}, carbon:{base:20,capacity:15000,initial:10000,unit:'t'},
  oxygen:{base:15,capacity:20000,initial:20000,unit:'t'}, crudeOil:{base:18,capacity:30000,initial:25000,unit:'L'},
  polymers:{base:40,capacity:15000,initial:12000,unit:'t'}, rubber:{base:55,capacity:12000,initial:8000,unit:'t'}, plastics:{base:65,capacity:10000,initial:6000,unit:'t'}, wood:{base:8,capacity:100000,initial:50000,unit:'t'}, biomass:{base:7,capacity:12000,initial:9000,unit:'t'}, iron:{base:10,capacity:100000,initial:100000,unit:'t'},
@@ -155,7 +155,7 @@ const MARKET_RESOURCES = {
  copper:{base:24,capacity:20000,initial:15000,unit:'t'}, batteries:{base:70,capacity:12000,initial:8000,unit:'t'}, lithiumBatteries:{base:950,capacity:1200,initial:0,unit:'t'},
  buildingMaterials:{base:8,capacity:60000,initial:60000,unit:'t'}, machines:{base:90,capacity:10000,initial:6000,unit:'t'},
  glass:{base:20,capacity:20000,initial:16000,unit:'t'}, electronics:{base:100,capacity:10000,initial:6000,unit:'t'},
- hydrogen:{base:12,capacity:20000,initial:16000,unit:'t'}, helium:{base:30,capacity:10000,initial:7000,unit:'t'},
+ hydrogen:{base:12,capacity:20000,initial:16000,unit:'t'}, nitrogen:{base:10,capacity:20000,initial:16000,unit:'t'},
  helium3:{base:250,capacity:5000,initial:2500,unit:'t'}, uranium:{base:100,capacity:5000,initial:2500,unit:'t'},
  processedUranium:{base:180,capacity:3000,initial:1500,unit:'t'}, nuclearFuel:{base:350,capacity:1500,initial:700,unit:'t'},
  bauxite:{base:5,capacity:30000,initial:30000,unit:'t'}, aluminiumOxide:{base:16,capacity:12000,initial:9000,unit:'t'},
@@ -710,8 +710,8 @@ function runBuildAction(action) {
 
 /* Planetendaten werden aus js/game-planets.js geladen. */
 
-const resourceNames = { ice: 'Eis', titanOre: 'Titanerz', processedTitan: 'Aufbereitetes Titan', titanium: 'Titan', bauxite: 'Bauxit', aluminiumOxide: 'Aluminiumoxid', aluminium: 'Aluminium', co2: 'CO₂', carbon: 'Kohlenstoff', oxygen: 'Sauerstoff', stone: 'Stein', coal: 'Kohle', gas: 'Gas', iron: 'Eisen', goldOre: 'Golderz', gold: 'Gold', microchip: 'Mikrochip', nanochips: 'Nanochips', silicon: 'Silizium', lithium: 'Lithium', copperOre: 'Kupfererz', copper: 'Kupfer', batteries: 'Batterien', lithiumBatteries: 'Lithium-Batterien', buildingMaterials: 'Baustoffe', machines: 'Maschinen', glass: 'Glas', electronics: 'Elektronik', steel: 'Stahl', hydrogen: 'Wasserstoff', helium: 'Helium', helium3: 'Helium-3', crudeOil: 'Rohöl', polymers: 'Polymere', rubber: 'Gummi', plastics: 'Kunststoff', wood: 'Bretter', biomass: 'Biomasse', vehicles: 'Fahrzeuge', cocoaBeans: 'Kakaobohnen', chocolate: 'Schokolade', luxuryFurniture: 'Luxusmöbel', nickelOre: 'Nickelerz', graphite: 'Graphit', liquidFuel: 'Treibstoff', trees: 'Bäume', uranium: 'Uran', processedUranium: 'Aufbereitetes Uran', nuclearFuel: 'Kernbrennstoff', ionium: 'Ionium', germanium: 'Germanium', chips: 'Chips', water: 'Wasser', grain: 'Getreide', vegetables: 'Gemüse', food: 'Lebensmittel', algaeBiomass: 'Algenbiomasse' };
-const resourceIcons = { ice: '🧊', titanOre: '⚙️', processedTitan: '⚗️', titanium: '🔩', bauxite: '🪨', aluminiumOxide: '⚗️', aluminium: '🥈', co2: '🌫️', carbon: '⚫', oxygen: '🫧', stone: '🪨', coal: '⚫', gas: '🔥', iron: '🧲', goldOre: '🟨', gold: '🪙', microchip: '💠', nanochips: '🔬', silicon: '🔷', lithium: '🔋', copperOre: '🟠', copper: '🟤', batteries: '🔋', lithiumBatteries: '🔋', buildingMaterials: '🧱', machines: '⚙️', glass: '🪟', electronics: '💻', steel: '🔩', hydrogen: '💨', helium: '💨', helium3: '🧪', crudeOil: '🛢️', polymers: '🧬', rubber: '⚫', plastics: '🧴', wood: '🪵', biomass: '🌿', vehicles: '🚗', cocoaBeans: '🫘', chocolate: '🍫', luxuryFurniture: '🛋️', nickelOre: '🪨', graphite: '⚫', liquidFuel: '🛢️', trees: '🌳', uranium: '☢️', processedUranium: '🧪', nuclearFuel: '⚛️', ionium: '☢️', germanium: '💎', chips: '💾', water: '💧', grain: '🌾', vegetables: '🥦', food: '🥫', algaeBiomass: '🪴' };
+const resourceNames = { ice: 'Eis', titanOre: 'Titanerz', processedTitan: 'Aufbereitetes Titan', titanium: 'Titan', bauxite: 'Bauxit', aluminiumOxide: 'Aluminiumoxid', aluminium: 'Aluminium', co2: 'CO₂', carbon: 'Kohlenstoff', oxygen: 'Sauerstoff', stone: 'Stein', coal: 'Kohle',  iron: 'Eisen', goldOre: 'Golderz', gold: 'Gold', microchip: 'Mikrochip', nanochips: 'Nanochips', silicon: 'Silizium', lithium: 'Lithium', copperOre: 'Kupfererz', copper: 'Kupfer', batteries: 'Batterien', lithiumBatteries: 'Lithium-Batterien', buildingMaterials: 'Baustoffe', machines: 'Maschinen', glass: 'Glas', electronics: 'Elektronik', steel: 'Stahl', helium3: 'Helium-3 (³He)', hydrogen: 'Wasserstoff (H₂)', nitrogen: 'Stickstoff (N₂)', crudeOil: 'Rohöl', polymers: 'Polymere', rubber: 'Gummi', plastics: 'Kunststoff', wood: 'Bretter', biomass: 'Biomasse', vehicles: 'Fahrzeuge', cocoaBeans: 'Kakaobohnen', chocolate: 'Schokolade', luxuryFurniture: 'Luxusmöbel', nickelOre: 'Nickelerz', graphite: 'Graphit', liquidFuel: 'Treibstoff', trees: 'Bäume', uranium: 'Uran', processedUranium: 'Aufbereitetes Uran', nuclearFuel: 'Kernbrennstoff', ionium: 'Ionium', germanium: 'Germanium', chips: 'Chips', water: 'Wasser', grain: 'Getreide', vegetables: 'Gemüse', food: 'Lebensmittel', algaeBiomass: 'Algenbiomasse' };
+const resourceIcons = { ice: '🧊', titanOre: '⚙️', processedTitan: '⚗️', titanium: '🔩', bauxite: '🪨', aluminiumOxide: '⚗️', aluminium: '🥈', co2: '🌫️', carbon: '⚫', oxygen: '🫧', stone: '🪨', coal: '⚫', gas: '🔥', iron: '🧲', goldOre: '🟨', gold: '🪙', microchip: '💠', nanochips: '🔬', silicon: '🔷', lithium: '🔋', copperOre: '🟠', copper: '🟤', batteries: '🔋', lithiumBatteries: '🔋', buildingMaterials: '🧱', machines: '⚙️', glass: '🪟', electronics: '💻', steel: '🔩', hydrogen: '💨', helium3: '✨', crudeOil: '🛢️', polymers: '🧬', rubber: '⚫', plastics: '🧴', wood: '🪵', biomass: '🌿', vehicles: '🚗', cocoaBeans: '🫘', chocolate: '🍫', luxuryFurniture: '🛋️', nickelOre: '🪨', graphite: '⚫', liquidFuel: '🛢️', trees: '🌳', uranium: '☢️', processedUranium: '🧪', nuclearFuel: '⚛️', ionium: '☢️', germanium: '💎', chips: '💾', water: '💧', grain: '🌾', vegetables: '🥦', food: '🥫', algaeBiomass: '🪴' };
 
 function formatTons(value) { return `${value.toFixed(2)} t`; }
 function formatLargeTons(value) {
@@ -732,18 +732,23 @@ function formatAtmosphereTons(value) {
 // Oberflächenschwerkraft und Planetenradius. Ein EINHEITLICHER Spielfaktor
 // kalibriert das Modell auf Venus: 100 Billionen t CO₂ entsprechen dort 92 bar.
 const PLANET_ATMOSPHERE_PHYSICS = {
-  mercury: { radiusM: 2439700, gravity: 3.70 },
-  venus:   { radiusM: 6051800, gravity: 8.87 },
-  earth:   { radiusM: 6371000, gravity: 9.81 },
-  luna:    { radiusM: 1737400, gravity: 1.62 },
-  mars:    { radiusM: 3389500, gravity: 3.71 },
-  jupiter: { radiusM: 69911000, gravity: 24.79 },
-  saturn:  { radiusM: 58232000, gravity: 10.44 },
-  uranus:  { radiusM: 25362000, gravity: 8.69 },
-  neptune: { radiusM: 24622000, gravity: 11.15 },
-  pluto:   { radiusM: 1188300, gravity: 0.62 },
-  ceres:   { radiusM: 469600, gravity: 0.27 },
-  io:      { radiusM: 1821600, gravity: 1.80 }
+  mercury: { radiusM: 1300000, gravity: 3.70 },
+  venus:   { radiusM: 3600000, gravity: 8.87 },
+  earth:   { radiusM: 3185000, gravity: 9.81 },
+  luna:    { radiusM: 869000, gravity: 1.62 },
+  mars:    { radiusM: 2050000, gravity: 3.71 },
+  jupiter: { radiusM: 34955500, gravity: 24.79 },
+  saturn:  { radiusM: 29116000, gravity: 10.44 },
+  uranus:  { radiusM: 12663000, gravity: 8.69 },
+  neptune: { radiusM: 12311000, gravity: 11.15 },
+  pluto:   { radiusM: 959500, gravity: 0.62 },
+  ceres:   { radiusM: 291000, gravity: 0.27 },
+  io:      { radiusM: 1821500, gravity: 1.80 },
+  nivaris: { radiusM: 4921000, gravity: 9.81 },
+  noxaris: { radiusM: 3200000, gravity: 9.81 },
+  themepatin: { radiusM: 2595000, gravity: 9.81 },
+  rethroxid: { radiusM: 994000, gravity: 9.81 },
+  pyrophor: { radiusM: 1971000, gravity: 9.81 }
 };
 const VENUS_ATMOSPHERE_REFERENCE_TONS = 100000000000000;
 const VENUS_ATMOSPHERE_REFERENCE_BAR = 92;
@@ -771,19 +776,11 @@ function venusPressurePercent() { return Math.max(0, Math.min(100, venusAtmosphe
 
 // Luna und alle weiteren Planeten verwenden dieselbe Formel; nur Radius und Schwerkraft variieren.
 const ATMOSPHERE_RELEASE_GASES = {
-  oxygen: { label: 'Sauerstoff', icon: '🫧' },
-  co2: { label: 'CO₂', icon: '🌫️' },
-  gas: { label: 'Gas', icon: '🔥' },
-  hydrogen: { label: 'Wasserstoff', icon: '💨' },
-  helium: { label: 'Helium', icon: '💨' },
-  carbon: { label: 'Kohlenstoff', icon: '⚫' },
-  nitrogen: { label: 'Stickstoff', icon: '🌬️' },
-  argon: { label: 'Argon', icon: '🧪' },
-  methane: { label: 'Methan (CH₄)', icon: '💨' },
-  carbonMonoxide: { label: 'Kohlenstoffmonoxid (CO)', icon: '☁️' },
-  sulfurDioxide: { label: 'Schwefeldioxid (SO₂)', icon: '🌋' },
-  sodium: { label: 'Natrium', icon: '🧪' },
-  potassium: { label: 'Kalium', icon: '🧪' }
+  helium3: { label: 'Helium-3 (³He)', icon: '✨' },
+  oxygen: { label: 'Sauerstoff (O₂)', icon: '🫧' },
+  hydrogen: { label: 'Wasserstoff (H₂)', icon: '💨' },
+  co2: { label: 'Kohlendioxid (CO₂)', icon: '🌫️' },
+  nitrogen: { label: 'Stickstoff (N₂)', icon: '🌬️' }
 };
 const LUNA_RELEASE_GASES = ATMOSPHERE_RELEASE_GASES; // Kompatibilität mit bestehenden Spielständen/UI
 function ensureLunaAtmosphere() { return ensurePlanetAtmosphere('luna'); }
@@ -1001,12 +998,13 @@ function getPlanetStorage(id) {
   // Ungültige oder veraltete Planet-IDs dürfen die Ressourcenabfrage nicht
   // zum Absturz bringen. Ein fehlender Planet besitzt kein Spielerlager.
   if (!id || !bodies[id] || typeof bodies[id] !== 'object') return {};
+  const obsoleteAtmosphereKeys = ['gas','helium','argon','methane','carbonMonoxide','sulfurDioxide','sodium','potassium'];
   if (id === 'earth') {
-    delete state.potassium; delete state.sodium; delete state.sulfurDioxide;
+    obsoleteAtmosphereKeys.forEach(key => delete state[key]);
     return state;
   }
   if (!bodies[id].storage) bodies[id].storage = {};
-  delete bodies[id].storage.potassium; delete bodies[id].storage.sodium; delete bodies[id].storage.sulfurDioxide;
+  obsoleteAtmosphereKeys.forEach(key => delete bodies[id].storage[key]);
   if (bodies[id].storage.glass === undefined) bodies[id].storage.glass = 0;
   if (bodies[id].storage.wood === undefined) bodies[id].storage.wood = 0;
   if (bodies[id].storage.biomass === undefined) bodies[id].storage.biomass = 0;
@@ -1016,7 +1014,7 @@ function getPlanetStorage(id) {
 function getOrbitStorage(id) {
   if (!bodies[id]) return {};
   if (!bodies[id].orbitStorage) bodies[id].orbitStorage = {};
-  delete bodies[id].orbitStorage.potassium; delete bodies[id].orbitStorage.sodium; delete bodies[id].orbitStorage.sulfurDioxide;
+  ['gas','helium','argon','methane','carbonMonoxide','sulfurDioxide','sodium','potassium'].forEach(key => delete bodies[id].orbitStorage[key]);
   if (bodies[id].orbitStorage.glass === undefined) bodies[id].orbitStorage.glass = 0;
   if (bodies[id].orbitStorage.wood === undefined) bodies[id].orbitStorage.wood = 0;
   if (bodies[id].orbitStorage.biomass === undefined) bodies[id].orbitStorage.biomass = 0;
@@ -1025,7 +1023,7 @@ function getOrbitStorage(id) {
 }
 // Gaslagerkapazität wird getrennt für Oberfläche und Orbit geführt.
 // Jeder atmosphärische Gasbestand benötigt ein Gaslager; Kapazität: 100.000 t je Gas und Gebäude.
-const ATMOSPHERIC_STORAGE_GASES = Object.keys(ATMOSPHERE_RELEASE_GASES).filter(key => !['potassium', 'sodium', 'sulfurDioxide'].includes(key));
+const ATMOSPHERIC_STORAGE_GASES = Object.keys(ATMOSPHERE_RELEASE_GASES);
 function gasCarbonStorageCount(id, mode = 'surface') {
   const buildings = getBuildingsOnPlanet(id);
   return Math.max(0, Number(buildings[mode === 'orbit' ? 'gasCarbonStorageOrbit' : 'gasCarbonStorage']) || 0);
@@ -3358,7 +3356,7 @@ function renderSystem() {
           pyrophor: 'Ein extrem heißer, rot-rosafarbener Gesteinsplanet auf derselben Umlaufbahn wie Noxaris.'
         };
         const description = descriptions[body.id] || 'Ein bislang unerforschter Planet.';
-        infoPanel.innerHTML = `<h2>🪐 ${body.name}</h2><div class="stat"><span>Typ</span><strong>${body.type}</strong></div><div class="stat"><span>Temperatur</span><strong>${body.temperature}</strong></div><h3>🪨 Rohstoffvorkommen</h3>${resourceRows}<h3>📦 Lager</h3><div class="stat"><span>Oberflächenlager</span><strong>Eigenes Lager</strong></div><div class="stat"><span>Orbitlager</span><strong>Eigenes Lager</strong></div><p class="hint">${description}</p>`;
+        infoPanel.innerHTML = `<h2>🪐 ${body.name}</h2><div class="stat"><span>Typ</span><strong>${body.type}</strong></div><div class="stat"><span>Durchmesser</span><strong>${body.diameterKm ? body.diameterKm.toLocaleString('de-DE') + ' km' : '–'}</strong></div><div class="stat"><span>Durchmesser</span><strong>${body.diameterKm.toLocaleString('de-DE')} km</strong></div><div class="stat"><span>Temperatur</span><strong>${body.temperature}</strong></div><h3>🪨 Rohstoffvorkommen</h3>${resourceRows}<h3>📦 Lager</h3><div class="stat"><span>Oberflächenlager</span><strong>Eigenes Lager</strong></div><div class="stat"><span>Orbitlager</span><strong>Eigenes Lager</strong></div><p class="hint">${description}</p>`;
       });
       solarSystem.appendChild(planet);
     });
@@ -4209,7 +4207,7 @@ function isBuildingAllowed(key, planetId = state.selected) {
 }
 
 function setGasRemovalGas(gasKey) {
-  const allowed = new Set(['co2','oxygen','nitrogen','hydrogen','helium','methane','argon']);
+  const allowed = new Set(['helium3','oxygen','hydrogen','co2','nitrogen']);
   if (!allowed.has(gasKey) || !bodies[state.selected]) return;
   bodies[state.selected].gasRemovalGas = gasKey;
   saveGame(false);
@@ -4239,7 +4237,7 @@ function buildButtonUnsafe(key) {
     const b = buildingTypes[key];
     const count = Number(getBuildingsOnPlanet(state.selected).gasRemoval || 0);
     const selected = String(bodies[state.selected]?.gasRemovalGas || 'co2');
-    const gasOptions = [['co2','Kohlendioxid (CO₂)'],['oxygen','Sauerstoff'],['nitrogen','Stickstoff'],['hydrogen','Wasserstoff'],['helium','Helium'],['methane','Methan'],['argon','Argon']];
+    const gasOptions = [['helium3','Helium-3 (³He)'],['oxygen','Sauerstoff (O₂)'],['hydrogen','Wasserstoff (H₂)'],['co2','Kohlendioxid (CO₂)'],['nitrogen','Stickstoff (N₂)']];
     return `<div class="build-card"><div><strong>${b.icon} ${b.name}</strong><small>${b.text}</small><label>Zu entfernendes Gas <select data-gas-removal-select onchange="setGasRemovalGas(this.value)">${gasOptions.map(([key,label]) => `<option value="${key}" ${selected===key?'selected':''}>${label}</option>`).join('')}</select></label></div><button class="build-resource" data-building="gasRemoval">Bauen (${count})</button></div>`;
   }
   if (key === 'gasCarbonStorage') {
@@ -4842,7 +4840,7 @@ function renderInfo() {
 }
 
 function freightResourceLabel(key) {
-  const labels = { iron:'Eisen', ironOre:'Eisenerz', steel:'Stahl', stone:'Stein', silicon:'Silizium', lithium:'Lithium', copper:'Kupfer', copperOre:'Kupfererz', uranium:'Uran', helium3:'Helium-3', water:'Wasser', ice:'Eis', glass:'Glas', chips:'Chips', electronics:'Elektronik', plastic:'Kunststoff', polymers:'Polymere', rubber:'Gummi', wood:'Holz', biomass:'Biomasse', food:'Nahrung', oxygen:'Sauerstoff', hydrogen:'Wasserstoff', nitrogen:'Stickstoff', co2:'CO₂', argon:'Argon', fuel:'Treibstoff', ionium:'Ionium', cocoa:'Kakao', chocolate:'Schokolade', luxuryFurniture:'Luxusmöbel', vehicles:'Fahrzeuge', crudeOil:'Rohöl', gas:'Gas' };
+  const labels = { iron:'Eisen', ironOre:'Eisenerz', steel:'Stahl', stone:'Stein', silicon:'Silizium', lithium:'Lithium', copper:'Kupfer', copperOre:'Kupfererz', uranium:'Uran', helium3:'Helium-3', water:'Wasser', ice:'Eis', glass:'Glas', chips:'Chips', electronics:'Elektronik', plastic:'Kunststoff', polymers:'Polymere', rubber:'Gummi', wood:'Holz', biomass:'Biomasse', food:'Nahrung', oxygen:'Sauerstoff', hydrogen:'Wasserstoff', nitrogen:'Stickstoff', co2:'CO₂', fuel:'Treibstoff', ionium:'Ionium', cocoa:'Kakao', chocolate:'Schokolade', luxuryFurniture:'Luxusmöbel', vehicles:'Fahrzeuge', crudeOil:'Rohöl', gas:'Gas' };
   return labels[key] || key.replace(/([A-Z])/g, ' $1').replace(/^./, c => c.toUpperCase());
 }
 function freightResourceKeys(id) {
@@ -4966,7 +4964,7 @@ function renderInfoInternal() {
   const currentColonists = colonistsOnPlanet(state.selected);
   const currentHousingCapacity = housingCapacity(state.selected);
   const currentHousingFree = Math.max(0, currentHousingCapacity - currentColonists);
-  infoPanel.innerHTML = `<h2>${state.selected === 'earth' ? '🌍' : state.selected === 'nivaris' ? '🌌' : '🪐'} ${body.name}</h2><p class="hint">${body.type}</p>${body.description ? `<p class="hint">${body.description}</p><p class="hint"><strong>Der Beginn einer mystischen Reise …</strong></p>` : ''}${state.selected === 'nivaris' ? '<button type="button" id="nivaris-message-btn">Nachricht</button>' : ''}${renderPlanetViewSwitch()}<div class="stat"><span>Temperatur</span><strong>${planetTemperatureCelsius(state.selected).toFixed(0) + ' °C'}</strong></div><div class="stat colonists-planet-count"><span>👥 Kolonisten auf ${body.name}</span><strong data-planet-colonists="${state.selected}">${currentColonists.toLocaleString('de-DE')}</strong></div><div class="stat housing-planet-count"><span>🏠 Wohnraum</span><strong data-planet-housing="${state.selected}">${currentColonists.toLocaleString('de-DE')} / ${currentHousingCapacity.toLocaleString('de-DE')} · ${currentHousingFree.toLocaleString('de-DE')} frei</strong></div>${renderAtmospherePanel(state.selected)}<details class="planet-resources-details" data-planet-resources="${state.selected}"><summary><span>🌐 Rohstoffe auf dem Planeten</span></summary><div class="planet-resources-content">${resourceRows(body)}</div></details><details class="planet-storage-details"><summary>📦 Lager auf ${body.name}</summary><div class="planet-storage-content">${formatStorage(state.selected)}</div></details><hr><details class="planet-economy-details"><summary><span>🏭 Gebäude auf ${body.name}</span><strong>${totalBuildingsOnPlanet(state.selected)} Gebäude</strong></summary>${renderPlanetBuildingSummary(state.selected)}</details><hr>`;
+  infoPanel.innerHTML = `<h2>${state.selected === 'earth' ? '🌍' : state.selected === 'nivaris' ? '🌌' : '🪐'} ${body.name}</h2><p class="hint">${body.type} · Durchmesser: ${body.diameterKm ? body.diameterKm.toLocaleString('de-DE') + ' km' : '–'}</p>${body.description ? `<p class="hint">${body.description}</p><p class="hint"><strong>Der Beginn einer mystischen Reise …</strong></p>` : ''}${state.selected === 'nivaris' ? '<button type="button" id="nivaris-message-btn">Nachricht</button>' : ''}${renderPlanetViewSwitch()}<div class="stat"><span>Temperatur</span><strong>${planetTemperatureCelsius(state.selected).toFixed(0) + ' °C'}</strong></div><div class="stat colonists-planet-count"><span>👥 Kolonisten auf ${body.name}</span><strong data-planet-colonists="${state.selected}">${currentColonists.toLocaleString('de-DE')}</strong></div><div class="stat housing-planet-count"><span>🏠 Wohnraum</span><strong data-planet-housing="${state.selected}">${currentColonists.toLocaleString('de-DE')} / ${currentHousingCapacity.toLocaleString('de-DE')} · ${currentHousingFree.toLocaleString('de-DE')} frei</strong></div>${renderAtmospherePanel(state.selected)}<details class="planet-resources-details" data-planet-resources="${state.selected}"><summary><span>🌐 Rohstoffe auf dem Planeten</span></summary><div class="planet-resources-content">${resourceRows(body)}</div></details><details class="planet-storage-details"><summary>📦 Lager auf ${body.name}</summary><div class="planet-storage-content">${formatStorage(state.selected)}</div></details><hr><details class="planet-economy-details"><summary><span>🏭 Gebäude auf ${body.name}</span><strong>${totalBuildingsOnPlanet(state.selected)} Gebäude</strong></summary>${renderPlanetBuildingSummary(state.selected)}</details><hr>`;
   bindPlanetViewControls();
   bindPlanetResourceDetails();
   const atmosphereReleaseButton = document.querySelector('#planet-atmosphere-release');
@@ -6761,79 +6759,39 @@ function atmosphereMassForPressure(planetId, pressureBar) {
 function ensurePlanetAtmosphere(planetId) {
   const planet = bodies[planetId];
   if (!planet || planetId === 'sun') return null;
-  const hadAtmosphere = !!(planet.atmosphere && typeof planet.atmosphere === 'object');
-  if (!hadAtmosphere) planet.atmosphere = {};
+  const allowed = Object.keys(ATMOSPHERE_RELEASE_GASES);
+  if (!planet.atmosphere || typeof planet.atmosphere !== 'object') planet.atmosphere = {};
   const atmosphere = planet.atmosphere;
-  if (!atmosphere.gases || typeof atmosphere.gases !== 'object') atmosphere.gases = {};
-  // Erstinitialisierung: bestehende Erdatmosphäre bleibt erhalten, Venus behält ihr
-  // CO₂ als Atmosphäre, Gasriesen starten mit deutlich höherem Druck.
-  if (!Number.isFinite(Number(atmosphere.totalGas))) {
-    const initialPressure = { jupiter: 1000, saturn: 1000, uranus: 100, neptune: 108, mars: 0.006, mercury: 0.000, luna: 0, ceres: 0, pluto: 0, io: 0 };
-    if (planetId === 'venus') {
-      atmosphere.totalGas = Math.max(0, Number(planet.resources?.co2) || Number(atmosphere.co2Initial) || 0);
-      atmosphere.gases.co2 = 0;
-    } else {
-      atmosphere.totalGas = atmosphereMassForPressure(planetId, initialPressure[planetId] || 0);
-      const initialMixes = {
-        mercury: { oxygen: 0.42, sodium: 0.29, hydrogen: 0.18, helium: 0.07, potassium: 0.04 },
-        mars: { co2: 0.953, nitrogen: 0.027, argon: 0.016, oxygen: 0.0013, carbonMonoxide: 0.0027 },
-        jupiter: { hydrogen: 0.90, helium: 0.10 },
-        saturn: { hydrogen: 0.96, helium: 0.035, methane: 0.005 },
-        uranus: { hydrogen: 0.83, helium: 0.15, methane: 0.02 },
-        neptune: { hydrogen: 0.80, helium: 0.19, methane: 0.01 },
-        io: { sulfurDioxide: 0.90, co2: 0.05, oxygen: 0.05 },
-        pluto: { nitrogen: 0.98, methane: 0.015, carbonMonoxide: 0.005 }
-      };
-      const mix = initialMixes[planetId];
-      if (mix && atmosphere.totalGas > 0) {
-        for (const [gasKey, fraction] of Object.entries(mix)) {
-          if (ATMOSPHERE_RELEASE_GASES[gasKey]) atmosphere.gases[gasKey] = atmosphere.totalGas * fraction;
-        }
-      }
-    }
-  }
-  atmosphere.totalGas = Math.max(0, Number(atmosphere.totalGas) || 0);
-  // Ältere Spielstände mit vorhandener Gesamtmasse, aber ohne Gasverteilung erhalten
-  // eine passende Startzusammensetzung, ohne vorhandene Terraforming-Gase zu überschreiben.
-  if (atmosphere.totalGas > 0 && Object.values(atmosphere.gases).every(amount => !(Number(amount) > 0))) {
-    const savedMixes = {
-      mercury: { oxygen: 0.42, hydrogen: 0.18, helium: 0.07 },
-      venus: { co2: 0.965, nitrogen: 0.035 },
-      mars: { co2: 0.953, nitrogen: 0.027, argon: 0.016, oxygen: 0.0013, carbonMonoxide: 0.0027 },
-      jupiter: { hydrogen: 0.90, helium: 0.10 },
-      saturn: { hydrogen: 0.96, helium: 0.035, methane: 0.005 },
-      uranus: { hydrogen: 0.83, helium: 0.15, methane: 0.02 },
-      neptune: { hydrogen: 0.80, helium: 0.19, methane: 0.01 },
-      io: { sulfurDioxide: 0.90, co2: 0.05, oxygen: 0.05 },
-      pluto: { nitrogen: 0.98, methane: 0.015, carbonMonoxide: 0.005 }
+  const legacyAtmosphere = atmosphere.composition !== 'sfo-five-gas-v1';
+  const oldGases = !legacyAtmosphere && atmosphere.gases && typeof atmosphere.gases === 'object' ? atmosphere.gases : {};
+  const hadSavedGasData = Object.values(oldGases).some(v => Number(v) > 0);
+  if (legacyAtmosphere) atmosphere.totalGas = 0;
+  const cleanGases = {};
+  allowed.forEach(key => { cleanGases[key] = Math.max(0, Number(oldGases[key]) || 0); });
+  atmosphere.gases = cleanGases;
+
+  // Neue Startwerte: Erde 1 bar; Gasriesen mit den vereinbarten Drücken;
+  // alle übrigen Himmelskörper beginnen ohne Atmosphäre.
+  const initialPressure = { earth: 1, jupiter: 90, saturn: 45, uranus: 40, neptune: 60 };
+  if (!Number.isFinite(Number(atmosphere.totalGas)) || (!hadSavedGasData && Number(atmosphere.totalGas) <= 0)) {
+    const pressure = initialPressure[planetId] || 0;
+    atmosphere.totalGas = atmosphereMassForPressure(planetId, pressure);
+    const mixes = {
+      earth: { oxygen: 0.20, hydrogen: 0.70, co2: 0.10 },
+      jupiter: { helium3: 0.10, hydrogen: 0.895, co2: 0.0025, nitrogen: 0.0025 },
+      saturn: { helium3: 0.08, hydrogen: 0.915, co2: 0.0025, nitrogen: 0.0025 },
+      uranus: { helium3: 0.05, hydrogen: 0.945, co2: 0.0025, nitrogen: 0.0025 },
+      neptune: { helium3: 0.05, hydrogen: 0.945, co2: 0.0025, nitrogen: 0.0025 }
     };
-    const mix = savedMixes[planetId];
-    if (mix) for (const [gasKey, fraction] of Object.entries(mix)) {
-      if (ATMOSPHERE_RELEASE_GASES[gasKey]) atmosphere.gases[gasKey] = atmosphere.totalGas * fraction;
-    }
+    const mix = mixes[planetId] || {};
+    for (const [key, fraction] of Object.entries(mix)) atmosphere.gases[key] = atmosphere.totalGas * fraction;
+  } else {
+    // Altspielstände: nicht mehr erlaubte Gase entfernen und die Gesamtmasse
+    // aus den fünf erlaubten Gasen neu bilden.
+    atmosphere.totalGas = allowed.reduce((sum, key) => sum + atmosphere.gases[key], 0);
   }
-  // Migration: ältere Spielstände können eine leere Erdatmosphäre gespeichert
-  // haben. Nur wenn keinerlei Gasdaten existieren, Startatmosphäre ergänzen.
-  if (planetId === 'earth' && atmosphere.totalGas <= 0 &&
-      Object.values(atmosphere.gases).every(amount => !(Number(amount) > 0))) {
-    atmosphere.totalGas = 1089213113205.7233;
-    atmosphere.gases.nitrogen = 850457598791.0288;
-    atmosphere.gases.oxygen = 228190147216.59903;
-    atmosphere.gases.argon = 10129681952.813227;
-    atmosphere.gases.co2 = 435685245.2822893;
-    atmosphere.oxygen = atmosphere.gases.oxygen;
-    atmosphere.composition = 'earth-standard-v1';
-  }
-  for (const key of Object.keys(ATMOSPHERE_RELEASE_GASES)) {
-    atmosphere.gases[key] = Math.max(0, Number(atmosphere.gases[key]) || 0);
-  }
-  atmosphere.oxygen = Math.max(0, Number(atmosphere.oxygen ?? atmosphere.gases.oxygen) || 0);
-  if (planetId === 'venus') {
-    // Die noch vorhandene Venus-CO₂-Ressource ist Teil ihrer Atmosphäre.
-    const remainingCo2 = Math.max(0, Number(planet.resources?.co2) || 0);
-    const releasedGas = Object.values(atmosphere.gases).reduce((sum, amount) => sum + Math.max(0, Number(amount) || 0), 0);
-    atmosphere.totalGas = remainingCo2 + releasedGas;
-  }
+  atmosphere.oxygen = atmosphere.gases.oxygen;
+  atmosphere.composition = 'sfo-five-gas-v1';
   return atmosphere;
 }
 

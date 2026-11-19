@@ -6,7 +6,7 @@
 // Spiel- und Speicherformatversion getrennt halten:
 // appVersion = veröffentlichte Spielversion, schemaVersion = Struktur des JSON-Spielstands.
 const SFO_APP_VERSION = '1.0.0';
-const SFO_SAVE_SCHEMA_VERSION = 6;
+const SFO_SAVE_SCHEMA_VERSION = 7;
 const SFO_LAST_APP_VERSION_KEY = 'sfo_last_app_version_v1';
 
 function sfoCompareVersions(a, b) {
@@ -49,7 +49,7 @@ function sfoMigrateSaveData(data) {
 
   let migrated = false;
   // v1-v3 verwendeten "version" ohne separates Schemafeld.
-  // v5/v6 ergänzen Register- und Migrationsunterstützung für neue Rohstoffe, Gebäude und Planeten.
+  // v5/v6 ergänzen Register; v7 vereinheitlicht die Atmosphäre auf fünf Gase.
   if (currentSchema < SFO_SAVE_SCHEMA_VERSION) {
     data.schemaVersion = SFO_SAVE_SCHEMA_VERSION;
     data.version = SFO_SAVE_SCHEMA_VERSION;
@@ -60,6 +60,39 @@ function sfoMigrateSaveData(data) {
   }
   if (!data.bodies || typeof data.bodies !== 'object' || Array.isArray(data.bodies)) {
     throw new Error('Ungültiger Spielstand: Planetendaten fehlen.');
+  }
+  if (currentSchema < 7) {
+  // Schema 7: ausschließlich ³He, O₂, H₂, CO₂ und N₂ sind Atmosphärengase.
+  const allowedAtmosphereGases = ['helium3', 'oxygen', 'hydrogen', 'co2', 'nitrogen'];
+  const obsoleteGasKeys = ['gas', 'helium', 'argon', 'methane', 'carbonMonoxide', 'sulfurDioxide', 'sodium', 'potassium'];
+  Object.values(data.bodies).forEach(body => {
+    if (!body || typeof body !== 'object') return;
+    if (body.atmosphere && typeof body.atmosphere === 'object') {
+      const old = body.atmosphere.gases && typeof body.atmosphere.gases === 'object' ? body.atmosphere.gases : {};
+      const clean = {};
+      allowedAtmosphereGases.forEach(key => { clean[key] = Math.max(0, Number(old[key]) || 0); });
+      body.atmosphere.gases = clean;
+      body.atmosphere.totalGas = 0;
+      body.atmosphere.oxygen = 0;
+      body.atmosphere.composition = 'sfo-atmosphere-reset-v7';
+    }
+    if (body.storage && typeof body.storage === 'object') obsoleteGasKeys.forEach(key => delete body.storage[key]);
+    if (body.orbitStorage && typeof body.orbitStorage === 'object') obsoleteGasKeys.forEach(key => delete body.orbitStorage[key]);
+    if (body.resources && typeof body.resources === 'object') delete body.resources.gas;
+  });
+  if (data.state && typeof data.state === 'object') {
+    obsoleteGasKeys.forEach(key => delete data.state[key]);
+  }
+  if (data.market && data.market.resources && typeof data.market.resources === 'object') {
+    obsoleteGasKeys.forEach(key => delete data.market.resources[key]);
+    if (data.market.priceHistory && typeof data.market.priceHistory === 'object') {
+      obsoleteGasKeys.forEach(key => delete data.market.priceHistory[key]);
+    }
+  }
+  if (data.state && typeof data.state === 'object') {
+    // legacy market copies, if any, are cleaned as well
+    if (data.state.market?.resources) obsoleteGasKeys.forEach(key => delete data.state.market.resources[key]);
+  }
   }
   if (!data.market || typeof data.market !== 'object') data.market = {};
   if (!data.rockets || !Array.isArray(data.rockets)) data.rockets = [];

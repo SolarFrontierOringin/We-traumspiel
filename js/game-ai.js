@@ -1111,20 +1111,16 @@ function setupTopPanels() {
   const populationTabs = document.querySelectorAll('.colonists-panel [data-population-tab]');
   function showPopulationSection(section) {
     const showFree = section === 'free';
-    const showWorkforce = section === 'workforce';
     if (colonistsPanel) colonistsPanel.hidden = showFree;
     if (freePopulationPanel) freePopulationPanel.hidden = !showFree;
     const colonistsContent = document.querySelector('#colonists-content');
-    const workforceContent = document.querySelector('#workforce-content');
-    if (colonistsContent) colonistsContent.hidden = showWorkforce;
-    if (workforceContent) workforceContent.hidden = !showWorkforce;
+    if (colonistsContent) colonistsContent.hidden = false;
     populationTabs.forEach(tab => {
       const active = tab.dataset.populationTab === section;
       tab.classList.toggle('active', active);
       tab.setAttribute('aria-selected', active ? 'true' : 'false');
     });
     if (showFree) renderFreePopulationPanel();
-    else if (showWorkforce) window.SolarFrontierWorkforce?.renderPanel?.();
     else renderColonistsPanel();
   }
   populationTabs.forEach(tab => tab.addEventListener('click', () => showPopulationSection(tab.dataset.populationTab)));
@@ -1137,7 +1133,7 @@ function setupTopPanels() {
       const delta = endX - touchStartX;
       if (Math.abs(delta) > 65) {
         const current = document.querySelector('.colonists-panel [data-population-tab].active')?.dataset.populationTab || 'colonists';
-        const order = ['colonists', 'free', 'workforce'];
+        const order = ['colonists', 'free'];
         const index = order.indexOf(current);
         const next = (index + (delta < 0 ? 1 : order.length - 1)) % order.length;
         showPopulationSection(order[next]);

@@ -21,11 +21,19 @@ function renderColonistsPanel() {
   const ids = Object.keys(bodies).filter(id => id !== 'sun').sort((a, b) => { const priority = id => id === 'earth' ? 0 : id === 'luna' ? 1 : 2; return priority(a) - priority(b) || String(bodies[a]?.name || a).localeCompare(String(bodies[b]?.name || b), 'de'); });
   const openPlanetIds = new Set([...panel.querySelectorAll('.colonists-planet-card[open]')].map(card => card.dataset.planetId));
   const allColonists = ids.reduce((sum, id) => sum + colonistsOnPlanet(id), 0);
+  const workforceTotals = ids.reduce((sum, id) => {
+    const stats = window.SolarFrontierWorkforce?.getSummary?.(id, bodies[id]);
+    sum.assigned += Number(stats?.assignedWorkers || 0);
+    sum.free += Number(stats?.freeWorkers ?? colonistsOnPlanet(id));
+    return sum;
+  }, { assigned: 0, free: 0 });
   const foodNeed = allColonists * (0.001 / 86400);
   const waterNeed = allColonists * (2 / 86400);
   panel.innerHTML = `
     <div class="colonists-summary">
       <div class="colonists-summary-card"><span>👥 Kolonisten gesamt</span><strong data-colonists-total>${allColonists.toLocaleString('de-DE')}</strong></div>
+      <div class="colonists-summary-card"><span>🧑‍🏭 Beschäftigt</span><strong>${Math.floor(workforceTotals.assigned).toLocaleString('de-DE')}</strong></div>
+      <div class="colonists-summary-card"><span>🧑‍🚀 Frei verfügbar</span><strong>${Math.floor(workforceTotals.free).toLocaleString('de-DE')}</strong></div>
       <div class="colonists-summary-card"><span>💵 GünniDollar-Einnahmen</span><strong data-colonists-income>${(allColonists * 0.0002).toLocaleString('de-DE', {maximumFractionDigits:6})}/s</strong></div>
       <div class="colonists-summary-card"><span>🍲 Lebensmittelbedarf</span><strong data-food-need>${foodNeed.toLocaleString('de-DE',{maximumFractionDigits:6})} t/s</strong></div>
       <div class="colonists-summary-card"><span>💧 Wasserbedarf</span><strong data-water-need>${waterNeed.toLocaleString('de-DE',{maximumFractionDigits:4})} L/s</strong></div>
@@ -43,6 +51,8 @@ function renderColonistsPanel() {
         return `<details class="colonists-planet-card" data-planet-id="${id}" ${openPlanetIds.has(id) ? 'open' : ''}>
           <summary class="colonists-planet-head"><h3>${body.name}</h3><span><strong data-pop="${id}">${pop.toLocaleString('de-DE')} Kolonisten</strong><span class="colonists-expand-hint"> · Details</span></span></summary>
           <div class="stat"><span>Wohnraum</span><strong data-housing="${id}">${pop} / ${capacity} · ${free} frei</strong></div>
+          <div class="stat"><span>Beschäftigt</span><strong>${Math.floor(Number(window.SolarFrontierWorkforce?.getSummary?.(id, body)?.assignedWorkers || 0)).toLocaleString('de-DE')}</strong></div>
+          <div class="stat"><span>Frei verfügbar</span><strong>${Math.floor(Number(window.SolarFrontierWorkforce?.getSummary?.(id, body)?.freeWorkers ?? pop)).toLocaleString('de-DE')}</strong></div>
           <div class="stat"><span>Lebensmittel im Oberflächenlager</span><strong data-food="${id}">${Number(storage.food || 0).toLocaleString('de-DE',{maximumFractionDigits:4})} t</strong></div>
           <div class="stat"><span>Wasser im Oberflächenlager</span><strong data-water="${id}">${Number(storage.water || 0).toLocaleString('de-DE',{maximumFractionDigits:2})} L</strong></div>
           <div class="stat"><span>Fahrzeuge im Oberflächenlager</span><strong data-vehicles="${id}">${formatTons(Number(storage.vehicles || 0))}</strong></div>
