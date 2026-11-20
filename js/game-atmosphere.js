@@ -26,7 +26,7 @@ function lunaAtmosphericPressure() { return atmosphericPressureFromMass('luna', 
 function releaseLunaAtmosphereGas() { return releasePlanetAtmosphereGas(); }
 function releasePlanetAtmosphereGas() {
   const planetId = state.selected;
-  if (!bodies[planetId] || planetId === 'sun') return;
+  if (!bodies[planetId] || !hasPlanetSurface(planetId)) return;
   const resourceSelect = document.querySelector('#planet-atmosphere-gas');
   const amountInput = document.querySelector('#planet-atmosphere-amount');
   const status = document.querySelector('#planet-atmosphere-status');
@@ -56,7 +56,7 @@ function releasePlanetAtmosphereGas() {
   if (nextStatus) nextStatus.textContent = `${formatAtmosphereTons(amount)} ${gas.label} freigesetzt.`;
 }
 function renderAtmospherePanel(planetId) {
-  if (!planetId || planetId === 'sun') return '';
+  if (!planetId || !hasPlanetSurface(planetId)) return '';
   const atmosphere = ensurePlanetAtmosphere(planetId);
   const pressure = atmosphericPressureFromMass(planetId, atmosphere.totalGas);
   const gasAmount = key => planetId === 'venus' && key === 'co2'
@@ -134,7 +134,7 @@ function ensurePlanetAtmosphere(planetId) {
 
 function updateAtmosphereRegulators(planetId, storage, buildings, delta) {
   const count = Math.max(0, Number(buildings.atmosphereRegulator) || 0);
-  if (!count || !(delta > 0)) return;
+  if (!count || !(delta > 0) || !hasPlanetSurface(planetId)) return;
   const atmosphere = ensurePlanetAtmosphere(planetId);
   if (!atmosphere) return;
   // Jeder Regulator überführt bis zu 0,2 t CO₂ pro Ingame-Sekunde

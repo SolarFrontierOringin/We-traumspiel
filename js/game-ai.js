@@ -1164,8 +1164,38 @@ function setupTopPanels() {
     if (!economyPanel.hidden && newsPanel) newsPanel.hidden = true;
     const introPanel=document.querySelector('#introduction-panel'), mainMenu=document.querySelector('#main-menu');
     if (!economyPanel.hidden && introPanel) introPanel.hidden=true; if(mainMenu) mainMenu.hidden=true;
-    renderEconomy();
-    applyLanguage(economyPanel);
+    try {
+      renderEconomy();
+      applyLanguage(economyPanel);
+    } catch (error) {
+      console.error('Fehler beim Aufbau des Wirtschafts-Dashboards:', error);
+      const content = economyPanel.querySelector('#economy-content');
+      if (content) {
+        content.replaceChildren();
+        const message = document.createElement('p');
+        message.className = 'hint';
+        message.textContent = 'Das Wirtschafts-Dashboard konnte nicht vollständig geladen werden.';
+        const details = document.createElement('details');
+        details.className = 'economy-error-details';
+        const summary = document.createElement('summary');
+        summary.textContent = 'Technische Fehlerdetails anzeigen';
+        const diagnostic = document.createElement('pre');
+        diagnostic.className = 'economy-error-diagnostic';
+        diagnostic.style.whiteSpace = 'pre-wrap';
+        diagnostic.style.overflowWrap = 'anywhere';
+        diagnostic.style.fontSize = '0.8rem';
+        diagnostic.style.padding = '10px';
+        diagnostic.style.borderRadius = '8px';
+        diagnostic.style.background = 'rgba(255,255,255,0.06)';
+        diagnostic.textContent = [
+          'Fehler: ' + String(error && error.message || error || 'Unbekannter Fehler'),
+          'Typ: ' + String(error && error.name || 'Unbekannt'),
+          error && error.stack ? 'Stacktrace:\n' + String(error.stack) : ''
+        ].filter(Boolean).join('\n\n');
+        details.append(summary, diagnostic);
+        content.append(message, details);
+      }
+    }
   });
   if (economyClose && economyPanel) economyClose.addEventListener('click', () => { economyPanel.hidden = true; });
   if (researchButton && researchPanel) researchButton.addEventListener('click', () => {

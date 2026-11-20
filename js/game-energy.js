@@ -25,6 +25,7 @@
     megaChipFactory: 4,
     megaNanoChipFactory: 4,
     vehicleFactory: 5,
+    lithiumBatteryFactory: 3,
     chocolateFactory: 5,
     luxuryFurnitureFactory: 5
   });
@@ -49,8 +50,20 @@
     { key: 'syntheticGraphitePlant', name: 'Synthetische Graphitproduktion', perBuilding: 10, priority: 4 },
     { key: 'foodFactory', name: 'Lebensmittelfabrik', perBuilding: 5, priority: 2 },
     { key: 'crudeOilPump', name: 'Rohölpumpe', perBuilding: 2, priority: 3 },
-    { key: 'vehicleFactory', name: 'Fahrzeugfabrik', perBuilding: 4, priority: 5, countType: 'vehicleFactory' }
+    { key: 'vehicleFactory', name: 'Fahrzeugfabrik', perBuilding: 4, priority: 5, countType: 'vehicleFactory' },
+    { key: 'lithiumBatteryFactory', name: 'Lithium-Batteriefabrik', perBuilding: 10, priority: 3 }
   ]);
+
+  // Batteriespeicher: Werte pro Gebäude.
+  window.SF_ENERGY_STORAGE = Object.freeze({
+    capacityMWhPerBuilding: 100,
+    maxChargeMWPerBuilding: 10,
+    maxDischargeMWPerBuilding: 10,
+    minimumReservePercent: 30
+  });
+
+  // Solar-Satelliten speisen separat in das globale Sonnenorbit-Netz ein.
+  window.SF_SOLAR_SATELLITE_OUTPUT_MW = 10000;
 
   // Lokale Stromerzeugung je Planet. Sonnenorbit-Satelliten bleiben separat.
   window.SF_ENERGY_GENERATORS = Object.freeze([

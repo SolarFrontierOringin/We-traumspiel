@@ -559,7 +559,17 @@ function flightDurationSeconds(destination, mode = 'surface') {
 function getLocationStorage(id, mode = 'surface') {
   return mode === 'orbit' ? getOrbitStorage(id) : getPlanetStorage(id);
 }
-function hasPlanetSurface(id) { return id !== 'jupiter' && id !== 'neptune' && id !== 'sun'; }
+function hasPlanetSurface(id) {
+  if (!id || id === 'sun') return false;
+  const body = bodies[id] || (typeof futureSolarSystem !== 'undefined'
+    ? futureSolarSystem.bodies.find(item => item.id === id)
+    : null);
+  const bodyType = String(body?.type || '').toLowerCase().replace(/[\s_-]/g, '');
+  // Gasplaneten haben keine nutzbare feste Oberfläche. Die Typprüfung
+  // schließt auch künftig neu angelegte Gasplaneten automatisch aus.
+  if (bodyType.includes('gasplanet')) return false;
+  return !['jupiter', 'saturn', 'uranus', 'neptune'].includes(id);
+}
 function rocketCanLand(id) { return hasPlanetSurface(id); }
 function getOrbitBuildings(id) {
   if (!bodies[id]) return {};
@@ -961,8 +971,8 @@ const COLONIST_OXYGEN_MIN_PERCENT = 15;
 const COLONIST_OXYGEN_MAX_PERCENT = 25;
 
 function getColonistAtmosphereStatus(id) {
-  if (!id || id === 'sun' || !bodies[id]) {
-    return { pressure: 0, oxygenPercent: 0, breathable: false, normalHousingAllowed: false, habitatAllowed: false, label: 'Kein bewohnbarer Planet' };
+  if (!id || !bodies[id] || !hasPlanetSurface(id)) {
+    return { pressure: 0, oxygenPercent: 0, breathable: false, normalHousingAllowed: false, habitatAllowed: false, label: 'Keine feste Oberfläche – Terraforming und Kolonisten sind hier nicht verfügbar.' };
   }
   const atmosphere = ensurePlanetAtmosphere(id);
   const pressure = atmosphericPressureFromMass(id, atmosphere?.totalGas || 0);
@@ -980,7 +990,7 @@ function getColonistAtmosphereStatus(id) {
   return { pressure, oxygenPercent, breathable: oxygenOk, pressureOk, normalHousingAllowed, habitatAllowed, label };
 }
 function canHouseColonistInBuilding(id, buildingKey) {
-  return buildingKey === 'habitat' || getColonistAtmosphereStatus(id).normalHousingAllowed;
+  return hasPlanetSurface(id) && (buildingKey === 'habitat' || getColonistAtmosphereStatus(id).normalHousingAllowed);
 }
 
 function ensureColonistData(id) {
@@ -1280,7 +1290,7 @@ function newBuildingPowerFactor(id = state.selected) {
   if (demand <= 0) return 1;
   return Math.max(0, Math.min(1, electricityProduction(id) / demand));
 }
-function solarSatelliteElectricityProduction() { return Number(bodies.sun?.buildings?.solarSatellite || 0) * 10000; }
+function solarSatelliteElectricityProduction() { return Number(bodies.sun?.buildings?.solarSatellite || 0) * Number(window.SF_SOLAR_SATELLITE_OUTPUT_MW || 10000); }
 function baseElectricityProduction(id = state.selected) {
   // Lokales Stromnetz: Kraftwerke dieses Planeten versorgen nur diesen Planeten.
   const b = getOperationalBuildingsOnPlanet(id);
@@ -1297,12 +1307,12 @@ function batteryDischargePower(id = state.selected) {
   if (!count) return 0;
   const d = ensureBatteryStorageData(id);
   if (d.mode === 'manual' && !['auto','discharge'].includes(d.manualAction)) return 0;
-  const capacity = count * 100;
+  const capacity = count * Number(window.SF_ENERGY_STORAGE?.capacityMWhPerBuilding || 100);
   const reserve = capacity * d.reservePercent / 100;
   const availableMWh = Math.max(0, d.chargeMWh - reserve);
   if (availableMWh <= 0) return 0;
   const deficit = Math.max(0, electricityConsumption(id) - baseElectricityProduction(id));
-  return Math.min(count * 10, deficit, availableMWh * 0.9 * 3600);
+  return Math.min(count * Number(window.SF_ENERGY_STORAGE?.maxDischargeMWPerBuilding || 10), deficit, availableMWh * 0.9 * 3600);
 }
 function electricityProduction(id = state.selected) {
   return baseElectricityProduction(id) + batteryDischargePower(id);
@@ -1370,18 +1380,18 @@ function ensureBatteryStorageData(id = state.selected) {
   d.reservePercent = Math.max(0, Math.min(90, Number(d.reservePercent ?? 30) || 0));
   d.manualAction = ['auto','charge','discharge','hold'].includes(d.manualAction) ? d.manualAction : 'auto';
   const count = Math.max(0, Number(getBuildingsOnPlanet(id).batteryStorage) || 0);
-  d.chargeMWh = Math.min(d.chargeMWh, count * 100);
+  d.chargeMWh = Math.min(d.chargeMWh, count * Number(window.SF_ENERGY_STORAGE?.capacityMWhPerBuilding || 100));
   return d;
 }
 function updateBatteryStorage(id, deltaSeconds) {
   const count = Math.max(0, Number(getBuildingsOnPlanet(id).batteryStorage) || 0);
   if (!count || !(deltaSeconds > 0)) return;
   const d = ensureBatteryStorageData(id);
-  const capacity = count * 100;
+  const capacity = count * Number(window.SF_ENERGY_STORAGE?.capacityMWhPerBuilding || 100);
   const reserve = capacity * d.reservePercent / 100;
   const balance = baseElectricityProduction(id) - electricityConsumption(id);
-  const maxChargeMW = count * 10;
-  const maxDischargeMW = count * 10;
+  const maxChargeMW = count * Number(window.SF_ENERGY_STORAGE?.maxChargeMWPerBuilding || 10);
+  const maxDischargeMW = count * Number(window.SF_ENERGY_STORAGE?.maxDischargeMWPerBuilding || 10);
   const canAutoCharge = d.mode !== 'manual' || ['auto','charge'].includes(d.manualAction);
   const canAutoDischarge = d.mode !== 'manual' || ['auto','discharge'].includes(d.manualAction);
   if ((d.mode === 'manual' && d.manualAction === 'hold') || balance === 0) return;
@@ -1401,7 +1411,7 @@ function batteryStorageControlsHtml(id) {
   const count = Math.max(0, Number(getBuildingsOnPlanet(id).batteryStorage) || 0);
   if (!count) return '';
   const d = ensureBatteryStorageData(id);
-  const capacity = count * 100;
+  const capacity = count * Number(window.SF_ENERGY_STORAGE?.capacityMWhPerBuilding || 100);
   const charge = Math.min(capacity, d.chargeMWh);
   const pct = capacity ? charge / capacity * 100 : 0;
   const modeLabels = { automatic: 'Automatisch', hybrid: 'Hybrid', manual: 'Manuell' };
@@ -1410,7 +1420,7 @@ function batteryStorageControlsHtml(id) {
       <div class="stat"><span>Gespeicherte Energie</span><strong>${charge.toLocaleString('de-DE',{maximumFractionDigits:2})} / ${capacity} MWh (${pct.toFixed(1)} %)</strong></div>
       <div class="progress"><i style="width:${pct}%"></i></div>
       <div class="stat"><span>Reserve</span><strong>${d.reservePercent} % · ${(capacity*d.reservePercent/100).toLocaleString('de-DE')} MWh</strong></div>
-      <div class="stat"><span>Max. Lade-/Entladeleistung</span><strong>${count*10} MW / ${count*10} MW</strong></div>
+      <div class="stat"><span>Max. Lade-/Entladeleistung</span><strong>${count * Number(window.SF_ENERGY_STORAGE?.maxChargeMWPerBuilding || 10)} MW / ${count * Number(window.SF_ENERGY_STORAGE?.maxDischargeMWPerBuilding || 10)} MW</strong></div>
       <label class="battery-control-label">Betriebsmodus
         <select data-battery-setting="mode" data-planet="${id}">
           <option value="automatic" ${d.mode==='automatic'?'selected':''}>Automatisch</option>
@@ -3414,7 +3424,7 @@ function renderSystem() {
       ${state.selected === 'earth' ? buildButton('solarProbe') : ''}
       ${state.selected === 'earth' ? `<div class="build-card research-lab-card"><div><strong>🔬 Forschungslabor</strong><small>Nur auf der Erde · benötigt Baustoffe, Glas und Elektronik · Kostenmengen werden noch festgelegt</small></div><button class="build-resource" id="build-research-lab" ${getBuildingsOnPlanet('earth').researchLab ? 'disabled' : ''}>${getBuildingsOnPlanet('earth').researchLab ? 'Gebaut' : 'Bauen'}</button></div>` : ''}
       ${state.selected === 'earth' && state.viewMode === 'surface' ? buildButton('observatory') : ''}
-      <div class="build-card"><div><strong>⚡ Kohlekraftwerk</strong><small>20 MW Strom/s · verbraucht 0,0002 t Kohle/s · 90 t Stahl</small></div><button class="build-resource" id="build-coal-power" ${Number(getPlanetStorage(state.selected).steel || 0) >= 90 ? '' : 'disabled'}>Bauen (${getBuildingsOnPlanet(state.selected).coalPowerPlant})</button></div>
+      <div class="build-card"><div><strong>⚡ Kohlekraftwerk</strong><small>Verbraucht 0,0002 t Kohle/s · 90 t Stahl</small></div><button class="build-resource" id="build-coal-power" ${Number(getPlanetStorage(state.selected).steel || 0) >= 90 ? '' : 'disabled'}>Bauen (${getBuildingsOnPlanet(state.selected).coalPowerPlant})</button></div>
       ${(() => { const mode=state.viewMode==='orbit'?'orbit':'surface'; const body=ensureLiquidTankData(state.selected); const key=liquidTankLocationKey(state.selected,mode); const capacity=liquidTankCapacity(state.selected,mode); const fuel=liquidFuelAmount(state.selected,mode); const pct=capacity>0?Math.min(100,fuel/capacity*100):0; const queued=Number(liquidTankBuildQueue[key]||0)>0; const remaining=queued?Math.max(0,30-(gameNow()-Number(liquidTankBuildStarted[key]||gameNow()))/1000):0; const storage=getLocationStorage(state.selected,mode); const affordable=Number(storage.buildingMaterials||0)>=500&&Number(storage.steel||0)>=500; return `<div class="build-card liquid-tank-card"><div><strong>🛢️ Flüssiglager</strong><small>10.000 Liter Kapazität je Tank · 500 t Baustoffe · 500 t Stahl · 30 Sekunden Bauzeit · keine Forschung · unbegrenzt baubar · ${mode==='orbit'?'Orbit':'Oberfläche'}</small><div class="liquid-tank-summary"><span>${fuel.toLocaleString('de-DE',{maximumFractionDigits:2})} / ${capacity.toLocaleString('de-DE')} L</span><strong>${pct.toFixed(1)} %</strong></div><div class="liquid-tank-progress"><i style="width:${pct}%"></i></div>${queued?`<small>Tank im Bau · noch ${remaining.toFixed(1)} Sekunden</small>`:''}</div><button class="build-resource" data-building="liquidStorage" ${queued||!affordable?'disabled':''}>${queued?'Im Bau':'Tank bauen'}</button></div>`; })()}
       <div class="build-card rocket-factory-card"><div><strong>🏭 Raketenfabrik</strong><small>500 t Stahl · 500 t Baustoffe · 60 Sekunden Bauzeit · Voraussetzung für alle Raketen · Produktionswarteschlange</small>${rocketFactoryBuildQueue[state.selected] ? `<div class="rocket-progress"><i style="width:${Math.min(100,(gameNow()-(rocketFactoryBuildStarted[state.selected]||gameNow()))/60000*100)}%"></i></div><small>Fertigstellung: ${Math.max(0,60-(gameNow()-(rocketFactoryBuildStarted[state.selected]||gameNow()))/1000).toFixed(1)} s</small>` : ''}</div><button class="build-resource" id="build-rocket-factory" ${getBuildingsOnPlanet(state.selected).rocketFactory || rocketFactoryBuildQueue[state.selected] || !isBuildingAllowed('rocketFactory', state.selected) || Number(getPlanetStorage(state.selected).steel || 0) < 500 || Number(getPlanetStorage(state.selected).buildingMaterials || 0) < 500 ? 'disabled' : ''}>${getBuildingsOnPlanet(state.selected).rocketFactory ? 'Gebaut' : rocketFactoryBuildQueue[state.selected] ? 'Im Bau' : 'Bauen'}</button></div>
       ${state.viewMode === 'orbit' ? (() => { const orbitStore=getOrbitStorage(state.selected); const padCount=getOrbitLandingPadCount(state.selected); const used=getOrbitRocketSlotsUsed(state.selected); const costs={steel:2000,buildingMaterials:3000,machines:500,batteries:300}; const affordable=Object.entries(costs).every(([r,n])=>Number(orbitStore[r]||0)>=n); return `<div class="build-card orbit-landing-pad-card"><div><strong>🛰️ Orbit-Start- und Landevorrichtung</strong><small>1 Stellplatz für eine Rakete in einer zyklischen Orbitmission · Betankung aus dem Orbit-Flüssiglager · Baukosten: 2.000 t Stahl, 3.000 t Baustoffe, 500 t Maschinen, 300 t Batterien</small><small>Stellplätze belegt: ${used} / ${padCount}</small></div><button class="build-resource" id="build-orbit-landing-pad" ${!isBuildingAllowed('orbitLandingPad', state.selected) || !affordable ? 'disabled' : ''}>Bauen (${padCount})</button></div>`; })() : ''}
@@ -4108,7 +4118,7 @@ function buildButtonUnsafe(key) {
     const costs = { steel: 250, buildingMaterials: 300, batteries: 120, electronics: 80, graphite: 50 };
     const affordable = isBuildingAllowed(key, state.selected) && Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount);
     const costText = `${costs.steel} t Stahl · ${costs.buildingMaterials} t Baustoffe · ${costs.batteries} t Batterien · ${costs.electronics} t Elektronik · ${costs.graphite} t Graphit`;
-    return `<div class="build-card battery-storage-card"><div><strong>${b.icon} ${b.name}</strong><small>100 MWh je Speicher · 10 MW Ladeleistung · 10 MW Entladeleistung · 30 % Mindestreserve · keine Forschung · unbegrenzt baubar</small><small>Baukosten: ${costText}</small><small>Vorhanden: ${count} · Gesamtkapazität: ${count * 100} MWh · Lade-/Entladeleistung: ${count * 10} MW</small></div><button class="build-resource" data-building="batteryStorage" ${affordable ? '' : 'disabled'}>Bauen (${count})</button></div>`;
+    return `<div class="build-card battery-storage-card"><div><strong>${b.icon} ${b.name}</strong><small>100 MWh je Speicher · 30 % Mindestreserve · keine Forschung · unbegrenzt baubar</small><small>Baukosten: ${costText}</small><small>Vorhanden: ${count} · Gesamtkapazität: ${count * 100} MWh</small></div><button class="build-resource" data-building="batteryStorage" ${affordable ? '' : 'disabled'}>Bauen (${count})</button></div>`;
   }
   const b = buildingTypes[key];
   const count = key === 'solarSail' && state.viewMode === 'orbit' ? orbitalSolarSailCount(state.selected) : getBuildingsOnPlanet(state.selected)[key];
@@ -4234,7 +4244,7 @@ function buildButtonUnsafe(key) {
   if (key === 'woodcutter') {
     const costs = { steel: 380, glass: 200, buildingMaterials: 900 };
     const affordable = isBuildingAllowed(key, state.selected) && Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount);
-    return `<div class="build-card"><div><strong>🪵 Sägewerk</strong><small>Verbraucht 1 MW Strom und 0,01 t Bäume/s · produziert 0,009 t Biomasse/s und 0,009 t Bretter/s · ohne Forschung · auf allen Planetenoberflächen baubar · Baukosten: 380 t Stahl · 200 t Glas · 900 t Baustoffe</small></div><button class="build-resource" data-building="woodcutter" ${affordable ? '' : 'disabled'}>Bauen (${Number(count || 0)})</button></div>`;
+    return `<div class="build-card"><div><strong>🪵 Sägewerk</strong><small>Verbraucht 0,01 t Bäume/s · produziert 0,009 t Biomasse/s und 0,009 t Bretter/s · ohne Forschung · auf allen Planetenoberflächen baubar · Baukosten: 380 t Stahl · 200 t Glas · 900 t Baustoffe</small></div><button class="build-resource" data-building="woodcutter" ${affordable ? '' : 'disabled'}>Bauen (${Number(count || 0)})</button></div>`;
   }
 
   if (key === 'forester') {
@@ -4300,7 +4310,7 @@ function buildButtonUnsafe(key) {
   if (key === 'lithiumBatteryFactory') {
     const costs = { steel: 400, buildingMaterials: 500, copper: 100, electronics: 200, chips: 150 };
     const affordable = isBuildingAllowed(key, state.selected) && Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount);
-    return `<div class="build-card lithium-battery-factory-card"><div><strong>🔋 Lithium-Batteriefabrik</strong><small>Produktion 0,005 t/s · 10 MW Strom · 30 Arbeiter · Verbrauch: 0,08 t Lithium, 0,04 t Kupfer, 0,02 t Kunststoff, 0,01 t Elektronik und 0,01 t Graphit je Sekunde</small></div><button class="build-resource" data-building="lithiumBatteryFactory" ${affordable ? '' : 'disabled'}>Bauen (${Number(count || 0)})</button></div>`;
+    return `<div class="build-card lithium-battery-factory-card"><div><strong>🔋 Lithium-Batteriefabrik</strong><small>Produktion 0,005 t/s · 30 Arbeiter · Verbrauch: 0,08 t Lithium, 0,04 t Kupfer, 0,02 t Kunststoff, 0,01 t Elektronik und 0,01 t Graphit je Sekunde</small></div><button class="build-resource" data-building="lithiumBatteryFactory" ${affordable ? '' : 'disabled'}>Bauen (${Number(count || 0)})</button></div>`;
   }
 
   if (key === 'vehicleFactory') {
@@ -4310,7 +4320,7 @@ function buildButtonUnsafe(key) {
     const affordable = researched && isBuildingAllowed(key, state.selected) && Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount);
     const queueText = queue.length ? `<small class="vehicle-factory-queue">${queue.length} Fahrzeugfabrik(en) im Bau · Bauzeit je Fabrik: 120 Sekunden</small>` : '';
     const status = researched ? '' : ' · Voraussetzung: Forschung Fahrzeugfabrik (1.500 FP, 5 Minuten)';
-    return `<div class="build-card vehicle-factory-card"><div><strong>${b.icon} ${b.name}</strong><small>Produziert Fahrzeuge · benötigt 4 MW Strom · Bauzeit: 120 Sekunden${status}</small>${queueText}</div><button class="build-resource" data-building="vehicleFactory" ${affordable ? '' : 'disabled'}>Bauen (${Number(count || 0)})</button></div>`;
+    return `<div class="build-card vehicle-factory-card"><div><strong>${b.icon} ${b.name}</strong><small>Produziert Fahrzeuge · Bauzeit: 120 Sekunden${status}</small>${queueText}</div><button class="build-resource" data-building="vehicleFactory" ${affordable ? '' : 'disabled'}>Bauen (${Number(count || 0)})</button></div>`;
   }
 
   if (key === 'solarSatellite' || key === 'solarProbe') {
@@ -4501,7 +4511,7 @@ function buildButtonUnsafe(key) {
       Number(storage.electronics || 0) >= 20 &&
       isBuildingAllowed(key) && researched;
     const status = researched ? '' : ' · Voraussetzung: Forschung „Solaranlage“';
-    return `<div class="build-card"><div><strong>${b.icon} ${b.name}</strong><small>20 MW Strom/s · 30 t Stahl · 10 t Baustoffe · 20 t Elektronik${status}</small></div><button class="build-resource" data-building="${key}" ${affordable ? '' : 'disabled'}>Bauen (${count})</button></div>`;
+    return `<div class="build-card"><div><strong>${b.icon} ${b.name}</strong><small>30 t Stahl · 10 t Baustoffe · 20 t Elektronik${status}</small></div><button class="build-resource" data-building="${key}" ${affordable ? '' : 'disabled'}>Bauen (${count})</button></div>`;
   }
 
   if (key === 'solarSatellite') {
@@ -6645,7 +6655,7 @@ function updateResources() {
     // proportional zur jeweils vorhandenen Gaszusammensetzung.
     const gasRemovalCount = Math.max(0, Number(bld.gasRemoval) || 0);
     const atmosphereForRemoval = ensurePlanetAtmosphere(id);
-    if (gasRemovalCount > 0 && delta > 0 && atmosphereForRemoval) {
+    if (gasRemovalCount > 0 && delta > 0 && atmosphereForRemoval && hasPlanetSurface(id)) {
       const gases = atmosphereForRemoval.gases || (atmosphereForRemoval.gases = {});
       const total = Math.max(0, Number(atmosphereForRemoval.totalGas) || 0);
       const selectedGas = String(planet.gasRemovalGas || 'co2');
@@ -6659,27 +6669,28 @@ function updateResources() {
       }
     }
     // Wasserelektrolyse: verarbeitet bis zu 0,2 Liter Wasser/s je Anlage.
-    // Wasserstoff und Sauerstoff werden direkt der Planetenatmosphäre hinzugefügt,
-    // nicht im Rohstofflager gespeichert. Atmosphärische Gaswerte sind in Tonnen.
+    // Wasserstoff und Sauerstoff werden ausschließlich im lokalen Gaslager gespeichert,
+    // niemals direkt der Planetenatmosphäre hinzugefügt.
     if (Number(bld.waterElectrolysis || 0) > 0 && delta > 0) {
       const count = Number(bld.waterElectrolysis || 0);
       const powerFactor = getBuildingPowerFactor(id, 'waterElectrolysis');
       const waterAvailable = Math.max(0, Number(storage.water || 0));
       const requestedWater = 0.2 * count * delta * powerFactor;
-      const waterUsed = Math.min(waterAvailable, requestedWater);
+      const gasCapacity = gasCarbonStorageCapacity(id, 'surface');
+      const hydrogenStored = Math.max(0, Number(storage.hydrogen) || 0);
+      const oxygenStored = Math.max(0, Number(storage.oxygen) || 0);
+      // Beide Produkte müssen Platz haben. Die Reaktion wird begrenzt,
+      // sobald einer der beiden Gaslager-Bestände seine Kapazität erreicht.
+      const waterRoomForHydrogen = Math.max(0, gasCapacity - hydrogenStored) / 0.0001119;
+      const waterRoomForOxygen = Math.max(0, gasCapacity - oxygenStored) / 0.0008881;
+      const waterUsed = Math.min(waterAvailable, requestedWater, waterRoomForHydrogen, waterRoomForOxygen);
       if (waterUsed > 0) {
         storage.water = Math.max(0, waterAvailable - waterUsed);
         // 1 Liter Wasser ≈ 1 kg; Masseanteile: 11,19 % Wasserstoff und 88,81 % Sauerstoff.
         const hydrogenProduced = waterUsed * 0.0001119;
         const oxygenProduced = waterUsed * 0.0008881;
-        const atmosphere = ensurePlanetAtmosphere(id);
-        if (atmosphere) {
-          const gases = atmosphere.gases || (atmosphere.gases = {});
-          gases.hydrogen = Math.max(0, Number(gases.hydrogen) || 0) + hydrogenProduced;
-          gases.oxygen = Math.max(0, Number(gases.oxygen) || 0) + oxygenProduced;
-          atmosphere.totalGas = Math.max(0, Number(atmosphere.totalGas) || 0) + hydrogenProduced + oxygenProduced;
-          atmosphere.oxygen = gases.oxygen;
-        }
+        addStoredAtmosphericGas(id, 'surface', 'hydrogen', hydrogenProduced);
+        addStoredAtmosphericGas(id, 'surface', 'oxygen', oxygenProduced);
       }
     }
     // Kupfer wird auf jedem Planeten fair auf alle gleichzeitig kupferverbrauchenden
