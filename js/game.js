@@ -3389,6 +3389,7 @@ function renderSystem() {
       ${buildButton('glassFactory')}
       ${buildButton('heliumExtractor')}
       ${buildButton('fusionReactor')}
+      ${buildButton('gasPowerPlant')}
       ${buildButton('solarPlant')}
       ${buildButton('hydroelectricPlant')}
       ${buildButton('greenhouse')}
@@ -3979,6 +3980,12 @@ function planetTemperatureCelsius(planetId) {
 }
 
 function isBuildingAllowed(key, planetId = state.selected) {
+  if (key === 'gasPlant') {
+    return state.viewMode === 'surface' &&
+      planetId !== 'sun' &&
+      !!bodies[planetId] &&
+      Number(bodies[planetId]?.resources?.gas || 0) > 0;
+  }
   if (key === 'gasPowerPlant') return state.viewMode === 'surface' && planetId !== 'sun' && !!bodies[planetId] && hasPlanetSurface(planetId);
   if (key === 'lithiumBatteryFactory') return state.viewMode === 'surface' && planetId !== 'sun' && !!bodies[planetId];
   if (key === 'batteryStorage') return state.viewMode === 'surface' && planetId !== 'sun' && !!bodies[planetId];
