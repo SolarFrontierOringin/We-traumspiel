@@ -67,6 +67,7 @@
 
   // Lokale Stromerzeugung je Planet. Sonnenorbit-Satelliten bleiben separat.
   window.SF_ENERGY_GENERATORS = Object.freeze([
+    { key: 'gasPowerPlant', name: 'Gaskraftwerk', icon: '🔥', perBuilding: 200 },
     { key: 'coalPowerPlant', name: 'Kohlekraftwerk', icon: '🏭', perBuilding: 20 },
     { key: 'solarPlant', name: 'Solaranlage', icon: '☀️', perBuilding: 20 },
     { key: 'fusionReactor', name: 'Fusionsreaktor', icon: '☢️', perBuilding: 50 },

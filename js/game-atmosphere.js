@@ -26,7 +26,7 @@ function lunaAtmosphericPressure() { return atmosphericPressureFromMass('luna', 
 function releaseLunaAtmosphereGas() { return releasePlanetAtmosphereGas(); }
 function releasePlanetAtmosphereGas() {
   const planetId = state.selected;
-  if (!bodies[planetId] || !hasPlanetSurface(planetId)) return;
+  if (!bodies[planetId] || planetId === 'sun') return;
   const resourceSelect = document.querySelector('#planet-atmosphere-gas');
   const amountInput = document.querySelector('#planet-atmosphere-amount');
   const status = document.querySelector('#planet-atmosphere-status');
@@ -56,7 +56,7 @@ function releasePlanetAtmosphereGas() {
   if (nextStatus) nextStatus.textContent = `${formatAtmosphereTons(amount)} ${gas.label} freigesetzt.`;
 }
 function renderAtmospherePanel(planetId) {
-  if (!planetId || !hasPlanetSurface(planetId)) return '';
+  if (!planetId || !bodies[planetId] || planetId === 'sun') return '';
   const atmosphere = ensurePlanetAtmosphere(planetId);
   const pressure = atmosphericPressureFromMass(planetId, atmosphere.totalGas);
   const gasAmount = key => planetId === 'venus' && key === 'co2'
@@ -87,7 +87,7 @@ function renderAtmospherePanel(planetId) {
   const colonistAtmosphere = getColonistAtmosphereStatus(planetId);
   const colonistStatusClass = colonistAtmosphere.normalHousingAllowed ? 'good' : colonistAtmosphere.habitatAllowed ? 'warn' : 'bad';
   const colonistStatusHtml = `<div class="colonist-atmosphere-status"><strong>👥 Kolonisten-Freigabe</strong><p class="${colonistStatusClass}">${colonistAtmosphere.label}</p><small>Normale Wohngebäude und Vermehrung: 0,8–2,0 bar und 15–25 % O₂ · außerhalb des Bereichs keine neue Belegung/Vermehrung, bestehende Kolonisten bleiben · Habitat: eigene Lebenserhaltung</small></div>`;
-  const storage = getPlanetStorage(planetId);
+  const storage = state.viewMode === 'orbit' ? getOrbitStorage(planetId) : getPlanetStorage(planetId);
   const gases = Object.entries(ATMOSPHERE_RELEASE_GASES).map(([key, gas]) =>
     `<option value="${key}">${gas.icon} ${gas.label} · Lager: ${formatAtmosphereTons(Number(storage[key] || 0))}</option>`).join('');
   return `<details class="planet-atmosphere-details"><summary>🌫️ Atmosphäre · ${pressure.toFixed(3)} bar</summary>
@@ -120,14 +120,16 @@ function ensurePlanetAtmosphere(planetId) {
  const allowed=Object.keys(ATMOSPHERE_RELEASE_GASES), old=atmosphere.gases&&typeof atmosphere.gases==='object'?atmosphere.gases:{}, gases={};
  allowed.forEach(k=>gases[k]=Math.max(0,Number(old[k])||0)); atmosphere.gases=gases;
  const starts={earth:1,jupiter:90,saturn:45,uranus:40,neptune:60};
- if(atmosphere.ruleVersion!=='4t-km2-v1'){
+ const gasPlanet=['jupiter','saturn','uranus','neptune'].includes(planetId);
+ const targetRuleVersion=gasPlanet?'4t-km2-v2':'4t-km2-v1';
+ if(atmosphere.ruleVersion!==targetRuleVersion){
   const total=atmosphereMassForPressure(planetId,starts[planetId]||0); let mix={};
   if(planetId==='earth') mix={hydrogen:.79,oxygen:.20,co2:.01};
   else if(planetId==='jupiter') mix={hydrogen:.88,helium3:.10,nitrogen:.01,co2:.01};
   else if(planetId==='saturn') mix={hydrogen:.90,helium3:.08,nitrogen:.01,co2:.01};
   else if(planetId==='uranus'||planetId==='neptune') mix={hydrogen:.84,helium3:.14,nitrogen:.01,co2:.01};
   allowed.forEach(k=>gases[k]=total*(mix[k]||0)); atmosphere.totalGas=total;
-  atmosphere.oxygen=gases.oxygen; atmosphere.ruleVersion='4t-km2-v1';
+  atmosphere.oxygen=gases.oxygen; atmosphere.ruleVersion=targetRuleVersion;
  } else { atmosphere.totalGas=allowed.reduce((s,k)=>s+gases[k],0); atmosphere.oxygen=gases.oxygen; }
  return atmosphere;
 }

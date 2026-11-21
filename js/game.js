@@ -463,6 +463,7 @@ const state = {
     rocketFactory: 0,
     landingPad: 0,
     coalPowerPlant: 0,
+    gasPowerPlant: 0,
     researchLab: 0,
     observatory: 0,
     moonBase: 0,
@@ -743,6 +744,7 @@ function venusCo2ExtractionRate(id='venus') { return Number(getOperationalBuildi
 function getBuildingsOnPlanet(id) {
   if (id === 'earth') {
     if (state.buildings.companyHeadquarters === undefined) state.buildings.companyHeadquarters = 0;
+    if (state.buildings.gasPowerPlant === undefined) state.buildings.gasPowerPlant = 0;
     if (state.buildings.gasCarbonStorage === undefined) state.buildings.gasCarbonStorage = 0;
     if (state.buildings.gasCarbonStorageOrbit === undefined) state.buildings.gasCarbonStorageOrbit = 0;
     if (state.buildings.iceMine === undefined) state.buildings.iceMine = 0;
@@ -765,7 +767,7 @@ function getBuildingsOnPlanet(id) {
     return state.buildings;
   }
   if (!bodies[id].buildings) {
-    bodies[id].buildings = { companyHeadquarters: 0, gasCarbonStorageOrbit: 0, iceMine: 0, residentialHouse: 0, mediumResidentialHouse: 0, residentialComplex: 0, habitat: 0, observatory: 0, foodFactory: 0, algaeFarm: 0, algaeFoodProcessor: 0, steelworks: 0, stoneQuarry: 0, buildingMaterialsFactory: 0, coalMine: 0, gasPlant: 0, co2Extraction: 0, co2ProcessingPlant: 0, orbitalCo2Extractor: 0, researchSatellite: 0, ironMine: 0, goldMine: 0, goldRefinery: 0, megaChipFactory: 0, megaNanoChipFactory: 0, nickelMine: 0, graphiteMine: 0, syntheticGraphitePlant: 0, siliconMine: 0, lithiumMine: 0, copperMine: 0, copperSmelter: 0, lithiumRefinery: 0, machineFactory: 0, glassFactory: 0, heliumExtractor: 0, fusionReactor: 0, outpost: 0, coalPowerPlant: 0, solarPlant: 0, researchLab: 0, moonBase: 0, crudeOilPump: 0, refinery: 0, polymerFactory: 0, rubberFactory: 0, plasticFactory: 0, vehicleFactory: 0, electronicsFactory: 0, uraniumMine: 0, ioniumMine: 0, uraniumProcessingPlant: 0, nuclearFuelPlant: 0, nuclearReactor: 0, radioactiveStorageSurface: 0, radioactiveStorageOrbit: 0, chipFactory: 0, solarSail: 0, warmingSail: 0, solarSatellite: 0, solarProbe: 0, bauxiteMine: 0, titanMine: 0, titanProcessing: 0, titanRefinery: 0, aluminiumOxideRefinery: 0, aluminiumSmelter: 0, hydroelectricPlant: 0, greenhouse: 0, cocoaPlantation: 0, woodcutter: 0, forester: 0, atmosphereRegulator: 0, gasRemoval: 0, waterElectrolysis: 0, treeNursery: 0 }
+    bodies[id].buildings = { companyHeadquarters: 0, gasCarbonStorageOrbit: 0, iceMine: 0, residentialHouse: 0, mediumResidentialHouse: 0, residentialComplex: 0, habitat: 0, observatory: 0, foodFactory: 0, algaeFarm: 0, algaeFoodProcessor: 0, steelworks: 0, stoneQuarry: 0, buildingMaterialsFactory: 0, coalMine: 0, gasPlant: 0, co2Extraction: 0, co2ProcessingPlant: 0, orbitalCo2Extractor: 0, researchSatellite: 0, ironMine: 0, goldMine: 0, goldRefinery: 0, megaChipFactory: 0, megaNanoChipFactory: 0, nickelMine: 0, graphiteMine: 0, syntheticGraphitePlant: 0, siliconMine: 0, lithiumMine: 0, copperMine: 0, copperSmelter: 0, lithiumRefinery: 0, machineFactory: 0, glassFactory: 0, heliumExtractor: 0, fusionReactor: 0, outpost: 0, coalPowerPlant: 0, gasPowerPlant: 0, solarPlant: 0, researchLab: 0, moonBase: 0, crudeOilPump: 0, refinery: 0, polymerFactory: 0, rubberFactory: 0, plasticFactory: 0, vehicleFactory: 0, electronicsFactory: 0, uraniumMine: 0, ioniumMine: 0, uraniumProcessingPlant: 0, nuclearFuelPlant: 0, nuclearReactor: 0, radioactiveStorageSurface: 0, radioactiveStorageOrbit: 0, chipFactory: 0, solarSail: 0, warmingSail: 0, solarSatellite: 0, solarProbe: 0, bauxiteMine: 0, titanMine: 0, titanProcessing: 0, titanRefinery: 0, aluminiumOxideRefinery: 0, aluminiumSmelter: 0, hydroelectricPlant: 0, greenhouse: 0, cocoaPlantation: 0, woodcutter: 0, forester: 0, atmosphereRegulator: 0, gasRemoval: 0, waterElectrolysis: 0, treeNursery: 0 }
   }
   if (bodies[id].buildings.goldMine === undefined) bodies[id].buildings.goldMine = 0;
   if (bodies[id].buildings.goldRefinery === undefined) bodies[id].buildings.goldRefinery = 0;
@@ -774,6 +776,7 @@ function getBuildingsOnPlanet(id) {
   if (bodies[id].buildings.nickelMine === undefined) bodies[id].buildings.nickelMine = 0;
   if (bodies[id].buildings.syntheticGraphitePlant === undefined) bodies[id].buildings.syntheticGraphitePlant = 0;
   if (bodies[id].buildings.companyHeadquarters === undefined) bodies[id].buildings.companyHeadquarters = 0;
+  if (bodies[id].buildings.gasPowerPlant === undefined) bodies[id].buildings.gasPowerPlant = 0;
   if (bodies[id].buildings.gasCarbonStorage === undefined) bodies[id].buildings.gasCarbonStorage = 0;
   if (bodies[id].buildings.gasCarbonStorageOrbit === undefined) bodies[id].buildings.gasCarbonStorageOrbit = 0;
   if (bodies[id].buildings.observatory === undefined) bodies[id].buildings.observatory = 0;
@@ -883,7 +886,7 @@ function getOrbitStorage(id) {
 }
 // Gaslagerkapazität wird getrennt für Oberfläche und Orbit geführt.
 // Jeder atmosphärische Gasbestand benötigt ein Gaslager; Kapazität: 100.000 t je Gas und Gebäude.
-const ATMOSPHERIC_STORAGE_GASES = Object.keys(ATMOSPHERE_RELEASE_GASES).filter(key => !['potassium', 'sodium', 'sulfurDioxide'].includes(key));
+const ATMOSPHERIC_STORAGE_GASES = [...Object.keys(ATMOSPHERE_RELEASE_GASES), 'gas'];
 function gasCarbonStorageCount(id, mode = 'surface') {
   const buildings = getBuildingsOnPlanet(id);
   return Math.max(0, Number(buildings[mode === 'orbit' ? 'gasCarbonStorageOrbit' : 'gasCarbonStorage']) || 0);
@@ -906,6 +909,9 @@ function enforceCO2StorageCapacity(id) {
     const storage = mode === 'orbit' ? getOrbitStorage(id) : getPlanetStorage(id);
     const capacity = gasCarbonStorageCapacity(id, mode);
     for (const key of ATMOSPHERIC_STORAGE_GASES) {
+      // Bereits vorhandene Gasbestände älterer Spielstände nicht löschen,
+      // nur weil vor dem Update noch kein Gaslager gebaut wurde.
+      if (key === 'gas' && capacity <= 0) continue;
       storage[key] = Math.min(capacity, Math.max(0, Number(storage[key]) || 0));
     }
   }
@@ -943,7 +949,7 @@ function formatStorage(id) {
   const gasKeys = ATMOSPHERIC_STORAGE_GASES;
   const gasUsed = gasKeys.reduce((sum, key) => sum + Math.max(0, Number(st[key] || 0)), 0);
   const gasPct = gasCapacity > 0 ? Math.min(100, gasUsed / (gasCapacity * gasKeys.length) * 100) : 0;
-  const gasRow = `<details class="planet-resource-section gas-storage-section"><summary>🌫️ Gaslager <strong>${formatTons(gasUsed)} / ${formatTons(gasCapacity * gasKeys.length)}</strong></summary><div class="planet-resource-list"><small class="hint">Je Gas 100.000 t Kapazität pro gebautem Gaslager · ${mode === 'orbit' ? 'Orbit' : 'Planetenoberfläche'}</small><div class="liquid-storage-meter"><div class="liquid-storage-meter-label"><span>Gesamtauslastung</span><strong>${gasPct.toFixed(1)} %</strong></div><div class="liquid-storage-progress"><i style="width:${gasPct}%"></i></div></div>${gasKeys.map(key => `<div class="stat"><span>${ATMOSPHERE_RELEASE_GASES[key].icon} ${ATMOSPHERE_RELEASE_GASES[key].label}</span><strong>${formatAtmosphereTons(Number(st[key] || 0))} / ${formatAtmosphereTons(gasCapacity)}</strong></div>`).join('')}${gasCapacity <= 0 ? '<p class="hint">Noch kein Gaslager an diesem Standort gebaut. Atmosphärische Gase können hier nicht gelagert werden.</p>' : ''}</div></details>`;
+  const gasRow = `<details class="planet-resource-section gas-storage-section"><summary>🌫️ Gaslager <strong>${formatTons(gasUsed)} / ${formatTons(gasCapacity * gasKeys.length)}</strong></summary><div class="planet-resource-list"><small class="hint">Je Gas 100.000 t Kapazität pro gebautem Gaslager · ${mode === 'orbit' ? 'Orbit' : 'Planetenoberfläche'}</small><div class="liquid-storage-meter"><div class="liquid-storage-meter-label"><span>Gesamtauslastung</span><strong>${gasPct.toFixed(1)} %</strong></div><div class="liquid-storage-progress"><i style="width:${gasPct}%"></i></div></div>${gasKeys.map(key => `<div class="stat"><span>${ATMOSPHERE_RELEASE_GASES[key]?.icon || '🔥'} ${ATMOSPHERE_RELEASE_GASES[key]?.label || resourceNames[key] || 'Gas'}</span><strong>${formatAtmosphereTons(Number(st[key] || 0))} / ${formatAtmosphereTons(gasCapacity)}</strong></div>`).join('')}${gasCapacity <= 0 ? '<p class="hint">Noch kein Gaslager an diesem Standort gebaut. Atmosphärische Gase können hier nicht gelagert werden.</p>' : ''}</div></details>`;
   const radioactiveCapacity = radioactiveStorageCapacity(id, mode);
   const radioactiveUsed = radioactiveStoredAmount(st);
   const radioactiveSummary = `<details class="planet-resource-section radioactive-storage-section"><summary>☢️ Radioaktivstofflager <strong>${formatTons(radioactiveUsed)} / ${formatTons(radioactiveCapacity)}</strong></summary><div class="planet-resource-list"><small class="hint">Ionium und andere radioaktive Stoffe sind in diesem Lager abgeschirmt. Kapazität: 10.000 t je gebautem Radioaktivstofflager · ${mode === 'orbit' ? 'Orbit' : 'Oberfläche'}</small>${['uranium','processedUranium','nuclearFuel','ionium'].map(k => `<div class="stat"><span>${resourceIcons[k] || '☢️'} ${resourceNames[k] || k}</span><strong>${formatTons(Number(st[k] || 0))}</strong></div>`).join('')}${radioactiveCapacity <= 0 ? '<p class="hint">Noch kein Radioaktivstofflager an diesem Standort gebaut.</p>' : ''}</div></details>`;
@@ -3450,7 +3456,7 @@ function renderSystem() {
       { title: '🌱 Landwirtschaft & Versorgung', keys: ['greenhouse','hydroelectricPlant','cocoaPlantation','woodcutter'] },
       { title: '🍫 Kolonistenversorgung', keys: ['chocolateFactory','luxuryFurnitureFactory'] },
       { title: '🏭 Verarbeitung & Industrie', keys: ['lithiumBatteryFactory','syntheticGraphitePlant','titanProcessing','titanRefinery','goldRefinery','megaChipFactory','megaNanoChipFactory','steelworks','buildingMaterialsFactory','co2ProcessingPlant','aluminiumOxideRefinery','aluminiumSmelter','copperSmelter','lithiumRefinery','machineFactory','glassFactory','electronicsFactory','chipFactory','polymerFactory','rubberFactory','plasticFactory','vehicleFactory','foodFactory','iceProcessingPlant','algaeFarm','algaeFoodProcessor','uraniumProcessingPlant','nuclearFuelPlant','radioactiveStorageSurface','radioactiveStorageOrbit'] },
-      { title: '⚡ Energie & Forschung', keys: ['batteryStorage','coalPowerPlant','solarPlant','fusionReactor','nuclearReactor','researchLab','observatory'] },
+      { title: '⚡ Energie & Forschung', keys: ['batteryStorage','coalPowerPlant','gasPowerPlant','solarPlant','fusionReactor','nuclearReactor','researchLab','observatory'] },
       { title: '📦 Lager', keys: ['gasCarbonStorage','liquidStorage'] },
       { title: '🚀 Raumfahrt & Infrastruktur', keys: ['co2Extraction','moonBase','solarSail','warmingSail','outpost','rocketFactory','landingPad','solarSatellite','solarProbe'] },
       { title: '🛰️ Orbit-Gebäude', keys: ['orbitLandingPad','orbitalCo2Extractor','researchSatellite'] }
@@ -3973,6 +3979,7 @@ function planetTemperatureCelsius(planetId) {
 }
 
 function isBuildingAllowed(key, planetId = state.selected) {
+  if (key === 'gasPowerPlant') return state.viewMode === 'surface' && planetId !== 'sun' && !!bodies[planetId] && hasPlanetSurface(planetId);
   if (key === 'lithiumBatteryFactory') return state.viewMode === 'surface' && planetId !== 'sun' && !!bodies[planetId];
   if (key === 'batteryStorage') return state.viewMode === 'surface' && planetId !== 'sun' && !!bodies[planetId];
   if (key === 'gasCarbonStorage') return planetId !== 'sun' && !!bodies[planetId] && ['surface','orbit'].includes(state.viewMode);
@@ -4084,6 +4091,14 @@ function buildButton(key) {
 }
 
 function buildButtonUnsafe(key) {
+  if (key === 'gasPowerPlant') {
+    const b = buildingTypes[key];
+    const count = Number(getBuildingsOnPlanet(state.selected).gasPowerPlant || 0);
+    const storage = getPlanetStorage(state.selected);
+    const costs = { steel: 400, buildingMaterials: 900 };
+    const affordable = isBuildingAllowed(key, state.selected) && Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount);
+    return `<div class="build-card"><div><strong>${b.icon} ${b.name}</strong><small>${b.text}</small></div><button class="build-resource" data-building="gasPowerPlant" ${affordable ? '' : 'disabled'}>Bauen (${count})</button></div>`;
+  }
   if (key === 'goldMine' || key === 'goldRefinery' || key === 'megaChipFactory' || key === 'megaNanoChipFactory') {
     const b = buildingTypes[key];
     const count = Number(getBuildingsOnPlanet(state.selected)[key] || 0);
@@ -5089,6 +5104,17 @@ function demolishBuilding(key = null, planetId = state.selected) {
 
 function buildResourceBuilding(key) {
   const planetId = state.selected;
+  if (key === 'gasPowerPlant') {
+    const bld = getBuildingsOnPlanet(planetId);
+    const storage = getPlanetStorage(planetId);
+    const costs = { steel: 400, buildingMaterials: 900 };
+    if (!isBuildingAllowed(key, planetId) || !Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount)) return;
+    for (const [r, amount] of Object.entries(costs)) storage[r] = Number(storage[r] || 0) - amount;
+    bld.gasPowerPlant = Number(bld.gasPowerPlant || 0) + 1;
+    playUiSound('build');
+    renderSystem(); renderInfo(); renderTopResources(); saveAfterBuild();
+    return;
+  }
   if (key === 'goldMine' || key === 'goldRefinery' || key === 'megaChipFactory' || key === 'megaNanoChipFactory') {
     const bld = getBuildingsOnPlanet(planetId);
     const storage = getPlanetStorage(planetId);
@@ -6914,9 +6940,9 @@ function updateResources() {
       if (resourceKey === 'water' && id === 'mercury' && mercuryTemperature() >= 50) return;
       const available = Number(planet.resources[resourceKey] || 0);
       let amount = Math.min(available, Number(b.rate || 0) * Number(bld[key] || 0) * delta);
-      if (resourceKey === 'co2') {
+      if (resourceKey === 'co2' || resourceKey === 'gas') {
         const capacity = gasCarbonStorageCapacity(id, 'surface');
-        const stored = Math.min(capacity, Math.max(0, Number(storage.co2) || 0));
+        const stored = Math.min(capacity, Math.max(0, Number(storage[resourceKey]) || 0));
         amount = Math.min(amount, Math.max(0, capacity - stored));
       }
       if (amount > 0) {

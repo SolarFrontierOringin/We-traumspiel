@@ -6,7 +6,7 @@
 // Spiel- und Speicherformatversion getrennt halten:
 // appVersion = veröffentlichte Spielversion, schemaVersion = Struktur des JSON-Spielstands.
 const SFO_APP_VERSION = '1.0.0';
-const SFO_SAVE_SCHEMA_VERSION = 7;
+const SFO_SAVE_SCHEMA_VERSION = 9;
 const SFO_LAST_APP_VERSION_KEY = 'sfo_last_app_version_v1';
 
 function sfoCompareVersions(a, b) {
@@ -49,7 +49,7 @@ function sfoMigrateSaveData(data) {
 
   let migrated = false;
   // v1-v3 verwendeten "version" ohne separates Schemafeld.
-  // v5-v7 ergänzen Register, Planeten, 4t-Atmosphärenregel und die fünf erlaubten Gase.
+  // v5-v9 ergänzen Register, Planeten, 4t-Atmosphärenregel, erlaubte Gase, Gasplaneten-Atmosphären und Gaskraftwerk.
   if (currentSchema < SFO_SAVE_SCHEMA_VERSION) {
     data.schemaVersion = SFO_SAVE_SCHEMA_VERSION;
     data.version = SFO_SAVE_SCHEMA_VERSION;
@@ -61,7 +61,7 @@ function sfoMigrateSaveData(data) {
   if (!data.bodies || typeof data.bodies !== 'object' || Array.isArray(data.bodies)) {
     throw new Error('Ungültiger Spielstand: Planetendaten fehlen.');
   }
-  // v7: veraltete Atmosphärengase und Gaslager entfernen; Durchmesser ergänzen.
+  // v7-v8: veraltete Atmosphärengase und Gaslager entfernen; Durchmesser ergänzen und Gasplaneten-Atmosphären neu initialisieren.
   const sfoDiameters = { mercury:2600, venus:7200, earth:6370, luna:1738, mars:3390, jupiter:69911, saturn:58232, uranus:25326, neptune:24622, pluto:1919, ceres:582, io:3643, nivaris:9842, noxaris:6400, themepatin:5190, pyrophor:3942, rethroxid:1988 };
   const allowedGases = new Set(['helium3','oxygen','hydrogen','co2','nitrogen']);
   for (const [planetId, body] of Object.entries(data.bodies)) {
@@ -75,8 +75,15 @@ function sfoMigrateSaveData(data) {
       const old = body.atmosphere.gases && typeof body.atmosphere.gases === 'object' ? body.atmosphere.gases : {};
       body.atmosphere.gases = Object.fromEntries(Object.entries(old).filter(([key]) => allowedGases.has(key)));
       delete body.atmosphere.pressure;
-      // Runtime initializes the agreed starting pressure/composition under the 4t rule.
-      if (currentSchema < 7) delete body.atmosphere.ruleVersion;
+      // Ältere Spielstände erhalten für Gasplaneten die korrigierte 4t/km²-Initialisierung.
+      if (['jupiter','saturn','uranus','neptune'].includes(planetId)) {
+        delete body.atmosphere.ruleVersion;
+        body.atmosphere.totalGas = 0;
+        body.atmosphere.oxygen = 0;
+        body.atmosphere.gases = {};
+      } else if (currentSchema < 7) {
+        delete body.atmosphere.ruleVersion;
+      }
     }
   }
   if (data.bodies.venus?.resources && typeof data.bodies.venus.resources === 'object') {
