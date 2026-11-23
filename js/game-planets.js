@@ -16,3 +16,18 @@ const bodies = {
   nivaris: { name: 'Nivaris', type: 'Mystischer Eisplanet', className: 'nivaris', diameterKm: 9842, temperature: '-500 °C', description: 'Ein mystischer, kalter Planet. Er wurde erst 2027 durch ein Teleskop entdeckt. Wie lange er bereits existiert, ist nicht bekannt.', resources: { ice: 1000000000, iron: 3000000, stone: 2000000, ionium: 2000000 }, storage: {}, orbit: 720 },
   io: { name: 'Io', type: 'Mond des Jupiter', className: 'io', diameterKm: 3643, temperature: 'ca. -110 °C Durchschnitt', resources: { iron: 20000000, silicon: 15000000, copperOre: 20000000, graphite: 70000000, bauxite: 19000000, ionium: 1000000 }, storage: {}, orbit: 570, moonOf: 'jupiter' }
 };
+
+// Zweites Sonnensystem: Elyndra liegt im Zentrum; Noxaris liegt auf der äußersten Umlaufbahn.
+const futureSolarSystem = {
+  id: 'system2', name: 'Sonnensystem 2',
+  bodies: [
+    { id: 'elyndra', name: 'Elyndra', type: 'Mystischer Gesteinsplanet', className: 'elyndra', diameterKm: 25000, orbit: 0, rotationHours: 96, temperature: 'Unbekannt', description: 'Ein gewaltiger mystischer Gesteinsplanet im Zentrum des Systems. Seine violett-rosa Oberfläche wird von hellblauen Energieadern durchzogen.', resources: { nickelOre: 10000000 }, atmosphere: { gases: { helium3: 0, oxygen: 0, hydrogen: 0, co2: 0, nitrogen: 0 }, totalGas: 0, oxygen: 0 }, storage: {}, orbitStorage: {} },
+    { id: 'themepatin', name: 'Themepatin', type: 'Gesteinsplanet', className: 'themepatin', diameterKm: 5190, orbit: 1120, temperature: 'Unbekannt', resources: { stone: 1000000, copperOre: 2000000, uranium: 10000000 }, storage: {}, orbitStorage: {} },
+    { id: 'rethroxid', name: 'Rethroxid', type: 'Roter Gesteinsplanet', className: 'rethroxid', diameterKm: 1988, orbit: 1120, temperature: 'Unbekannt', resources: { copperOre: 10000000, germanium: 2000000 }, storage: {}, orbitStorage: {} },
+    { id: 'noxaris', name: 'Noxaris', type: 'Mystischer Planet', className: 'noxaris', diameterKm: 6400, orbit: 1420, temperature: 'Unbekannt', resources: { iron: 2000000, stone: 1000000, ionium: 500000, germanium: 1000000 }, storage: {}, orbitStorage: {} },
+    { id: 'pyrophor', name: 'Pyrophor', type: 'Vulkanischer Gesteinsplanet', className: 'pyrophor', diameterKm: 3942, orbit: 1420, temperature: '1.200 °C', resources: { uranium: 8000000, stone: 12000000, ionium: 2000000 }, storage: {}, orbitStorage: {} }
+  ]
+};
+// Elyndra wird wie die übrigen Planeten in die gemeinsame Planetenverwaltung eingebunden.
+bodies.elyndra = futureSolarSystem.bodies.find(body => body.id === 'elyndra');
+
