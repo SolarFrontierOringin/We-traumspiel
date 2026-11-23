@@ -4083,11 +4083,19 @@ function renderPlanetBuildingSummary(planetId) {
 
 function renderSystem2PlanetInfo(body) {
   const diameter = Number(body.diameterKm || 0);
-  const surface = Math.round(Math.PI * diameter * diameter);
-  const atmosphereMass = Number(body.atmosphere?.totalGas || 0);
-  const pressure = typeof atmosphericPressureFromMass === 'function'
-    ? atmosphericPressureFromMass(body.id, atmosphereMass)
-    : 0;
+  const surface = Math.round(4 * Math.PI * (diameter / 2) ** 2);
+  // Sonnensystem 2 startet auf allen Planeten ohne Atmosphäre.
+  // Die Druckberechnung folgt derselben 4-t-Regel wie Sonnensystem 1:
+  // 4 t Gas je km² Oberfläche entsprechen 1 bar.
+  const atmosphere = body.atmosphere || (body.atmosphere = {
+    gases: { helium3: 0, oxygen: 0, hydrogen: 0, co2: 0, nitrogen: 0 },
+    totalGas: 0,
+    oxygen: 0,
+    ruleVersion: '4t-km2-v1'
+  });
+  const pressure = Number(atmosphere.totalGas || 0) / Math.max(1, surface * 4);
+  const colonists = Number(body.colonists || 0);
+  const housing = Number(body.housingCapacity || 0);
   const storage = state.viewMode === 'orbit' ? (body.orbitStorage || {}) : (body.storage || {});
   const storageRows = Object.entries(storage)
     .filter(([, amount]) => Number(amount) > 0)
@@ -4097,15 +4105,35 @@ function renderSystem2PlanetInfo(body) {
     <button type="button" class="view-switch-btn ${state.viewMode === 'surface' ? 'active' : ''}" data-planet-view="surface">🌍 Oberfläche</button>
     <button type="button" class="view-switch-btn ${state.viewMode === 'orbit' ? 'active' : ''}" data-planet-view="orbit">🛰️ Orbit</button>
   </div>`;
-  infoPanel.innerHTML = `<h2>🪐 ${body.name}</h2><p class="hint">${body.type}</p>
+  const gasLabels = [
+    ['helium3', '🧪 Helium-3'], ['oxygen', '🫧 Sauerstoff'],
+    ['hydrogen', '💨 Wasserstoff'], ['co2', '🌫️ CO₂'],
+    ['nitrogen', '🌬️ Stickstoff']
+  ];
+  const atmosphereRows = gasLabels.map(([key, label]) =>
+    `<div class="stat atmosphere-gas-row"><span>${label}</span><strong>0 t · 0 %</strong></div>`
+  ).join('');
+  infoPanel.innerHTML = `<h2>🪐 ${body.name}</h2>
+    <p class="hint">${body.type}</p>
     <div class="stat"><span>Durchmesser</span><strong>${diameter.toLocaleString('de-DE')} km</strong></div>
     <div class="stat"><span>Oberfläche</span><strong>${surface.toLocaleString('de-DE')} km²</strong></div>
-    <p class="hint">${body.description || 'Ein bislang unerforschter Planet.'}</p>
+    ${body.description ? `<p class="hint">${body.description}</p>` : ''}
     ${viewSwitch}
     <div class="stat"><span>Temperatur</span><strong>${body.temperature || 'Unbekannt'}</strong></div>
-    <div class="stat"><span>Atmosphäre</span><strong>${pressure.toFixed(3)} bar</strong></div>
+    <div class="stat colonists-planet-count"><span>👥 Kolonisten auf ${body.name}</span><strong>${colonists.toLocaleString('de-DE')}</strong></div>
+    <div class="stat housing-planet-count"><span>🏠 Wohnraum</span><strong>0 / ${housing.toLocaleString('de-DE')} · ${housing.toLocaleString('de-DE')} frei</strong></div>
+    <details class="planet-atmosphere-details">
+      <summary>🌫️ Atmosphäre · ${pressure.toFixed(3)} bar</summary>
+      <div class="planet-atmosphere-content">
+        <div class="stat"><span>Atmosphärendruck</span><strong>${pressure.toFixed(3)} bar</strong></div>
+        <div class="stat"><span>Gasmenge gesamt</span><strong>0 t</strong></div>
+        ${atmosphereRows}
+        <p class="hint">Atmosphärenregel: 4 t Gas je km² Oberfläche entsprechen 1 bar. Aktuell ist keine Atmosphäre vorhanden.</p>
+      </div>
+    </details>
     <details class="planet-resources-details" data-planet-resources="${body.id}"><summary><span>🌐 Rohstoffe auf dem Planeten</span></summary><div class="planet-resources-content">${resourceRows(body)}</div></details>
-    <details class="planet-storage-details"><summary>📦 Lager auf ${body.name}</summary><div class="planet-storage-content">${storageRows}</div></details>`;
+    <details class="planet-storage-details"><summary>📦 Lager auf ${body.name}</summary><div class="planet-storage-content">${storageRows}</div></details>
+    <hr><details class="planet-economy-details"><summary><span>🏭 Gebäude auf ${body.name}</span><strong>0 Gebäude</strong></summary><p class="hint">Auf diesem Planeten wurden noch keine Gebäude errichtet.</p></details><hr>`;
   bindPlanetViewControls();
   bindPlanetResourceDetails();
   applyLanguage();
