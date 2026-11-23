@@ -5,8 +5,8 @@
 
 // Spiel- und Speicherformatversion getrennt halten:
 // appVersion = veröffentlichte Spielversion, schemaVersion = Struktur des JSON-Spielstands.
-const SFO_APP_VERSION = '1.0.2';
-const SFO_SAVE_SCHEMA_VERSION = 9;
+const SFO_APP_VERSION = '1.0.4';
+const SFO_SAVE_SCHEMA_VERSION = 10;
 const SFO_LAST_APP_VERSION_KEY = 'sfo_last_app_version_v1';
 
 function sfoCompareVersions(a, b) {
@@ -49,7 +49,7 @@ function sfoMigrateSaveData(data) {
 
   let migrated = false;
   // v1-v3 verwendeten "version" ohne separates Schemafeld.
-  // v5-v9 ergänzen Register, Planeten, 4t-Atmosphärenregel, erlaubte Gase, Gasplaneten-Atmosphären und Gaskraftwerk.
+  // v5-v10 ergänzen Register, Planeten, 4t-Atmosphärenregel, erlaubte Gase, Gasplaneten-Atmosphären, Gaskraftwerk und Elyndras Nickelvorkommen.
   if (currentSchema < SFO_SAVE_SCHEMA_VERSION) {
     data.schemaVersion = SFO_SAVE_SCHEMA_VERSION;
     data.version = SFO_SAVE_SCHEMA_VERSION;
@@ -62,7 +62,7 @@ function sfoMigrateSaveData(data) {
     throw new Error('Ungültiger Spielstand: Planetendaten fehlen.');
   }
   // v7-v8: veraltete Atmosphärengase und Gaslager entfernen; Durchmesser ergänzen und Gasplaneten-Atmosphären neu initialisieren.
-  const sfoDiameters = { mercury:2600, venus:7200, earth:6370, luna:1738, mars:3390, jupiter:69911, saturn:58232, uranus:25326, neptune:24622, pluto:1919, ceres:582, io:3643, nivaris:9842, noxaris:6400, themepatin:5190, pyrophor:3942, rethroxid:1988 };
+  const sfoDiameters = { mercury:2600, venus:7200, earth:6370, luna:1738, mars:3390, jupiter:69911, saturn:58232, uranus:25326, neptune:24622, pluto:1919, ceres:582, io:3643, nivaris:9842, noxaris:6400, elyndra:25000, themepatin:5190, pyrophor:3942, rethroxid:1988 };
   const allowedGases = new Set(['helium3','oxygen','hydrogen','co2','nitrogen']);
   for (const [planetId, body] of Object.entries(data.bodies)) {
     if (!body || typeof body !== 'object') continue;
@@ -85,6 +85,19 @@ function sfoMigrateSaveData(data) {
         delete body.atmosphere.ruleVersion;
       }
     }
+  }
+  // v10: Elyndra erhält einmalig 10 Mio. t Nickelerz. Bestehende Bestände bleiben erhalten.
+  if (currentSchema < 10) {
+    if (!data.bodies.elyndra || typeof data.bodies.elyndra !== 'object') {
+      data.bodies.elyndra = { resources: {}, storage: {}, orbitStorage: {} };
+    }
+    if (!data.bodies.elyndra.resources || typeof data.bodies.elyndra.resources !== 'object') {
+      data.bodies.elyndra.resources = {};
+    }
+    if (data.bodies.elyndra.resources.nickelOre === undefined) {
+      data.bodies.elyndra.resources.nickelOre = 10000000;
+    }
+    migrated = true;
   }
   if (data.bodies.venus?.resources && typeof data.bodies.venus.resources === 'object') {
     // Die frühere Venus-CO₂-Ressource war eine alte Atmosphären-Massen-Sonderbehandlung.

@@ -1,7 +1,7 @@
 // Solar Frontier: Origins – gemeinsames Atmosphären- und CO₂-Modul.
 // CO₂-Verwaltungsfenster bleibt sichtbar, seine alten Einträge/Emissionen sind deaktiviert.
 const ATMOSPHERE_TONS_PER_KM2_PER_BAR = 4;
-const PLANET_DIAMETERS_KM = {mercury:2600,venus:7200,earth:6370,luna:1738,mars:3390,jupiter:69911,saturn:58232,uranus:25326,neptune:24622,pluto:1919,ceres:582,io:3643,nivaris:9842,noxaris:6400,themepatin:5190,pyrophor:3942,rethroxid:1988};
+const PLANET_DIAMETERS_KM = {mercury:2600,venus:7200,earth:6370,luna:1738,mars:3390,jupiter:69911,saturn:58232,uranus:25326,neptune:24622,pluto:1919,ceres:582,io:3643,nivaris:9842,noxaris:6400,elyndra:25000,themepatin:5190,pyrophor:3942,rethroxid:1988};
 function planetSurfaceAreaKm2(id){const d=Number(bodies[id]?.diameterKm||PLANET_DIAMETERS_KM[id]||0);return d>0?4*Math.PI*(d/2)**2:0;}
 function atmosphericPressureFromMass(id,mass){const a=planetSurfaceAreaKm2(id);return a>0?Math.max(0,Number(mass)||0)/(a*ATMOSPHERE_TONS_PER_KM2_PER_BAR):0;}
 function atmosphereMassForPressure(id,bar){const a=planetSurfaceAreaKm2(id);return a>0&&bar>0?a*ATMOSPHERE_TONS_PER_KM2_PER_BAR*bar:0;}
@@ -119,7 +119,7 @@ function ensurePlanetAtmosphere(planetId) {
  const atmosphere=planet.atmosphere&&typeof planet.atmosphere==='object'?planet.atmosphere:(planet.atmosphere={});
  const allowed=Object.keys(ATMOSPHERE_RELEASE_GASES), old=atmosphere.gases&&typeof atmosphere.gases==='object'?atmosphere.gases:{}, gases={};
  allowed.forEach(k=>gases[k]=Math.max(0,Number(old[k])||0)); atmosphere.gases=gases;
- const starts={earth:1,jupiter:90,saturn:45,uranus:40,neptune:60};
+ const starts={earth:1,jupiter:90,saturn:45,uranus:40,neptune:60,elyndra:0};
  const gasPlanet=['jupiter','saturn','uranus','neptune'].includes(planetId);
  const targetRuleVersion=gasPlanet?'4t-km2-v2':'4t-km2-v1';
  if(atmosphere.ruleVersion!==targetRuleVersion){

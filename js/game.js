@@ -25,16 +25,19 @@ function getSaveSlotKeys(slot = activeSaveSlot) {
   };
 }
 
-// Zweites Sonnensystem: Noxaris liegt auf der äußersten Umlaufbahn.
+// Zweites Sonnensystem: Elyndra liegt im Zentrum; Noxaris liegt auf der äußersten Umlaufbahn.
 const futureSolarSystem = {
   id: 'system2', name: 'Sonnensystem 2',
   bodies: [
+    { id: 'elyndra', name: 'Elyndra', type: 'Mystischer Gesteinsplanet', className: 'elyndra', diameterKm: 25000, orbit: 0, rotationHours: 96, temperature: 'Unbekannt', description: 'Ein gewaltiger mystischer Gesteinsplanet im Zentrum des Systems. Seine violett-rosa Oberfläche wird von hellblauen Energieadern durchzogen.', resources: { nickelOre: 10000000 }, storage: {}, orbitStorage: {} },
     { id: 'themepatin', name: 'Themepatin', type: 'Gesteinsplanet', className: 'themepatin', diameterKm: 5190, orbit: 1120, temperature: 'Unbekannt', resources: { stone: 1000000, copperOre: 2000000, uranium: 10000000 }, storage: {}, orbitStorage: {} },
     { id: 'rethroxid', name: 'Rethroxid', type: 'Roter Gesteinsplanet', className: 'rethroxid', diameterKm: 1988, orbit: 1120, temperature: 'Unbekannt', resources: { copperOre: 10000000, germanium: 2000000 }, storage: {}, orbitStorage: {} },
     { id: 'noxaris', name: 'Noxaris', type: 'Mystischer Planet', className: 'noxaris', diameterKm: 6400, orbit: 1420, temperature: 'Unbekannt', resources: { iron: 2000000, stone: 1000000, ionium: 500000, germanium: 1000000 }, storage: {}, orbitStorage: {} },
     { id: 'pyrophor', name: 'Pyrophor', type: 'Vulkanischer Gesteinsplanet', className: 'pyrophor', diameterKm: 3942, orbit: 1420, temperature: '1.200 °C', resources: { uranium: 8000000, stone: 12000000, ionium: 2000000 }, storage: {}, orbitStorage: {} }
   ]
 };
+// Elyndra wird wie die übrigen Planeten in die gemeinsame Planetenverwaltung eingebunden.
+bodies.elyndra = futureSolarSystem.bodies.find(body => body.id === 'elyndra');
 let activeSolarSystemId = 'system1';
 
 // ==========================================
@@ -2444,13 +2447,30 @@ function renderSystem() {
   solarSystem.innerHTML = '';
   if (activeSolarSystemId === 'system2') {
     solarSystem.classList.remove('building-menu-open');
-    const star = document.createElement('div');
-    star.className = 'system2-star';
-    star.setAttribute('aria-label', 'Unbekannter Stern');
-    star.title = 'Unbekannter Stern';
-    solarSystem.appendChild(star);
-
+    // Elyndra ersetzt den bisherigen Mittelpunkt-Stern und bleibt fest im Zentrum.
     futureSolarSystem.bodies.forEach((body, index) => {
+      if (body.id === 'elyndra') {
+        const planet = document.createElement('button');
+        planet.type = 'button';
+        planet.className = `body ${body.className}`;
+        planet.setAttribute('aria-label', body.name);
+        planet.title = `${body.name} · langsame Eigenrotation`;
+        planet.style.left = '50%';
+        planet.style.top = '50%';
+        const label = document.createElement('span');
+        label.className = 'body-label';
+        label.textContent = body.name;
+        planet.appendChild(label);
+        planet.addEventListener('click', () => {
+          state.selected = 'elyndra';
+          state.viewMode = 'surface';
+          state.buildMenuOpen = false;
+          renderSystem();
+          renderInfo();
+        });
+        solarSystem.appendChild(planet);
+        return;
+      }
       const orbit = document.createElement('div');
       orbit.className = `orbit ${body.className}-orbit`;
       orbit.style.width = `${body.orbit}px`;
@@ -2479,6 +2499,7 @@ function renderSystem() {
           themepatin: 'Ein innerer Gesteinsplanet mit bedeutenden Kupfererz- und Uranvorkommen.',
           rethroxid: 'Ein roter Gesteinsplanet auf Themepatins Umlaufbahn, genau auf der gegenüberliegenden Seite. Oberfläche und Orbit besitzen jeweils ein eigenes Lager.',
           noxaris: 'Ein geheimnisvoller, dunkelblauer Planet, umgeben von violett-blauen kosmischen Nebeln.',
+          elyndra: 'Ein gewaltiger mystischer Gesteinsplanet im Zentrum des Systems. Seine violett-rosa Oberfläche wird von hellblauen Energieadern durchzogen.',
           pyrophor: 'Ein extrem heißer, rot-rosafarbener Gesteinsplanet auf derselben Umlaufbahn wie Noxaris.'
         };
         const description = descriptions[body.id] || 'Ein bislang unerforschter Planet.';
