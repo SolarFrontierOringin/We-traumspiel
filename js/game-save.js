@@ -5,7 +5,7 @@
 
 // Spiel- und Speicherformatversion getrennt halten:
 // appVersion = veröffentlichte Spielversion, schemaVersion = Struktur des JSON-Spielstands.
-const SFO_APP_VERSION = '1.0.4';
+const SFO_APP_VERSION = '1.0.4_Fix';
 const SFO_SAVE_SCHEMA_VERSION = 10;
 const SFO_LAST_APP_VERSION_KEY = 'sfo_last_app_version_v1';
 

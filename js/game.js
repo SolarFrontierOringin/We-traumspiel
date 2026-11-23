@@ -29,7 +29,7 @@ function getSaveSlotKeys(slot = activeSaveSlot) {
 const futureSolarSystem = {
   id: 'system2', name: 'Sonnensystem 2',
   bodies: [
-    { id: 'elyndra', name: 'Elyndra', type: 'Mystischer Gesteinsplanet', className: 'elyndra', diameterKm: 25000, orbit: 0, rotationHours: 96, temperature: 'Unbekannt', description: 'Ein gewaltiger mystischer Gesteinsplanet im Zentrum des Systems. Seine violett-rosa Oberfläche wird von hellblauen Energieadern durchzogen.', resources: { nickelOre: 10000000 }, storage: {}, orbitStorage: {} },
+    { id: 'elyndra', name: 'Elyndra', type: 'Mystischer Gesteinsplanet', className: 'elyndra', diameterKm: 25000, orbit: 0, rotationHours: 96, temperature: 'Unbekannt', description: 'Ein gewaltiger mystischer Gesteinsplanet im Zentrum des Systems. Seine violett-rosa Oberfläche wird von hellblauen Energieadern durchzogen.', resources: { nickelOre: 10000000 }, atmosphere: { gases: { helium3: 0, oxygen: 0, hydrogen: 0, co2: 0, nitrogen: 0 }, totalGas: 0, oxygen: 0 }, storage: {}, orbitStorage: {} },
     { id: 'themepatin', name: 'Themepatin', type: 'Gesteinsplanet', className: 'themepatin', diameterKm: 5190, orbit: 1120, temperature: 'Unbekannt', resources: { stone: 1000000, copperOre: 2000000, uranium: 10000000 }, storage: {}, orbitStorage: {} },
     { id: 'rethroxid', name: 'Rethroxid', type: 'Roter Gesteinsplanet', className: 'rethroxid', diameterKm: 1988, orbit: 1120, temperature: 'Unbekannt', resources: { copperOre: 10000000, germanium: 2000000 }, storage: {}, orbitStorage: {} },
     { id: 'noxaris', name: 'Noxaris', type: 'Mystischer Planet', className: 'noxaris', diameterKm: 6400, orbit: 1420, temperature: 'Unbekannt', resources: { iron: 2000000, stone: 1000000, ionium: 500000, germanium: 1000000 }, storage: {}, orbitStorage: {} },
@@ -2466,6 +2466,15 @@ function renderSystem() {
           state.viewMode = 'surface';
           state.buildMenuOpen = false;
           renderSystem();
+          const area = typeof planetSurfaceAreaKm2 === 'function' ? planetSurfaceAreaKm2(body.id) : 0;
+          const pressure = typeof ensurePlanetAtmosphere === 'function'
+            ? atmosphericPressureFromMass(body.id, ensurePlanetAtmosphere(body.id)?.totalGas || 0)
+            : 0;
+          const resourceRows = Object.entries(body.resources || {}).map(([key, amount]) => {
+            const names = { nickelOre: 'Nickelerz', stone: 'Stein', copperOre: 'Kupfererz', uranium: 'Uran', iron: 'Eisen', ionium: 'Ionium' };
+            return `<div class="stat"><span>${names[key] || key}</span><strong>${Number(amount || 0).toLocaleString('de-DE')} t</strong></div>`;
+          }).join('');
+          infoPanel.innerHTML = `<h2>🪐 ${body.name}</h2><div class="stat"><span>Typ</span><strong>${body.type}</strong></div><div class="stat"><span>Durchmesser</span><strong>${Number(body.diameterKm || 0).toLocaleString('de-DE')} km</strong></div><div class="stat"><span>Oberfläche</span><strong>${area.toLocaleString('de-DE', { maximumFractionDigits: 0 })} km²</strong></div><div class="stat"><span>Atmosphäre</span><strong>${pressure.toFixed(3)} bar</strong></div><div class="stat"><span>Temperatur</span><strong>${body.temperature || 'Unbekannt'}</strong></div><h3>🪨 Rohstoffvorkommen</h3>${resourceRows}<h3>📦 Lager</h3><div class="stat"><span>Oberflächenlager</span><strong>Eigenes Lager</strong></div><div class="stat"><span>Orbitlager</span><strong>Eigenes Lager</strong></div><p class="hint">${body.description || 'Ein bislang unerforschter Planet.'}</p>`;
           renderInfo();
         });
         solarSystem.appendChild(planet);
@@ -2503,7 +2512,7 @@ function renderSystem() {
           pyrophor: 'Ein extrem heißer, rot-rosafarbener Gesteinsplanet auf derselben Umlaufbahn wie Noxaris.'
         };
         const description = descriptions[body.id] || 'Ein bislang unerforschter Planet.';
-        infoPanel.innerHTML = `<h2>🪐 ${body.name}</h2><div class="stat"><span>Typ</span><strong>${body.type}</strong></div><div class="stat"><span>Durchmesser</span><strong>${Number(body.diameterKm || 0).toLocaleString('de-DE')} km</strong></div>${['jupiter','saturn','uranus','neptune'].includes(body.id) ? `<div class="stat"><span>Oberfläche</span><strong>${typeof planetSurfaceAreaKm2 === 'function' ? planetSurfaceAreaKm2(body.id).toLocaleString('de-DE', { maximumFractionDigits: 0 }) : '–'} km²</strong></div>` : ''}<div class="stat"><span>Temperatur</span><strong>${body.temperature}</strong></div><h3>🪨 Rohstoffvorkommen</h3>${resourceRows}<h3>📦 Lager</h3><div class="stat"><span>Oberflächenlager</span><strong>Eigenes Lager</strong></div><div class="stat"><span>Orbitlager</span><strong>Eigenes Lager</strong></div><p class="hint">${description}</p>`;
+        infoPanel.innerHTML = `<h2>🪐 ${body.name}</h2><div class="stat"><span>Typ</span><strong>${body.type}</strong></div><div class="stat"><span>Durchmesser</span><strong>${Number(body.diameterKm || 0).toLocaleString('de-DE')} km</strong></div>${!['jupiter','saturn','uranus','neptune'].includes(body.id) ? `<div class="stat"><span>Oberfläche</span><strong>${typeof planetSurfaceAreaKm2 === 'function' ? planetSurfaceAreaKm2(body.id).toLocaleString('de-DE', { maximumFractionDigits: 0 }) : '–'} km²</strong></div>` : ''}<div class="stat"><span>Atmosphäre</span><strong>${typeof ensurePlanetAtmosphere === 'function' ? atmosphericPressureFromMass(body.id, ensurePlanetAtmosphere(body.id)?.totalGas || 0).toFixed(3) : '0.000'} bar</strong></div><div class="stat"><span>Temperatur</span><strong>${body.temperature}</strong></div><h3>🪨 Rohstoffvorkommen</h3>${resourceRows}<h3>📦 Lager</h3><div class="stat"><span>Oberflächenlager</span><strong>Eigenes Lager</strong></div><div class="stat"><span>Orbitlager</span><strong>Eigenes Lager</strong></div><p class="hint">${description}</p>`;
       });
       solarSystem.appendChild(planet);
     });
