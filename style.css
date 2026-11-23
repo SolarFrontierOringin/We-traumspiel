@@ -2524,3 +2524,29 @@ body > .planet-build-menu .planet-build-header {
 .resource-intermediate{background:#594323!important;border-color:#806437!important;color:#ffebc4}
 .planet-resource-value{display:block;min-width:0;overflow-wrap:anywhere}
 @media(max-width:360px){.planet-storage-grid,.resource-tile-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}.planet-resource-value{font-size:11px;padding:5px 6px}}
+
+
+/* Elyndra – zentraler mystischer Gesteinsplanet mit langsamer sichtbarer Eigenrotation. */
+.body.elyndra{
+  z-index:8;width:68px;height:68px;transform:translate(-50%,-50%);
+  border:1px solid rgba(218,190,255,.98);border-radius:50%;
+  background:
+    radial-gradient(ellipse at 32% 24%,rgba(255,226,255,.95) 0%,rgba(236,133,255,.85) 9%,transparent 27%),
+    radial-gradient(ellipse at 68% 70%,rgba(58,220,255,.95) 0%,rgba(45,133,220,.55) 20%,transparent 42%),
+    radial-gradient(circle at 42% 42%,#b34bd5 0%,#6a2b9c 42%,#24113f 76%,#080b20 100%);
+  box-shadow:inset -12px -9px 16px rgba(0,0,0,.72),inset 5px 4px 12px rgba(255,220,255,.48),
+    0 0 18px rgba(218,116,255,.95),0 0 42px rgba(175,69,255,.62),0 0 72px rgba(71,192,255,.28);
+  overflow:visible;
+}
+.body.elyndra::before{
+  content:"";position:absolute;inset:-7px;border-radius:50%;
+  background:conic-gradient(from 0deg,transparent 0 12%,rgba(91,224,255,.9) 19%,transparent 29%,rgba(255,113,236,.82) 43%,transparent 57%,rgba(120,164,255,.85) 72%,transparent 86%,rgba(255,155,246,.75) 94%,transparent);
+  filter:blur(5px);animation:elyndra-surface-rotation 96s linear infinite;pointer-events:none;
+}
+.body.elyndra::after{
+  content:"";position:absolute;inset:-12px;border:1px solid rgba(217,146,255,.48);
+  border-radius:50%;box-shadow:0 0 15px rgba(170,106,255,.48),inset 0 0 12px rgba(95,206,255,.16);
+  pointer-events:none;
+}
+@keyframes elyndra-surface-rotation{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.body.elyndra .body-label{top:calc(100% + 14px);white-space:nowrap;color:#f4ddff;text-shadow:0 0 8px #b85cff,0 1px 3px #000}
