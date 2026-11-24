@@ -69,7 +69,7 @@ if(languageSelect){
 }
 
 
-// Breaking News: beim Start eines neuen Spielablaufs einmalig zeigen, danach über Aufgaben erneut abspielbar.
+// Breaking News: ausschließlich manuell über Aufgaben > Prolog öffnen.
 const BREAKING_NEWS_SEEN_KEY = 'solarFrontierOriginsBreakingNewsSeen_v1';
 const breakingNewsPopup = document.querySelector('#breaking-news-popup');
 function openBreakingNews() {
@@ -204,10 +204,9 @@ function openStartupUpdate() {
 }
 if (startupPlay && startupIntro) {
   startupPlay.addEventListener('click', () => {
+    // Der Prolog startet nicht automatisch. Er wird ausschließlich
+    // bewusst über Aufgaben > Prolog geöffnet.
     startupIntro.hidden = true;
-    let seen = false;
-    try { seen = localStorage.getItem(BREAKING_NEWS_SEEN_KEY) === '1'; } catch {}
-    if (!seen) openBreakingNews();
   });
 }
 if (startupUpdates && startupIntro && updatePopup) {
