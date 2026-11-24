@@ -23,6 +23,28 @@ radial-gradient(circle at 84% 68%,rgba(255,255,255,.75) 0 1px,transparent 1.6px)
 radial-gradient(circle at 33% 78%,rgba(255,255,255,.65) 0 1px,transparent 1.6px),
 radial-gradient(circle,#18243d 0%,#080f1d 52%,#02050b 100%);
 background-size:140px 120px,190px 160px,230px 180px,170px 210px,auto}
+/* Eigenständiger Nebelhintergrund ausschließlich für Sonnensystem 2 */
+.solar-system.system2-expanded{
+  background-color:#05030d;
+  background-image:
+    radial-gradient(circle at 18% 22%,rgba(255,255,255,.88) 0 1px,transparent 1.6px),
+    radial-gradient(circle at 72% 15%,rgba(255,255,255,.78) 0 1px,transparent 1.6px),
+    radial-gradient(circle at 84% 68%,rgba(255,255,255,.78) 0 1px,transparent 1.6px),
+    radial-gradient(circle at 33% 78%,rgba(255,255,255,.7) 0 1px,transparent 1.6px),
+    radial-gradient(ellipse at 23% 38%,rgba(24,190,213,.34) 0%,rgba(20,113,171,.18) 23%,transparent 48%),
+    radial-gradient(ellipse at 70% 30%,rgba(220,52,164,.34) 0%,rgba(112,54,190,.24) 27%,transparent 54%),
+    radial-gradient(ellipse at 48% 70%,rgba(91,54,191,.34) 0%,rgba(25,103,166,.2) 30%,transparent 57%),
+    radial-gradient(ellipse at 86% 82%,rgba(230,92,174,.2) 0%,transparent 42%),
+    linear-gradient(135deg,#050711 0%,#0a1230 38%,#100821 70%,#05030d 100%);
+  background-size:140px 120px,190px 160px,230px 180px,170px 210px,100% 100%,100% 100%,100% 100%,100% 100%,100% 100%;
+  background-position:0 0,0 0,0 0,0 0,center,center,center,center,center;
+  animation:system2NebulaDrift 100s ease-in-out infinite alternate;
+}
+@keyframes system2NebulaDrift{
+  0%{background-position:0 0,0 0,0 0,0 0,center center,48% 52%,52% 48%,center center,center center}
+  50%{background-position:0 0,0 0,0 0,0 0,53% 47%,center center,47% 53%,53% 47%,center center}
+  100%{background-position:0 0,0 0,0 0,0 0,center center,52% 48%,center center,center center,center center}
+}
 .orbit{position:absolute;left:50%;top:50%;border:1px solid rgba(145,170,210,.28);border-radius:50%;transform:translate(-50%,-50%);pointer-events:none}
 .body-wrap{position:absolute;transform:translate(-50%,-50%);z-index:4}
 .body{position:absolute;left:0;top:0;transform:translate(-50%,-50%);width:42px;height:42px;border:2px solid rgba(255,255,255,.25);border-radius:50%;display:grid;place-items:center;cursor:pointer;user-select:none;padding:0;z-index:2}
@@ -2550,3 +2572,182 @@ body > .planet-build-menu .planet-build-header {
 }
 @keyframes elyndra-surface-rotation{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 .body.elyndra .body-label{top:calc(100% + 14px);white-space:nowrap;color:#f4ddff;text-shadow:0 0 8px #b85cff,0 1px 3px #000}
+
+
+/* Einzigartige Gebäude und Hauptquartier Forschung – Version 1.1.0 */
+.unique-buildings-panel, .research-hq-panel { z-index: 45; }
+.unique-building-card, .research-hq-dashboard, .research-training-panel, .research-departments-panel {
+  background: var(--panel-bg, rgba(15, 25, 42, .92));
+  border: 1px solid var(--panel-border, rgba(130, 170, 220, .25));
+  border-radius: 16px;
+  padding: 16px;
+  margin: 12px 0;
+  box-shadow: 0 10px 28px rgba(0,0,0,.14);
+}
+.unique-building-card-head, .research-hq-heading, .research-training-head {
+  display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
+}
+.unique-building-card h3, .research-hq-heading h3, .research-training-panel h3, .research-departments-panel h3 {
+  margin: 4px 0 8px;
+}
+.unique-building-kicker { display:block; font-size:.68rem; letter-spacing:.12em; opacity:.72; font-weight:800; }
+.unique-building-status {
+  display:inline-flex; align-items:center; border-radius:999px; padding:5px 10px;
+  font-size:.75rem; font-weight:800; white-space:nowrap; background:rgba(140,150,165,.16);
+}
+.unique-building-status.is-built { color:#64d99b; background:rgba(50,180,115,.14); }
+.unique-building-status.is-available { color:#7fc7ff; background:rgba(60,145,230,.14); }
+.unique-building-meta, .unique-building-summary, .research-hq-stats {
+  display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; margin:14px 0;
+}
+.unique-building-meta > div, .unique-building-summary > div, .research-hq-stats > div {
+  display:flex; flex-direction:column; gap:5px; padding:10px; border-radius:10px;
+  background:rgba(130,160,195,.09); min-width:0;
+}
+.unique-building-meta span, .unique-building-summary span, .research-hq-stats span { font-size:.75rem; opacity:.72; }
+.unique-building-meta strong, .unique-building-summary strong, .research-hq-stats strong { font-size:1rem; overflow-wrap:anywhere; }
+.unique-building-note, .unique-building-footnote { font-size:.85rem; opacity:.78; line-height:1.5; }
+.unique-building-card button, .research-training-controls button, .research-assignment-row button, .research-activate-button {
+  border:1px solid rgba(120,170,230,.35); border-radius:10px; padding:10px 14px; font-weight:750;
+  background:rgba(55,125,205,.16); color:inherit; cursor:pointer;
+}
+.unique-building-card button, .unique-open-hq { width:100%; margin-top:8px; }
+.research-training-panel, .research-departments-panel { margin-top:14px; }
+.research-training-controls { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; align-items:end; margin:12px 0; }
+.research-training-controls label { grid-column:1/-1; font-size:.82rem; opacity:.8; }
+.research-training-controls input, .research-assignment-row input {
+  min-width:0; width:100%; box-sizing:border-box; border:1px solid rgba(130,160,195,.35);
+  border-radius:9px; padding:10px; background:rgba(120,145,175,.10); color:inherit;
+}
+.research-training-item { padding:12px; margin:8px 0; border-radius:10px; background:rgba(120,145,175,.08); }
+.research-training-head { font-size:.84rem; }
+.research-training-track { height:8px; background:rgba(130,150,180,.2); border-radius:99px; overflow:hidden; margin:9px 0; }
+.research-training-track span { display:block; height:100%; background:linear-gradient(90deg,#3987dc,#55d3b2); border-radius:99px; }
+.research-training-item small { opacity:.75; }
+.research-department-card { border:1px solid rgba(130,160,195,.22); border-radius:12px; margin:9px 0; overflow:hidden; }
+.research-department-card summary { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:13px; cursor:pointer; list-style:none; }
+.research-department-card summary::-webkit-details-marker { display:none; }
+.research-department-card summary > span:first-child { display:flex; flex-direction:column; gap:4px; }
+.research-department-card summary small { opacity:.72; }
+.research-department-state { font-size:.75rem; font-weight:800; opacity:.75; }
+.research-department-body { padding:0 13px 13px; }
+.research-department-body p { font-size:.83rem; opacity:.78; }
+.research-department-body label { display:block; font-size:.8rem; margin:10px 0 6px; }
+.research-assignment-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; }
+.research-department-placeholder { margin:10px 0; font-size:.8rem; opacity:.72; }
+.research-activate-button.is-active { border-color:rgba(65,190,130,.55); background:rgba(45,175,110,.15); }
+.research-wage-warning { padding:10px; margin-top:10px; border-radius:9px; color:#ffc66e; background:rgba(230,155,45,.12); font-size:.82rem; }
+.researcher-population-overview small { display:block; font-size:.72rem; opacity:.72; margin-top:4px; }
+@media (min-width:700px) {
+  .unique-building-meta, .unique-building-summary, .research-hq-stats { grid-template-columns:repeat(4,minmax(0,1fr)); }
+  .research-training-controls { grid-template-columns:minmax(0,1fr) auto; }
+}
+
+/* Einzigartige Gebäude – Bau-/Abrissaktionen und stabile Forschungsabteilungen */
+.unique-building-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.unique-building-actions .primary-button,.unique-building-actions .danger-button{margin:0;min-height:44px;padding:10px 16px}
+.danger-button{background:#7f1d1d;color:#fff;border:1px solid #b91c1c;border-radius:12px;font-weight:700;cursor:pointer}
+.danger-button:active{transform:translateY(1px)}
+.research-department-card>summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.research-department-card>summary::-webkit-details-marker{display:none}
+.research-department-card[open]>summary{margin-bottom:12px}
+
+
+/* Aufgaben-Auswahl: zwei getrennte Bereiche für Aufträge und Prolog */
+.task-home-tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 8px 0 18px;
+}
+.task-home-tile {
+  min-width: 0;
+  min-height: 150px;
+  padding: 18px 14px;
+  border: 1px solid #2c4565;
+  border-radius: 20px;
+  color: #edf4ff;
+  background: linear-gradient(145deg, #173b63, #10243c);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 9px;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(0,0,0,.18);
+}
+.task-home-tile-prolog {
+  background: linear-gradient(145deg, #4b2b68, #251d3e);
+  border-color: #76518f;
+}
+.task-home-tile:active { transform: scale(.985); }
+.task-home-icon { font-size: 2rem; line-height: 1; }
+.task-home-tile strong { font-size: 1.15rem; }
+.task-home-tile > span:last-child {
+  color: #c5d2e5;
+  font-size: .88rem;
+  line-height: 1.35;
+}
+.task-subview { display: flex; flex-direction: column; gap: 12px; }
+.task-subview h3 { margin: 6px 0; }
+.task-overall-progress {
+  color: var(--muted, #aab8cd);
+  font-weight: 700;
+  padding: 4px 2px 8px;
+}
+.prolog-story-card { margin: 4px 0; }
+.prolog-info-button { margin-top: 12px; min-width: 88px; }
+.prolog-page {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 4px 0 14px;
+}
+.prolog-news-kicker {
+  color: #ff646e;
+  font-weight: 900;
+  letter-spacing: .13em;
+  font-size: .78rem;
+  border-bottom: 2px solid #a72e3c;
+  padding-bottom: 9px;
+}
+.prolog-page h2 { margin: 0; font-size: 1.55rem; }
+.prolog-news-image {
+  width: 100%;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid #34465f;
+  background: #080e1a;
+}
+.prolog-news-image img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+.prolog-news-copy {
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(18, 31, 50, .78);
+  border: 1px solid #2c405d;
+  line-height: 1.55;
+}
+.prolog-news-copy h3 { margin: 0 0 8px; }
+.prolog-news-copy p { margin: 8px 0; }
+.prolog-audio-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 14px;
+  background: #111525;
+  border: 1px solid #34415c;
+}
+.prolog-audio-heading { font-weight: 800; }
+.prolog-audio-panel audio { width: 100%; max-width: 100%; }
+.prolog-back-button { align-self: flex-start; }
+@media (max-width: 420px) {
+  .task-home-tiles { gap: 10px; }
+  .task-home-tile { min-height: 138px; padding: 14px 11px; }
+}

@@ -6,7 +6,7 @@
   <title>Solar Frontier: Origins</title>
   <meta name="theme-color" content="#02050b">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=update-cloud-pyrophor-20261116">
+  <link rel="stylesheet" href="style.css?v=unique-buildings-1.1.0">
 </head>
 <body>
 
@@ -70,6 +70,18 @@
         </svg>
       </div>
       <section class="update-popup-page" data-update-page-content="1">
+        <div class="update-popup-kicker">VERSION 1.1.0 · 24. NOVEMBER 2026</div>
+        <div class="update-popup-message">
+          <h3>🏛️ Neu: Einzigartige Gebäude</h3>
+          <ul class="update-checklist">
+            <li>☑ Eigenes Menü für einzigartige Gebäude.</li>
+            <li>☑ Hauptquartier Forschung auf der Erde – einmalig baubar.</li>
+            <li>☑ Kolonisten können in parallelen Ausbildungsgruppen innerhalb von 2 Ingame-Tagen zu Forschern werden.</li>
+            <li>☑ Vier Forschungsabteilungen mit frei verteilbaren Forschern und Aktivierungsschaltern.</li>
+            <li>☑ Forscherbestand in der Bevölkerungszentrale als reine Übersicht.</li>
+            <li>☑ Ausbildungskosten und tägliche Forschergehälter werden im Finanzbereich erfasst.</li>
+          </ul>
+        </div>
         <div class="update-popup-kicker">LIVE-UPDATE · 16. NOVEMBER 2026</div>
         <h2 id="update-popup-title">New Update meine Freunde</h2>
         <div class="update-popup-message" style="border-left-color:#ffb347">
@@ -302,7 +314,7 @@
       <div>
         <h1>🚀 Solar Frontier: Origins</h1>
         <div class="hint">Sonnensystem · Rohstoffe · Aufbau · Transport</div>
-        <div class="hint version-label">Version 1.0.4_Fix</div>
+        <div class="hint version-label">Version 1.1.0</div>
       </div>
       <div class="header-actions">
         <button id="market-button" class="market-header-button" type="button">🛒 Markt</button>
@@ -360,6 +372,7 @@
         <button id="economy-button" class="menu-item">📊 <span>Wirtschaft</span></button>
         <button id="company-headquarters-button" class="menu-item" hidden>🏢 <span>Unternehmen</span></button>
         <button id="colonists-button" class="menu-item">👥 <span>Bevölkerungszentrale</span></button>
+        <button id="unique-buildings-button" class="menu-item">🏛️ <span>Einzigartige Gebäude</span></button>
         
         <button id="research-button" class="menu-item">🔬 <span>Forschung</span></button>
         <button id="asteroids-button" class="menu-item">☄️ <span>Asteroidenabbau</span></button>
@@ -398,7 +411,7 @@
       </div>
 
       <div class="dev-status">
-        <div><span>📦 Aktuelle Version</span><strong>v1.0.4_Fix</strong></div>
+        <div><span>📦 Aktuelle Version</span><strong>v1.1.0</strong></div>
         <div><span>🚀 Nächstes Update</span><strong>v0.9</strong></div>
         <div><span>📅 Geplant</span><strong>Noch offen</strong></div>
       </div>
@@ -454,7 +467,7 @@
     </section>
 
     <section id="tasks-panel" class="tasks-panel" hidden>
-      <div class="tasks-head"><div><h2>📋 Aufgaben</h2><div class="hint">Einführung · Ziele und Fortschritt</div></div><button id="tasks-close" class="icon-button">✕</button></div>
+      <div class="tasks-head"><div><h2>📋 Aufgaben</h2><div class="hint">Aufgaben und Prolog · Ziele und Geschichte</div></div><button id="tasks-close" class="icon-button">✕</button></div>
       <div id="tasks-content"></div>
     </section>
 
@@ -552,6 +565,22 @@
         </div>
         <div id="ai-companies-content"></div>
       </div>
+    </section>
+
+    <section id="unique-buildings-panel" class="colonists-panel unique-buildings-panel" hidden>
+      <div class="colonists-head">
+        <div><h2>🏛️ Einzigartige Gebäude</h2><div class="hint">Besondere Gebäude · jedes Gebäude nur einmal auf der Erde</div></div>
+        <button id="unique-buildings-close" class="icon-button" type="button" aria-label="Schließen">✕</button>
+      </div>
+      <div id="unique-buildings-content"></div>
+    </section>
+
+    <section id="research-hq-panel" class="colonists-panel research-hq-panel" hidden>
+      <div class="colonists-head">
+        <div><h2>🏛️ Hauptquartier Forschung</h2><div class="hint">Ausbildung, Personalbestand und Forschungsabteilungen</div></div>
+        <button id="research-hq-close" class="icon-button" type="button" aria-label="Schließen">✕</button>
+      </div>
+      <div id="research-hq-window"></div>
     </section>
 
     <section id="economy-panel" class="economy-panel" hidden>
@@ -663,14 +692,15 @@
   <script src="js/game-buildings.js?v=gaspowerplant-20261121-v9"></script>
   <script src="js/resource-registry.js?v=resource-registry-20261115-v2"></script>
   <script src="js/building-registry.js?v=building-registry-20261115-v2"></script>
-  <script src="js/game-save.js?v=save-schema9-gaspowerplant-20261121"></script>
+  <script src="js/game-save.js?v=save-schema11-unique-buildings-1.1.0"></script>
   <script src="js/game.js?v=system2-luna-style-atmosphere-20261123"></script>
   <script src="js/game-research.js?v=research-orders-split-20261122"></script>
   <script src="js/game-workforce.js?v=workforce-powerlink-20261114"></script>
 <script src="js/game-colonists.js?v=recruitment-20261114"></script>
 <script src="js/game-ai.js?v=split-20261105"></script>
 <script src="js/game-company.js?v=split-20261105"></script>
-<script src="js/game-orders.js?v=recruitment-20261114"></script>
+<script src="js/game-orders.js?v=finance-researchers-1.1.0"></script>
+  <script src="js/unique-buildings.js?v=unique-research-hq-1.1.0"></script>
 <script src="js/game-recruitment.js?v=recruitment-20261114"></script>
 <script src="js/game-language-ui.js?v=cloud-restore-pagehide-fix-20261116"></script>
   <script>if ("serviceWorker" in navigator) navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{});</script>
