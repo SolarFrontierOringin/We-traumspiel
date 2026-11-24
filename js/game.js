@@ -2011,7 +2011,7 @@ function renderTasks() {
       <div class="task-overall-progress">${completed} / ${total} Aufgaben abgeschlossen</div>
       ${taskGroups.map(group => {
         const count = group.keys.filter(taskIsComplete).length;
-        const open = panel.dataset['openGroup_' + group.id] !== 'false';
+        const open = panel.dataset['openGroup_' + group.id] === 'true';
         return `<section class="task-group-section">
           <button type="button" class="task-group-toggle" data-task-group="${group.id}" aria-expanded="${open}">
             <span>${open ? '▾' : '▸'} ${group.label}</span><strong>${count} / ${group.keys.length}</strong>
