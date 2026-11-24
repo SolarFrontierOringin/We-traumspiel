@@ -385,7 +385,10 @@ function renderCompanyHeadquarters() {
     if (id === 'sun') return total;
     return total + Math.max(0, Number(getBuildingsOnPlanet(id).habitat) || 0);
   }, 0);
-  const expensePerSecond = habitatCount * (88 / 3600); // 88 GD je Habitat und Ingame-Stunde.
+  const researcherCount = Math.max(0, Number(state.uniqueBuildings?.researchHQ?.researchers) || 0);
+  const researcherSalaryPerDay = researcherCount * 120;
+  const researcherSalaryPerSecond = researcherSalaryPerDay / 86400;
+  const expensePerSecond = habitatCount * (88 / 3600) + researcherSalaryPerSecond; // Habitat-Unterhalt plus Forschergehälter.
   const fmt = amount => `${Number(amount || 0).toLocaleString('de-DE', { maximumFractionDigits: 2 })} GünniDollar`;
   const level = Math.max(1, Number(state.companyOrders?.unlockedLevel) || 1);
   panel.innerHTML = `
@@ -408,10 +411,12 @@ function renderCompanyHeadquarters() {
       </div>
       <div class="hq-finance-rate hq-expenses">
         <h4>↘️ Regelmäßige Ausgaben</h4>
-        <div><span>Pro Ingame-Sekunde</span><strong>${fmt(expensePerSecond)}</strong></div>
-        <div><span>Pro Ingame-Stunde</span><strong>${fmt(expensePerSecond * 3600)}</strong></div>
-        <div><span>Pro Ingame-Tag</span><strong>${fmt(expensePerSecond * 86400)}</strong></div>
-        <small>Regelmäßige Ausgaben werden erst hochgerechnet, wenn sie als laufende Kosten separat erfasst werden.</small>
+        <div><span>Forschergehälter · pro Ingame-Tag</span><strong>${fmt(researcherSalaryPerDay)}</strong></div>
+        <div><span>Forschergehälter · pro Ingame-Sekunde</span><strong>${fmt(researcherSalaryPerSecond)}</strong></div>
+        <div><span>Alle regelmäßigen Ausgaben · pro Ingame-Sekunde</span><strong>${fmt(expensePerSecond)}</strong></div>
+        <div><span>Alle regelmäßigen Ausgaben · pro Ingame-Stunde</span><strong>${fmt(expensePerSecond * 3600)}</strong></div>
+        <div><span>Alle regelmäßigen Ausgaben · pro Ingame-Tag</span><strong>${fmt(expensePerSecond * 86400)}</strong></div>
+        <small>Forschergehälter betragen 120 GD je Forscher und Ingame-Tag. Die tatsächliche Abrechnung wird täglich im Spiel vorgenommen.</small>
       </div>
     </section>
     <section id="hq-company-details" class="hq-company-details"></section>`;

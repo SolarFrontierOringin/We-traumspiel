@@ -1897,102 +1897,140 @@ function renderTasks() {
   const panel = document.querySelector('#tasks-content');
   if (!panel) return;
   updateTasks();
-  const quests = [
-    { id: 'main', label: '📜 Hauptquest', groups: [
-      { id: 'intro', label: '🎯 Einführung', keys: Object.keys(taskTypes).filter(key => !taskTypes[key].group) },
-      { id: 'companyStart', label: '🏢 Der Weg zur Firma', keys: Object.keys(taskTypes).filter(key => taskTypes[key].group === 'companyStart') }
-    ]},
-    { id: 'side', label: '🧭 Nebenquest', groups: [
-      { id: 'moon', label: '🌙 Griff nach dem Mond', keys: Object.keys(taskTypes).filter(key => taskTypes[key].group === 'moon') },
-      { id: 'colonists', label: '👥 Die Kolonisten', keys: Object.keys(taskTypes).filter(key => taskTypes[key].group === 'colonists') }
-    ]}
-  ];
-  const activeQuest = panel.dataset.activeQuest || 'main';
+
+  const view = panel.dataset.activeTaskView || 'home';
+  const breakingNewsPage = panel.dataset.breakingNewsPage === 'true';
+
+  const taskGroupLabels = {
+    moon: '🌙 Griff nach dem Mond',
+    lunaExpansion: '🚀 Ausbau von Luna',
+    colonists: '👥 Die Kolonisten'
+  };
+  const visibleGroups = [...new Set(Object.values(taskTypes)
+    .filter(task => task.group && task.group !== 'companyStart')
+    .map(task => task.group))];
+  const taskGroups = visibleGroups.map(groupId => ({
+    id: groupId,
+    label: taskGroupLabels[groupId] || groupId,
+    keys: Object.keys(taskTypes).filter(key => taskTypes[key].group === groupId)
+  })).filter(group => group.keys.length);
+
+  const renderTaskCard = key => {
+    const t = taskTypes[key], progress = taskProgress(key), done = taskIsComplete(key);
+    const displayProgress = t.unit === 't' ? progress.toFixed(2) : progress.toFixed(0);
+    const target = t.unit === 't' ? t.target.toFixed(0) : t.target;
+    return `<div class="task-card ${done ? 'task-done' : 'task-pending'}">
+      <div class="task-title"><strong>${done ? '✅' : '⬜'} ${t.name}</strong>${t.reward ? `<span class="task-reward">+${t.reward} Forschungspunkte</span>` : ''}</div>
+      <div class="hint">${t.description}</div>
+      <div class="task-progress-text"><span>Fortschritt</span><strong>${displayProgress} / ${target} ${t.unit}</strong></div>
+      <div class="task-progress"><i style="width:${Math.min(100, progress / t.target * 100)}%"></i></div>
+    </div>`;
+  };
+
+  if (breakingNewsPage) {
+    panel.innerHTML = `
+      <div class="prolog-page">
+        <button type="button" class="small-button prolog-back-button" data-prolog-back>← Zurück zum Prolog</button>
+        <div class="prolog-news-kicker">SPACEY · SONDERMELDUNG</div>
+        <h2>Die globale Rohstoffkrise</h2>
+        <div class="prolog-news-image">
+          <img src="Images/prolog-breaking-news.png" alt="Erde aus dem All während der globalen Rohstoffkrise">
+        </div>
+        <div class="prolog-news-copy">
+          <h3>Eine Welt am Limit</h3>
+          <p>Die weltweite Nachfrage nach Rohstoffen steigt unaufhaltsam. Lagerstätten werden knapper, Lieferketten geraten unter Druck und die Industrie steht vor einer beispiellosen Herausforderung.</p>
+          <p>Während die Erde nach neuen Lösungen sucht, richtet sich der Blick der Menschheit zunehmend ins All. SPACEY steht am Beginn einer Mission, die den Zugang zu den Ressourcen des Sonnensystems eröffnen soll.</p>
+        </div>
+        <div class="prolog-audio-panel">
+          <div class="prolog-audio-heading">🎙️ Originalmeldung · Sprachausgabe</div>
+          <audio controls preload="metadata">
+            <source src="audio/Prolog01.mp3" type="audio/mpeg">
+            Dein Browser unterstützt die Audio-Wiedergabe nicht.
+          </audio>
+        </div>
+        <button type="button" class="small-button prolog-back-button" data-prolog-back>← Zurück zum Prolog</button>
+      </div>`;
+    panel.querySelectorAll('[data-prolog-back]').forEach(button => button.addEventListener('click', () => {
+      panel.dataset.breakingNewsPage = 'false';
+      panel.dataset.activeTaskView = 'prolog';
+      renderTasks();
+    }));
+    return;
+  }
+
+  if (view === 'home') {
+    panel.innerHTML = `
+      <div class="task-home-tiles">
+        <button type="button" class="task-home-tile task-home-tile-quests" data-task-view="tasks">
+          <span class="task-home-icon">📋</span>
+          <strong>Aufgaben</strong>
+          <span>Alle Aufträge und Ziele</span>
+        </button>
+        <button type="button" class="task-home-tile task-home-tile-prolog" data-task-view="prolog">
+          <span class="task-home-icon">📖</span>
+          <strong>Prolog</strong>
+          <span>Die Geschichte von Solar Frontier</span>
+        </button>
+      </div>`;
+    panel.querySelectorAll('[data-task-view]').forEach(button => button.addEventListener('click', () => {
+      panel.dataset.activeTaskView = button.dataset.taskView;
+      panel.dataset.breakingNewsPage = 'false';
+      renderTasks();
+    }));
+    return;
+  }
+
+  if (view === 'prolog') {
+    panel.innerHTML = `
+      <div class="task-subview">
+        <button type="button" class="small-button" data-task-home>← Zur Auswahl</button>
+        <h3>📖 Prolog – Anfang einer Ära</h3>
+        <div class="task-card task-pending prolog-story-card">
+          <div class="task-title"><strong>📺 Die globale Rohstoffkrise</strong></div>
+          <div class="hint">Die erste Breaking-News-Sendung. Erfahre, warum SPACEY eine Zukunftsmission ins All startet.</div>
+          <button type="button" class="small-button prolog-info-button" data-open-breaking-news>Info</button>
+        </div>
+      </div>`;
+    panel.querySelector('[data-task-home]')?.addEventListener('click', () => {
+      panel.dataset.activeTaskView = 'home';
+      renderTasks();
+    });
+    panel.querySelector('[data-open-breaking-news]')?.addEventListener('click', () => {
+      panel.dataset.breakingNewsPage = 'true';
+      renderTasks();
+    });
+    return;
+  }
+
+  const total = taskGroups.reduce((sum, group) => sum + group.keys.length, 0);
+  const completed = taskGroups.reduce((sum, group) => sum + group.keys.filter(taskIsComplete).length, 0);
   panel.innerHTML = `
-    <div class="task-quest-sections">
-      ${quests.map(quest => {
-        const count = quest.groups.reduce((sum, group) => sum + group.keys.filter(taskIsComplete).length, 0);
-        const total = quest.groups.reduce((sum, group) => sum + group.keys.length, 0);
-        const open = panel.dataset['openQuest' + quest.id] !== 'false';
-        return `<section class="task-quest-section">
-          <button type="button" class="task-quest-toggle" data-task-quest="${quest.id}" aria-expanded="${open}">
-            <span>${open ? '▾' : '▸'} ${quest.label}</span><strong>${count} / ${total}</strong>
+    <div class="task-subview">
+      <button type="button" class="small-button" data-task-home>← Zur Auswahl</button>
+      <h3>📋 Aufgaben · Ziele und Fortschritt</h3>
+      <div class="task-overall-progress">${completed} / ${total} Aufgaben abgeschlossen</div>
+      ${taskGroups.map(group => {
+        const count = group.keys.filter(taskIsComplete).length;
+        const open = panel.dataset['openGroup_' + group.id] !== 'false';
+        return `<section class="task-group-section">
+          <button type="button" class="task-group-toggle" data-task-group="${group.id}" aria-expanded="${open}">
+            <span>${open ? '▾' : '▸'} ${group.label}</span><strong>${count} / ${group.keys.length}</strong>
           </button>
-          ${open ? `<div class="task-quest-content">${quest.groups.map(group => {
-            const groupStateKey = quest.id + '_' + group.id;
-            const groupOpen = panel.dataset['openGroup_' + groupStateKey] !== 'false';
-            const groupCount = group.keys.filter(taskIsComplete).length;
-            return `<section class="task-group-section">
-              <button type="button" class="task-group-toggle" data-task-group="${groupStateKey}" aria-expanded="${groupOpen}">
-                <span>${groupOpen ? '▾' : '▸'} ${group.label}</span><strong>${groupCount} / ${group.keys.length}</strong>
-              </button>
-              ${groupOpen ? `<div class="tasks-list">${group.keys.map(key => {
-              const t = taskTypes[key], progress = taskProgress(key), done = taskIsComplete(key);
-              const displayProgress = t.unit === 't' ? progress.toFixed(2) : progress.toFixed(0);
-              const target = t.unit === 't' ? t.target.toFixed(0) : t.target;
-              return `<div class="task-card ${done ? 'task-done' : 'task-pending'}">
-                <div class="task-title"><strong>${done ? '✅' : '⬜'} ${t.name}</strong>${t.reward ? `<span class="task-reward">+${t.reward} Forschungspunkte</span>` : ''}</div>
-                <div class="hint">${t.description}</div>
-                ${key === 'company_start_name' && taskIsComplete('company_start_buildings') && !done ? '<button type="button" class="small-button" data-task-company-name>🏢 Firmennamen eingeben</button>' : ''}
-                ${key === 'company_start_name' && done ? `<div class="hint">Firmenname: <strong>${escapeCompanyText(state.companyName)}</strong></div>` : ''}
-                <div class="task-progress-text"><span>Fortschritt</span><strong>${displayProgress} / ${target} ${t.unit}</strong></div>
-                <div class="task-progress"><i style="width:${Math.min(100, progress / t.target * 100)}%"></i></div>
-              </div>`;
-            }).join('')}</div>` : ''}
-            </section>`;
-          }).join('')}</div>` : ''}
+          ${open ? `<div class="tasks-list">${group.keys.map(renderTaskCard).join('')}</div>` : ''}
         </section>`;
       }).join('')}
     </div>`;
-  const introGroup = panel.querySelector('[data-task-group="main_intro"]')?.parentElement;
-  if (introGroup) {
-    const replay = document.createElement('div');
-    replay.className = 'task-card task-pending breaking-news-task';
-    replay.innerHTML = '<div class="task-title"><strong>📺 Einführung – Die globale Rohstoffkrise</strong><button type="button" class="small-button" data-replay-breaking-news>Info</button></div><div class="hint">Die erste Breaking-News-Sendung über die Rohstoffkrise und SPACEYs Mission jederzeit erneut ansehen.</div>';
-    // Direkter Handler am dynamisch erzeugten Info-Button: funktioniert auch dann,
-    // wenn ein Browser einen älteren delegierten UI-Handler im Cache hält.
-    replay.querySelector('[data-replay-breaking-news]')?.addEventListener('click', event => {
-      event.stopPropagation();
-      const popup = document.querySelector('#breaking-news-popup');
-      if (!popup) return;
-      popup.hidden = false;
-      popup.setAttribute('aria-hidden', 'false');
-      const audio = document.querySelector('#breaking-news-audio');
-      if (audio) {
-        audio.pause();
-        audio.currentTime = 0;
-        const playback = audio.play();
-        if (playback && typeof playback.catch === 'function') playback.catch(() => {});
-      }
-    });
-    const groupContent = introGroup.querySelector('.tasks-list');
-    if (groupContent) groupContent.prepend(replay);
-    else {
-      const toggle = introGroup.querySelector('.task-group-toggle');
-      if (toggle) toggle.insertAdjacentElement('afterend', replay);
-    }
-  }
-  panel.querySelectorAll('[data-task-quest]').forEach(button => button.addEventListener('click', () => {
-    const id = button.dataset.taskQuest;
-    panel.dataset['openQuest' + id] = button.getAttribute('aria-expanded') === 'true' ? 'false' : 'true';
+  panel.querySelector('[data-task-home]')?.addEventListener('click', () => {
+    panel.dataset.activeTaskView = 'home';
     renderTasks();
-  }));
+  });
   panel.querySelectorAll('[data-task-group]').forEach(button => button.addEventListener('click', () => {
     const id = button.dataset.taskGroup;
     panel.dataset['openGroup_' + id] = button.getAttribute('aria-expanded') === 'true' ? 'false' : 'true';
     renderTasks();
   }));
-  panel.querySelector('[data-task-company-name]')?.addEventListener('click', () => {
-    const name = prompt('Wie soll deine Firma heißen?');
-    if (name !== null && name.trim()) {
-      state.companyName = name.trim().slice(0, 60);
-      state.tasks.companyNameChosen = true;
-      saveGame(false);
-      taskProgressUpdate();
-      renderTasks();
-    }
-  });
 }
+
 function taskProgressUpdate() {
   const changed = updateTasks();
   const panel = document.querySelector('#tasks-panel');

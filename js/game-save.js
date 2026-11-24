@@ -5,8 +5,8 @@
 
 // Spiel- und Speicherformatversion getrennt halten:
 // appVersion = veröffentlichte Spielversion, schemaVersion = Struktur des JSON-Spielstands.
-const SFO_APP_VERSION = '1.0.4_Fix';
-const SFO_SAVE_SCHEMA_VERSION = 10;
+const SFO_APP_VERSION = '1.1.0';
+const SFO_SAVE_SCHEMA_VERSION = 11;
 const SFO_LAST_APP_VERSION_KEY = 'sfo_last_app_version_v1';
 
 function sfoCompareVersions(a, b) {
@@ -49,7 +49,7 @@ function sfoMigrateSaveData(data) {
 
   let migrated = false;
   // v1-v3 verwendeten "version" ohne separates Schemafeld.
-  // v5-v10 ergänzen Register, Planeten, 4t-Atmosphärenregel, erlaubte Gase, Gasplaneten-Atmosphären, Gaskraftwerk und Elyndras Nickelvorkommen.
+  // v5-v11 ergänzen Register, Planeten, 4t-Atmosphärenregel, erlaubte Gase, Gasplaneten-Atmosphären, Gaskraftwerk, Elyndras Nickelvorkommen und einzigartige Gebäude.
   if (currentSchema < SFO_SAVE_SCHEMA_VERSION) {
     data.schemaVersion = SFO_SAVE_SCHEMA_VERSION;
     data.version = SFO_SAVE_SCHEMA_VERSION;
@@ -97,6 +97,20 @@ function sfoMigrateSaveData(data) {
     if (data.bodies.elyndra.resources.nickelOre === undefined) {
       data.bodies.elyndra.resources.nickelOre = 10000000;
     }
+    migrated = true;
+  }
+  // v11: Einzigartige Gebäude und das Forschungshauptquartier erhalten einen eigenen, savegame-sicheren Status.
+  if (!data.state.uniqueBuildings || typeof data.state.uniqueBuildings !== 'object') {
+    data.state.uniqueBuildings = {};
+    migrated = true;
+  }
+  if (!data.state.uniqueBuildings.researchHQ || typeof data.state.uniqueBuildings.researchHQ !== 'object') {
+    data.state.uniqueBuildings.researchHQ = {
+      built: false, researchers: 0, trainingQueue: [],
+      departments: { nuclear: 0, space: 0, atmosphere: 0, probes: 0 },
+      active: { nuclear: false, space: false, atmosphere: false, probes: false },
+      lastSalaryDay: 0, unpaidWages: 0
+    };
     migrated = true;
   }
   if (data.bodies.venus?.resources && typeof data.bodies.venus.resources === 'object') {
