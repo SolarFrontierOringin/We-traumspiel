@@ -2751,3 +2751,12 @@ body > .planet-build-menu .planet-build-header {
   .task-home-tiles { gap: 10px; }
   .task-home-tile { min-height: 138px; padding: 14px 11px; }
 }
+
+/* Aufgabenübersicht: kompakte, standardmäßig eingeklappte Gruppen */
+.task-group-section{margin:10px 0;border:1px solid rgba(130,160,200,.22);border-radius:15px;overflow:hidden}
+.task-group-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 14px;min-height:54px;text-align:left}
+.task-group-toggle strong{white-space:nowrap;font-variant-numeric:tabular-nums}
+.task-group-section .tasks-list{padding:8px 10px;display:grid;gap:9px}
+.task-group-section .task-card{margin:0}
+.prolog-audio-panel audio{display:block;width:100%;min-height:48px;accent-color:#287bd1}
+.prolog-audio-panel{overflow:hidden}
