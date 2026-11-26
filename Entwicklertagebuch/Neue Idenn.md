@@ -15,6 +15,10 @@
 - [] Neue Gebäude Einfügen und auf Funktion Testen 
 
 
-### 1 Sonnensystem 
+## 1 Sonnensystem 
 - [] Überarbeitung des Desing (Dunkler und Planeten wieder auf Umlauf bringen
-- [] Gasplaneten bekommen neue Monde ? In Planung
+- [] Gasplaneten bekommen neue Monde ? In Planung Überlegung um Umgesetzt wird
+- [] Neue Umgebung und Anpassung des Orbits.
+
+## Neue Ideen für den Orbit 
+# Neue Idee ist das man ein neues Orbit System, neue Satelitten, massive Weltraum erweiterung
