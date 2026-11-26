@@ -13,3 +13,8 @@
 ## Einzigartige Gebäude 
 - [x] planen 
 - [] Neue Gebäude Einfügen und auf Funktion Testen 
+
+
+### 1 Sonnensystem 
+- [] Überarbeitung des Desing (Dunkler und Planeten wieder auf Umlauf bringen
+- [] Gasplaneten bekommen neue Monde ? In Planung
