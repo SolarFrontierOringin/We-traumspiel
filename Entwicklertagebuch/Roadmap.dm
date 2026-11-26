@@ -11,3 +11,7 @@ Neue Funktion Einzigartige Gebäude
 
 Story Weiterentwickeln 
 [] Story neu Schreiben mit neuen Prolog und Bilder
+
+
+Solarstrom Anoassung für den Mond Luna 
+[ ] 
