@@ -2800,3 +2800,15 @@ body > .planet-build-menu .planet-build-header {
   .task-home-tiles { gap: 10px; }
   .task-home-tile { min-height: 138px; padding: 14px 11px; }
 }
+
+
+/* Leistungsmodus während Pinch-Zoom: teure Nebel-Filter/Animationen pausieren. */
+#solar-system.is-zooming .asteroid-nebula{
+  animation-play-state:paused !important;
+  filter:none !important;
+  opacity:.28 !important;
+  will-change:auto;
+}
+#solar-system.is-zooming .asteroid-belt-star{
+  box-shadow:none !important;
+}
