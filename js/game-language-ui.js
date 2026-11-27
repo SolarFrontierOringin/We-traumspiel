@@ -293,7 +293,7 @@ document.addEventListener('visibilitychange', () => {
 });
 
 
-// Sonnensystem: zwei Finger zum Verschieben/Zoomen; ein Finger zum normalen Schwenken.
+// Sonnensystem: flüssiges Zwei-Finger-Zoomen und Ein-Finger-Schwenken.
 (function setupSolarSystemGestures(){
   const viewport = document.querySelector('#solar-system-viewport');
   const system = document.querySelector('#solar-system');
@@ -301,12 +301,29 @@ document.addEventListener('visibilitychange', () => {
   let zoom = 1;
   let gesture = null;
   let oneFingerMoved = false;
+  let pendingFrame = 0;
+  let pendingTouch = null;
   const dist = (a,b) => Math.hypot(b.clientX-a.clientX,b.clientY-a.clientY);
   const mid = (a,b) => ({x:(a.clientX+b.clientX)/2,y:(a.clientY+b.clientY)/2});
   const point = t => ({clientX:t.clientX,clientY:t.clientY});
+
+  const applyPinch = () => {
+    pendingFrame = 0;
+    if (!gesture || gesture.kind !== 'pinch' || !pendingTouch) return;
+    const e = pendingTouch;
+    const a=point(e.touches[0]), b=point(e.touches[1]), m=mid(a,b);
+    const minZoom=system.classList.contains('system2-expanded')?0.2:0.35;
+    const nextZoom=Math.max(minZoom,Math.min(2.2,gesture.zoom*dist(a,b)/gesture.distance));
+    const ratio=nextZoom/gesture.zoom;
+    zoom=nextZoom;
+    system.style.zoom=String(zoom);
+    // Viewport-Position nur einmal beim Start messen: vermeidet Layout-Abfragen
+    // nach jeder Zoom-Änderung und reduziert Reflow-Arbeit auf Mobilgeräten.
+    viewport.scrollLeft=Math.max(0,(gesture.scrollLeft+gesture.midX-gesture.left)*ratio-(m.x-gesture.left));
+    viewport.scrollTop=Math.max(0,(gesture.scrollTop+gesture.midY-gesture.top)*ratio-(m.y-gesture.top));
+  };
+
   viewport.addEventListener('touchstart', e => {
-    // Das Gebäudemenü besitzt eigenes natives Touch-Scrolling. Diese Gesten
-    // dürfen nicht vom Pan-/Zoom-System des Sonnensystems abgefangen werden.
     if (e.target.closest('.planet-build-menu')) {
       gesture = null;
       oneFingerMoved = false;
@@ -318,22 +335,19 @@ document.addEventListener('visibilitychange', () => {
       oneFingerMoved=false;
     } else if (e.touches.length >= 2) {
       const a=point(e.touches[0]), b=point(e.touches[1]), m=mid(a,b);
+      const rect=viewport.getBoundingClientRect();
       gesture={kind:'pinch',distance:Math.max(1,dist(a,b)),zoom,midX:m.x,midY:m.y,
-        scrollLeft:viewport.scrollLeft,scrollTop:viewport.scrollTop};
+        left:rect.left,top:rect.top,scrollLeft:viewport.scrollLeft,scrollTop:viewport.scrollTop};
+      system.classList.add('is-zooming');
     }
   }, {passive:true});
+
   viewport.addEventListener('touchmove', e => {
     if (!gesture) return;
     if (e.touches.length >= 2 && gesture.kind==='pinch') {
       e.preventDefault();
-      const a=point(e.touches[0]), b=point(e.touches[1]), m=mid(a,b);
-      const minZoom=system.classList.contains('system2-expanded')?0.2:0.35;
-      const nextZoom=Math.max(minZoom,Math.min(2.2,gesture.zoom*dist(a,b)/gesture.distance));
-      const ratio=nextZoom/gesture.zoom;
-      zoom=nextZoom;
-      system.style.zoom=String(zoom);
-      viewport.scrollLeft=Math.max(0,(gesture.scrollLeft+gesture.midX-viewport.getBoundingClientRect().left)*ratio-(m.x-viewport.getBoundingClientRect().left));
-      viewport.scrollTop=Math.max(0,(gesture.scrollTop+gesture.midY-viewport.getBoundingClientRect().top)*ratio-(m.y-viewport.getBoundingClientRect().top));
+      pendingTouch=e;
+      if (!pendingFrame) pendingFrame=requestAnimationFrame(applyPinch);
     } else if (e.touches.length===1 && gesture.kind==='pan') {
       const t=e.touches[0], dx=t.clientX-gesture.x, dy=t.clientY-gesture.y;
       if (Math.abs(dx)+Math.abs(dy)>6) oneFingerMoved=true;
@@ -344,15 +358,22 @@ document.addEventListener('visibilitychange', () => {
       }
     }
   }, {passive:false});
-  const reset=()=>{gesture=null;};
+
+  const reset=()=>{
+    gesture=null;
+    pendingTouch=null;
+    if (pendingFrame) cancelAnimationFrame(pendingFrame);
+    pendingFrame=0;
+    system.classList.remove('is-zooming');
+  };
   viewport.addEventListener('touchend', e => {
     if (e.touches.length===1) {
+      system.classList.remove('is-zooming');
       const t=e.touches[0];
       gesture={kind:'pan',x:t.clientX,y:t.clientY,scrollLeft:viewport.scrollLeft,scrollTop:viewport.scrollTop};
     } else if (e.touches.length===0) reset();
   }, {passive:true});
   viewport.addEventListener('touchcancel', reset, {passive:true});
   viewport.setAttribute('aria-description','Mit einem Finger verschieben oder Planeten auswählen; mit zwei Fingern verschieben und zoomen.');
-})(); 
-
+})();
 ['pointerdown','touchstart','keydown'].forEach(evt=>document.addEventListener(evt, unlockAudio, {once:true, passive:true}));
