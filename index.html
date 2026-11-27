@@ -6,7 +6,7 @@
   <title>Solar Frontier: Origins</title>
   <meta name="theme-color" content="#02050b">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=unique-buildings-1.1.0">
+  <link rel="stylesheet" href="style.css?v=release-1.1.1">
 </head>
 <body>
 
@@ -70,7 +70,17 @@
         </svg>
       </div>
       <section class="update-popup-page" data-update-page-content="1">
-        <div class="update-popup-kicker">VERSION 1.1.0 · 24. NOVEMBER 2026</div>
+        <div class="update-popup-kicker">VERSION 1.1.1 · 27. NOVEMBER 2026</div>
+        <div class="update-popup-message">
+          <h3>🪐 Asteroidengürtel überarbeitet</h3>
+          <ul class="update-checklist">
+            <li>☑ Asteroiden erscheinen ausschließlich innerhalb des Asteroidengürtels.</li>
+            <li>☑ Grüner und violetter Gasnebel mit langsamer, gegenläufiger Bewegung.</li>
+            <li>☑ Sonnensystem-Karte auf 2.100 px erweitert und Umlaufbahnen nach der Abstandstabelle ausgerichtet.</li>
+            <li>☑ Spielstände werden beim Update sicher auf Speicherformat 12 migriert; vor der Migration wird eine Sicherung angelegt.</li>
+          </ul>
+        </div>
+
         <div class="update-popup-message">
           <h3>🏛️ Neu: Einzigartige Gebäude</h3>
           <ul class="update-checklist">
@@ -260,7 +270,7 @@
     </article>
   </section>
 
-  <!-- Legacy-Breaking-News-Popup: kein automatischer Start; der Prolog wird über Aufgaben > Prolog geöffnet. -->
+  <!-- Breaking News: Prolog beim ersten Spielstart und jederzeit über Aufgaben > Einführung abrufbar -->
   <section id="breaking-news-popup" class="update-popup-overlay breaking-news-overlay" role="dialog" aria-modal="true" aria-labelledby="breaking-news-title" hidden>
     <article class="update-popup-card story-intro-card breaking-news-card">
       <button id="breaking-news-close" class="update-popup-close" type="button" aria-label="Breaking News schließen">✕</button>
@@ -270,7 +280,7 @@
       </div>
       <div class="breaking-news-audio">
         <div class="breaking-news-audio-label">🎙️ Originalmeldung · Prolog</div>
-        <audio id="breaking-news-audio" controls preload="auto" playsinline controlslist="nodownload">
+        <audio id="breaking-news-audio" controls preload="metadata">
           <source src="audio/Prolog01.mp3" type="audio/mpeg">
           Dein Browser unterstützt die Audiowiedergabe nicht.
         </audio>
@@ -314,7 +324,7 @@
       <div>
         <h1>🚀 Solar Frontier: Origins</h1>
         <div class="hint">Sonnensystem · Rohstoffe · Aufbau · Transport</div>
-        <div class="hint version-label">Version 1.1.0</div>
+        <div class="hint version-label">Version 1.1.1</div>
       </div>
       <div class="header-actions">
         <button id="market-button" class="market-header-button" type="button">🛒 Markt</button>
@@ -411,7 +421,7 @@
       </div>
 
       <div class="dev-status">
-        <div><span>📦 Aktuelle Version</span><strong>v1.1.0</strong></div>
+        <div><span>📦 Aktuelle Version</span><strong>v1.1.1</strong></div>
         <div><span>🚀 Nächstes Update</span><strong>v0.9</strong></div>
         <div><span>📅 Geplant</span><strong>Noch offen</strong></div>
       </div>
@@ -692,15 +702,15 @@
   <script src="js/game-buildings.js?v=gaspowerplant-20261121-v9"></script>
   <script src="js/resource-registry.js?v=resource-registry-20261115-v2"></script>
   <script src="js/building-registry.js?v=building-registry-20261115-v2"></script>
-  <script src="js/game-save.js?v=save-schema11-unique-buildings-1.1.0"></script>
+  <script src="js/game-save.js?v=save-schema12-release-1.1.1"></script>
   <script src="js/game.js?v=system2-luna-style-atmosphere-20261123"></script>
   <script src="js/game-research.js?v=research-orders-split-20261122"></script>
   <script src="js/game-workforce.js?v=workforce-powerlink-20261114"></script>
 <script src="js/game-colonists.js?v=recruitment-20261114"></script>
 <script src="js/game-ai.js?v=split-20261105"></script>
 <script src="js/game-company.js?v=split-20261105"></script>
-<script src="js/game-orders.js?v=finance-researchers-1.1.0"></script>
-  <script src="js/unique-buildings.js?v=unique-research-hq-1.1.0"></script>
+<script src="js/game-orders.js?v=finance-researchers-1.1.1"></script>
+  <script src="js/unique-buildings.js?v=unique-research-hq-1.1.1"></script>
 <script src="js/game-recruitment.js?v=recruitment-20261114"></script>
 <script src="js/game-language-ui.js?v=cloud-restore-pagehide-fix-20261116"></script>
   <script>if ("serviceWorker" in navigator) navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{});</script>
