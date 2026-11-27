@@ -7,6 +7,7 @@ Mond    190 px. | 7px
 Mars | 250 px | 15 px
 Ceres 320 px | 11px
 Jupiter 410 px | 10 px 
+Europa 410 Px | 10 px 
 
 Astrroidengürtel von 420px bis 640px
 Saturn | 670 px | 10px
