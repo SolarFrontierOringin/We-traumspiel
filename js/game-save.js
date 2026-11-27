@@ -5,8 +5,8 @@
 
 // Spiel- und Speicherformatversion getrennt halten:
 // appVersion = veröffentlichte Spielversion, schemaVersion = Struktur des JSON-Spielstands.
-const SFO_APP_VERSION = '1.1.0';
-const SFO_SAVE_SCHEMA_VERSION = 11;
+const SFO_APP_VERSION = '1.1.1';
+const SFO_SAVE_SCHEMA_VERSION = 12;
 const SFO_LAST_APP_VERSION_KEY = 'sfo_last_app_version_v1';
 
 function sfoCompareVersions(a, b) {
@@ -49,7 +49,9 @@ function sfoMigrateSaveData(data) {
 
   let migrated = false;
   // v1-v3 verwendeten "version" ohne separates Schemafeld.
-  // v5-v11 ergänzen Register, Planeten, 4t-Atmosphärenregel, erlaubte Gase, Gasplaneten-Atmosphären, Gaskraftwerk, Elyndras Nickelvorkommen und einzigartige Gebäude.
+  // v5-v11 ergänzen Register, Planeten, 4t-Atmosphärenregel, erlaubte Gase,
+  // Gasplaneten-Atmosphären, Gaskraftwerk, Elyndras Nickelvorkommen und einzigartige Gebäude.
+  // v12 vereinheitlicht die gespeicherten Bahnradii von Sonnensystem 1.
   if (currentSchema < SFO_SAVE_SCHEMA_VERSION) {
     data.schemaVersion = SFO_SAVE_SCHEMA_VERSION;
     data.version = SFO_SAVE_SCHEMA_VERSION;
@@ -60,6 +62,22 @@ function sfoMigrateSaveData(data) {
   }
   if (!data.bodies || typeof data.bodies !== 'object' || Array.isArray(data.bodies)) {
     throw new Error('Ungültiger Spielstand: Planetendaten fehlen.');
+  }
+  // v12: Verbindliche Bahnradii aus der Entwickler-Abstandstabelle.
+  // Im Save wird weiterhin der Durchmesser gespeichert (Radius × 2).
+  if (currentSchema < 12) {
+    const orbitRadiiPx = {
+      mercury: 65, venus: 105, earth: 190, mars: 250, ceres: 320,
+      jupiter: 410, saturn: 670, io: 710, uranus: 730, neptune: 750,
+      pluto: 790, nivaris: 830
+    };
+    for (const [planetId, radiusPx] of Object.entries(orbitRadiiPx)) {
+      if (data.bodies[planetId]) data.bodies[planetId].orbit = radiusPx * 2;
+    }
+    if (data.bodies.luna) data.bodies.luna.orbit = 0;
+    data.schemaVersion = 12;
+    data.version = 12;
+    migrated = true;
   }
   // v7-v8: veraltete Atmosphärengase und Gaslager entfernen; Durchmesser ergänzen und Gasplaneten-Atmosphären neu initialisieren.
   const sfoDiameters = { mercury:2600, venus:7200, earth:6370, luna:1738, mars:3390, jupiter:69911, saturn:58232, uranus:25326, neptune:24622, pluto:1919, ceres:582, io:3643, nivaris:9842, noxaris:6400, elyndra:25000, themepatin:5190, pyrophor:3942, rethroxid:1988 };
@@ -308,6 +326,18 @@ function loadGame(showMessage = true) {
     if (typeof sfoMergeBodyResourceDefaults === 'function') sfoMergeBodyResourceDefaults(data.bodies);
     if (typeof sfoNormalizeBuildingSave === 'function') sfoNormalizeBuildingSave(data.state, data.bodies);
     Object.assign(bodies, data.bodies);
+    // Umlaufbahnen sind feste Spieldaten und dürfen nicht durch ältere
+    // gespeicherte Orbit-Werte überschrieben werden. Ressourcen, Gebäude,
+    // Atmosphären und sonstiger Spielfortschritt bleiben unangetastet.
+    const SFO_ORBIT_RADII_PX = {
+      mercury: 65, venus: 105, earth: 190, mars: 250, ceres: 320,
+      jupiter: 410, saturn: 670, io: 710, uranus: 730, neptune: 750,
+      pluto: 790, nivaris: 830
+    };
+    for (const [planetId, radiusPx] of Object.entries(SFO_ORBIT_RADII_PX)) {
+      if (bodies[planetId]) bodies[planetId].orbit = radiusPx * 2;
+    }
+    if (bodies.luna) bodies.luna.orbit = 0; // Luna teilt die Erdbahn.
     // Neue Golderzvorkommen für bestehende Spielstände ergänzen, ohne bereits abgebaute Bestände aufzufüllen.
     for (const [planetId, initialGoldOre] of Object.entries({ earth: 5000000, luna: 7000000, mars: 11000000 })) {
       if (bodies[planetId] && bodies[planetId].resources && !Object.prototype.hasOwnProperty.call(bodies[planetId].resources, 'goldOre')) bodies[planetId].resources.goldOre = initialGoldOre;

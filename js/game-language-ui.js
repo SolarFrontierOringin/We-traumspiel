@@ -69,7 +69,7 @@ if(languageSelect){
 }
 
 
-// Breaking News: ausschließlich manuell über Aufgaben > Prolog öffnen.
+// Breaking News: beim Start eines neuen Spielablaufs einmalig zeigen, danach über Aufgaben erneut abspielbar.
 const BREAKING_NEWS_SEEN_KEY = 'solarFrontierOriginsBreakingNewsSeen_v1';
 const breakingNewsPopup = document.querySelector('#breaking-news-popup');
 function openBreakingNews() {
@@ -204,9 +204,10 @@ function openStartupUpdate() {
 }
 if (startupPlay && startupIntro) {
   startupPlay.addEventListener('click', () => {
-    // Der Prolog startet nicht automatisch. Er wird ausschließlich
-    // bewusst über Aufgaben > Prolog geöffnet.
     startupIntro.hidden = true;
+    let seen = false;
+    try { seen = localStorage.getItem(BREAKING_NEWS_SEEN_KEY) === '1'; } catch {}
+    if (!seen) openBreakingNews();
   });
 }
 if (startupUpdates && startupIntro && updatePopup) {
@@ -326,7 +327,7 @@ document.addEventListener('visibilitychange', () => {
     if (e.touches.length >= 2 && gesture.kind==='pinch') {
       e.preventDefault();
       const a=point(e.touches[0]), b=point(e.touches[1]), m=mid(a,b);
-      const minZoom=system.classList.contains('system2-expanded')?0.25:0.6;
+      const minZoom=system.classList.contains('system2-expanded')?0.2:0.35;
       const nextZoom=Math.max(minZoom,Math.min(2.2,gesture.zoom*dist(a,b)/gesture.distance));
       const ratio=nextZoom/gesture.zoom;
       zoom=nextZoom;

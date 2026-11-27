@@ -1944,7 +1944,7 @@ function renderTasks() {
         <div class="prolog-audio-panel">
           <div class="prolog-audio-heading">🎙️ Originalmeldung · Sprachausgabe</div>
           <audio controls preload="metadata">
-            <source src="audio/Prolog01.mp3" type="audio/mpeg">
+            <source src="audio/audio_Prolog01.mp3" type="audio/mpeg">
             Dein Browser unterstützt die Audio-Wiedergabe nicht.
           </audio>
         </div>
@@ -2011,7 +2011,7 @@ function renderTasks() {
       <div class="task-overall-progress">${completed} / ${total} Aufgaben abgeschlossen</div>
       ${taskGroups.map(group => {
         const count = group.keys.filter(taskIsComplete).length;
-        const open = panel.dataset['openGroup_' + group.id] === 'true';
+        const open = panel.dataset['openGroup_' + group.id] !== 'false';
         return `<section class="task-group-section">
           <button type="button" class="task-group-toggle" data-task-group="${group.id}" aria-expanded="${open}">
             <span>${open ? '▾' : '▸'} ${group.label}</span><strong>${count} / ${group.keys.length}</strong>
@@ -2296,36 +2296,8 @@ function setupSaveMenu() {
 }
 
 function rocketBodyPoint(id) {
-  // Asteroidengürtel im äußeren Bereich zwischen Mars und Jupiter.
-  // Entdeckte Asteroiden bleiben hier sichtbar, bis sie verschwinden/ablaufen.
-  const asteroidOrders = ensureResearchOrders();
-  const visibleAsteroids = asteroidOrders.discoveredAsteroids.filter(a => !a.vanished && Number(a.expiresAt) > gameNow());
-  const belt = document.createElement('div');
-  belt.className = 'asteroid-belt-orbit';
-  belt.setAttribute('aria-hidden', 'true');
-  belt.style.width = '520px';
-  belt.style.height = '520px';
-  solarSystem.appendChild(belt);
-  visibleAsteroids.forEach((asteroid, index) => {
-    const marker = document.createElement('button');
-    marker.type = 'button';
-    marker.className = 'asteroid-system-marker';
-    marker.textContent = asteroidTypeByKey(asteroid.typeKey).icon || '☄️';
-    marker.title = `${asteroid.name} · ${asteroidTypeByKey(asteroid.typeKey).name}`;
-    marker.setAttribute('aria-label', marker.title);
-    const angle = ((Number(asteroid.number) || index + 1) * 137.508 + 18) * Math.PI / 180;
-    const radius = 250 + ((Number(asteroid.number) || index) % 5 - 2) * 13;
-    marker.style.left = `calc(50% + ${Math.cos(angle) * radius}px)`;
-    marker.style.top = `calc(50% + ${Math.sin(angle) * radius}px)`;
-    marker.addEventListener('click', () => {
-      const type = asteroidTypeByKey(asteroid.typeKey);
-      const resourcesText = Object.entries(asteroid.resources || {}).map(([key, amount]) => `${resourceNames[key] || key}: ${Number(amount).toLocaleString('de-DE')} t`).join('<br>');
-
-infoPanel.innerHTML = `<h2>${type.icon} ${asteroid.name}</h2><div class="stat"><span>Typ</span><strong>${type.name}</strong></div><p>${resourcesText || 'Keine Rohstoffdaten verfügbar.'}</p><p class="hint">Asteroid im äußeren Asteroidengürtel.</p>`;
-    });
-    solarSystem.appendChild(marker);
-  });
-
+  // Asteroiden werden ausschließlich durch renderAsteroidVisuals()
+  // im festgelegten Gürtel (420–640 px ab Sonnenmitte) dargestellt.
   const angles = { sun: 0, mercury: 25, venus: 150, earth: 250, mars: 70, ceres: 90, jupiter: 145, saturn: 200, uranus: 35, neptune: 275, pluto: 230, nivaris: 320, io: 315 };
   if (id === 'sun') return { x: 530, y: 530 };
   if (id === 'luna') {
@@ -2425,11 +2397,11 @@ function renderAsteroidVisuals() {
   if (!orders.completed.skyObservation) return;
   const now = gameNow();
   const active = orders.discoveredAsteroids.filter(a => !a.vanished && Number(a.expiresAt) > now);
-  const center = 530;
-  // Asteroiden werden im äußeren Gürtel zwischen Mars und den äußeren Planeten verteilt.
+  const center = 1050;
+  // Asteroiden werden im festgelegten Gürtel zwischen 420 und 640 px Radius verteilt.
   active.forEach((asteroid, index) => {
     const angle = ((Number(asteroid.number) * 137.508 + index * 31) % 360) * Math.PI / 180;
-    const radius = 350 + (index % 3) * 28;
+    const radius = 420 + ((index * 37) % 221);
     const marker = document.createElement('button');
     marker.type = 'button';
     marker.className = 'solar-asteroid';
@@ -2446,6 +2418,9 @@ function renderAsteroidVisuals() {
     solarSystem.appendChild(marker);
   });
 }
+
+// Umlaufwinkel bleiben bei jedem Neuaufbau der Ansicht erhalten.
+let solarOrbitAngles = null;
 
 function renderSystem() {
   // Scrollpositionen vor dem DOM-Neuaufbau sichern. Auf Mobilgeräten kann
@@ -2473,6 +2448,7 @@ function renderSystem() {
   if (activeSolarSystemId === 'system2') {
     solarSystem.classList.remove('building-menu-open');
     // Elyndra ersetzt den bisherigen Mittelpunkt-Stern und bleibt fest im Zentrum.
+    const renderedSystem2OrbitRadii = new Set();
     futureSolarSystem.bodies.forEach((body, index) => {
       if (body.id === 'elyndra') {
         const planet = document.createElement('button');
@@ -2496,11 +2472,16 @@ function renderSystem() {
         solarSystem.appendChild(planet);
         return;
       }
-      const orbit = document.createElement('div');
-      orbit.className = `orbit ${body.className}-orbit`;
-      orbit.style.width = `${body.orbit}px`;
-      orbit.style.height = `${body.orbit}px`;
-      solarSystem.appendChild(orbit);
+      const radiusKey = String(body.orbit);
+      if (body.orbit > 0 && !renderedSystem2OrbitRadii.has(radiusKey)) {
+        renderedSystem2OrbitRadii.add(radiusKey);
+        const orbit = document.createElement('div');
+        orbit.className = `orbit ${body.className}-orbit`;
+        orbit.dataset.orbitFor = body.id;
+        orbit.style.width = `${body.orbit}px`;
+        orbit.style.height = `${body.orbit}px`;
+        solarSystem.appendChild(orbit);
+      }
 
       // Rethroxid teilt sich Themepatins Umlaufbahn, liegt aber genau auf der Gegenseite.
       const angle = ({ themepatin: 145, rethroxid: 325, noxaris: 230, pyrophor: 50 }[body.id] ?? 230) * Math.PI / 180;
@@ -2533,44 +2514,74 @@ function renderSystem() {
   updateSolarSystemSelector();
   const buildMenuTriggerButton = document.querySelector('#open-build-menu-button');
   if (buildButton && state.selected !== 'sun') { buildMenuTriggerButton.disabled = false; buildMenuTriggerButton.textContent = '🏗️ Gebäudeübersicht öffnen'; }
+  // Jeder Planet erhält genau eine eigene Sonnenumlaufbahn.
+  // Der Bahndurchmesser entspricht dem orbit-Wert; die Planetenposition
+  // liegt auf dem dazugehörigen Radius orbit / 2.
+  // Ausschließlich die Umlaufbahnen der tatsächlich vorhandenen Planeten anzeigen.
+  // Luna hat keine zusätzliche Bahn: Sie nutzt exakt die Umlaufbahn der Erde.
+  // Asteroidengürtel zwischen Jupiter und Saturn: 90 px breite Zone mit roten Innen- und Außenkanten.
+  const asteroidBelt = document.createElement('div');
+  asteroidBelt.className = 'asteroid-belt';
+  asteroidBelt.setAttribute('aria-label', 'Asteroidengürtel');
+
+  // Langsam wandernde grüne und violette Gasnebel innerhalb des Asteroidengürtels.
+  const nebulaGreen = document.createElement('div');
+  nebulaGreen.className = 'asteroid-nebula asteroid-nebula-green';
+  nebulaGreen.setAttribute('aria-hidden', 'true');
+  asteroidBelt.appendChild(nebulaGreen);
+
+  const nebulaViolet = document.createElement('div');
+  nebulaViolet.className = 'asteroid-nebula asteroid-nebula-violet';
+  nebulaViolet.setAttribute('aria-hidden', 'true');
+  asteroidBelt.appendChild(nebulaViolet);
+
+  const beltInnerRadius = 420;
+  const beltOuterRadius = 640;
+  for (let i = 0; i < 360; i++) {
+    const asteroid = document.createElement('span');
+    asteroid.className = 'asteroid-belt-star';
+    const angle = (i * 137.507764) * Math.PI / 180;
+    const radius = beltInnerRadius + ((i * 137) % (beltOuterRadius - beltInnerRadius + 1));
+    const size = 1 + ((i * 7) % 4) * 0.55;
+    asteroid.style.left = `calc(50% + ${Math.cos(angle) * radius}px)`;
+    asteroid.style.top = `calc(50% + ${Math.sin(angle) * radius}px)`;
+    asteroid.style.width = `${size}px`;
+    asteroid.style.height = `${size}px`;
+    asteroid.style.opacity = `${0.38 + ((i * 13) % 60) / 100}`;
+    asteroidBelt.appendChild(asteroid);
+  }
+  solarSystem.appendChild(asteroidBelt);
+
   Object.entries(bodies).forEach(([id, body]) => {
-    if (body.orbit > 0 && id !== 'pluto') {
-      const orbit = document.createElement('div');
-      orbit.className = 'orbit';
-      orbit.style.width = `${body.orbit * 2}px`;
-      orbit.style.height = `${body.orbit * 2}px`;
-      solarSystem.appendChild(orbit);
-    }
+    if (id === 'sun' || id === 'luna' || !(body.orbit > 0)) return;
+    const orbitRadius = Number(body.orbit) / 2;
+    // Alle Planetenbahnen werden exakt nach dem Radius der Abstandstabelle gezeichnet.
+    // Jupiter liegt bei 410 px knapp innerhalb des Gürtels; Saturn bei 670 px außerhalb.
+    const orbit = document.createElement('div');
+    orbit.className = 'orbit';
+    orbit.dataset.orbitFor = id;
+    orbit.style.width = `${body.orbit}px`;
+    orbit.style.height = `${body.orbit}px`;
+    solarSystem.appendChild(orbit);
   });
 
-  const angles = { sun: 0, mercury: 25, venus: 150, earth: 250, mars: 70, ceres: 90, jupiter: 145, saturn: 200, uranus: 35, neptune: 275, pluto: 230, nivaris: 320, io: 315 };
+  const initialAngles = { sun: 0, mercury: 25, venus: 150, earth: 250, mars: 70, ceres: 90, jupiter: 145, saturn: 200, uranus: 35, neptune: 275, pluto: 230, nivaris: 320, io: 315 };
+  if (!solarOrbitAngles) {
+    solarOrbitAngles = Object.fromEntries(Object.entries(initialAngles).map(([id, degrees]) => [id, degrees * Math.PI / 180]));
+  }
+  const angles = solarOrbitAngles;
 
-  // Luna bekommt eine eigene Umlaufbahn um die Erde.
-  const earthAngle = angles.earth * Math.PI / 180;
+  // Luna wird als Planetenkörper auf der Erdbahn dargestellt; es gibt keine zusätzliche Mondbahn.
+  const earthAngle = angles.earth;
   const earthRadius = bodies.earth.orbit / 2;
-  const earthX = Math.cos(earthAngle) * earthRadius;
-  const earthY = Math.sin(earthAngle) * earthRadius;
-  const moonOrbit = document.createElement('div');
-  moonOrbit.className = 'moon-orbit';
-  moonOrbit.style.left = `calc(50% + ${earthX}px)`;
-  moonOrbit.style.top = `calc(50% + ${earthY}px)`;
-  moonOrbit.style.width = `${bodies.luna.moonOrbit * 2}px`;
-  moonOrbit.style.height = `${bodies.luna.moonOrbit * 2}px`;
-  solarSystem.appendChild(moonOrbit);
-
-  const moonSystem = document.createElement('div');
-  moonSystem.className = 'moon-system';
-  moonSystem.style.left = `calc(50% + ${earthX}px)`;
-  moonSystem.style.top = `calc(50% + ${earthY}px)`;
   const moon = document.createElement('button');
   moon.className = `body luna${state.selected === 'luna' ? ' selected' : ''}`;
   moon.type = 'button';
   moon.setAttribute('aria-label', 'Luna');
   moon.dataset.bodyId = 'luna';
   moon.title = 'Luna';
-  const moonAngle = 225 * Math.PI / 180;
-  moon.style.left = `${Math.cos(moonAngle) * bodies.luna.moonOrbit}px`;
-  moon.style.top = `${Math.sin(moonAngle) * bodies.luna.moonOrbit}px`;
+  const moonAngle = earthAngle + Math.PI / 2;
+  const moonRadius = earthRadius;
   moon.innerHTML = '<span class="body-label">Luna</span>';
   if (hasSurfaceBuildings('luna')) {
     const badge = document.createElement('span');
@@ -2587,8 +2598,27 @@ function renderSystem() {
     renderSystem();
     renderInfo();
   });
-  moonSystem.appendChild(moon);
-  solarSystem.appendChild(moonSystem);
+  moon.style.left = `calc(50% + ${Math.cos(moonAngle) * moonRadius}px)`;
+  moon.style.top = `calc(50% + ${Math.sin(moonAngle) * moonRadius}px)`;
+  solarSystem.appendChild(moon);
+
+  // Luna bleibt 90 Grad vor der Erde und bewegt sich mit 7 Pixeln pro Sekunde.
+  let lunaAngle = angles.earth + Math.PI / 2;
+  let lunaPreviousFrameTime = null;
+  const animateLuna = (timestamp) => {
+    if (!moon.isConnected) return;
+    if (lunaPreviousFrameTime !== null) {
+      const deltaSeconds = (timestamp - lunaPreviousFrameTime) / 1000;
+      lunaAngle += (7 / Math.max(1, earthRadius)) * deltaSeconds;
+    }
+    lunaPreviousFrameTime = timestamp;
+    // Erde und Luna teilen dieselbe Bahn; Luna bleibt exakt 90 Grad versetzt.
+    angles.earth = lunaAngle - Math.PI / 2;
+    moon.style.left = `calc(50% + ${Math.cos(lunaAngle) * moonRadius}px)`;
+    moon.style.top = `calc(50% + ${Math.sin(lunaAngle) * moonRadius}px)`;
+    requestAnimationFrame(animateLuna);
+  };
+  requestAnimationFrame(animateLuna);
 
   Object.entries(bodies).forEach(([id, body]) => {
     if (id === 'luna') return;
@@ -2602,7 +2632,7 @@ function renderSystem() {
       element.style.left = '50%'; element.style.top = '50%';
     } else {
       const radius = body.orbit / 2;
-      const rad = angles[id] * Math.PI / 180;
+      const rad = angles[id];
       element.style.left = `calc(50% + ${Math.cos(rad) * radius}px)`;
       element.style.top = `calc(50% + ${Math.sin(rad) * radius}px)`;
     }
@@ -2627,6 +2657,27 @@ function renderSystem() {
       renderInfo();
     });
     solarSystem.appendChild(element);
+
+    // Umlaufgeschwindigkeiten gemäß Abstandstabelle in Pixeln pro Sekunde.
+    const orbitSpeeds = { mercury: 12, venus: 9, earth: 7, mars: 15, ceres: 11, jupiter: 10, saturn: 10, io: 11, uranus: 10, neptune: 12, pluto: 15, nivaris: 19 };
+    if (orbitSpeeds[id]) {
+      const orbitRadius = Math.max(1, Number(body.orbit) / 2);
+      let orbitAngle = angles[id];
+      let previousFrameTime = null;
+      const animateBody = (timestamp) => {
+        if (!element.isConnected) return;
+        if (previousFrameTime !== null) {
+          const deltaSeconds = (timestamp - previousFrameTime) / 1000;
+          orbitAngle += (orbitSpeeds[id] / orbitRadius) * deltaSeconds;
+        }
+        previousFrameTime = timestamp;
+        angles[id] = orbitAngle;
+        element.style.left = `calc(50% + ${Math.cos(orbitAngle) * orbitRadius}px)`;
+        element.style.top = `calc(50% + ${Math.sin(orbitAngle) * orbitRadius}px)`;
+        requestAnimationFrame(animateBody);
+      };
+      requestAnimationFrame(animateBody);
+    }
   });
 
   renderAsteroidVisuals();

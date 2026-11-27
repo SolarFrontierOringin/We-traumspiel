@@ -1,4 +1,4 @@
-/* Solar Frontier: Origins 1.1.0 – Einzigartige Gebäude / Hauptquartier Forschung */
+/* Solar Frontier: Origins 1.1.1 – Einzigartige Gebäude / Hauptquartier Forschung */
 (() => {
   'use strict';
 
