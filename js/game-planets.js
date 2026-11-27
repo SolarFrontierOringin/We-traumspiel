@@ -14,7 +14,8 @@ const bodies = {
   neptune: { name: 'Neptun', type: 'Gasplanet', className: 'neptune', diameterKm: 24622, temperature: 'ca. -200 °C Wolkenobergrenze', resources: { hydrogen: 0 }, storage: {}, orbit: 1500 },
   pluto: { name: 'Pluto', type: 'Zwergplanet', className: 'pluto', diameterKm: 1919, temperature: 'ca. -230 °C Durchschnitt', resources: { iron: 20000000, uranium: 5000000, silicon: 20000000, copper: 40000000 }, storage: {}, orbit: 1580 },
   nivaris: { name: 'Nivaris', type: 'Mystischer Eisplanet', className: 'nivaris', diameterKm: 9842, temperature: '-500 °C', description: 'Ein mystischer, kalter Planet. Er wurde erst 2027 durch ein Teleskop entdeckt. Wie lange er bereits existiert, ist nicht bekannt.', resources: { ice: 1000000000, iron: 3000000, stone: 2000000, ionium: 2000000 }, storage: {}, orbit: 1660 },
-  io: { name: 'Io', type: 'Mond des Jupiter', className: 'io', diameterKm: 3643, temperature: 'ca. -110 °C Durchschnitt', resources: { iron: 20000000, silicon: 15000000, copperOre: 20000000, graphite: 70000000, bauxite: 19000000, ionium: 1000000 }, storage: {}, orbit: 1420, moonOf: 'jupiter' }
+  io: { name: 'Io', type: 'Mond des Jupiter', className: 'io', diameterKm: 3643, temperature: 'ca. -110 °C Durchschnitt', resources: { iron: 20000000, silicon: 15000000, copperOre: 20000000, graphite: 70000000, bauxite: 19000000, ionium: 1000000 }, storage: {}, orbit: 1420, moonOf: 'jupiter'  },
+  europa: { name: 'Europa', type: 'Mond des Jupiter', className: 'europa', diameterKm: 3122, temperature: '-100 °C', resources: { ice: 70000000, iron: 3000000, stone: 3000000, goldOre: 10000000, copperOre: 1000000 }, storage: {}, orbit: 820, moonOf: 'jupiter', sharedOrbitWith: 'jupiter' }
 };
 
 // Zweites Sonnensystem: Elyndra liegt im Zentrum; Noxaris liegt auf der äußersten Umlaufbahn.

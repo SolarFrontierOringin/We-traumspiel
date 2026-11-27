@@ -1812,6 +1812,25 @@ function totalIronMinesBuilt() {
 function totalSteelworksBuilt() {
   return Object.keys(bodies).filter(id => id !== 'sun').reduce((sum, id) => sum + Number(getBuildingsOnPlanet(id).steelworks || 0), 0);
 }
+function totalStoneQuarriesBuilt() {
+  return Object.keys(bodies).filter(id => id !== 'sun').reduce((sum, id) => sum + Number(getBuildingsOnPlanet(id).stoneQuarry || 0), 0);
+}
+function updatePrologThreeProgress() {
+  const iron = Math.min(6, totalIronMinesBuilt());
+  const stone = Math.min(6, totalStoneQuarriesBuilt());
+  const percent = Math.floor(((iron + stone) / 12) * 100);
+  const bar = document.querySelector('[data-prolog-three-progress]');
+  const label = document.querySelector('[data-prolog-three-percent]');
+  const details = document.querySelector('[data-prolog-three-counts]');
+  if (bar) bar.style.width = `${percent}%`;
+  if (label) label.textContent = `${percent}%`;
+  if (details) details.textContent = `Eisenminen: ${iron} / 6 · Steinbrüche: ${stone} / 6`;
+  const status = document.querySelector('[data-prolog-three-status]');
+  if (status) status.textContent = iron >= 6 && stone >= 6
+    ? 'Aufgabe abgeschlossen! Alle 12 Gebäude wurden errichtet.'
+    : 'Baue die benötigten Gebäude, um diese Aufgabe abzuschließen.';
+  return { iron, stone, percent, complete: iron >= 6 && stone >= 6 };
+}
 function taskProgress(key) {
   const task = taskTypes[key];
   if (!task) return 0;
@@ -1893,13 +1912,35 @@ function updateTasks() {
   }
   return changed;
 }
+async function resolvePrologAudio(root = document, storyId = '01') {
+  const audio = root.querySelector(`[data-prolog-audio="${storyId}"]`);
+  const status = root.querySelector(`[data-prolog-audio-status="${storyId}"]`);
+  if (!audio || audio.dataset.resolved === 'true') return;
+  audio.dataset.resolved = 'true';
+  const storyName = `Geschichte-${storyId}`;
+  const candidates = ['mp3', 'ogg', 'wav', 'm4a'].map(ext => `audio/${storyName}.${ext}`);
+  for (const source of candidates) {
+    try {
+      const response = await fetch(source, { method: 'HEAD', cache: 'no-store' });
+      if (response.ok) {
+        audio.src = source;
+        audio.load();
+        if (status) status.textContent = `Audiodatei geladen: ${source}`;
+        return;
+      }
+    } catch (error) {
+      // Nächste unterstützte Dateiendung prüfen.
+    }
+  }
+  if (status) status.textContent = 'Noch keine Audiodatei gefunden. Lege sie als audio/${storyName}.mp3 (oder .ogg, .wav, .m4a) ab.';
+}
+
 function renderTasks() {
   const panel = document.querySelector('#tasks-content');
   if (!panel) return;
   updateTasks();
 
   const view = panel.dataset.activeTaskView || 'home';
-  const breakingNewsPage = panel.dataset.breakingNewsPage === 'true';
 
   const taskGroupLabels = {
     moon: '🌙 Griff nach dem Mond',
@@ -1927,37 +1968,6 @@ function renderTasks() {
     </div>`;
   };
 
-  if (breakingNewsPage) {
-    panel.innerHTML = `
-      <div class="prolog-page">
-        <button type="button" class="small-button prolog-back-button" data-prolog-back>← Zurück zum Prolog</button>
-        <div class="prolog-news-kicker">SPACEY · SONDERMELDUNG</div>
-        <h2>Die globale Rohstoffkrise</h2>
-        <div class="prolog-news-image">
-          <img src="Images/prolog-breaking-news.png" alt="Erde aus dem All während der globalen Rohstoffkrise">
-        </div>
-        <div class="prolog-news-copy">
-          <h3>Eine Welt am Limit</h3>
-          <p>Die weltweite Nachfrage nach Rohstoffen steigt unaufhaltsam. Lagerstätten werden knapper, Lieferketten geraten unter Druck und die Industrie steht vor einer beispiellosen Herausforderung.</p>
-          <p>Während die Erde nach neuen Lösungen sucht, richtet sich der Blick der Menschheit zunehmend ins All. SPACEY steht am Beginn einer Mission, die den Zugang zu den Ressourcen des Sonnensystems eröffnen soll.</p>
-        </div>
-        <div class="prolog-audio-panel">
-          <div class="prolog-audio-heading">🎙️ Originalmeldung · Sprachausgabe</div>
-          <audio controls preload="metadata">
-            <source src="audio/audio_Prolog01.mp3" type="audio/mpeg">
-            Dein Browser unterstützt die Audio-Wiedergabe nicht.
-          </audio>
-        </div>
-        <button type="button" class="small-button prolog-back-button" data-prolog-back>← Zurück zum Prolog</button>
-      </div>`;
-    panel.querySelectorAll('[data-prolog-back]').forEach(button => button.addEventListener('click', () => {
-      panel.dataset.breakingNewsPage = 'false';
-      panel.dataset.activeTaskView = 'prolog';
-      renderTasks();
-    }));
-    return;
-  }
-
   if (view === 'home') {
     panel.innerHTML = `
       <div class="task-home-tiles">
@@ -1969,12 +1979,11 @@ function renderTasks() {
         <button type="button" class="task-home-tile task-home-tile-prolog" data-task-view="prolog">
           <span class="task-home-icon">📖</span>
           <strong>Prolog</strong>
-          <span>Die Geschichte von Solar Frontier</span>
+          <span>Geschichte und Nachrichten</span>
         </button>
       </div>`;
     panel.querySelectorAll('[data-task-view]').forEach(button => button.addEventListener('click', () => {
       panel.dataset.activeTaskView = button.dataset.taskView;
-      panel.dataset.breakingNewsPage = 'false';
       renderTasks();
     }));
     return;
@@ -1982,22 +1991,192 @@ function renderTasks() {
 
   if (view === 'prolog') {
     panel.innerHTML = `
-      <div class="task-subview">
+      <div class="task-subview prolog-page">
         <button type="button" class="small-button" data-task-home>← Zur Auswahl</button>
-        <h3>📖 Prolog – Anfang einer Ära</h3>
-        <div class="task-card task-pending prolog-story-card">
-          <div class="task-title"><strong>📺 Die globale Rohstoffkrise</strong></div>
-          <div class="hint">Die erste Breaking-News-Sendung. Erfahre, warum SPACEY eine Zukunftsmission ins All startet.</div>
-          <button type="button" class="small-button prolog-info-button" data-open-breaking-news>Info</button>
-        </div>
+        <h3>📖 Prolog · Deine Geschichte</h3>
+        <details class="prolog-task-accordion">
+          <summary><span>📜 Willkommen</span><span class="prolog-task-status">Prolog-Aufgabe 1</span></summary>
+          <div class="prolog-task-body">
+            <p>Dein Einstieg in Solar Frontier Origins.</p>
+            <button type="button" class="prolog-open-message" data-open-prolog-message>Nachricht öffnen</button>
+          </div>
+        </details>
+        <details class="prolog-task-accordion prolog-task-two">
+          <summary><span>📰 Die Rohstoffkrise</span><span class="prolog-task-status">Prolog-Aufgabe 2</span></summary>
+          <div class="prolog-task-body">
+            <p>Die weltweite Rohstoffkrise verändert die Zukunft der Menschheit. Lies die Nachricht und gründe dein eigenes Raumfahrtunternehmen.</p>
+            <button type="button" class="prolog-open-message prolog-open-news" data-open-prolog-news>Nachrichten öffnen</button>
+          </div>
+        </details>
+        <details class="prolog-task-accordion prolog-task-three">
+          <summary><span>🏢 Die ersten Grundlagen</span><span class="prolog-task-status">Prolog-Aufgabe 3</span></summary>
+          <div class="prolog-task-body">
+            <p>Beginne mit dem Aufbau deiner Firma: Errichte 6 Eisenminen und 6 Steinbrüche.</p>
+            <button type="button" class="prolog-open-message prolog-open-green" data-open-prolog-three>Aufgabe öffnen</button>
+          </div>
+        </details>
+        <section class="prolog-message-window" data-prolog-message hidden role="dialog" aria-modal="true" aria-labelledby="prolog-welcome-title">
+          <div class="prolog-message-head">
+            <div><span>PROLOG · NACHRICHT 01</span><h3 id="prolog-welcome-title">Willkommen</h3></div>
+            <button type="button" class="icon-button" data-close-prolog-message aria-label="Nachricht schließen">✕</button>
+          </div>
+          <div class="prolog-message-content">
+            <p>Willkommen zu Solar Frontier Origins.</p>
+            <p>Jetzt wird deine Geschichte geschrieben.</p>
+          </div>
+          <div class="prolog-audio-panel">
+            <div class="prolog-audio-heading">🎙️ Geschichte-01</div>
+            <audio controls preload="metadata" data-prolog-audio>
+              Dein Browser unterstützt den Audioplayer nicht.
+            </audio>
+            <div class="hint" data-prolog-audio-status>Suche nach audio/Geschichte-01 …</div>
+          </div>
+        </section>
+        <section class="prolog-message-window prolog-news-window" data-prolog-news hidden role="dialog" aria-modal="true" aria-labelledby="prolog-news-title">
+          <div class="prolog-message-head prolog-news-head">
+            <div><span>01.01.2027 · NACHRICHTEN</span><h3 id="prolog-news-title">Willkommen zu den Nachrichten</h3></div>
+            <button type="button" class="icon-button" data-close-prolog-news aria-label="Nachrichten schließen">✕</button>
+          </div>
+          <div class="prolog-message-content prolog-news-content">
+            <p>Willkommen zu den Nachrichten</p>
+            <p>Die Rohstoffe auf der Erde gehen rechnerisch zu Ende. Firmen kämpfen auf dem Markt um den Erhalt wichtiger Rohstoffe.</p>
+            <p>Unter den Weltfirmen bricht Chaos aus, viele Ideen zeigten bis jetzt keine Wirkung.</p>
+            <p>Es ist die Rede von neuen Raketen und Treibstoffarten, die einen Transfer von Rohstoffen eines anderen Planeten ermöglichen.</p>
+            <p>Die Hitech Forma Ilon Minski AG erklärt heute, dass sie bereit ist, den Asteroidenabbau zu ermöglichen.</p>
+            <p>An diesem Tag packst du, nimmst dein Handy und gründest dein eigenes Raumfahrtunternehmen.</p>
+          </div>
+          <div class="prolog-company-create">
+            <h4>Deine Aufgabe: Gib deiner Firma einen eigenen Namen</h4>
+            <label for="prolog-company-name">Firmenname</label>
+            <input id="prolog-company-name" type="text" maxlength="40" autocomplete="organization" placeholder="Name deines Raumfahrtunternehmens" value="${String(state.companyName || '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}">
+            <button type="button" class="prolog-company-submit" data-create-prolog-company ${state.tasks?.prologCompanyRewardApplied ? 'disabled' : ''}>${state.tasks?.prologCompanyRewardApplied ? 'Firma gegründet · Belohnung erhalten' : (state.tasks?.prologCompanyRewardClaimed ? 'Belohnung nachbuchen' : 'Firma gründen')}</button>
+            <p class="prolog-company-reward">Belohnung: einmalig 700 t Stahl und 700 t Baustoffe auf der Erde.</p>
+            <p class="prolog-company-status" data-prolog-company-status>${state.tasks?.prologCompanyRewardClaimed ? 'Deine Firma wurde gegründet. Die Belohnung wurde bereits gutgeschrieben.' : ''}</p>
+          </div>
+          <div class="prolog-audio-panel">
+            <div class="prolog-audio-heading">🎙️ Geschichte-02</div>
+            <audio controls preload="metadata" data-prolog-audio="02">
+              Dein Browser unterstützt den Audioplayer nicht.
+            </audio>
+            <div class="hint" data-prolog-audio-status="02">Suche nach audio/Geschichte-02 …</div>
+          </div>
+        </section>
+        <section class="prolog-message-window prolog-green-window" data-prolog-three hidden role="dialog" aria-modal="true" aria-labelledby="prolog-three-title">
+          <div class="prolog-message-head prolog-green-head">
+            <div><span>PROLOG · AUFGABE 03</span><h3 id="prolog-three-title">Willkommen, Chef!</h3></div>
+            <button type="button" class="icon-button" data-close-prolog-three aria-label="Aufgabe schließen">✕</button>
+          </div>
+          <div class="prolog-message-content prolog-green-content">
+            <p>Willkommen chef, zu deiner eigenen Firma.</p>
+            <p>Es ist an der Zeit zu beginnen.</p>
+            <p>Wir sollten als erstes die Grund Legenden Sachen klären. Baue 6 Eisenminune und 6 Steinminen.</p>
+          </div>
+          <div class="prolog-three-task">
+            <h4>Deine Aufgabe: Baue 6 Eisenminen und 6 Steinbruch</h4>
+            <div class="prolog-three-progress-line"><strong>Fortschritt</strong><strong data-prolog-three-percent>0%</strong></div>
+            <div class="prolog-three-progress-track"><i data-prolog-three-progress style="width:0%"></i></div>
+            <p class="prolog-three-counts" data-prolog-three-counts>Eisenminen: 0 / 6 · Steinbrüche: 0 / 6</p>
+            <p class="prolog-three-status" data-prolog-three-status>Baue die benötigten Gebäude, um diese Aufgabe abzuschließen.</p>
+          </div>
+          <div class="prolog-audio-panel">
+            <div class="prolog-audio-heading">🎙️ Geschichte-03</div>
+            <audio controls preload="metadata" data-prolog-audio="03">
+              Dein Browser unterstützt den Audioplayer nicht.
+            </audio>
+            <div class="hint" data-prolog-audio-status="03">Suche nach audio/Geschichte-03 …</div>
+          </div>
+        </section>
       </div>`;
     panel.querySelector('[data-task-home]')?.addEventListener('click', () => {
       panel.dataset.activeTaskView = 'home';
       renderTasks();
     });
-    panel.querySelector('[data-open-breaking-news]')?.addEventListener('click', () => {
-      panel.dataset.breakingNewsPage = 'true';
-      renderTasks();
+
+    const welcomeMessage = panel.querySelector('[data-prolog-message]');
+    const newsMessage = panel.querySelector('[data-prolog-news]');
+    const prologThreeMessage = panel.querySelector('[data-prolog-three]');
+    const oldWelcome = document.querySelector('[data-prolog-message].prolog-message-window');
+    const oldNews = document.querySelector('[data-prolog-news].prolog-message-window');
+    const oldPrologThree = document.querySelector('[data-prolog-three].prolog-message-window');
+    if (oldWelcome && oldWelcome !== welcomeMessage) oldWelcome.remove();
+    if (oldNews && oldNews !== newsMessage) oldNews.remove();
+    if (oldPrologThree && oldPrologThree !== prologThreeMessage) oldPrologThree.remove();
+    document.body.appendChild(welcomeMessage);
+    document.body.appendChild(newsMessage);
+    document.body.appendChild(prologThreeMessage);
+
+    const openModal = modal => {
+      if (!modal) return;
+      modal.hidden = false;
+      modal.style.display = 'block';
+      if (modal === welcomeMessage) resolvePrologAudio(document, '01');
+      if (modal === newsMessage) resolvePrologAudio(document, '02');
+      if (modal === prologThreeMessage) {
+        resolvePrologAudio(document, '03');
+        updatePrologThreeProgress();
+      }
+    };
+    const closeModal = modal => {
+      const audio = modal?.querySelector('[data-prolog-audio]');
+      if (audio) audio.pause();
+      if (modal) { modal.hidden = true; modal.style.display = 'none'; }
+    };
+    panel.querySelector('[data-open-prolog-message]')?.addEventListener('click', () => openModal(welcomeMessage));
+    panel.querySelector('.prolog-task-accordion:not(.prolog-task-two) > summary')?.addEventListener('click', () => openModal(welcomeMessage));
+    panel.querySelector('.prolog-task-two > summary')?.addEventListener('click', () => openModal(newsMessage));
+    panel.querySelector('[data-open-prolog-news]')?.addEventListener('click', () => openModal(newsMessage));
+    panel.querySelector('.prolog-task-three > summary')?.addEventListener('click', () => openModal(prologThreeMessage));
+    panel.querySelector('[data-open-prolog-three]')?.addEventListener('click', () => openModal(prologThreeMessage));
+    welcomeMessage?.querySelector('[data-close-prolog-message]')?.addEventListener('click', () => closeModal(welcomeMessage));
+    newsMessage?.querySelector('[data-close-prolog-news]')?.addEventListener('click', () => closeModal(newsMessage));
+    prologThreeMessage?.querySelector('[data-close-prolog-three]')?.addEventListener('click', () => closeModal(prologThreeMessage));
+    updatePrologThreeProgress();
+
+    newsMessage?.querySelector('[data-create-prolog-company]')?.addEventListener('click', () => {
+      state.tasks = state.tasks || {};
+      if (state.tasks.prologCompanyRewardApplied) return;
+      const input = newsMessage.querySelector('#prolog-company-name');
+      const companyName = String(input?.value || '').trim();
+      const status = newsMessage.querySelector('[data-prolog-company-status]');
+      const isRepair = !!state.tasks.prologCompanyRewardClaimed;
+      if (!isRepair && !companyName) {
+        if (status) status.textContent = 'Bitte gib zuerst einen Firmennamen ein.';
+        input?.focus();
+        return;
+      }
+      if (!isRepair) {
+        state.companyName = companyName;
+        state.tasks.companyNameChosen = true;
+      }
+      const earth = getPlanetStorage('earth');
+      if (!earth || typeof earth !== 'object') {
+        if (status) status.textContent = 'Fehler: Das Erd-Lager konnte nicht gefunden werden. Bitte erneut versuchen.';
+        return;
+      }
+      const steelBefore = Number(earth.steel || 0);
+      const materialsBefore = Number(earth.buildingMaterials || 0);
+      earth.steel = steelBefore + 700;
+      earth.buildingMaterials = materialsBefore + 700;
+      if (Number(earth.steel) !== steelBefore + 700 || Number(earth.buildingMaterials) !== materialsBefore + 700) {
+        earth.steel = steelBefore;
+        earth.buildingMaterials = materialsBefore;
+        if (status) status.textContent = 'Die Belohnung konnte nicht gespeichert werden. Bitte erneut versuchen.';
+        return;
+      }
+      state.tasks.prologCompanyRewardClaimed = true;
+      state.tasks.prologCompanyRewardApplied = true;
+      if (status) status.textContent = `${isRepair ? 'Die Belohnung wurde nachgebucht.' : `Firma „${companyName}“ gegründet.`} 700 t Stahl und 700 t Baustoffe wurden deinem Erd-Lager gutgeschrieben.`;
+      const submit = newsMessage.querySelector('[data-create-prolog-company]');
+      if (submit) { submit.disabled = true; submit.textContent = 'Firma gegründet · Belohnung erhalten'; }
+      if (input) input.disabled = true;
+      saveGame(false);
+      refreshPlanetStorageDisplay();
+      renderTopResources();
+      renderInfo();
+      updateCompanyHeadquartersMenu();
+      if (panel && !panel.hidden) {
+        // Die Meldung bleibt offen; die abgeschlossene Aufgabe ist im Status erkennbar.
+      }
     });
     return;
   }
@@ -2033,6 +2212,7 @@ function renderTasks() {
 
 function taskProgressUpdate() {
   const changed = updateTasks();
+  updatePrologThreeProgress();
   const panel = document.querySelector('#tasks-panel');
   if (panel && !panel.hidden) renderTasks();
   updateCompanyHeadquartersMenu();
@@ -2298,7 +2478,7 @@ function setupSaveMenu() {
 function rocketBodyPoint(id) {
   // Asteroiden werden ausschließlich durch renderAsteroidVisuals()
   // im festgelegten Gürtel (420–640 px ab Sonnenmitte) dargestellt.
-  const angles = { sun: 0, mercury: 25, venus: 150, earth: 250, mars: 70, ceres: 90, jupiter: 145, saturn: 200, uranus: 35, neptune: 275, pluto: 230, nivaris: 320, io: 315 };
+  const angles = { sun: 0, mercury: 25, venus: 150, earth: 250, mars: 70, ceres: 90, jupiter: 145, saturn: 200, uranus: 35, neptune: 275, pluto: 230, nivaris: 320, io: 315, europa: 235 };
   if (id === 'sun') return { x: 530, y: 530 };
   if (id === 'luna') {
     const earth = rocketBodyPoint('earth');
@@ -2316,7 +2496,7 @@ function rocketBodyPoint(id) {
 function rocketOrbitPoint(id) {
   const p = rocketBodyPoint(id);
   if (id === 'sun') return p;
-  const a = id === 'luna' ? 225 * Math.PI / 180 : (({ mercury:25, venus:150, earth:250, mars:70, jupiter:145, neptune:210, pluto:230, ceres:90 }[id] || 0) * Math.PI / 180);
+  const a = id === 'luna' ? 225 * Math.PI / 180 : (({ mercury:25, venus:150, earth:250, mars:70, jupiter:145, europa:235, neptune:210, pluto:230, ceres:90 }[id] || 0) * Math.PI / 180);
   const offset = id === 'luna' ? 28 : Math.max(34, Number(bodies[id]?.className === 'jupiter' ? 42 : 30));
   return { x: p.x + Math.cos(a) * offset, y: p.y + Math.sin(a) * offset };
 }
@@ -2398,10 +2578,13 @@ function renderAsteroidVisuals() {
   const now = gameNow();
   const active = orders.discoveredAsteroids.filter(a => !a.vanished && Number(a.expiresAt) > now);
   const center = 1050;
-  // Asteroiden werden im festgelegten Gürtel zwischen 420 und 640 px Radius verteilt.
-  active.forEach((asteroid, index) => {
-    const angle = ((Number(asteroid.number) * 137.508 + index * 31) % 360) * Math.PI / 180;
-    const radius = 420 + ((index * 37) % 221);
+  // Jeder Asteroid erhält seine feste Position ausschließlich aus seiner Nummer.
+  // Dadurch bleibt er auch nach einem Neuaufbau der Ansicht am selben Ort.
+  // Die Position liegt immer zwischen 420 und 640 px von der Sonnenmitte entfernt.
+  active.forEach(asteroid => {
+    const asteroidNumber = Math.max(1, Math.floor(Number(asteroid.number) || 1));
+    const angle = ((asteroidNumber * 137.508) % 360) * Math.PI / 180;
+    const radius = 420 + ((asteroidNumber * 37) % 221);
     const marker = document.createElement('button');
     marker.type = 'button';
     marker.className = 'solar-asteroid';
@@ -2553,7 +2736,7 @@ function renderSystem() {
   solarSystem.appendChild(asteroidBelt);
 
   Object.entries(bodies).forEach(([id, body]) => {
-    if (id === 'sun' || id === 'luna' || !(body.orbit > 0)) return;
+    if (id === 'sun' || id === 'luna' || body.sharedOrbitWith || !(body.orbit > 0)) return;
     const orbitRadius = Number(body.orbit) / 2;
     // Alle Planetenbahnen werden exakt nach dem Radius der Abstandstabelle gezeichnet.
     // Jupiter liegt bei 410 px knapp innerhalb des Gürtels; Saturn bei 670 px außerhalb.
@@ -2565,7 +2748,7 @@ function renderSystem() {
     solarSystem.appendChild(orbit);
   });
 
-  const initialAngles = { sun: 0, mercury: 25, venus: 150, earth: 250, mars: 70, ceres: 90, jupiter: 145, saturn: 200, uranus: 35, neptune: 275, pluto: 230, nivaris: 320, io: 315 };
+  const initialAngles = { sun: 0, mercury: 25, venus: 150, earth: 250, mars: 70, ceres: 90, jupiter: 145, saturn: 200, uranus: 35, neptune: 275, pluto: 230, nivaris: 320, io: 315, europa: 235 };
   if (!solarOrbitAngles) {
     solarOrbitAngles = Object.fromEntries(Object.entries(initialAngles).map(([id, degrees]) => [id, degrees * Math.PI / 180]));
   }
@@ -2607,7 +2790,7 @@ function renderSystem() {
   let lunaPreviousFrameTime = null;
   const animateLuna = (timestamp) => {
     if (!moon.isConnected) return;
-    if (lunaPreviousFrameTime !== null) {
+    if (lunaPreviousFrameTime !== null && !solarSystem.classList.contains('is-zooming')) {
       const deltaSeconds = (timestamp - lunaPreviousFrameTime) / 1000;
       lunaAngle += (7 / Math.max(1, earthRadius)) * deltaSeconds;
     }
@@ -2659,14 +2842,14 @@ function renderSystem() {
     solarSystem.appendChild(element);
 
     // Umlaufgeschwindigkeiten gemäß Abstandstabelle in Pixeln pro Sekunde.
-    const orbitSpeeds = { mercury: 12, venus: 9, earth: 7, mars: 15, ceres: 11, jupiter: 10, saturn: 10, io: 11, uranus: 10, neptune: 12, pluto: 15, nivaris: 19 };
+    const orbitSpeeds = { mercury: 12, venus: 9, earth: 7, mars: 15, ceres: 11, jupiter: 10, europa: 10, saturn: 10, io: 11, uranus: 10, neptune: 12, pluto: 15, nivaris: 19 };
     if (orbitSpeeds[id]) {
       const orbitRadius = Math.max(1, Number(body.orbit) / 2);
       let orbitAngle = angles[id];
       let previousFrameTime = null;
       const animateBody = (timestamp) => {
         if (!element.isConnected) return;
-        if (previousFrameTime !== null) {
+        if (previousFrameTime !== null && !solarSystem.classList.contains('is-zooming')) {
           const deltaSeconds = (timestamp - previousFrameTime) / 1000;
           orbitAngle += (orbitSpeeds[id] / orbitRadius) * deltaSeconds;
         }

@@ -69,39 +69,6 @@ if(languageSelect){
 }
 
 
-// Breaking News: beim Start eines neuen Spielablaufs einmalig zeigen, danach über Aufgaben erneut abspielbar.
-const BREAKING_NEWS_SEEN_KEY = 'solarFrontierOriginsBreakingNewsSeen_v1';
-const breakingNewsPopup = document.querySelector('#breaking-news-popup');
-function openBreakingNews() {
-  if (!breakingNewsPopup) return;
-  breakingNewsPopup.hidden = false;
-  breakingNewsPopup.setAttribute('aria-hidden', 'false');
-  const audio = document.querySelector('#breaking-news-audio');
-  if (audio) {
-    audio.pause();
-    audio.currentTime = 0;
-    const playback = audio.play();
-    if (playback && typeof playback.catch === 'function') playback.catch(() => {});
-  }
-}
-function closeBreakingNews() {
-  if (breakingNewsPopup) {
-    breakingNewsPopup.hidden = true;
-    breakingNewsPopup.setAttribute('aria-hidden', 'true');
-  }
-  const audio = document.querySelector('#breaking-news-audio');
-  if (audio) {
-    audio.pause();
-    audio.currentTime = 0;
-  }
-  try { localStorage.setItem(BREAKING_NEWS_SEEN_KEY, '1'); } catch {}
-}
-document.querySelector('#breaking-news-close')?.addEventListener('click', closeBreakingNews);
-document.querySelector('#breaking-news-start')?.addEventListener('click', closeBreakingNews);
-document.addEventListener('click', event => {
-  if (event.target.closest('[data-replay-breaking-news]')) openBreakingNews();
-});
-
 // Navigation zwischen den beiden Sonnensystemen.
 function updateSolarSystemSelector() {
   const current = document.querySelector('.solar-system-selector-current');
@@ -205,9 +172,6 @@ function openStartupUpdate() {
 if (startupPlay && startupIntro) {
   startupPlay.addEventListener('click', () => {
     startupIntro.hidden = true;
-    let seen = false;
-    try { seen = localStorage.getItem(BREAKING_NEWS_SEEN_KEY) === '1'; } catch {}
-    if (!seen) openBreakingNews();
   });
 }
 if (startupUpdates && startupIntro && updatePopup) {
@@ -313,14 +277,21 @@ document.addEventListener('visibilitychange', () => {
     const e = pendingTouch;
     const a=point(e.touches[0]), b=point(e.touches[1]), m=mid(a,b);
     const minZoom=system.classList.contains('system2-expanded')?0.2:0.35;
-    const nextZoom=Math.max(minZoom,Math.min(2.2,gesture.zoom*dist(a,b)/gesture.distance));
+    const rawZoom=Math.max(minZoom,Math.min(2.2,gesture.zoom*dist(a,b)/gesture.distance));
+    // Sonnensystem 1: winzige Subpixel-Änderungen zusammenfassen. Das vermeidet
+    // unnötige Layout-Neuberechnungen auf Android, ohne die Zoom-Geste sichtbar
+    // stufig zu machen. Sonnensystem 2 behält seine bisherige Zoom-Präzision.
+    const nextZoom=system.classList.contains('system2-expanded')?rawZoom:Math.round(rawZoom*1000)/1000;
+    if (nextZoom===zoom) return;
     const ratio=nextZoom/gesture.zoom;
+    const nextScrollLeft=Math.max(0,(gesture.scrollLeft+gesture.midX-gesture.left)*ratio-(m.x-gesture.left));
+    const nextScrollTop=Math.max(0,(gesture.scrollTop+gesture.midY-gesture.top)*ratio-(m.y-gesture.top));
     zoom=nextZoom;
     system.style.zoom=String(zoom);
-    // Viewport-Position nur einmal beim Start messen: vermeidet Layout-Abfragen
-    // nach jeder Zoom-Änderung und reduziert Reflow-Arbeit auf Mobilgeräten.
-    viewport.scrollLeft=Math.max(0,(gesture.scrollLeft+gesture.midX-gesture.left)*ratio-(m.x-gesture.left));
-    viewport.scrollTop=Math.max(0,(gesture.scrollTop+gesture.midY-gesture.top)*ratio-(m.y-gesture.top));
+    // Scrollpositionen aus den Startwerten berechnen; keine zusätzlichen
+    // Geometrie-Abfragen während der laufenden Pinch-Geste.
+    if (Math.abs(viewport.scrollLeft-nextScrollLeft)>0.5) viewport.scrollLeft=nextScrollLeft;
+    if (Math.abs(viewport.scrollTop-nextScrollTop)>0.5) viewport.scrollTop=nextScrollTop;
   };
 
   viewport.addEventListener('touchstart', e => {
