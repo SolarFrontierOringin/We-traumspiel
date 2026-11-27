@@ -6,7 +6,7 @@
   <title>Solar Frontier: Origins</title>
   <meta name="theme-color" content="#02050b">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=zoom-performance-1.1.1">
+  <link rel="stylesheet" href="style.css?v=prolog-news-task2-20261127">
 </head>
 <body>
 
@@ -267,35 +267,6 @@
         <p>Wir haben es geschaft, die ersten Kolonisten sind unseren Unternehmen hinzu gekommen. Jetzt liegt es an uns wie wir weiter machen</p>
       </div>
       <button id="colonists-complete-confirm" class="story-start-button" type="button">🚀 Weiter</button>
-    </article>
-  </section>
-
-  <!-- Breaking News: Prolog beim ersten Spielstart und jederzeit über Aufgaben > Einführung abrufbar -->
-  <section id="breaking-news-popup" class="update-popup-overlay breaking-news-overlay" role="dialog" aria-modal="true" aria-labelledby="breaking-news-title" hidden>
-    <article class="update-popup-card story-intro-card breaking-news-card">
-      <button id="breaking-news-close" class="update-popup-close" type="button" aria-label="Breaking News schließen">✕</button>
-      <div class="breaking-news-banner"><span class="breaking-news-live">● LIVE</span><strong>BREAKING NEWS</strong><small>NACHRICHTENZENTRALE · 01.01.2027</small></div>
-      <div class="breaking-news-visual">
-        <img src="Images/prolog-breaking-news.png" alt="Die Erde aus dem All während der globalen Rohstoffkrise">
-      </div>
-      <div class="breaking-news-audio">
-        <div class="breaking-news-audio-label">🎙️ Originalmeldung · Prolog</div>
-        <audio id="breaking-news-audio" controls preload="metadata">
-          <source src="audio/Prolog01.mp3" type="audio/mpeg">
-          Dein Browser unterstützt die Audiowiedergabe nicht.
-        </audio>
-      </div>
-      <div class="update-popup-kicker">SONDERBERICHT · GLOBALE ROHSTOFFKRISE</div>
-      <h2 id="breaking-news-title">Die Rohstoffe der Erde gehen zur Neige</h2>
-      <div class="story-text">
-        <p><strong>01. Januar 2027.</strong> Weltweit werden die Rohstoffvorkommen der Erde immer knapper. Immer mehr Fördergebiete erschöpfen sich, Lieferketten geraten unter Druck und ganze Industriezweige kämpfen um ihre Versorgung.</p>
-        <p>Inmitten dieser Krise hat sich das Unternehmen <strong>SPACEY</strong> der Herausforderung angeschlossen. Mit Forschung, moderner Raumfahrttechnik und der Erschließung außerirdischer Rohstoffquellen will SPACEY neue Perspektiven für die Menschheit schaffen.</p>
-        <p>Die Mission ist klar: neue Welten erschließen, Ressourcen verantwortungsvoll nutzen und die Zukunft der Erde sichern. Der Aufbruch ins All beginnt jetzt.</p>
-        <h3>Die Zukunft braucht neue Perspektiven.</h3>
-        <p><strong>SPACEY – Unsere Zukunft liegt im All.</strong></p>
-      </div>
-      <div class="breaking-news-ticker"><span>BREAKING NEWS</span> · ROHSTOFFKRISE AUF DER ERDE · SPACEY STARTET ZUKUNFTSMISSION · DER AUFBRUCH INS ALL BEGINNT</div>
-      <button id="breaking-news-start" class="story-start-button" type="button">🚀 Zurück ins Spiel</button>
     </article>
   </section>
 
@@ -695,7 +666,7 @@
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/cloud-sync.js?v=cloud-restore-pagehide-fix-20261116"></script>
-  <script src="js/game-planets.js?v=system2-planets-20261123"></script>
+  <script src="js/game-planets.js?v=europa-20261127"></script>
   <script src="js/game-asteroids.js?v=asteroids-split-20261116"></script>
   <script src="js/game-atmosphere.js?v=surface-terraforming-gasgiant-lock-20261119"></script>
   <script src="js/game-energy.js?v=gaspowerplant-20261121-v9"></script>
@@ -703,7 +674,7 @@
   <script src="js/resource-registry.js?v=resource-registry-20261115-v2"></script>
   <script src="js/building-registry.js?v=building-registry-20261115-v2"></script>
   <script src="js/game-save.js?v=save-schema12-release-1.1.1"></script>
-  <script src="js/game.js?v=system2-luna-style-atmosphere-20261123"></script>
+  <script src="js/game.js?v=20261127-prolog-audio02"></script>
   <script src="js/game-research.js?v=research-orders-split-20261122"></script>
   <script src="js/game-workforce.js?v=workforce-powerlink-20261114"></script>
 <script src="js/game-colonists.js?v=recruitment-20261114"></script>
@@ -712,7 +683,7 @@
 <script src="js/game-orders.js?v=finance-researchers-1.1.1"></script>
   <script src="js/unique-buildings.js?v=unique-research-hq-1.1.1"></script>
 <script src="js/game-recruitment.js?v=recruitment-20261114"></script>
-<script src="js/game-language-ui.js?v=zoom-performance-1.1.1&cloud-restore-pagehide-fix-20261116"></script>
+<script src="js/game-language-ui.js?v=20261127-no-breaking-news"></script>
   <script>if ("serviceWorker" in navigator) navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{});</script>
 
 <script>
