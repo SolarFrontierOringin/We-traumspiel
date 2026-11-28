@@ -2063,6 +2063,24 @@ async function resolvePrologAudio(root = document, storyId = '01') {
   if (!audio || audio.dataset.resolved === 'true') return;
   audio.dataset.resolved = 'true';
   const storyName = `Geschichte-${storyId}`;
+
+  // Aufgabe 1: Die MP3 liegt fest unter audio/Geschichte-01.mp3.
+  // Quelle und play() werden direkt beim Klick auf die Aufgabe gesetzt,
+  // damit Android-Chrome die Wiedergabe als Nutzeraktion akzeptiert.
+  if (storyId === '01') {
+    const source = 'audio/Geschichte-01.mp3';
+    audio.src = source;
+    audio.load();
+    if (status) status.textContent = `Audiodatei geladen: ${source}`;
+    const playAttempt = audio.play();
+    if (playAttempt && typeof playAttempt.catch === 'function') {
+      playAttempt.catch(() => {
+        if (status) status.textContent = 'Bitte tippe im Audioplayer auf Wiedergabe.';
+      });
+    }
+    return;
+  }
+
   const candidates = ['mp3', 'ogg', 'wav', 'm4a'].map(ext => `audio/${storyName}.${ext}`);
   for (const source of candidates) {
     try {
@@ -2178,10 +2196,10 @@ function renderTasks() {
           </div>
           <div class="prolog-audio-panel">
             <div class="prolog-audio-heading">🎙️ Geschichte-01</div>
-            <audio controls preload="metadata" data-prolog-audio>
+            <audio controls preload="auto" data-prolog-audio="01">
               Dein Browser unterstützt den Audioplayer nicht.
             </audio>
-            <div class="hint" data-prolog-audio-status>Suche nach audio/Geschichte-01 …</div>
+            <div class="hint" data-prolog-audio-status="01">audio/Geschichte-01.mp3 wird geladen …</div>
           </div>
         </section>
         <section class="prolog-message-window prolog-news-window" data-prolog-news hidden role="dialog" aria-modal="true" aria-labelledby="prolog-news-title">
