@@ -28,57 +28,182 @@ function getSaveSlotKeys(slot = activeSaveSlot) {
 let activeSolarSystemId = 'system1';
 
 // ==========================================
-// AUDIO
+// AUDIO – Hintergrundmusik und Spielsounds
 // ==========================================
 const AUDIO_SETTINGS_KEY = 'solarFrontierAudio_v1';
-const musicTracks = ['Ruskerdax - Pondering the Cosmos.mp3', 'humanstudioed-cyberpunk-techno-510219.mp3', 'audio/psychronic-celtic-winds-439101.mp3'];
+const musicTracks = [
+  { src: 'Ruskerdax - Pondering the Cosmos.mp3', title: 'Pondering the Cosmos' },
+  { src: 'humanstudioed-cyberpunk-techno-510219.mp3', title: 'Cyberpunk Techno' },
+  { src: 'audio/psychronic-celtic-winds-439101.mp3', title: 'Celtic Winds' }
+];
 let currentMusicTrack = 0;
-const backgroundMusic = new Audio(musicTracks[currentMusicTrack]);
+let audioSettings = (() => {
+  try {
+    return Object.assign(
+      { musicEnabled: true, musicVolume: 0.35, soundsEnabled: true },
+      JSON.parse(localStorage.getItem(AUDIO_SETTINGS_KEY) || '{}')
+    );
+  } catch (_) {
+    return { musicEnabled: true, musicVolume: 0.35, soundsEnabled: true };
+  }
+})();
+audioSettings.musicVolume = Math.max(0, Math.min(1, Number(audioSettings.musicVolume) || 0));
+const backgroundMusic = new Audio();
 backgroundMusic.loop = false;
 backgroundMusic.preload = 'auto';
-backgroundMusic.addEventListener('ended', () => {
-  currentMusicTrack = (currentMusicTrack + 1) % musicTracks.length;
-  backgroundMusic.src = musicTracks[currentMusicTrack];
-  if (audioSettings.musicEnabled && audioUnlocked) backgroundMusic.play().catch(()=>{});
-});
-let audioSettings = (() => {
-  try { return Object.assign({ musicEnabled: true, musicVolume: 0.35, soundsEnabled: true }, JSON.parse(localStorage.getItem(AUDIO_SETTINGS_KEY) || '{}')); }
-  catch { return { musicEnabled: true, musicVolume: 0.35, soundsEnabled: true }; }
-})();
-backgroundMusic.volume = Math.max(0, Math.min(1, Number(audioSettings.musicVolume) || 0));
+backgroundMusic.volume = audioSettings.musicVolume;
 let audioUnlocked = false;
 let soundContext = null;
+let failedTrackAttempts = 0;
 
-function unlockAudio(){
-  audioUnlocked = true;
-  if (audioSettings.musicEnabled) backgroundMusic.play().catch(()=>{});
+function updateMusicControls() {
+  const title = document.querySelector('#music-track-name');
+  const mute = document.querySelector('#music-mute');
+  const volume = document.querySelector('#music-volume');
+  const value = document.querySelector('#music-volume-value');
+  const track = musicTracks[currentMusicTrack];
+  if (title) title.textContent = track ? track.title : 'Kein Titel';
+  if (mute) {
+    mute.textContent = audioSettings.musicEnabled ? '🔊 Musik an' : '🔇 Stumm';
+    mute.classList.toggle('off', !audioSettings.musicEnabled);
+    mute.setAttribute('aria-pressed', String(!audioSettings.musicEnabled));
+  }
+  if (volume) volume.value = String(Math.round(audioSettings.musicVolume * 100));
+  if (value) value.textContent = `${Math.round(audioSettings.musicVolume * 100)} %`;
 }
-function saveAudioSettings(){ localStorage.setItem(AUDIO_SETTINGS_KEY, JSON.stringify(audioSettings)); }
-function playUiSound(type='click'){
+
+function saveAudioSettings() {
+  try { localStorage.setItem(AUDIO_SETTINGS_KEY, JSON.stringify(audioSettings)); } catch (_) {}
+}
+
+function playCurrentMusic() {
+  if (!audioSettings.musicEnabled || !audioUnlocked || !backgroundMusic.src) return;
+  backgroundMusic.volume = audioSettings.musicVolume;
+  const playAttempt = backgroundMusic.play();
+  if (playAttempt && typeof playAttempt.catch === 'function') {
+    playAttempt.catch(error => {
+      // Browser blockiert Wiedergabe ohne gültige Nutzerinteraktion:
+      // beim nächsten echten Tipp erneut versuchen.
+      if (error && error.name === 'NotAllowedError') audioUnlocked = false;
+    });
+  }
+}
+
+function setMusicTrack(index, shouldPlay = true, resetFailures = true) {
+  currentMusicTrack = (index + musicTracks.length) % musicTracks.length;
+  if (resetFailures) failedTrackAttempts = 0;
+  const track = musicTracks[currentMusicTrack];
+  backgroundMusic.pause();
+  backgroundMusic.src = track.src;
+  backgroundMusic.load();
+  updateMusicControls();
+  if (shouldPlay) playCurrentMusic();
+}
+
+function nextMusicTrack(randomize = false) {
+  let nextIndex = (currentMusicTrack + 1) % musicTracks.length;
+  if (randomize && musicTracks.length > 1) {
+    do {
+      nextIndex = Math.floor(Math.random() * musicTracks.length);
+    } while (nextIndex === currentMusicTrack);
+  }
+  setMusicTrack(nextIndex, true);
+}
+function previousMusicTrack() {
+  // Bei mehr als 3 Sekunden Wiedergabe startet „Zurück“ den aktuellen Titel neu.
+  if (backgroundMusic.currentTime > 3) {
+    backgroundMusic.currentTime = 0;
+    playCurrentMusic();
+    return;
+  }
+  setMusicTrack(currentMusicTrack - 1, true);
+}
+
+backgroundMusic.addEventListener('ended', () => nextMusicTrack(true));
+backgroundMusic.addEventListener('error', () => {
+  // Fehlende Audiodateien überspringen, statt die gesamte Wiedergabe zu stoppen.
+  if (!audioUnlocked || !audioSettings.musicEnabled || failedTrackAttempts >= musicTracks.length) return;
+  failedTrackAttempts += 1;
+  setMusicTrack(currentMusicTrack + 1, true, false);
+});
+
+function unlockAudio() {
+  audioUnlocked = true;
+  if (!backgroundMusic.src) setMusicTrack(currentMusicTrack, false);
+  playCurrentMusic();
+}
+
+function playUiSound(type = 'click') {
   if (!audioSettings.soundsEnabled || !audioUnlocked) return;
   try {
     soundContext ||= new (window.AudioContext || window.webkitAudioContext)();
     if (soundContext.state === 'suspended') soundContext.resume();
     const o = soundContext.createOscillator();
-    const g = soundContext.createGain();
+    const gain = soundContext.createGain();
     const now = soundContext.currentTime;
-    const cfg = type === 'research' ? {a:660,b:990,d:.18} : type === 'build' ? {a:440,b:660,d:.14} : {a:520,b:700,d:.08};
-    o.type = 'sine'; o.frequency.setValueAtTime(cfg.a, now); o.frequency.exponentialRampToValueAtTime(cfg.b, now + cfg.d);
-    g.gain.setValueAtTime(.0001, now); g.gain.exponentialRampToValueAtTime(.08, now + .015); g.gain.exponentialRampToValueAtTime(.0001, now + cfg.d);
-    o.connect(g); g.connect(soundContext.destination); o.start(now); o.stop(now + cfg.d + .02);
-  } catch {}
-}
-function setupAudio(){
-  const toggle=document.querySelector('#music-toggle'), volume=document.querySelector('#music-volume'), value=document.querySelector('#music-volume-value'), soundToggle=document.querySelector('#sound-toggle');
-  if(!toggle || !volume || !value || !soundToggle) return;
-  volume.value=Math.round((Number(audioSettings.musicVolume)||0)*100); value.textContent=`${volume.value} %`;
-  const refresh=()=>{ toggle.textContent=audioSettings.musicEnabled?'Ein':'Aus'; toggle.classList.toggle('off',!audioSettings.musicEnabled); soundToggle.textContent=audioSettings.soundsEnabled?'Ein':'Aus'; soundToggle.classList.toggle('off',!audioSettings.soundsEnabled); };
-  refresh();
-  toggle.addEventListener('click',()=>{ unlockAudio(); audioSettings.musicEnabled=!audioSettings.musicEnabled; if(audioSettings.musicEnabled) backgroundMusic.play().catch(()=>{}); else backgroundMusic.pause(); saveAudioSettings(); refresh(); });
-  volume.addEventListener('input',()=>{ audioSettings.musicVolume=Number(volume.value)/100; backgroundMusic.volume=audioSettings.musicVolume; value.textContent=`${volume.value} %`; saveAudioSettings(); });
-  soundToggle.addEventListener('click',()=>{ unlockAudio(); audioSettings.soundsEnabled=!audioSettings.soundsEnabled; saveAudioSettings(); refresh(); if(audioSettings.soundsEnabled) playUiSound('click'); });
+    const cfg = type === 'research' ? { a: 660, b: 990, d: .18 } :
+      type === 'build' ? { a: 440, b: 660, d: .14 } : { a: 520, b: 700, d: .08 };
+    o.type = 'sine';
+    o.frequency.setValueAtTime(cfg.a, now);
+    o.frequency.exponentialRampToValueAtTime(cfg.b, now + cfg.d);
+    gain.gain.setValueAtTime(.0001, now);
+    gain.gain.exponentialRampToValueAtTime(.08, now + .015);
+    gain.gain.exponentialRampToValueAtTime(.0001, now + cfg.d);
+    o.connect(gain);
+    gain.connect(soundContext.destination);
+    o.start(now);
+    o.stop(now + cfg.d + .02);
+  } catch (_) {}
 }
 
+function setupAudio() {
+  const mute = document.querySelector('#music-mute');
+  const previous = document.querySelector('#music-previous');
+  const next = document.querySelector('#music-next');
+  const volume = document.querySelector('#music-volume');
+  const soundToggle = document.querySelector('#sound-toggle');
+
+  updateMusicControls();
+  setMusicTrack(currentMusicTrack, false);
+
+  mute?.addEventListener('click', () => {
+    audioSettings.musicEnabled = !audioSettings.musicEnabled;
+    saveAudioSettings();
+    if (audioSettings.musicEnabled) {
+      unlockAudio();
+    } else {
+      backgroundMusic.pause();
+      updateMusicControls();
+    }
+  });
+  previous?.addEventListener('click', () => {
+    unlockAudio();
+    previousMusicTrack();
+  });
+  next?.addEventListener('click', () => {
+    unlockAudio();
+    nextMusicTrack();
+  });
+  volume?.addEventListener('input', () => {
+    audioSettings.musicVolume = Math.max(0, Math.min(1, Number(volume.value) / 100));
+    backgroundMusic.volume = audioSettings.musicVolume;
+    saveAudioSettings();
+    updateMusicControls();
+  });
+  soundToggle?.addEventListener('click', () => {
+    unlockAudio();
+    audioSettings.soundsEnabled = !audioSettings.soundsEnabled;
+    saveAudioSettings();
+    soundToggle.textContent = audioSettings.soundsEnabled ? 'Ein' : 'Aus';
+    soundToggle.classList.toggle('off', !audioSettings.soundsEnabled);
+    if (audioSettings.soundsEnabled) playUiSound('click');
+  });
+}
+
+// Audio darf erst nach einer echten Nutzeraktion starten (Browser-Autoplay-Schutz).
+// Deshalb auf den allerersten Tipp/Tastendruck reagieren – nicht erst auf den Menü-Klick.
+document.addEventListener('pointerdown', unlockAudio, true);
+document.addEventListener('keydown', unlockAudio, true);
 
 // ==========================================
 // ZENTRALE SPIELUHR – Galaktischer Standardkalender
@@ -3184,7 +3309,10 @@ function renderSystem() {
         if (term) { g.content.hidden = false; g.heading.setAttribute('aria-expanded','true'); g.heading.querySelector('.building-category-arrow').textContent = '▾'; }
       });
       tools.querySelector('.building-result-count').textContent = `${visible} Gebäude${visible === 1 ? '' : ''} angezeigt`;
-      rememberBuildMenuUiState(menu);
+      // Während des Neuaufbaus ist das neue Menü zunächst noch nicht im DOM.
+      // In diesem Zustand darf seine Scrollposition (0) den gespeicherten
+      // Zustand des zuvor geöffneten, fixierten Menüs nicht überschreiben.
+      if (menu.isConnected) rememberBuildMenuUiState(menu);
     };
     // Filtereinstellungen bleiben nach jedem Bau erhalten, statt auf die
     // Standardansicht zurückzuspringen.
@@ -3209,8 +3337,13 @@ function renderSystem() {
       activeBuildingCategoryTitle = categoryToRestore.heading.querySelector('span')?.textContent || null;
     }
 
+    menu.style.position = 'fixed';
     menu.style.left = '50%';
-    menu.style.top = 'calc(50% - 150px)';
+    menu.style.top = '50%';
+    menu.style.right = 'auto';
+    menu.style.bottom = 'auto';
+    menu.style.transform = 'translate(-50%, -50%)';
+    menu.style.overflowAnchor = 'none';
     document.body.appendChild(menu);
     // Das Menü liegt direkt im Dokument, damit Zoom/Scrollen des Sonnensystems seine Position nicht verschiebt.
     // Absichtlich keine building-menu-open-Klasse am Sonnensystem setzen: Das Menü liegt separat auf dem Dokument.

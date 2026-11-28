@@ -347,4 +347,4 @@ document.addEventListener('visibilitychange', () => {
   viewport.addEventListener('touchcancel', reset, {passive:true});
   viewport.setAttribute('aria-description','Mit einem Finger verschieben oder Planeten auswählen; mit zwei Fingern verschieben und zoomen.');
 })();
-['pointerdown','touchstart','keydown'].forEach(evt=>document.addEventListener(evt, unlockAudio, {once:true, passive:true}));
+// Audio-Freigabe wird zentral in game.js bei jeder echten Nutzeraktion behandelt.

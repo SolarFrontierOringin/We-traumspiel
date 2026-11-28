@@ -18,15 +18,15 @@ const bodies = {
   europa: { name: 'Europa', type: 'Mond des Jupiter', className: 'europa', diameterKm: 3122, temperature: '-100 °C', resources: { ice: 70000000, iron: 3000000, stone: 3000000, goldOre: 10000000, copperOre: 1000000 }, storage: {}, orbit: 820, moonOf: 'jupiter', sharedOrbitWith: 'jupiter' }
 };
 
-// Zweites Sonnensystem: Elyndra liegt im Zentrum; Noxaris liegt auf der äußersten Umlaufbahn.
+// Zweites Sonnensystem: Elyndra im Zentrum; Themepatin/Rethroxid teilen 1120 px, Noxaris/Pyrophor teilen 1420 px.
 const futureSolarSystem = {
   id: 'system2', name: 'Sonnensystem 2',
   bodies: [
     { id: 'elyndra', name: 'Elyndra', type: 'Mystischer Gesteinsplanet', className: 'elyndra', diameterKm: 25000, orbit: 0, rotationHours: 96, temperature: 'Unbekannt', description: 'Ein gewaltiger mystischer Gesteinsplanet im Zentrum des Systems. Seine violett-rosa Oberfläche wird von hellblauen Energieadern durchzogen.', resources: { nickelOre: 10000000 }, atmosphere: { gases: { helium3: 0, oxygen: 0, hydrogen: 0, co2: 0, nitrogen: 0 }, totalGas: 0, oxygen: 0, ruleVersion: '4t-km2-v1' }, storage: {}, orbitStorage: {} },
     { id: 'themepatin', name: 'Themepatin', type: 'Gesteinsplanet', className: 'themepatin', diameterKm: 5190, orbit: 1120, temperature: 'Unbekannt', resources: { stone: 1000000, copperOre: 2000000, uranium: 10000000 }, storage: {}, atmosphere: { gases: { helium3: 0, oxygen: 0, hydrogen: 0, co2: 0, nitrogen: 0 }, totalGas: 0, oxygen: 0, ruleVersion: '4t-km2-v1' }, orbitStorage: {} },
-    { id: 'rethroxid', name: 'Rethroxid', type: 'Roter Gesteinsplanet', className: 'rethroxid', diameterKm: 1988, orbit: 1280, temperature: 'Unbekannt', resources: { copperOre: 10000000, germanium: 2000000 }, storage: {}, atmosphere: { gases: { helium3: 0, oxygen: 0, hydrogen: 0, co2: 0, nitrogen: 0 }, totalGas: 0, oxygen: 0, ruleVersion: '4t-km2-v1' }, orbitStorage: {} },
+    { id: 'rethroxid', name: 'Rethroxid', type: 'Roter Gesteinsplanet', className: 'rethroxid', diameterKm: 1988, orbit: 1120, temperature: 'Unbekannt', resources: { copperOre: 10000000, germanium: 2000000 }, storage: {}, atmosphere: { gases: { helium3: 0, oxygen: 0, hydrogen: 0, co2: 0, nitrogen: 0 }, totalGas: 0, oxygen: 0, ruleVersion: '4t-km2-v1' }, orbitStorage: {} },
     { id: 'noxaris', name: 'Noxaris', type: 'Mystischer Planet', className: 'noxaris', diameterKm: 6400, orbit: 1420, temperature: 'Unbekannt', resources: { iron: 2000000, stone: 1000000, ionium: 500000, germanium: 1000000 }, storage: {}, atmosphere: { gases: { helium3: 0, oxygen: 0, hydrogen: 0, co2: 0, nitrogen: 0 }, totalGas: 0, oxygen: 0, ruleVersion: '4t-km2-v1' }, orbitStorage: {} },
-    { id: 'pyrophor', name: 'Pyrophor', type: 'Vulkanischer Gesteinsplanet', className: 'pyrophor', diameterKm: 3942, orbit: 1580, temperature: '1.200 °C', resources: { uranium: 8000000, stone: 12000000, ionium: 2000000 }, storage: {}, atmosphere: { gases: { helium3: 0, oxygen: 0, hydrogen: 0, co2: 0, nitrogen: 0 }, totalGas: 0, oxygen: 0, ruleVersion: '4t-km2-v1' }, orbitStorage: {} }
+    { id: 'pyrophor', name: 'Pyrophor', type: 'Vulkanischer Gesteinsplanet', className: 'pyrophor', diameterKm: 3942, orbit: 1420, temperature: '1.200 °C', resources: { uranium: 8000000, stone: 12000000, ionium: 2000000 }, storage: {}, atmosphere: { gases: { helium3: 0, oxygen: 0, hydrogen: 0, co2: 0, nitrogen: 0 }, totalGas: 0, oxygen: 0, ruleVersion: '4t-km2-v1' }, orbitStorage: {} }
   ]
 };
 // Elyndra wird wie die übrigen Planeten in die gemeinsame Planetenverwaltung eingebunden.

@@ -211,7 +211,7 @@
       const { data, error } = await getClient().rpc('sfo_save_game_slot', {
         p_save_slot: slot,
         p_save_data: saveData,
-        p_app_version: String(saveData.appVersion || '1.0.4_Fix'),
+        p_app_version: String(saveData.appVersion || '1.1.2'),
         p_schema_version: Number(saveData.schemaVersion || saveData.version || 1),
         p_device_id: getDeviceId()
       });
