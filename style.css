@@ -3158,3 +3158,1761 @@ body.prolog-fullscreen-open {
   .prolog-message-window { padding: 16px !important; }
   .prolog-message-window .prolog-message-head { top: -16px; }
 }
+
+
+/* Integriertes Startseiten-Design aus SFO Starttest Real Ship */
+/* Startseite: langsam ziehende rot-pinke Kometen mit leuchtenden Schweifen */
+.startup-intro{
+  background:
+    radial-gradient(ellipse at 18% 28%,rgba(255,55,125,.15) 0%,transparent 38%),
+    radial-gradient(ellipse at 82% 62%,rgba(195,55,190,.17) 0%,transparent 42%),
+    radial-gradient(ellipse at 50% 42%,#142747 0%,#071225 48%,#02050b 100%);
+}
+.startup-comets{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:1}
+.startup-comet{
+  position:absolute;display:block;width:clamp(90px,24vw,170px);height:2px;
+  border-radius:999px;opacity:0;
+  transform:rotate(-31deg);
+  background:linear-gradient(90deg,transparent 0%,rgba(255,65,130,.12) 18%,rgba(255,100,170,.9) 78%,#fff0f7 100%);
+  box-shadow:0 0 5px rgba(255,65,140,.95),0 0 13px rgba(255,35,125,.75),0 0 24px rgba(226,50,190,.38);
+  animation:startup-comet-flight 8s linear infinite;
+}
+.startup-comet::after{
+  content:"";position:absolute;right:-2px;top:50%;width:5px;height:5px;
+  border-radius:50%;transform:translateY(-50%);
+  background:#fff4fa;box-shadow:0 0 7px 3px rgba(255,100,170,.9),0 0 16px 6px rgba(255,40,130,.48);
+}
+.comet-one{top:13%;left:-35%;animation-delay:.2s;animation-duration:9s}
+.comet-two{top:36%;left:-42%;width:clamp(75px,19vw,135px);animation-delay:3.1s;animation-duration:11s}
+.comet-three{top:59%;left:-38%;width:clamp(100px,27vw,190px);animation-delay:5.4s;animation-duration:10s}
+.comet-four{top:79%;left:-30%;width:clamp(65px,16vw,115px);animation-delay:1.8s;animation-duration:12s;filter:hue-rotate(18deg)}
+.comet-five{top:23%;left:-45%;width:clamp(55px,14vw,100px);animation-delay:7.2s;animation-duration:13s;opacity:0}
+@keyframes startup-comet-flight{
+  0%{transform:translate3d(-10vw,-4vh,0) rotate(-31deg);opacity:0}
+  8%{opacity:.82}
+  24%{opacity:.72}
+  38%{transform:translate3d(125vw,45vh,0) rotate(-31deg);opacity:0}
+  100%{transform:translate3d(125vw,45vh,0) rotate(-31deg);opacity:0}
+}
+.startup-intro-art,.startup-intro-kicker,.startup-intro h1,.startup-intro p,.startup-intro-actions{
+  position:relative;z-index:2
+}
+.startup-intro h1{text-shadow:0 0 18px rgba(80,180,255,.34),0 0 30px rgba(255,70,155,.18)}
+@media(prefers-reduced-motion:reduce){
+  .startup-comet{animation:none;display:none}
+}
+.startup-intro-loader{width:150px;height:3px;margin-top:8px;overflow:hidden;border-radius:5px;background:#233752}
+.startup-intro-loader i{display:block;width:45%;height:100%;border-radius:5px;background:#63d8ff;animation:intro-loader 1.6s ease-in-out forwards}
+@keyframes intro-art-float{from{transform:translateY(3px)}to{transform:translateY(-5px)}}
+@keyframes intro-loader{from{transform:translateX(-110%)}to{transform:translateX(240%)}}
+@keyframes intro-fade-out{to{opacity:0;visibility:hidden;pointer-events:none}}
+
+
+/* Nivaris – mystischer Eisplanet mit grün-roten und pinken Leuchtzonen */
+.body.nivaris{
+  width:50px;height:50px;
+  background:
+    radial-gradient(ellipse at 28% 32%,rgba(255,90,120,.95) 0 12%,transparent 34%),
+    radial-gradient(ellipse at 70% 62%,rgba(255,90,210,.9) 0 15%,transparent 38%),
+    radial-gradient(ellipse at 55% 25%,rgba(80,255,150,.95) 0 18%,transparent 42%),
+    radial-gradient(circle at 35% 30%,#4e9c73 0%,#173f39 42%,#160e29 72%,#080b18 100%);
+  border:1px solid rgba(255,170,235,.8);
+  box-shadow:0 0 12px rgba(70,255,160,.65),0 0 25px rgba(255,65,190,.45),0 0 38px rgba(255,70,90,.28);
+}
+.body.nivaris::after{
+  content:"";position:absolute;width:76px;height:24px;border:2px solid rgba(255,100,220,.72);
+  border-left-color:rgba(90,255,170,.85);border-right-color:rgba(255,80,100,.8);
+  border-radius:50%;transform:rotate(-22deg);pointer-events:none;
+}
+
+/* Forstübersicht im Wirtschafts-Dashboard */
+.forest-planet-card{margin:8px 0;padding:10px;border:1px solid #31513f;border-radius:11px;background:#0b1a17}
+.forest-planet-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding-bottom:7px;border-bottom:1px solid #294536}
+.forest-planet-head span{font-size:12px;color:#aab8ce;text-align:right}
+.forest-planet-card .stat{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px solid #1b3429;font-size:13px}
+.forest-planet-card .stat strong{white-space:nowrap}
+.forest-planet-card .forest-total{color:#8ee5a8;font-weight:700}
+.forest-bonus-total{padding-top:8px;color:#8ee5a8;font-size:12px}
+.forest-note{display:block;margin-top:7px;color:#ffd36a;font-size:11px;line-height:1.4}
+
+
+/* Individuelle Leistungssteuerung je Produktionsgebäude und Planet */
+.building-performance-control{grid-column:1/-1;margin-top:4px;padding:10px;border:1px solid #315273;border-radius:10px;background:#0a1728}
+.building-performance-control label{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px;font-size:13px;font-weight:700}
+.building-performance-control label strong{color:#75e09b;font-size:15px}
+.building-performance-control input[type=range]{display:block;width:100%;margin:6px 0;accent-color:#3288ed}
+.building-performance-control small{display:block;color:#aab8ce;font-size:11px;line-height:1.35}
+
+/* Stromspeicher-Übersicht im Wirtschafts-Dashboard */
+.dashboard-battery-summary{margin:0 0 14px;padding:14px;border:1px solid rgba(73,173,221,.28);border-radius:12px;background:linear-gradient(135deg,rgba(15,45,70,.72),rgba(10,22,38,.78));}
+.dashboard-battery-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+.dashboard-battery-heading strong{color:#d8efff;}
+.dashboard-battery-heading span{font-weight:700;color:#8ee7b7;}
+.dashboard-battery-track{height:9px;overflow:hidden;border-radius:99px;background:rgba(255,255,255,.1);margin-bottom:12px;}
+.dashboard-battery-track i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#39b9f4,#5be0a2);}
+.dashboard-battery-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;}
+.dashboard-battery-stats>div{display:flex;flex-direction:column;gap:4px;min-width:0;padding:9px;border-radius:8px;background:rgba(255,255,255,.045);}
+.dashboard-battery-stats span,.dashboard-battery-summary>small{font-size:.78rem;color:var(--muted,#9aaec2);}
+.dashboard-battery-stats strong{font-size:.92rem;color:#edf7ff;overflow-wrap:anywhere;}
+.dashboard-battery-summary>small{display:block;margin-top:10px;}
+@media(max-width:600px){.dashboard-battery-stats{grid-template-columns:repeat(2,minmax(0,1fr));}}
+
+
+/* Frachttransport Oberfläche ↔ Orbit */
+.freight-transport-details{margin-top:10px;border:1px solid #315273;border-radius:12px;background:#0c1627;overflow:hidden}
+.freight-transport-details>summary{padding:12px;cursor:pointer;font-weight:700;color:#eef4ff}
+.freight-transport-details>.planet-storage-content{display:grid;gap:8px;padding:0 12px 12px}
+.freight-transport-details label{display:block;color:#c7d4e8}
+.freight-transport-details input:not([type=checkbox]),.freight-transport-details select{width:100%;padding:9px;border:1px solid #344967;border-radius:8px;background:#eef2f7;color:#111}
+.freight-transport-details input[type=checkbox]{margin-right:6px}
+
+
+/* Startseite mit explizitem Spielstart und Updatezugang */
+.startup-intro{z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(14px,2.8vh,26px);padding:28px 22px;text-align:center;background:radial-gradient(ellipse at 50% 42%,rgba(23,67,117,.38),transparent 52%),#02050b}
+.startup-intro[hidden]{display:none}
+.startup-intro h1{margin:0;max-width:800px;font-size:clamp(2rem,7vw,4.6rem);line-height:1.05;letter-spacing:-.035em;color:#f4f8ff;text-shadow:0 0 28px rgba(83,174,255,.2)}
+.startup-intro>p{max-width:560px;margin:0;color:#b9cbe2;font-size:clamp(1rem,2.7vw,1.2rem);line-height:1.6}
+.startup-intro-kicker{color:#72d8ff;font-size:.72rem;font-weight:800;letter-spacing:.18em}
+.startup-intro-actions{display:flex;flex-direction:column;align-items:stretch;gap:12px;width:min(100%,330px);margin-top:8px}
+.startup-intro-actions button{min-height:50px;padding:13px 20px;border:1px solid rgba(130,190,255,.35);border-radius:12px;background:rgba(18,42,72,.72);color:#eaf4ff;font:700 1rem/1.2 inherit;cursor:pointer;transition:transform .15s ease,border-color .15s ease,background .15s ease}
+.startup-intro-actions button:first-child{border-color:#65cfff;background:linear-gradient(135deg,#1767a8,#1648a0);box-shadow:0 8px 28px rgba(28,112,205,.24)}
+.startup-intro-actions button:hover{transform:translateY(-1px);border-color:#8de4ff}
+.startup-intro-actions button:focus-visible{outline:3px solid #9ce8ff;outline-offset:3px}
+@media(min-width:560px){.startup-intro-actions{flex-direction:row;width:auto}.startup-intro-actions button{min-width:190px}}
+@media(prefers-reduced-motion:reduce){.startup-intro-actions button{transition:none}}
+
+/* Einklappbare Planetkarten in der Kolonistenübersicht */
+.colonists-planet-card{display:block;padding:0;overflow:hidden}
+.colonists-planet-card>summary{list-style:none;cursor:pointer;padding:13px;min-height:54px}
+.colonists-planet-card>summary::-webkit-details-marker{display:none}
+.colonists-planet-card>summary::after{content:"＋";margin-left:auto;color:#9fb4d2;font-size:20px}
+.colonists-planet-card[open]>summary::after{content:"−"}
+.colonists-planet-card>summary h3{display:inline;margin:0}
+.colonists-planet-card>summary>span{display:flex;align-items:center;gap:5px}
+.colonists-planet-card>summary .colonists-expand-hint{color:#9fb4d2;font-size:12px;font-weight:500}
+.colonists-planet-card[open]>:not(summary){margin-left:12px;margin-right:12px}
+.colonists-planet-card[open]>.colonists-remove-row{margin-bottom:12px}
+
+/* Kolonisten-Luxusgüter: drei kompakte Schalter in einer Reihe */
+.luxury-controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:12px 0 14px}
+.luxury-control{min-width:0;text-align:center}
+.luxury-switch{width:100%;min-height:64px;padding:8px 3px;border:1px solid #2f9d68;border-radius:10px;background:#176b45;color:#fff;font-weight:700;font-size:12px;line-height:1.35;white-space:normal}
+.luxury-switch span{font-size:14px;letter-spacing:.04em}
+.luxury-switch.is-off{background:#7c2932;border-color:#b64a55}
+.luxury-control small{display:block;margin-top:6px;color:#b9c6d8;font-size:11px;line-height:1.35;overflow-wrap:anywhere}
+@media(max-width:360px){.luxury-controls{gap:4px}.luxury-switch{font-size:11px;padding:7px 2px}.luxury-control small{font-size:10px}}
+
+/* Aufgaben: einklappbare Questbereiche und Statusfarben */
+.task-quest-section{border:1px solid #263754;border-radius:12px;overflow:hidden;margin:10px 0;background:#0a1424}
+.task-quest-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px;background:#101e32;color:#e5edf9;border:0;font-size:16px;font-weight:800;text-align:left}
+.task-quest-content{padding:10px}
+.task-group-heading{margin:10px 0;font-size:15px;color:#c7d4e8}
+.task-card.task-pending{background:#351c25;border:1px solid #a94452}
+.task-card.task-done{background:#16452f;border:1px solid #3f9b68}
+
+/* Einzelne Aufgabenreihen innerhalb der Questbereiche einklappbar */
+.task-group-section{border:1px solid #263754;border-radius:10px;overflow:hidden;margin:8px 0;background:#0a1424}
+.task-group-toggle{width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 12px;background:#101e32;color:#dce7f6;border:0;border-radius:0;text-align:left;font-size:14px;font-weight:750}
+.task-group-toggle strong{white-space:nowrap;color:#aab8ce;font-size:12px}
+.task-group-section .tasks-list{padding:9px;}
+
+
+/* Startseite: Layout an die vom Nutzer gezeigte Weltraum-Startseite angepasst */
+.startup-intro{
+  justify-content:center;
+  gap:clamp(16px,2.4vh,26px);
+  padding:clamp(20px,4vh,38px) 22px;
+  background:
+    radial-gradient(ellipse at 85% 18%,rgba(77,105,186,.38),transparent 24%),
+    radial-gradient(ellipse at 18% 28%,rgba(20,157,190,.32),transparent 27%),
+    radial-gradient(ellipse at 75% 78%,rgba(241,151,59,.24),transparent 20%),
+    radial-gradient(ellipse at 42% 58%,rgba(69,46,130,.38),transparent 38%),
+    radial-gradient(ellipse at 50% 45%,#102849 0%,#06101f 52%,#02050b 100%);
+}
+.startup-intro-stars{
+  background-image:
+    radial-gradient(#e7f2ff 1px,transparent 1.6px),
+    radial-gradient(rgba(120,196,255,.9) 1px,transparent 1.8px),
+    radial-gradient(rgba(255,255,255,.7) .7px,transparent 1.4px);
+  background-size:83px 79px,137px 121px,47px 53px;
+  background-position:12px 17px,42px 51px,7px 29px;
+  opacity:.6;
+}
+.startup-intro-art{width:min(94vw,560px);height:clamp(150px,25vh,240px);}
+.startup-intro-art svg{filter:drop-shadow(0 0 20px rgba(76,166,255,.32));}
+.startup-intro-kicker{font-size:clamp(.68rem,2.5vw,.9rem);letter-spacing:.16em;text-shadow:0 0 14px rgba(86,211,255,.35);}
+.startup-intro h1{font-size:clamp(2rem,8vw,3.5rem);letter-spacing:-.045em;text-shadow:0 3px 24px rgba(0,0,0,.65);}
+.startup-intro>p{max-width:560px;font-size:clamp(1rem,4vw,1.3rem);line-height:1.65;letter-spacing:.025em;text-shadow:0 2px 12px #02050b;}
+.startup-intro-actions{width:min(100%,560px);gap:14px;margin-top:8px;}
+.startup-intro-actions button{min-height:64px;border-radius:17px;font-size:1.05rem;box-shadow:0 8px 24px rgba(0,0,0,.28);}
+.startup-intro-actions button:first-child{background:linear-gradient(115deg,#1767a8,#1648a0);box-shadow:0 8px 28px rgba(28,112,205,.34),inset 0 1px 0 rgba(255,255,255,.18);}
+@media(min-width:560px){.startup-intro-actions{flex-direction:column;width:min(100%,560px)}.startup-intro-actions button{width:100%;}}
+@media(max-height:700px){.startup-intro{gap:12px;padding-top:16px;padding-bottom:16px}.startup-intro-art{height:clamp(100px,19vh,150px)}.startup-intro-actions button{min-height:52px}}
+
+.free-population-facilities{margin-top:8px;padding:9px;border:1px solid #315273;border-radius:9px;background:#0b1728;color:#c7d8ee}
+.colonists-release-row{display:grid;grid-template-columns:minmax(0,1fr) 80px auto;gap:7px;align-items:center;margin-top:12px;padding:10px;border:1px solid #315273;border-radius:10px;background:#0b1728}
+.colonists-release-row small{grid-column:1/-1;color:#aab8ce;line-height:1.4}
+.colonists-release-row input{width:100%;min-width:0;padding:8px;border:1px solid #344967;border-radius:8px;background:#eef2f7;color:#111}
+.colonists-release-row button{white-space:nowrap}
+@media(max-width:430px){.colonists-release-row{grid-template-columns:minmax(0,1fr) 70px}.colonists-release-row button{grid-column:1/-1}}
+
+.free-population-storage{margin-top:9px;padding:9px;border:1px solid #315273;border-radius:9px;background:#091522}.free-population-storage>.stat:first-of-type{margin-top:5px}
+
+
+/* Gemeinsame Bevölkerungszentrale mit wischbaren Bereichen */
+.population-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:12px 0 14px;padding:5px;border:1px solid #263954;border-radius:14px;background:#07111f;touch-action:pan-y}
+.population-tab{min-width:0;min-height:44px;padding:10px 8px;border:1px solid transparent;border-radius:10px;background:transparent;color:#aebdd2;font:inherit;font-weight:700;font-size:.92rem;cursor:pointer;transition:background .18s,border-color .18s,color .18s}
+.population-tab.active{background:linear-gradient(135deg,#176fc0,#285fbd);border-color:#4b91dc;color:#fff;box-shadow:0 3px 12px rgba(20,100,190,.22)}
+@media(max-width:380px){.population-tab{font-size:.82rem;padding:9px 5px}}
+
+/* Bevölkerungszentrale: freundlichere Akzentfarben in Blau, Grün und Rot */
+#colonists-panel,
+#free-population-panel{
+  position:relative;
+  overflow:hidden;
+  border-color:rgba(91,160,211,.42);
+  background:
+    radial-gradient(ellipse at 8% 0%,rgba(56,145,215,.13),transparent 42%),
+    linear-gradient(155deg,#0c1a2c 0%,#091321 58%,#0a1724 100%);
+  box-shadow:0 12px 32px rgba(0,0,0,.28),inset 0 1px 0 rgba(190,225,255,.06);
+}
+#colonists-panel .colonists-head,
+#free-population-panel .colonists-head{align-items:center;padding-bottom:10px;border-bottom:1px solid rgba(123,170,213,.2)}
+#colonists-panel .colonists-head h2,
+#free-population-panel .colonists-head h2{color:#eaf5ff;text-shadow:0 0 18px rgba(80,165,235,.16)}
+#colonists-panel .colonists-head .hint,
+#free-population-panel .colonists-head .hint{color:#a9c4dd}
+.population-tabs{
+  gap:8px;
+  padding:6px;
+  border:1px solid rgba(126,170,207,.3);
+  border-radius:15px;
+  background:linear-gradient(110deg,rgba(13,31,51,.96),rgba(12,27,43,.96));
+  box-shadow:inset 0 1px 5px rgba(0,0,0,.25);
+}
+.population-tab{
+  min-height:49px;
+  border-radius:11px;
+  color:#b6c8d9;
+  background:rgba(255,255,255,.025);
+  font-weight:800;
+  letter-spacing:.005em;
+}
+.population-tab:first-child.active{
+  color:#f1f9ff;
+  border-color:#65b8f2;
+  background:linear-gradient(135deg,#267fc0,#2360a4);
+  box-shadow:0 4px 15px rgba(42,135,205,.27),inset 0 1px 0 rgba(255,255,255,.2);
+}
+.population-tab:last-child.active{
+  color:#f1fff6;
+  border-color:#72dba0;
+  background:linear-gradient(135deg,#269b70,#18734f);
+  box-shadow:0 4px 15px rgba(43,175,112,.24),inset 0 1px 0 rgba(255,255,255,.2);
+}
+.population-tab:focus-visible{outline:2px solid #a9e5ff;outline-offset:2px}
+#colonists-panel .colonists-summary-card,
+#free-population-panel .colonists-summary-card{
+  border-color:rgba(111,166,211,.32);
+  background:linear-gradient(145deg,rgba(23,49,74,.92),rgba(12,26,43,.96));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.045);
+}
+#colonists-panel .colonists-summary-card strong{color:#8fd0ff}
+#free-population-panel .colonists-summary-card strong{color:#8ce6b0}
+#colonists-panel .colonists-planet-card,
+#free-population-panel .colonists-planet-card{
+  border-color:rgba(103,157,198,.32);
+  background:linear-gradient(145deg,#10243a,#0b192a);
+}
+#colonists-panel .colonists-planet-card>summary{border-left:3px solid #4da5e4}
+#free-population-panel .colonists-planet-card>summary{border-left:3px solid #4cc58a}
+#colonists-panel .colonists-release-row,
+#free-population-panel .free-population-facilities,
+#free-population-panel .free-population-storage{
+  border-color:rgba(106,174,209,.4);
+  background:linear-gradient(145deg,rgba(18,43,61,.96),rgba(10,25,39,.98));
+}
+#colonists-panel .colonists-remove-row button,
+#colonists-panel button[data-remove-colonists],
+#free-population-panel button[data-reset-free-population]{
+  border-color:#c65d68;
+  background:linear-gradient(135deg,#963b48,#702b39);
+  color:#fff;
+}
+#colonists-panel .warn,
+#free-population-panel .warn,
+#colonists-panel .warning,
+#free-population-panel .warning{color:#ff9a9f}
+#colonists-panel .good,
+#free-population-panel .good{color:#8de5ad}
+@media(max-width:380px){
+  .population-tabs{gap:5px;padding:4px}
+  .population-tab{min-height:46px;font-size:.8rem}
+}
+
+/* KI-Handelsbörse */
+.market-mode-switch{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 14px}.market-mode-switch button{flex:1;min-width:145px;padding:10px;border:1px solid #31556a;border-radius:10px;background:#102838;color:#dceaf2;font-weight:700}.market-mode-switch button.active{background:linear-gradient(135deg,#176b82,#168b78);border-color:#55c9c0}.ai-exchange-orders,.ai-exchange-participants{display:grid;gap:8px;margin:10px 0 18px}.ai-exchange-order,.ai-exchange-participant{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px;align-items:center;padding:10px;border:1px solid #29485a;border-radius:10px;background:#0b202d}.ai-exchange-order small{color:#9db3c0}.ai-exchange-participant{grid-template-columns:1.4fr 1fr 1fr}.ai-exchange-participant span{color:#9db3c0;font-size:12px}.ai-exchange-participant strong{text-align:right}@media(max-width:520px){.ai-exchange-order{grid-template-columns:1fr 1fr}.ai-exchange-order span:last-child{grid-column:1/-1}.ai-exchange-participant{grid-template-columns:1fr 1fr}.ai-exchange-participant strong{grid-column:1/-1;text-align:left}}
+
+
+/* Entscheidungen für Anträge der KI-Handelsbörse */
+.ai-exchange-accept,.ai-exchange-reject{margin-top:6px;padding:7px 10px;border:0;border-radius:7px;font-weight:700;font-size:12px;cursor:pointer}
+.ai-exchange-accept{background:#1f8b55;color:#fff}
+.ai-exchange-reject{background:#a83b42;color:#fff}
+.ai-exchange-accept:active,.ai-exchange-reject:active{transform:scale(.97)}
+
+
+/* Einklappbare Informationen im Menü Freie Bevölkerung */
+.free-population-info{margin:12px 0;padding:0 12px;border:1px solid #315273;border-radius:12px;background:linear-gradient(120deg,#10243a,#0b1728)}
+.free-population-info summary{display:flex;align-items:center;min-height:46px;cursor:pointer;list-style:none;color:#b9d8f2;font-weight:700}
+.free-population-info summary::-webkit-details-marker{display:none}
+.free-population-info summary::after{content:"＋";margin-left:auto;color:#8fe0bd;font-size:20px}
+.free-population-info[open] summary::after{content:"−"}
+.free-population-info .hint{margin:0 0 12px;line-height:1.55}
+
+
+/* Updatefenster Redesign: Breaking News in Pink-Rot-Metallic */
+.update-popup-overlay{
+  background:
+    radial-gradient(ellipse at 50% 0%,rgba(154,22,66,.20),transparent 48%),
+    rgba(2,3,10,.90);
+  backdrop-filter:blur(9px);
+}
+.update-popup-card{
+  width:min(100%,560px);
+  max-height:90vh;
+  padding:20px;
+  border:1px solid rgba(255,75,125,.58);
+  border-radius:20px;
+  background:
+    linear-gradient(145deg,rgba(45,17,34,.98) 0%,rgba(17,13,25,.99) 42%,rgba(7,11,20,.99) 100%);
+  box-shadow:
+    0 0 0 1px rgba(255,110,155,.10),
+    0 0 34px rgba(255,35,95,.16),
+    0 26px 85px rgba(0,0,0,.72);
+}
+.update-popup-card::before{
+  content:"";
+  position:absolute;
+  top:0;left:18px;right:18px;height:2px;
+  background:linear-gradient(90deg,transparent,#ff3d78 18%,#ff8aa9 50%,#ff3d78 82%,transparent);
+  box-shadow:0 0 13px rgba(255,61,120,.8);
+}
+.update-popup-navigation{
+  border-bottom:1px solid rgba(255,83,130,.24);
+  background:rgba(17,12,24,.97);
+}
+.update-popup-page-button{
+  border:1px solid #573044;
+  background:linear-gradient(180deg,#211522,#130f1a);
+  color:#e7cbd6;
+  transition:background .18s ease,border-color .18s ease,box-shadow .18s ease;
+}
+.update-popup-page-button.active{
+  border-color:#ff5b8b;
+  background:linear-gradient(135deg,#a91e50,#5d173b);
+  color:#fff;
+  box-shadow:inset 0 1px rgba(255,255,255,.16),0 0 16px rgba(255,48,105,.22);
+}
+.update-popup-breaking{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:8px 11px;
+  margin:0 0 14px;
+  padding:10px 12px;
+  border:1px solid rgba(255,86,130,.62);
+  border-radius:12px;
+  background:
+    linear-gradient(105deg,rgba(128,16,57,.96),rgba(55,17,43,.98) 58%,rgba(27,17,34,.98));
+  box-shadow:inset 0 1px rgba(255,255,255,.12),0 7px 22px rgba(0,0,0,.25),0 0 18px rgba(255,45,105,.12);
+}
+.update-popup-breaking-live{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:4px 7px;
+  border-radius:5px;
+  background:#f5e8ed;
+  color:#8f123f;
+  font-size:9px;
+  font-weight:950;
+  letter-spacing:1.1px;
+}
+.update-popup-breaking-live::before{
+  content:"";
+  width:6px;height:6px;border-radius:50%;
+  background:#ed245d;
+  box-shadow:0 0 7px #ed245d;
+}
+.update-popup-breaking strong{
+  color:#fff;
+  font-size:clamp(19px,5vw,25px);
+  font-weight:950;
+  letter-spacing:1.4px;
+  line-height:1;
+  text-shadow:0 2px 14px rgba(255,65,120,.38);
+}
+.update-popup-breaking-sub{
+  flex-basis:100%;
+  color:#e8a9bd;
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:1.25px;
+}
+.update-popup-art{
+  height:92px;
+  margin:0 0 14px;
+  border:1px solid rgba(255,93,143,.25);
+  background:
+    radial-gradient(ellipse at 75% 50%,rgba(133,31,75,.45),transparent 55%),
+    linear-gradient(110deg,#160e1b,#0a101c);
+}
+.update-popup-art svg{height:92px}
+.update-popup-kicker{
+  color:#ff82a8;
+  font-size:10px;
+  letter-spacing:1.8px;
+}
+.update-popup-card h2{
+  margin-top:6px;
+  color:#fff0f5;
+  text-shadow:0 0 18px rgba(255,75,130,.17);
+}
+.update-popup-message{
+  border:1px solid rgba(255,91,139,.20);
+  border-left:3px solid #f0447b;
+  border-radius:11px;
+  background:linear-gradient(135deg,rgba(39,20,36,.94),rgba(14,17,28,.96));
+  color:#e9dce4;
+  box-shadow:inset 0 1px rgba(255,255,255,.035),0 5px 15px rgba(0,0,0,.14);
+}
+.update-popup-message h3{color:#ffb0c7}
+.update-popup-message strong{color:#fff0f5}
+.update-popup-card ul{color:#e8dce4}
+.update-popup-card li::marker{color:#ff6d99}
+.update-popup-close{
+  border:1px solid #a74468;
+  background:linear-gradient(145deg,#792342,#35172c);
+  box-shadow:0 0 13px rgba(255,52,110,.18);
+}
+.update-popup-close:hover{background:linear-gradient(145deg,#a52c55,#571b39)}
+.update-popup-footnote{border-top-color:rgba(255,91,139,.22);color:#c3a7b4}
+@media(max-width:430px){
+  .update-popup-card{padding:16px}
+  .update-popup-breaking{gap:7px;margin-bottom:11px;padding:9px}
+  .update-popup-breaking strong{font-size:19px}
+  .update-popup-breaking-sub{font-size:8px;letter-spacing:1px}
+  .update-popup-art,.update-popup-art svg{height:78px}
+  .update-popup-art{margin-bottom:11px}
+}
+@media(prefers-reduced-motion:reduce){
+  .update-popup-page-button{transition:none}
+}
+
+
+/* Zwei voneinander getrennte Spielstand-Slots */
+.active-save-slot-title{margin:10px 0 8px;padding:9px 11px;border:1px solid #315273;border-radius:10px;background:#0b1a2c;color:#b9d9ff;font-size:13px;font-weight:800}
+.save-slot-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:10px 0}
+.save-slot-card{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:7px;min-width:0;min-height:118px;padding:12px;border:1px solid #344967;border-radius:13px;background:linear-gradient(145deg,#101d30,#091321);color:#eef4ff;text-align:left}
+.save-slot-card strong{font-size:16px}
+.save-slot-card .save-slot-number{color:#9db2ce;font-size:10px;font-weight:900;letter-spacing:1px}
+.save-slot-card .save-slot-status{color:#aab8ce;font-size:11px;line-height:1.35;overflow-wrap:anywhere}
+.save-slot-card .save-slot-current{margin-top:auto;padding:4px 7px;border-radius:5px;background:#a82b67;color:#fff;font-size:10px;font-weight:900;letter-spacing:.7px}
+.save-slot-card.active{border-color:#f05a9b;background:linear-gradient(145deg,#35172b,#111525);box-shadow:0 0 0 1px rgba(240,90,155,.2),0 8px 22px rgba(0,0,0,.22)}
+.save-slot-card:not(.active):hover{border-color:#7b8eaa;background:#142238}
+#restart-game{width:100%;margin-top:3px}
+@media(max-width:430px){.save-slot-grid{gap:7px}.save-slot-card{padding:10px;min-height:112px}.save-slot-card strong{font-size:14px}}
+
+.save-menu .save-buttons{grid-template-columns:1fr}
+
+
+/* Flugzentrale: lokal gespeicherte Fehlerdiagnose */
+.flight-diagnostics-button {
+  border: 1px solid rgba(255, 105, 180, .55);
+  background: linear-gradient(135deg, rgba(115, 35, 91, .32), rgba(70, 35, 75, .22));
+  color: #ffd7ee;
+  border-radius: 9px;
+  padding: 8px 11px;
+  font: inherit;
+  cursor: pointer;
+}
+.flight-diagnostics-box {
+  margin: 12px 0 16px;
+  padding: 14px;
+  border: 1px solid rgba(255, 105, 180, .35);
+  border-radius: 12px;
+  background: rgba(32, 18, 39, .72);
+}
+.flight-diagnostics-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.flight-diagnostics-head > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.flight-diagnostics-box button {
+  border: 1px solid rgba(255, 255, 255, .18);
+  border-radius: 7px;
+  padding: 7px 10px;
+  color: inherit;
+  background: rgba(255, 255, 255, .07);
+  cursor: pointer;
+  font: inherit;
+}
+.flight-diagnostic-entry {
+  padding: 9px 0;
+  border-top: 1px solid rgba(255, 255, 255, .10);
+  overflow-wrap: anywhere;
+}
+.flight-diagnostic-entry strong,
+.flight-diagnostic-entry small {
+  display: block;
+}
+.flight-diagnostic-entry small {
+  opacity: .68;
+  margin-top: 3px;
+}
+.flight-diagnostic-entry p {
+  margin: 5px 0 0;
+  color: #ffc5dc;
+  white-space: pre-wrap;
+}
+
+
+/* Wirtschafts-Dashboard: eigenständige Energieansicht */
+.economy-tabs {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 5px;
+  border: 1px solid rgba(120, 150, 170, .22);
+  border-radius: 13px;
+  background: rgba(20, 34, 48, .72);
+}
+.economy-tab {
+  flex: 1 1 0;
+  min-height: 42px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text, #dce8f2);
+  font-weight: 700;
+  cursor: pointer;
+}
+.economy-tab.active {
+  color: #eaf8ff;
+  border-color: rgba(72, 190, 220, .5);
+  background: linear-gradient(135deg, rgba(26, 113, 119, .55), rgba(38, 79, 130, .58));
+  box-shadow: inset 0 0 0 1px rgba(130, 220, 235, .08);
+}
+.economy-tab-panel[hidden] { display: none !important; }
+.energy-system-overview {
+  margin: 0 0 16px;
+  padding: 15px;
+  border: 1px solid rgba(67, 178, 207, .3);
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(15, 73, 78, .35), rgba(22, 48, 79, .42));
+}
+.energy-system-heading,
+.energy-storage-head,
+.energy-planet-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.energy-system-heading strong { display: block; font-size: 1.05rem; }
+.energy-system-heading small,
+.energy-system-overview > small { display: block; margin-top: 4px; color: var(--muted, #9eacba); }
+.energy-system-kpis,
+.energy-planet-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+  margin: 14px 0 10px;
+}
+.energy-system-kpis > div,
+.energy-planet-kpis > div {
+  min-width: 0;
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(5, 15, 27, .34);
+}
+.energy-system-kpis span,
+.energy-planet-kpis span,
+.energy-storage-meta {
+  display: block;
+  color: var(--muted, #aab7c4);
+  font-size: .78rem;
+}
+.energy-system-kpis strong,
+.energy-planet-kpis strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 1rem;
+  overflow-wrap: anywhere;
+}
+.energy-planet-list { display: grid; gap: 13px; }
+.energy-planet-card {
+  padding: 14px;
+  border: 1px solid rgba(105, 143, 172, .25);
+  border-radius: 14px;
+  background: rgba(14, 27, 42, .48);
+}
+.energy-planet-card-head { margin-bottom: 8px; }
+.energy-planet-card-head h3 { margin: 0; font-size: 1.05rem; }
+.energy-planet-card-head > span { font-size: .82rem; font-weight: 700; }
+.energy-storage-block {
+  margin: 10px 0 12px;
+  padding: 11px;
+  border: 1px solid rgba(65, 165, 210, .2);
+  border-radius: 10px;
+  background: rgba(15, 47, 67, .28);
+}
+.energy-storage-head strong { font-size: .9rem; }
+.energy-storage-head > span { font-size: .84rem; font-weight: 700; text-align: right; }
+.energy-storage-block .dashboard-battery-track { margin: 9px 0 7px; }
+.energy-storage-meta { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 5px 12px; }
+.energy-planet-card .planet-electricity-panel { margin-top: 8px; }
+@media (max-width: 520px) {
+  .energy-system-kpis, .energy-planet-kpis { gap: 6px; }
+  .energy-system-kpis > div, .energy-planet-kpis > div { padding: 8px 6px; }
+  .energy-system-kpis strong, .energy-planet-kpis strong { font-size: .88rem; }
+  .energy-storage-head { align-items: flex-start; flex-direction: column; gap: 4px; }
+}
+
+/* Energie-Dashboard: sortierte, standardmäßig geschlossene Planetenkarten */
+.energy-planet-card { padding: 0; overflow: hidden; }
+.energy-planet-card > summary { list-style: none; cursor: pointer; }
+.energy-planet-card > summary::-webkit-details-marker { display: none; }
+.energy-planet-card-summary {
+  display: grid;
+  grid-template-columns: minmax(92px, .8fr) minmax(0, 2fr) 18px;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 14px;
+  min-height: 62px;
+}
+.energy-planet-card-summary:hover { background: rgba(70, 135, 170, .10); }
+.energy-planet-card-title { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.energy-planet-card-title strong { font-size: 1rem; }
+.energy-planet-card-title small { font-size: .76rem; font-weight: 700; }
+.energy-planet-summary-values { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.energy-planet-summary-values > span { display: flex; flex-direction: column; gap: 3px; color: var(--muted, #aab7c4); font-size: .7rem; }
+.energy-planet-summary-values strong { color: var(--text, #dce8f2); font-size: .82rem; overflow-wrap: anywhere; }
+.energy-planet-chevron { color: var(--muted, #aab7c4); font-size: 1.2rem; transition: transform .18s ease; }
+.energy-planet-card[open] .energy-planet-chevron { transform: rotate(180deg); }
+.energy-planet-card-content { padding: 0 14px 14px; border-top: 1px solid rgba(105, 143, 172, .18); }
+.energy-planet-card-content .energy-planet-kpis { margin-top: 12px; }
+@media (max-width: 600px) {
+  .energy-planet-card-summary { grid-template-columns: minmax(76px, .7fr) minmax(0, 2fr) 14px; gap: 7px; padding: 11px 10px; }
+  .energy-planet-summary-values { gap: 4px; }
+  .energy-planet-summary-values > span { font-size: .64rem; }
+  .energy-planet-summary-values strong { font-size: .72rem; }
+  .energy-planet-card-title strong { font-size: .9rem; }
+}
+@media (max-width: 390px) {
+  .energy-planet-card-summary { grid-template-columns: 1fr 14px; }
+  .energy-planet-summary-values { grid-column: 1 / 2; grid-row: 2; }
+  .energy-planet-chevron { grid-column: 2; grid-row: 1 / 3; }
+}
+
+/* Breaking News – roter Nachrichten-Prolog */
+.breaking-news-card{border-color:#9e2635;background:linear-gradient(180deg,#170b12 0%,#090f1b 58%);box-shadow:0 0 34px rgba(220,25,48,.22)}
+.breaking-news-banner{display:flex;flex-direction:column;gap:5px;padding:13px 15px;margin:-2px -2px 14px;background:linear-gradient(110deg,#8d1022,#d51d35 58%,#79101e);color:#fff;border-radius:12px;text-align:left}
+.breaking-news-banner strong{font-size:clamp(25px,7vw,38px);letter-spacing:1.5px;line-height:1.05}
+.breaking-news-banner small{font-size:10px;letter-spacing:1.3px;opacity:.9}
+.breaking-news-live{font-size:12px;font-weight:900;animation:breakingPulse 1.2s infinite}
+.breaking-news-earth{height:112px;position:relative;overflow:hidden;margin:4px 0 14px;background:radial-gradient(ellipse at center,#35101b 0%,#101421 65%,transparent 100%)}
+.breaking-news-earth-planet{position:absolute;width:104px;height:104px;border-radius:50%;left:50%;top:8px;transform:translateX(-50%);background:radial-gradient(circle at 32% 28%,#77c9e8 0 8%,#2877b5 32%,#12365d 70%,#071526 100%);box-shadow:0 0 22px #e22b45, inset -14px -9px 20px #020813;animation:breakingEarth 18s linear infinite}
+.breaking-news-earth-glow{position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,55,75,.24) 50%,transparent 65%);animation:breakingSweep 4s linear infinite}
+.breaking-news-ticker{overflow:hidden;white-space:nowrap;padding:9px 10px;margin:14px 0;background:#690f20;color:#fff;font-size:11px;font-weight:800;letter-spacing:.6px;animation:breakingTicker 16s linear infinite}
+.breaking-news-ticker span{color:#ffb9c2}
+@keyframes breakingPulse{50%{opacity:.35}}
+@keyframes breakingEarth{to{filter:hue-rotate(18deg);transform:translateX(-50%) rotate(360deg)}}
+@keyframes breakingSweep{to{transform:translateX(100%)}}
+@keyframes breakingTicker{0%{background-position:0 0}100%{background-position:100% 0}}
+
+
+/* Kompakte Sonnensystem-Auswahl als eigenes Dialogfenster */
+.solar-system-launcher{margin:10px 0 14px}
+.solar-system-launcher-button{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border:1px solid #356ba2;border-radius:14px;background:linear-gradient(135deg,#102b49,#0b1729);color:#f3f7ff;font-weight:800;font-size:16px;box-shadow:inset 0 0 18px rgba(65,145,230,.10)}
+.solar-system-launcher-button span{font-size:12px;color:#9fc8f4;font-weight:600}
+.solar-system-selector-dialog[hidden]{display:none!important}
+.solar-system-selector-dialog{position:fixed;inset:0;z-index:10050;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(0,5,14,.82);backdrop-filter:blur(5px)}
+.solar-system-selector-dialog-card{width:min(100%,520px);padding:18px;border:1px solid #31577f;border-radius:18px;background:linear-gradient(145deg,#101e32,#07101e);box-shadow:0 22px 70px rgba(0,0,0,.55)}
+.solar-system-selector-dialog-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.solar-system-selector-dialog-head h2{margin:0;font-size:20px}
+.solar-system-selector-dialog-head button{width:42px;height:42px;border:0;border-radius:12px;background:#2878d0;color:white;font-size:22px}
+.solar-system-selector-dialog .solar-system-selector{margin-top:14px;grid-template-columns:1fr}
+@media(min-width:520px){.solar-system-selector-dialog .solar-system-selector{grid-template-columns:1fr 1fr}}
+
+/* Sonnensystem-Auswahl als eigener Button mit kompaktem Auswahlfenster */
+.solar-system-open-button{display:flex;align-items:center;justify-content:space-between;gap:10px;width:calc(100% - 26px);margin:8px 13px 12px;padding:13px 16px;border:1px solid #3978b8;border-radius:14px;background:linear-gradient(120deg,#1765b5,#287ed8);color:#fff;font-size:16px;font-weight:800;text-align:left;box-shadow:0 5px 16px rgba(20,95,170,.2)}
+.solar-system-open-button span{font-size:12px;font-weight:600;color:#d7eaff}
+.solar-system-selector-dialog{position:fixed;inset:0;z-index:10050;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(0,5,15,.82);backdrop-filter:blur(5px)}
+.solar-system-selector-dialog[hidden]{display:none}
+.solar-system-selector-dialog-card{width:min(100%,520px);padding:16px;border:1px solid #345b85;border-radius:18px;background:linear-gradient(145deg,#101e32,#080f1d);box-shadow:0 18px 60px rgba(0,0,0,.55)}
+.solar-system-selector-dialog-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;color:#f3f7ff;font-size:19px}
+.solar-system-selector-dialog-head small{display:block;margin-top:4px;color:#aabbd2;font-size:12px;font-weight:500}
+.solar-system-selector-dialog .solar-system-selector{grid-template-columns:1fr}
+.solar-system-selector-dialog .solar-system-selector-current,.solar-system-selector-dialog .solar-system-selector-upcoming{min-height:82px;text-align:left;font-size:16px;cursor:pointer}
+.solar-system-selector-dialog .solar-system-selector-upcoming{cursor:default}
+
+/* Themepatin – eigener kupferfarbener Gesteinsplanet im zweiten Sonnensystem */
+.orbit.themepatin-orbit{border-color:rgba(205,139,83,.42);box-shadow:0 0 18px rgba(190,112,55,.12)}
+.body.themepatin{width:42px;height:42px;border:1px solid rgba(232,174,116,.9);border-radius:50%;background:radial-gradient(circle at 30% 25%,#f2d3a0 0%,#b97845 25%,#75452f 58%,#30201d 100%);box-shadow:inset -7px -6px 10px rgba(0,0,0,.65),inset 3px 2px 7px rgba(255,218,165,.35),0 0 14px rgba(207,133,76,.55),0 0 30px rgba(178,93,48,.22);overflow:visible}
+.body.themepatin::before{content:"";position:absolute;inset:-5px;border:1px solid rgba(220,154,99,.25);border-radius:50%;pointer-events:none}
+
+/* Updatefenster: übersichtliche erledigte Punkte */
+.update-popup-page .update-checklist{list-style:none;padding-left:0;margin:10px 0}
+.update-popup-page .update-checklist li{padding:5px 0;color:#dceaff;line-height:1.4}
+.update-popup-page .update-checklist li::first-letter{color:#62e6a5}
+.update-popup-page .update-popup-message h3{margin-top:0}
+
+/* Sichtbarkeit der Sonnensystem-Auswahl auch bei konkurrierenden Alt-Regeln sicherstellen */
+#solar-system-selector-dialog.is-open{display:flex!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important}
+#solar-system-selector-dialog[hidden]{display:none!important}
+#open-solar-system-selector{position:relative;z-index:5;display:flex!important;visibility:visible!important;pointer-events:auto!important}
+
+/* Zentrale CO2-Verwaltung innerhalb der planetaren Atmosphaerenanzeige */
+.co2-management-panel{margin:12px 0;padding:11px;border:1px solid #6b3d72;border-radius:12px;background:linear-gradient(135deg,rgba(92,35,91,.22),rgba(20,28,48,.55))}
+.co2-management-panel h4{margin:0 0 8px;color:#f0a5df;font-size:14px}
+.co2-management-panel .hint{margin:8px 0 0}
+
+
+/* Zentrale Arbeitskräfteübersicht */
+.workforce-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 14px 0;
+}
+.workforce-summary-card {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 13px;
+  border: 1px solid var(--border, rgba(255,255,255,.14));
+  border-radius: 12px;
+  background: var(--panel-card, rgba(255,255,255,.035));
+}
+.workforce-summary-card span {
+  color: var(--muted, #aaa);
+  font-size: .82rem;
+}
+.workforce-summary-card strong {
+  font-size: 1.35rem;
+  font-variant-numeric: tabular-nums;
+}
+.workforce-note { margin: 8px 0 14px; }
+.workforce-planet-list { display: grid; gap: 9px; }
+.workforce-planet-card {
+  border: 1px solid var(--border, rgba(255,255,255,.14));
+  border-radius: 11px;
+  padding: 0 12px;
+  background: var(--panel-card, rgba(255,255,255,.025));
+}
+.workforce-planet-card > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 48px;
+  cursor: pointer;
+  list-style: none;
+}
+.workforce-planet-card > summary::-webkit-details-marker { display: none; }
+.workforce-planet-card > summary span {
+  color: var(--muted, #aaa);
+  font-size: .82rem;
+  text-align: right;
+}
+.workforce-planet-stats { padding: 0 0 12px; }
+@media (max-width: 520px) {
+  .workforce-summary { grid-template-columns: 1fr; }
+  .workforce-summary-card { flex-direction: row; align-items: center; justify-content: space-between; }
+}
+
+
+/* Rethroxid: roter Gesteinsplanet auf der gegenüberliegenden Seite von Themepatins Umlaufbahn. */
+.orbit.rethroxid-orbit{border-color:rgba(235,86,66,.42);box-shadow:0 0 18px rgba(220,55,42,.13)}
+.body.rethroxid{width:46px;height:46px;border:1px solid rgba(255,142,112,.95);border-radius:50%;background:radial-gradient(circle at 29% 24%,#ffb09a 0%,#e45a43 25%,#9f3029 57%,#42151b 100%);box-shadow:inset -8px -7px 11px rgba(0,0,0,.68),inset 4px 3px 8px rgba(255,183,154,.38),0 0 15px rgba(239,75,55,.65),0 0 32px rgba(183,38,34,.3);overflow:visible}
+.body.rethroxid::before{content:"";position:absolute;inset:-6px;border:1px solid rgba(255,115,91,.28);border-radius:50%;pointer-events:none}
+
+
+/* Planetare Stromprioritäten */
+.electricity-priority-settings{margin:8px 0 12px;padding:10px;border:1px solid var(--border-color,rgba(255,255,255,.12));border-radius:10px;background:rgba(127,127,127,.06)}
+.electricity-priority-settings .stat{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.electricity-priority-settings select,.electricity-priority-control select{max-width:100%;min-width:145px;padding:6px 8px;border-radius:8px}
+.electricity-consumer-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid rgba(127,127,127,.12)}
+.electricity-priority-control{display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--muted,#999)}
+.electricity-priority-control select{min-width:175px}
+.electricity-priority-control select:disabled{opacity:.75}
+@media(max-width:560px){.electricity-consumer-row{grid-template-columns:1fr;gap:2px}.electricity-priority-control{justify-content:space-between}.electricity-priority-control select{flex:1;max-width:70%}}
+
+
+/* Personalbeschaffung in der Unternehmenszentrale */
+.recruitment-section{margin:14px 0;padding:14px;border:1px solid #28506c;border-radius:13px;background:linear-gradient(145deg,rgba(12,35,55,.94),rgba(7,17,30,.96));}
+.recruitment-title{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:6px;margin-bottom:12px}
+.recruitment-title h3{margin:0;color:#d9efff}.recruitment-title small,.recruitment-form small{color:#9eb8cc;line-height:1.45}
+.recruitment-form{display:grid;gap:7px;padding:12px;border:1px solid rgba(105,159,194,.22);border-radius:10px;background:rgba(4,13,24,.56)}
+.recruitment-form label{font-weight:700;color:#c7d9e9}.recruitment-form select,.recruitment-form input{width:100%;min-height:40px;padding:8px 10px;border:1px solid #365673;border-radius:8px;background:#0b1a2b;color:#eef7ff}
+.recruitment-cost{display:flex;justify-content:space-between;gap:8px;padding:9px 0;border-top:1px solid rgba(125,164,193,.18);color:#a9c4d9}.recruitment-cost strong{color:#f0c878}
+.recruitment-form button{min-height:42px;margin-top:4px}.recruitment-planet-list{display:grid;gap:8px;margin-top:12px}.recruitment-planet-card{padding:10px;border:1px solid rgba(105,159,194,.2);border-radius:9px;background:rgba(5,15,26,.55)}
+.recruitment-planet-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px;margin-bottom:6px}.recruitment-planet-head strong{color:#e0f1ff}.recruitment-planet-head span,.recruitment-planet-card small{color:#9eb8cc;font-size:.84rem}.recruitment-status{display:inline-block;color:#b7c9d8;font-size:.88rem}.recruitment-status.active{color:#8ce6b0}.recruitment-status.locked{color:#f0c878}.recruitment-progress{height:7px;margin:8px 0;border-radius:99px;overflow:hidden;background:#1b2c3e}.recruitment-progress i{display:block;height:100%;background:#35b879;border-radius:99px}
+
+
+/* Prolog-Bild und Audio der Breaking-News-Ausstrahlung */
+.breaking-news-visual{width:100%;overflow:hidden;border-radius:12px;margin:4px 0 12px;border:1px solid rgba(239,68,68,.42);background:#050914}
+.breaking-news-visual img{display:block;width:100%;height:auto;max-height:260px;object-fit:cover}
+.breaking-news-audio{padding:11px 12px;margin:0 0 14px;border:1px solid rgba(160,185,220,.2);border-radius:12px;background:rgba(8,15,29,.82)}
+.breaking-news-audio-label{font-size:12px;font-weight:800;letter-spacing:.5px;margin-bottom:8px;color:#f5d6da}
+.breaking-news-audio audio{display:block;width:100%;height:40px}
+
+
+/* Cloud-Konto und Geräteverwaltung */
+.cloud-account-panel {
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid rgba(105, 177, 255, .28);
+  border-radius: 14px;
+  background: rgba(8, 24, 43, .72);
+}
+.cloud-account-panel h3, .cloud-account-panel h4 { margin: 0 0 9px; }
+.cloud-auth-form { display: grid; gap: 7px; margin: 10px 0; }
+.cloud-auth-form input[type="email"], .cloud-auth-form input[type="password"] {
+  width: 100%; min-width: 0; box-sizing: border-box; padding: 10px;
+  color: inherit; background: rgba(0,0,0,.24); border: 1px solid rgba(160,190,220,.3);
+  border-radius: 8px;
+}
+.cloud-auth-modes { display: flex; flex-wrap: wrap; gap: 14px; margin: 4px 0; }
+.cloud-auth-modes label { display: flex; align-items: center; gap: 5px; }
+.cloud-google-button { margin: 4px 0; }
+.cloud-status { min-height: 1.4em; margin: 7px 0; color: #8fe0b1; font-size: .9em; }
+.cloud-status.is-error { color: #ff9a9a; }
+.cloud-device-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 10px 0; border-top: 1px solid rgba(160,190,220,.18);
+}
+.cloud-device-row > div { display: grid; gap: 3px; min-width: 0; }
+.cloud-device-row small { opacity: .72; overflow-wrap: anywhere; }
+
+
+/* Cloud-Konto im bestehenden Speichermenü */
+.cloud-save-panel {
+  margin-top: 22px;
+  padding: 18px;
+  border: 1px solid rgba(91, 139, 196, .42);
+  border-radius: 20px;
+  background: linear-gradient(145deg, rgba(15, 29, 49, .96), rgba(8, 17, 31, .98));
+  color: #edf4ff;
+}
+.cloud-panel-heading, .cloud-devices-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.cloud-panel-heading h3 { margin: 0 0 5px; font-size: 1.2rem; }
+.cloud-panel-heading .hint { margin: 0; }
+.cloud-phase-label {
+  flex: 0 0 auto;
+  border: 1px solid rgba(93, 160, 230, .5);
+  border-radius: 999px;
+  padding: 5px 9px;
+  color: #b9d9ff;
+  font-size: .72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.cloud-account-status {
+  margin: 15px 0;
+  padding: 11px 13px;
+  border-radius: 12px;
+  background: rgba(42, 112, 190, .16);
+  border: 1px solid rgba(93, 160, 230, .3);
+  color: #c9e2ff;
+  overflow-wrap: anywhere;
+}
+.cloud-auth-form { display: grid; gap: 8px; }
+.cloud-auth-form > label {
+  color: #c8d7eb;
+  font-size: .9rem;
+  font-weight: 700;
+}
+.cloud-auth-form input[type="email"], .cloud-auth-form input[type="password"] {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid #405875;
+  border-radius: 11px;
+  padding: 10px 12px;
+  background: #091525;
+  color: #f5f8ff;
+  font: inherit;
+}
+.cloud-auth-mode {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+  margin: 8px 0;
+}
+.cloud-auth-mode label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #d7e4f6;
+  font-size: .9rem;
+}
+.cloud-primary-button, .cloud-google-button {
+  width: 100%;
+  min-height: 46px;
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+.cloud-primary-button { background: #2878d0; color: white; }
+.cloud-google-button {
+  margin-top: 10px;
+  border: 1px solid #52657c;
+  background: #f7f9fc;
+  color: #202b3a;
+}
+.cloud-google-button span {
+  display: inline-grid;
+  place-items: center;
+  width: 23px;
+  height: 23px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: white;
+  color: #4285f4;
+  font-weight: 900;
+}
+.cloud-logout-button { margin-top: 10px; }
+.cloud-status {
+  min-height: 22px;
+  margin-top: 12px;
+  color: #a9bdd5;
+  font-size: .88rem;
+  overflow-wrap: anywhere;
+}
+.cloud-status.is-error { color: #ffaaa8; }
+.cloud-devices-heading {
+  margin-top: 18px;
+  padding-top: 15px;
+  border-top: 1px solid rgba(124, 157, 194, .24);
+}
+.cloud-devices-heading span {
+  color: #b9d9ff;
+  font-size: .8rem;
+  font-weight: 800;
+}
+.cloud-device-list { display: grid; gap: 9px; margin-top: 10px; }
+.cloud-device-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px;
+  border: 1px solid #344a64;
+  border-radius: 12px;
+  background: rgba(7, 18, 32, .65);
+}
+.cloud-device-row > div { min-width: 0; display: grid; gap: 4px; }
+.cloud-device-row strong { overflow-wrap: anywhere; }
+.cloud-device-row small { color: #9fb1c7; }
+.cloud-device-row .danger { flex: 0 0 auto; }
+.cloud-sync-note {
+  margin: 14px 0 0;
+  color: #93a8c1;
+  font-size: .8rem;
+  line-height: 1.45;
+}
+@media (max-width: 420px) {
+  .cloud-save-panel { padding: 14px; }
+  .cloud-device-row { align-items: flex-start; flex-direction: column; }
+}
+
+
+/* Cloud-Spielstand-Sicherung: manueller Upload und automatische 5-Minuten-Sicherung */
+.cloud-sync-controls {
+  display: grid;
+  gap: 10px;
+  margin: 14px 0 18px;
+  padding: 13px;
+  border: 1px solid rgba(105, 157, 215, .28);
+  border-radius: 15px;
+  background: rgba(30, 67, 111, .18);
+}
+.cloud-sync-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 6px 12px;
+  color: #b9cbe0;
+  font-size: .88rem;
+}
+.cloud-sync-meta strong { color: #e8f2ff; }
+#cloud-last-sync { color: #91a8c2; }
+.cloud-upload-button { width: 100%; min-height: 48px; }
+.cloud-secondary-button { width: 100%; min-height: 48px; margin-top: 10px; border: 1px solid rgba(117, 166, 220, .55); border-radius: 14px; background: rgba(30, 66, 108, .42); color: #d7e8ff; font-weight: 700; padding: 12px 16px; cursor: pointer; }
+.cloud-secondary-button:disabled { opacity: .48; cursor: not-allowed; }
+.cloud-upload-button:disabled { opacity: .48; cursor: not-allowed; }
+.cloud-sync-controls .cloud-sync-note { margin: 0; }
+
+
+/* Pyrophor: rot-rosafarbener Planet auf derselben Umlaufbahn wie Noxaris. */
+.orbit.pyrophor-orbit{border-color:rgba(255,112,153,.42);box-shadow:0 0 18px rgba(255,83,135,.16)}
+.body.pyrophor{width:46px;height:46px;border:1px solid rgba(255,177,197,.95);border-radius:50%;background:radial-gradient(circle at 29% 24%,#ffd0dc 0%,#f0789e 25%,#c83e70 57%,#55172f 100%);box-shadow:inset -8px -7px 11px rgba(0,0,0,.68),inset 4px 3px 8px rgba(255,218,230,.42),0 0 15px rgba(255,91,145,.68),0 0 32px rgba(204,45,105,.34);overflow:visible}
+.body.pyrophor::before{content:"";position:absolute;inset:-7px;border:1px solid rgba(255,142,177,.32);border-radius:50%;pointer-events:none}
+
+/* Startseiten-Gebäudeübersicht: nur gebaute Gebäude, keine Produktionswerte. */
+.planet-building-summary {
+  padding: 0 12px 10px;
+}
+.planet-building-summary-row {
+  min-height: 38px;
+}
+.planet-building-summary-row:last-child {
+  border-bottom: 0;
+}
+
+/* Einheitliches Lager-Raster: zwei Rohstoffe pro Zeile und vier Produktklassen */
+.planet-storage-grid,.resource-tile-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.planet-storage-grid .stat{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;min-width:0;padding:9px;border:1px solid rgba(255,255,255,.08);border-radius:9px}
+.resource-tile{border-bottom:0!important}
+.resource-ore{background:#263b30!important;border-color:#42634e!important;color:#d7f0df}
+.resource-finished{background:#263a59!important;border-color:#405d85!important;color:#d8e7ff}
+.resource-luxury{background:#49345f!important;border-color:#6a4c89!important;color:#eee0ff}
+.resource-intermediate{background:#594323!important;border-color:#806437!important;color:#ffebc4}
+.planet-resource-value{display:block;min-width:0;overflow-wrap:anywhere}
+@media(max-width:360px){.planet-storage-grid,.resource-tile-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}.planet-resource-value{font-size:11px;padding:5px 6px}}
+
+
+/* Elyndra – zentraler mystischer Gesteinsplanet mit langsamer sichtbarer Eigenrotation. */
+.body.elyndra{
+  z-index:8;width:68px;height:68px;transform:translate(-50%,-50%);
+  border:1px solid rgba(218,190,255,.98);border-radius:50%;
+  background:
+    radial-gradient(ellipse at 32% 24%,rgba(255,226,255,.95) 0%,rgba(236,133,255,.85) 9%,transparent 27%),
+    radial-gradient(ellipse at 68% 70%,rgba(58,220,255,.95) 0%,rgba(45,133,220,.55) 20%,transparent 42%),
+    radial-gradient(circle at 42% 42%,#b34bd5 0%,#6a2b9c 42%,#24113f 76%,#080b20 100%);
+  box-shadow:inset -12px -9px 16px rgba(0,0,0,.72),inset 5px 4px 12px rgba(255,220,255,.48),
+    0 0 18px rgba(218,116,255,.95),0 0 42px rgba(175,69,255,.62),0 0 72px rgba(71,192,255,.28);
+  overflow:visible;
+}
+.body.elyndra::before{
+  content:"";position:absolute;inset:-7px;border-radius:50%;
+  background:conic-gradient(from 0deg,transparent 0 12%,rgba(91,224,255,.9) 19%,transparent 29%,rgba(255,113,236,.82) 43%,transparent 57%,rgba(120,164,255,.85) 72%,transparent 86%,rgba(255,155,246,.75) 94%,transparent);
+  filter:blur(5px);animation:elyndra-surface-rotation 96s linear infinite;pointer-events:none;
+}
+.body.elyndra::after{
+  content:"";position:absolute;inset:-12px;border:1px solid rgba(217,146,255,.48);
+  border-radius:50%;box-shadow:0 0 15px rgba(170,106,255,.48),inset 0 0 12px rgba(95,206,255,.16);
+  pointer-events:none;
+}
+@keyframes elyndra-surface-rotation{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.body.elyndra .body-label{top:calc(100% + 14px);white-space:nowrap;color:#f4ddff;text-shadow:0 0 8px #b85cff,0 1px 3px #000}
+
+
+/* Einzigartige Gebäude und Hauptquartier Forschung – Version 1.1.0 */
+.unique-buildings-panel, .research-hq-panel { z-index: 45; }
+.unique-building-card, .research-hq-dashboard, .research-training-panel, .research-departments-panel {
+  background: var(--panel-bg, rgba(15, 25, 42, .92));
+  border: 1px solid var(--panel-border, rgba(130, 170, 220, .25));
+  border-radius: 16px;
+  padding: 16px;
+  margin: 12px 0;
+  box-shadow: 0 10px 28px rgba(0,0,0,.14);
+}
+.unique-building-card-head, .research-hq-heading, .research-training-head {
+  display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
+}
+.unique-building-card h3, .research-hq-heading h3, .research-training-panel h3, .research-departments-panel h3 {
+  margin: 4px 0 8px;
+}
+.unique-building-kicker { display:block; font-size:.68rem; letter-spacing:.12em; opacity:.72; font-weight:800; }
+.unique-building-status {
+  display:inline-flex; align-items:center; border-radius:999px; padding:5px 10px;
+  font-size:.75rem; font-weight:800; white-space:nowrap; background:rgba(140,150,165,.16);
+}
+.unique-building-status.is-built { color:#64d99b; background:rgba(50,180,115,.14); }
+.unique-building-status.is-available { color:#7fc7ff; background:rgba(60,145,230,.14); }
+.unique-building-meta, .unique-building-summary, .research-hq-stats {
+  display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; margin:14px 0;
+}
+.unique-building-meta > div, .unique-building-summary > div, .research-hq-stats > div {
+  display:flex; flex-direction:column; gap:5px; padding:10px; border-radius:10px;
+  background:rgba(130,160,195,.09); min-width:0;
+}
+.unique-building-meta span, .unique-building-summary span, .research-hq-stats span { font-size:.75rem; opacity:.72; }
+.unique-building-meta strong, .unique-building-summary strong, .research-hq-stats strong { font-size:1rem; overflow-wrap:anywhere; }
+.unique-building-note, .unique-building-footnote { font-size:.85rem; opacity:.78; line-height:1.5; }
+.unique-building-card button, .research-training-controls button, .research-assignment-row button, .research-activate-button {
+  border:1px solid rgba(120,170,230,.35); border-radius:10px; padding:10px 14px; font-weight:750;
+  background:rgba(55,125,205,.16); color:inherit; cursor:pointer;
+}
+.unique-building-card button, .unique-open-hq { width:100%; margin-top:8px; }
+.research-training-panel, .research-departments-panel { margin-top:14px; }
+.research-training-controls { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; align-items:end; margin:12px 0; }
+.research-training-controls label { grid-column:1/-1; font-size:.82rem; opacity:.8; }
+.research-training-controls input, .research-assignment-row input {
+  min-width:0; width:100%; box-sizing:border-box; border:1px solid rgba(130,160,195,.35);
+  border-radius:9px; padding:10px; background:rgba(120,145,175,.10); color:inherit;
+}
+.research-training-item { padding:12px; margin:8px 0; border-radius:10px; background:rgba(120,145,175,.08); }
+.research-training-head { font-size:.84rem; }
+.research-training-track { height:8px; background:rgba(130,150,180,.2); border-radius:99px; overflow:hidden; margin:9px 0; }
+.research-training-track span { display:block; height:100%; background:linear-gradient(90deg,#3987dc,#55d3b2); border-radius:99px; }
+.research-training-item small { opacity:.75; }
+.research-department-card { border:1px solid rgba(130,160,195,.22); border-radius:12px; margin:9px 0; overflow:hidden; }
+.research-department-card summary { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:13px; cursor:pointer; list-style:none; }
+.research-department-card summary::-webkit-details-marker { display:none; }
+.research-department-card summary > span:first-child { display:flex; flex-direction:column; gap:4px; }
+.research-department-card summary small { opacity:.72; }
+.research-department-state { font-size:.75rem; font-weight:800; opacity:.75; }
+.research-department-body { padding:0 13px 13px; }
+.research-department-body p { font-size:.83rem; opacity:.78; }
+.research-department-body label { display:block; font-size:.8rem; margin:10px 0 6px; }
+.research-assignment-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; }
+.research-department-placeholder { margin:10px 0; font-size:.8rem; opacity:.72; }
+.research-activate-button.is-active { border-color:rgba(65,190,130,.55); background:rgba(45,175,110,.15); }
+.research-wage-warning { padding:10px; margin-top:10px; border-radius:9px; color:#ffc66e; background:rgba(230,155,45,.12); font-size:.82rem; }
+.researcher-population-overview small { display:block; font-size:.72rem; opacity:.72; margin-top:4px; }
+@media (min-width:700px) {
+  .unique-building-meta, .unique-building-summary, .research-hq-stats { grid-template-columns:repeat(4,minmax(0,1fr)); }
+  .research-training-controls { grid-template-columns:minmax(0,1fr) auto; }
+}
+
+/* Einzigartige Gebäude – Bau-/Abrissaktionen und stabile Forschungsabteilungen */
+.unique-building-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.unique-building-actions .primary-button,.unique-building-actions .danger-button{margin:0;min-height:44px;padding:10px 16px}
+.danger-button{background:#7f1d1d;color:#fff;border:1px solid #b91c1c;border-radius:12px;font-weight:700;cursor:pointer}
+.danger-button:active{transform:translateY(1px)}
+.research-department-card>summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.research-department-card>summary::-webkit-details-marker{display:none}
+.research-department-card[open]>summary{margin-bottom:12px}
+
+
+/* Aufgaben-Auswahl: zwei getrennte Bereiche für Aufträge und Prolog */
+.task-home-tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 8px 0 18px;
+}
+.task-home-tile {
+  min-width: 0;
+  min-height: 150px;
+  padding: 18px 14px;
+  border: 1px solid #2c4565;
+  border-radius: 20px;
+  color: #edf4ff;
+  background: linear-gradient(145deg, #173b63, #10243c);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 9px;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(0,0,0,.18);
+}
+.task-home-tile-prolog {
+  background: linear-gradient(145deg, #4b2b68, #251d3e);
+  border-color: #76518f;
+}
+.task-home-tile:active { transform: scale(.985); }
+.task-home-icon { font-size: 2rem; line-height: 1; }
+.task-home-tile strong { font-size: 1.15rem; }
+.task-home-tile > span:last-child {
+  color: #c5d2e5;
+  font-size: .88rem;
+  line-height: 1.35;
+}
+.task-subview { display: flex; flex-direction: column; gap: 12px; }
+.task-subview h3 { margin: 6px 0; }
+.task-overall-progress {
+  color: var(--muted, #aab8cd);
+  font-weight: 700;
+  padding: 4px 2px 8px;
+}
+.prolog-story-card { margin: 4px 0; }
+.prolog-info-button { margin-top: 12px; min-width: 88px; }
+.prolog-page {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 4px 0 14px;
+}
+.prolog-news-kicker {
+  color: #ff646e;
+  font-weight: 900;
+  letter-spacing: .13em;
+  font-size: .78rem;
+  border-bottom: 2px solid #a72e3c;
+  padding-bottom: 9px;
+}
+.prolog-page h2 { margin: 0; font-size: 1.55rem; }
+.prolog-news-image {
+  width: 100%;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid #34465f;
+  background: #080e1a;
+}
+.prolog-news-image img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+.prolog-news-copy {
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(18, 31, 50, .78);
+  border: 1px solid #2c405d;
+  line-height: 1.55;
+}
+.prolog-news-copy h3 { margin: 0 0 8px; }
+.prolog-news-copy p { margin: 8px 0; }
+.prolog-audio-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 14px;
+  background: #111525;
+  border: 1px solid #34415c;
+}
+.prolog-audio-heading { font-weight: 800; }
+.prolog-audio-panel audio { width: 100%; max-width: 100%; }
+.prolog-back-button { align-self: flex-start; }
+@media (max-width: 420px) {
+  .task-home-tiles { gap: 10px; }
+  .task-home-tile { min-height: 138px; padding: 14px 11px; }
+}
+
+
+/* Leistungsmodus nur für Sonnensystem 1 während Pinch-Zoom.
+   Teure Filter und Leuchteffekte werden kurz deaktiviert und danach automatisch
+   wiederhergestellt; Planetenfarben, Größen und Umlaufbahnen bleiben gleich. */
+#solar-system:not(.system2-expanded).is-zooming .asteroid-nebula{
+  animation:none !important;
+  filter:none !important;
+  opacity:.28 !important;
+  will-change:auto;
+}
+#solar-system:not(.system2-expanded).is-zooming .asteroid-belt-star,
+#solar-system:not(.system2-expanded).is-zooming .asteroid-belt::before,
+#solar-system:not(.system2-expanded).is-zooming .asteroid-belt::after,
+#solar-system:not(.system2-expanded).is-zooming .sun,
+#solar-system:not(.system2-expanded).is-zooming .body{
+  box-shadow:none !important;
+}
+#solar-system:not(.system2-expanded).is-zooming .body::before{
+  filter:none !important;
+}
+
+
+/* Prolog: eigenständiges blaues Nachrichtenfenster */
+.prolog-task-accordion {
+  border: 1px solid #315b8b;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #0d1d32;
+}
+.prolog-task-accordion > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 15px;
+  color: #edf5ff;
+  background: linear-gradient(110deg, #173f6c, #10243d);
+  cursor: pointer;
+  font-weight: 800;
+  list-style: none;
+}
+.prolog-task-accordion > summary::-webkit-details-marker { display: none; }
+.prolog-task-status { color: #a9c9ee; font-size: .78rem; }
+.prolog-task-body { padding: 12px 15px 15px; color: #c8d7eb; }
+.prolog-open-message {
+  margin-top: 8px;
+  padding: 11px 16px;
+  border: 1px solid #438bd5;
+  border-radius: 10px;
+  background: #216fc0;
+  color: #fff;
+  font-weight: 800;
+}
+.prolog-message-window {
+  position: fixed;
+  z-index: 10050;
+  top: 5vh;
+  bottom: 5vh;
+  left: 4vw;
+  right: 4vw;
+  width: auto;
+  height: auto;
+  max-height: 90vh;
+  max-width: 680px;
+  margin: auto;
+  align-self: center;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
+  box-sizing: border-box;
+  padding: 18px;
+  border: 1px solid #3979b9;
+  border-radius: 20px;
+  color: #edf5ff;
+  background: linear-gradient(155deg, #102844 0%, #091525 72%);
+  box-shadow: 0 18px 70px rgba(0,0,0,.75), 0 0 28px rgba(39,118,210,.2);
+}
+.prolog-message-window[hidden] { display: none !important; }
+.prolog-message-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding-bottom:14px; border-bottom:1px solid #29496d; }
+.prolog-message-head span { color:#79b9f4; font-size:.75rem; font-weight:900; letter-spacing:.12em; }
+.prolog-message-head h3 { margin:5px 0 0; font-size:1.45rem; }
+.prolog-message-content { margin:18px 0; padding:18px; border:1px solid #29496d; border-radius:14px; background:#0c1b2e; font-size:1.05rem; line-height:1.6; }
+.prolog-message-content p { margin:0 0 10px; }
+.prolog-message-content p:last-child { margin-bottom:0; }
+.prolog-audio-panel { display:flex; flex-direction:column; gap:10px; padding:14px; border:1px solid #315b8b; border-radius:14px; background:#0b1b30; }
+.prolog-audio-panel audio { width:100%; max-width:100%; }
+@media(max-width:420px) {
+  .prolog-message-window { inset: 3vh 3vw; padding:14px; }
+  .prolog-message-content { padding:14px; }
+}
+
+
+/* Prolog-Aufgabe 2: rosa-rote Nachrichten und Firmengründung */
+.prolog-news-window {
+  border-color: #d94b79;
+  color: #fff0f5;
+  background: linear-gradient(155deg, #3b142b 0%, #180d1b 76%);
+  box-shadow: 0 18px 70px rgba(0,0,0,.78), 0 0 32px rgba(232,65,125,.28);
+}
+.prolog-news-head {
+  border-bottom-color: #873453;
+}
+.prolog-news-head span {
+  color: #ff9abb;
+}
+.prolog-news-head h3 {
+  color: #fff0f5;
+}
+.prolog-news-content {
+  border-color: #71314c;
+  background: rgba(55, 19, 39, .82);
+}
+.prolog-open-news {
+  border-color: #e56b99;
+  background: linear-gradient(110deg, #a92d5b, #d94b79);
+}
+.prolog-company-create {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 15px;
+  border: 1px solid #873453;
+  border-radius: 14px;
+  background: rgba(66, 20, 45, .82);
+}
+.prolog-company-create h4 {
+  margin: 0 0 4px;
+  color: #ffd5e3;
+}
+.prolog-company-create label {
+  color: #ffc0d4;
+  font-weight: 800;
+}
+.prolog-company-create input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 12px;
+  border: 1px solid #b94c76;
+  border-radius: 10px;
+  color: #fff;
+  background: #210f1b;
+  font: inherit;
+}
+.prolog-company-submit {
+  padding: 12px 16px;
+  border: 1px solid #f08bb0;
+  border-radius: 10px;
+  color: #fff;
+  background: linear-gradient(110deg, #a92d5b, #d94b79);
+  font-weight: 900;
+}
+.prolog-company-submit:disabled {
+  opacity: .7;
+}
+.prolog-company-reward,
+.prolog-company-status {
+  margin: 4px 0 0;
+  color: #ffd0e0;
+  line-height: 1.45;
+}
+
+
+/* Scroll-Fix für das Nachrichtenfenster von Prolog-Aufgabe 2 */
+.prolog-news-window {
+  min-height: 0;
+  max-height: 90vh;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
+  box-sizing: border-box;
+}
+@supports (height: 100dvh) {
+  .prolog-news-window {
+    top: 3dvh;
+    bottom: 3dvh;
+    max-height: 94dvh;
+  }
+}
+
+
+/* Prolog-Aufgabe 3: gruene Firmen-Nachricht und Fortschrittsanzeige */
+.prolog-open-green {
+  border-color: #62c98a;
+  background: linear-gradient(110deg, #176b43, #26965e);
+  color: #f0fff5;
+}
+.prolog-green-window {
+  border-color: #3ba66b;
+  color: #eafff1;
+  background: linear-gradient(155deg, #123b2a 0%, #091b14 78%);
+  box-shadow: 0 18px 70px rgba(0,0,0,.78), 0 0 32px rgba(52,190,112,.25);
+}
+.prolog-green-head {
+  border-bottom-color: #28784b;
+}
+.prolog-green-head span {
+  color: #8be5ae;
+}
+.prolog-green-head h3 {
+  color: #eafff1;
+}
+.prolog-green-content {
+  border-color: #286b46;
+  background: rgba(15, 57, 36, .84);
+}
+.prolog-three-task {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 15px;
+  border: 1px solid #28784b;
+  border-radius: 14px;
+  background: rgba(13, 52, 33, .88);
+}
+.prolog-three-task h4 {
+  margin: 0 0 3px;
+  color: #b8f5ce;
+}
+.prolog-three-progress-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: #eafff1;
+}
+.prolog-three-progress-track {
+  height: 13px;
+  overflow: hidden;
+  border: 1px solid #347c52;
+  border-radius: 99px;
+  background: #071b11;
+}
+.prolog-three-progress-track i {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #23864e, #72e39a);
+  transition: width .25s ease;
+}
+.prolog-three-counts,
+.prolog-three-status {
+  margin: 0;
+  color: #c9f5d8;
+  line-height: 1.45;
+}
+
+
+/* Hintergrundmusik-Steuerung im Hauptmenü */
+.music-controls{display:grid;gap:9px;padding:11px 12px;border:1px solid #344967;border-radius:12px;background:#0a1424;color:#fff}
+.music-controls-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.music-controls-head strong{font-size:14px}
+.music-controls-head span{font-size:12px;color:#a9c8ed;overflow-wrap:anywhere}
+.music-controls-buttons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.music-controls-buttons button{min-height:38px;padding:7px 5px;border:1px solid #344967;border-radius:9px;background:#14243a;color:#fff;font-size:12px}
+.music-controls-buttons button:active{background:#203a5c}
+.music-controls-buttons button.off{border-color:#7c4850;color:#ffc5ca}
+.music-volume-row{display:grid;grid-template-columns:auto minmax(70px,1fr) auto;align-items:center;gap:9px;font-size:12px;color:#c6d5e8}
+.music-volume-row input{width:100%;min-width:0;accent-color:#54a6ff}
+.music-volume-row output{min-width:38px;text-align:right;font-variant-numeric:tabular-nums}
+@media(max-width:380px){.music-controls-buttons button{font-size:11px}.music-controls-head{align-items:flex-start;flex-direction:column}}
+
+/* System 2: quadratische Ansicht passend zur 2100x2100-Sternenkarte.
+   Verhindert den schwarzen Restbereich unter der Karte und die horizontale Scrollleiste.
+   Die Zoom-/Wischsteuerung bleibt über game.js erhalten. */
+.solar-system-viewport:has(#solar-system.system2-expanded) {
+  width: 100%;
+  height: auto !important;
+  min-height: 0 !important;
+  aspect-ratio: 1 / 1;
+  overflow: hidden !important;
+  scrollbar-width: none;
+}
+.solar-system-viewport:has(#solar-system.system2-expanded)::-webkit-scrollbar {
+  display: none;
+}
+.solar-system-viewport:has(#solar-system.system2-expanded) > #solar-system.system2-expanded {
+  display: block;
+  width: 2100px !important;
+  height: 2100px !important;
+  min-width: 2100px !important;
+  min-height: 2100px !important;
+  max-width: none !important;
+  background-color: #05030d;
+  background-repeat: no-repeat;
+}
+
+
+/* Einzigartiges Raketen-Silo */
+.rocket-silo-card { border-color: rgba(245, 190, 55, .42); background: linear-gradient(145deg, rgba(35,39,46,.98), rgba(12,17,25,.98)); }
+.rocket-silo-card h3 { color: #f4c84e; }
+.rocket-silo-lock { display:flex; align-items:center; justify-content:center; gap:12px; padding:18px 12px; margin:12px 0; border:1px solid rgba(245,190,55,.5); border-radius:12px; color:#ffd34f; background:linear-gradient(90deg,rgba(90,75,28,.25),rgba(20,24,30,.95)); text-align:center; }
+.rocket-silo-locked { border-color:rgba(245,190,55,.35); }
+.rocket-silo-panel { z-index:46; }
+.rocket-silo-dashboard { border-color:rgba(245,190,55,.35); }
+
+
+/* Prolog-Aufgaben als eigenständiges Vollbildfenster: Spielhintergrund vollständig verdeckt */
+html.prolog-fullscreen-open,
+body.prolog-fullscreen-open {
+  overflow: hidden !important;
+  overscroll-behavior: none;
+}
+.prolog-message-window {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 20000 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  min-height: 100vh;
+  max-width: none !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: clamp(16px, 3.5vw, 34px) !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-sizing: border-box !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  background-color: #091525 !important;
+  background-image: linear-gradient(155deg, #102844 0%, #091525 72%) !important;
+  box-shadow: none !important;
+}
+.prolog-news-window {
+  background-color: #180d1b !important;
+  background-image: linear-gradient(155deg, #3b142b 0%, #180d1b 76%) !important;
+}
+.prolog-green-window {
+  background-color: #0b241b !important;
+  background-image: linear-gradient(155deg, #123c2b 0%, #091b15 76%) !important;
+}
+.prolog-message-window > * {
+  width: 100%;
+  max-width: 760px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.prolog-message-window .prolog-message-head {
+  position: sticky;
+  top: calc(-1 * clamp(16px, 3.5vw, 34px));
+  z-index: 1;
+  padding-top: 4px;
+  background: inherit;
+}
+@media (max-width: 600px) {
+  .prolog-message-window { padding: 16px !important; }
+  .prolog-message-window .prolog-message-head { top: -16px; }
+}
+
+
+/* SFO Starttest – veredeltes Startseiten-Design */
+.startup-intro{
+  isolation:isolate;
+  justify-content:center;
+  gap:clamp(14px,2.4vh,24px);
+  padding:clamp(22px,6vw,38px);
+  background:
+    radial-gradient(ellipse at 50% 37%,rgba(22,76,125,.42) 0%,transparent 43%),
+    radial-gradient(ellipse at 12% 72%,rgba(0,174,220,.13) 0%,transparent 35%),
+    radial-gradient(ellipse at 88% 64%,rgba(83,76,190,.18) 0%,transparent 38%),
+    linear-gradient(160deg,#07172b 0%,#030b18 52%,#02050c 100%);
+}
+.startup-intro::before{
+  content:"";position:absolute;z-index:-1;left:50%;top:42%;
+  width:min(105vw,560px);aspect-ratio:1;border-radius:50%;
+  transform:translate(-50%,-50%);
+  background:radial-gradient(circle,rgba(39,143,220,.15) 0 28%,rgba(20,91,155,.08) 42%,transparent 70%);
+  filter:blur(8px);pointer-events:none;
+}
+.startup-intro::after{
+  content:"";position:absolute;z-index:-1;left:-18%;right:-18%;bottom:-25%;
+  height:42%;border-radius:50% 50% 0 0;
+  background:radial-gradient(ellipse at 50% 0%,rgba(29,119,190,.22),rgba(3,12,25,.15) 44%,transparent 72%);
+  border-top:1px solid rgba(93,190,255,.12);pointer-events:none;
+}
+.startup-intro-stars{
+  opacity:.56;
+  background-image:
+    radial-gradient(#e5f4ff 1px,transparent 1.7px),
+    radial-gradient(rgba(113,195,255,.85) 1px,transparent 1.8px),
+    radial-gradient(rgba(255,255,255,.65) .7px,transparent 1.5px);
+  background-size:83px 79px,137px 121px,47px 53px;
+  background-position:12px 17px,42px 51px,9px 28px;
+  animation:sfo-star-drift 75s linear infinite;
+}
+.startup-intro-art{
+  width:min(88vw,420px);
+  height:clamp(145px,24vh,210px);
+  margin-bottom:clamp(2px,1vh,10px);
+  animation:intro-art-float 4.5s ease-in-out infinite alternate;
+}
+.startup-intro-art svg{
+  filter:drop-shadow(0 0 18px rgba(76,166,255,.32)) drop-shadow(0 12px 24px rgba(0,0,0,.3));
+}
+.startup-intro-kicker{
+  color:#79d8ff;font-size:clamp(10px,2.8vw,13px);font-weight:800;
+  letter-spacing:clamp(2px,.65vw,3.5px);text-transform:uppercase;
+  text-shadow:0 0 18px rgba(60,183,255,.38);
+}
+.startup-intro h1{
+  margin:0;font-size:clamp(29px,8vw,43px);line-height:1.12;
+  letter-spacing:-1.2px;font-weight:850;
+  background:linear-gradient(180deg,#fff 8%,#d8edff 62%,#91c9f3 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 5px 18px rgba(54,154,229,.22));
+}
+.startup-intro p{
+  max-width:560px;margin:0 auto;color:#b9cbe0;
+  font-size:clamp(14px,3.8vw,17px);line-height:1.75;letter-spacing:.15px;
+}
+.startup-intro-actions{
+  width:min(100%,440px);display:grid;gap:13px;margin-top:clamp(8px,2vh,18px);
+}
+.startup-intro-actions button{
+  min-height:62px;border-radius:19px;padding:15px 22px;
+  font-size:clamp(16px,4.4vw,19px);font-weight:800;letter-spacing:.1px;
+  transition:transform .18s ease,filter .18s ease,box-shadow .18s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.startup-intro-actions button:active{transform:scale(.985);filter:brightness(1.12)}
+.startup-intro-actions #startup-play{
+  color:#fff;border:1px solid rgba(119,218,255,.9);
+  background:linear-gradient(110deg,#1268a9 0%,#176fc2 52%,#234fae 100%);
+  box-shadow:0 8px 28px rgba(0,105,205,.28),inset 0 1px 0 rgba(255,255,255,.28),0 0 0 4px rgba(55,166,255,.07);
+}
+.startup-intro-actions #startup-play span{display:inline-block;margin-left:8px;transition:transform .18s ease}
+.startup-intro-actions #startup-play:active span{transform:translateX(4px)}
+.startup-intro-actions #startup-updates{
+  color:#d8e8fa;border:1px solid rgba(126,174,219,.35);
+  background:linear-gradient(135deg,rgba(24,49,78,.78),rgba(9,22,41,.88));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07);
+}
+@keyframes sfo-star-drift{from{background-position:12px 17px,42px 51px,9px 28px}to{background-position:92px 117px,-58px 151px,69px 88px}}
+@media(min-width:700px){
+ .startup-intro{gap:22px}
+ .startup-intro-art{height:220px}
+ .startup-intro-actions{grid-template-columns:1.15fr .85fr}
+ .startup-intro-actions button{min-height:66px}
+}
+@media(max-height:700px){
+ .startup-intro{gap:10px;padding-top:18px;padding-bottom:18px}
+ .startup-intro-art{height:clamp(100px,19vh,140px)}
+ .startup-intro-actions{margin-top:4px;gap:9px}
+ .startup-intro-actions button{min-height:54px;padding:12px 18px}
+}
+@media(prefers-reduced-motion:reduce){
+ .startup-intro-stars,.startup-intro-art{animation:none!important}
+}
+
+
+/* SFO Starttest – dunklere Farbwelt, hellere Schrift und dichterer Kometenschwarm */
+.startup-intro{
+  background:
+    radial-gradient(ellipse at 12% 24%,rgba(190,25,85,.12) 0%,transparent 34%),
+    radial-gradient(ellipse at 88% 68%,rgba(125,25,145,.13) 0%,transparent 38%),
+    radial-gradient(ellipse at 50% 46%,#091326 0%,#030914 55%,#010309 100%) !important;
+  color:#f5f8ff !important;
+}
+.startup-intro-stars{opacity:.58}
+.startup-intro-kicker{
+  color:#8fe4ff !important;
+  text-shadow:0 0 12px rgba(90,205,255,.42),0 0 22px rgba(255,70,155,.22);
+}
+.startup-intro h1{
+  color:#f7f9ff !important;
+  text-shadow:0 0 16px rgba(80,180,255,.25),0 0 28px rgba(255,70,155,.22) !important;
+}
+.startup-intro p{
+  color:#e0e9f7 !important;
+  text-shadow:0 1px 8px rgba(0,0,0,.8);
+}
+.startup-intro-art svg{filter:drop-shadow(0 0 16px rgba(76,166,255,.28)) drop-shadow(0 0 12px rgba(255,70,145,.12))}
+.startup-comet{animation-duration:9s}
+.comet-six{top:7%;left:-42%;width:clamp(70px,18vw,125px);animation-delay:2.4s;animation-duration:10s;filter:hue-rotate(-12deg)}
+.comet-seven{top:30%;left:-36%;width:clamp(110px,28vw,195px);animation-delay:6.1s;animation-duration:12s}
+.comet-eight{top:47%;left:-48%;width:clamp(60px,15vw,105px);animation-delay:1.1s;animation-duration:8.5s;filter:hue-rotate(24deg)}
+.comet-nine{top:68%;left:-40%;width:clamp(85px,22vw,155px);animation-delay:4.2s;animation-duration:10.5s}
+.comet-ten{top:88%;left:-34%;width:clamp(65px,17vw,120px);animation-delay:7.3s;animation-duration:11.5s;filter:hue-rotate(-20deg)}
+.comet-eleven{top:17%;left:-46%;width:clamp(55px,14vw,95px);animation-delay:8.4s;animation-duration:13s}
+.comet-twelve{top:55%;left:-38%;width:clamp(95px,25vw,175px);animation-delay:9.5s;animation-duration:12.5s;filter:hue-rotate(15deg)}
+.startup-comet{box-shadow:0 0 6px rgba(255,65,140,1),0 0 16px rgba(255,35,125,.85),0 0 30px rgba(226,50,190,.42)}
+.startup-comet::after{box-shadow:0 0 8px 3px rgba(255,100,170,1),0 0 19px 7px rgba(255,40,130,.58)}
+.startup-intro-actions #startup-updates{color:#f0f5ff !important}
+@media(prefers-reduced-motion:reduce){.startup-comet{display:none!important}}
+
+/* Realistischeres SF-01-Raumschiff für die Startseite */
+.startup-intro-art{position:relative;isolation:isolate;overflow:visible}
+.startup-hero-planet{
+  position:absolute;right:5%;top:12%;width:clamp(74px,23vw,132px);aspect-ratio:1;
+  border-radius:50%;z-index:0;
+  background:
+    radial-gradient(ellipse at 32% 28%,rgba(255,255,255,.7),transparent 12%),
+    radial-gradient(ellipse at 35% 32%,#4b9ce4 0%,#1b4e9b 52%,#07152e 78%);
+  box-shadow:inset -13px -9px 22px rgba(0,0,0,.58),0 0 25px rgba(68,150,255,.3);
+}
+.startup-hero-planet::after{content:"";position:absolute;inset:-7%;border-radius:50%;background:radial-gradient(ellipse,transparent 62%,rgba(83,172,255,.2) 68%,transparent 73%)}
+.startup-hero-ship{
+  position:absolute;z-index:2;left:-3%;top:0;width:78%;height:100%;
+  object-fit:contain;object-position:center;transform:rotate(-2deg);
+  filter:drop-shadow(0 8px 13px rgba(0,0,0,.6)) drop-shadow(0 0 12px rgba(255,55,135,.24));
+  animation:startup-ship-float 3.8s ease-in-out infinite alternate;
+}
+@keyframes startup-ship-float{
+  from{transform:translate3d(0,2px,0) rotate(-2deg)}
+  to{transform:translate3d(0,-7px,0) rotate(-.5deg)}
+}
+@media(prefers-reduced-motion:reduce){.startup-hero-ship{animation:none}}
