@@ -1,0 +1,6 @@
+Raketen Silo (Geperrt)
+Soll Atomrakteten Bauen können, bis zu 4 Stück über die Warteschleife.
+die Rohstoffe werden zum Beginn abgezogen.
+
+Die Raketen sollen später Asteroiden zerstören können.
+sie benötigen keinen Sprit / Treibstoff 
