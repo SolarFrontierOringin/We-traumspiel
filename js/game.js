@@ -271,7 +271,7 @@ const MARKET_RESOURCES = {
  buildingMaterials:{base:8,capacity:60000,initial:60000,unit:'t'}, machines:{base:90,capacity:10000,initial:6000,unit:'t'},
  glass:{base:20,capacity:20000,initial:16000,unit:'t'}, electronics:{base:100,capacity:10000,initial:6000,unit:'t'},
  hydrogen:{base:12,capacity:20000,initial:16000,unit:'t'}, nitrogen:{base:9,capacity:20000,initial:15000,unit:'t'},
- helium3:{base:250,capacity:5000,initial:2500,unit:'t'}, uranium:{base:100,capacity:5000,initial:2500,unit:'t'},
+ helium3:{base:250,capacity:5000,initial:2500,unit:'t'}, uranium:{base:100,capacity:5000,initial:2500,unit:'t'}, plutonium:{base:150000,capacity:10000,initial:10000,unit:'t'},
  processedUranium:{base:180,capacity:3000,initial:1500,unit:'t'}, nuclearFuel:{base:350,capacity:1500,initial:700,unit:'t'},
  bauxite:{base:5,capacity:30000,initial:30000,unit:'t'}, aluminiumOxide:{base:16,capacity:12000,initial:9000,unit:'t'},
  aluminium:{base:35,capacity:12000,initial:9000,unit:'t'}, water:{base:2,capacity:100000,initial:100000,unit:'L'},
@@ -675,6 +675,11 @@ function flightDurationSeconds(destination, mode = 'surface') {
 function getLocationStorage(id, mode = 'surface') {
   return mode === 'orbit' ? getOrbitStorage(id) : getPlanetStorage(id);
 }
+function canReceivePlutonium(id, mode = 'surface', amount = 0) {
+  if (mode !== 'surface' || !hasPlanetSurface(id) || Number(getBuildingsOnPlanet(id).radioactiveStorageSurface || 0) < 1) return false;
+  const storage = getPlanetStorage(id);
+  return radioactiveStoredAmount(storage) + Math.max(0, Number(amount) || 0) <= radioactiveStorageCapacity(id, 'surface') + 0.000001;
+}
 function hasPlanetSurface(id) {
   if (!id || id === 'sun') return false;
   const body = bodies[id] || (typeof futureSolarSystem !== 'undefined'
@@ -861,8 +866,8 @@ function runBuildAction(action) {
 
 /* Planetendaten werden aus js/game-planets.js geladen. */
 
-const resourceNames = { ice: 'Eis', titanOre: 'Titanerz', processedTitan: 'Aufbereitetes Titan', titanium: 'Titan', bauxite: 'Bauxit', aluminiumOxide: 'Aluminiumoxid', aluminium: 'Aluminium', co2: 'CO₂', carbon: 'Kohlenstoff', oxygen: 'Sauerstoff', stone: 'Stein', coal: 'Kohle', gas: 'Gas', iron: 'Eisen', goldOre: 'Golderz', gold: 'Gold', microchip: 'Mikrochip', nanochips: 'Nanochips', silicon: 'Silizium', lithium: 'Lithium', copperOre: 'Kupfererz', copper: 'Kupfer', batteries: 'Batterien', lithiumBatteries: 'Lithium-Batterien', buildingMaterials: 'Baustoffe', machines: 'Maschinen', glass: 'Glas', electronics: 'Elektronik', steel: 'Stahl', hydrogen: 'Wasserstoff', helium3: 'Helium-3', nitrogen: 'Stickstoff', crudeOil: 'Rohöl', polymers: 'Polymere', rubber: 'Gummi', plastics: 'Kunststoff', wood: 'Bretter', biomass: 'Biomasse', vehicles: 'Fahrzeuge', cocoaBeans: 'Kakaobohnen', chocolate: 'Schokolade', luxuryFurniture: 'Luxusmöbel', nickelOre: 'Nickelerz', graphite: 'Graphit', liquidFuel: 'Treibstoff', trees: 'Bäume', uranium: 'Uran', processedUranium: 'Aufbereitetes Uran', nuclearFuel: 'Kernbrennstoff', ionium: 'Ionium', germanium: 'Germanium', chips: 'Chips', water: 'Wasser', grain: 'Getreide', vegetables: 'Gemüse', food: 'Lebensmittel', algaeBiomass: 'Algenbiomasse' };
-const resourceIcons = { ice: '🧊', titanOre: '⚙️', processedTitan: '⚗️', titanium: '🔩', bauxite: '🪨', aluminiumOxide: '⚗️', aluminium: '🥈', co2: '🌫️', carbon: '⚫', oxygen: '🫧', stone: '🪨', coal: '⚫', gas: '🔥', iron: '🧲', goldOre: '🟨', gold: '🪙', microchip: '💠', nanochips: '🔬', silicon: '🔷', lithium: '🔋', copperOre: '🟠', copper: '🟤', batteries: '🔋', lithiumBatteries: '🔋', buildingMaterials: '🧱', machines: '⚙️', glass: '🪟', electronics: '💻', steel: '🔩', hydrogen: '💨', helium3: '🧪', nitrogen: '🌬️', crudeOil: '🛢️', polymers: '🧬', rubber: '⚫', plastics: '🧴', wood: '🪵', biomass: '🌿', vehicles: '🚗', cocoaBeans: '🫘', chocolate: '🍫', luxuryFurniture: '🛋️', nickelOre: '🪨', graphite: '⚫', liquidFuel: '🛢️', trees: '🌳', uranium: '☢️', processedUranium: '🧪', nuclearFuel: '⚛️', ionium: '☢️', germanium: '💎', chips: '💾', water: '💧', grain: '🌾', vegetables: '🥦', food: '🥫', algaeBiomass: '🪴' };
+const resourceNames = { ice: 'Eis', titanOre: 'Titanerz', processedTitan: 'Aufbereitetes Titan', titanium: 'Titan', bauxite: 'Bauxit', aluminiumOxide: 'Aluminiumoxid', aluminium: 'Aluminium', co2: 'CO₂', carbon: 'Kohlenstoff', oxygen: 'Sauerstoff', stone: 'Stein', coal: 'Kohle', gas: 'Gas', iron: 'Eisen', goldOre: 'Golderz', gold: 'Gold', microchip: 'Mikrochip', nanochips: 'Nanochips', silicon: 'Silizium', lithium: 'Lithium', copperOre: 'Kupfererz', copper: 'Kupfer', batteries: 'Batterien', lithiumBatteries: 'Lithium-Batterien', buildingMaterials: 'Baustoffe', machines: 'Maschinen', glass: 'Glas', electronics: 'Elektronik', steel: 'Stahl', hydrogen: 'Wasserstoff', helium3: 'Helium-3', nitrogen: 'Stickstoff', crudeOil: 'Rohöl', polymers: 'Polymere', rubber: 'Gummi', plastics: 'Kunststoff', wood: 'Bretter', biomass: 'Biomasse', vehicles: 'Fahrzeuge', cocoaBeans: 'Kakaobohnen', chocolate: 'Schokolade', luxuryFurniture: 'Luxusmöbel', nickelOre: 'Nickelerz', graphite: 'Graphit', liquidFuel: 'Treibstoff', trees: 'Bäume', uranium: 'Uran', plutonium: 'Plutonium', processedUranium: 'Aufbereitetes Uran', nuclearFuel: 'Kernbrennstoff', ionium: 'Ionium', germanium: 'Germanium', chips: 'Chips', water: 'Wasser', grain: 'Getreide', vegetables: 'Gemüse', food: 'Lebensmittel', algaeBiomass: 'Algenbiomasse' };
+const resourceIcons = { ice: '🧊', titanOre: '⚙️', processedTitan: '⚗️', titanium: '🔩', bauxite: '🪨', aluminiumOxide: '⚗️', aluminium: '🥈', co2: '🌫️', carbon: '⚫', oxygen: '🫧', stone: '🪨', coal: '⚫', gas: '🔥', iron: '🧲', goldOre: '🟨', gold: '🪙', microchip: '💠', nanochips: '🔬', silicon: '🔷', lithium: '🔋', copperOre: '🟠', copper: '🟤', batteries: '🔋', lithiumBatteries: '🔋', buildingMaterials: '🧱', machines: '⚙️', glass: '🪟', electronics: '💻', steel: '🔩', hydrogen: '💨', helium3: '🧪', nitrogen: '🌬️', crudeOil: '🛢️', polymers: '🧬', rubber: '⚫', plastics: '🧴', wood: '🪵', biomass: '🌿', vehicles: '🚗', cocoaBeans: '🫘', chocolate: '🍫', luxuryFurniture: '🛋️', nickelOre: '🪨', graphite: '⚫', liquidFuel: '🛢️', trees: '🌳', uranium: '☢️', plutonium: '☢️', processedUranium: '🧪', nuclearFuel: '⚛️', ionium: '☢️', germanium: '💎', chips: '💾', water: '💧', grain: '🌾', vegetables: '🥦', food: '🥫', algaeBiomass: '🪴' };
 
 function formatTons(value) { return `${value.toFixed(2)} t`; }
 function formatLargeTons(value) {
@@ -907,7 +912,7 @@ function getBuildingsOnPlanet(id) {
     return state.buildings;
   }
   if (!bodies[id].buildings) {
-    bodies[id].buildings = { companyHeadquarters: 0, gasCarbonStorageOrbit: 0, iceMine: 0, residentialHouse: 0, mediumResidentialHouse: 0, residentialComplex: 0, habitat: 0, observatory: 0, foodFactory: 0, algaeFarm: 0, algaeFoodProcessor: 0, steelworks: 0, stoneQuarry: 0, buildingMaterialsFactory: 0, coalMine: 0, gasPlant: 0, co2Extraction: 0, co2ProcessingPlant: 0, orbitalCo2Extractor: 0, researchSatellite: 0, ironMine: 0, goldMine: 0, goldRefinery: 0, megaChipFactory: 0, megaNanoChipFactory: 0, nickelMine: 0, graphiteMine: 0, syntheticGraphitePlant: 0, siliconMine: 0, lithiumMine: 0, copperMine: 0, copperSmelter: 0, lithiumRefinery: 0, machineFactory: 0, glassFactory: 0, heliumExtractor: 0, fusionReactor: 0, outpost: 0, coalPowerPlant: 0, gasPowerPlant: 0, solarPlant: 0, researchLab: 0, moonBase: 0, crudeOilPump: 0, refinery: 0, polymerFactory: 0, rubberFactory: 0, plasticFactory: 0, vehicleFactory: 0, electronicsFactory: 0, uraniumMine: 0, ioniumMine: 0, uraniumProcessingPlant: 0, nuclearFuelPlant: 0, nuclearReactor: 0, radioactiveStorageSurface: 0, radioactiveStorageOrbit: 0, chipFactory: 0, solarSail: 0, warmingSail: 0, solarSatellite: 0, solarProbe: 0, bauxiteMine: 0, titanMine: 0, titanProcessing: 0, titanRefinery: 0, aluminiumOxideRefinery: 0, aluminiumSmelter: 0, hydroelectricPlant: 0, greenhouse: 0, cocoaPlantation: 0, woodcutter: 0, forester: 0, atmosphereRegulator: 0, gasRemoval: 0, waterElectrolysis: 0, treeNursery: 0 }
+    bodies[id].buildings = { companyHeadquarters: 0, gasCarbonStorageOrbit: 0, iceMine: 0, residentialHouse: 0, mediumResidentialHouse: 0, residentialComplex: 0, habitat: 0, observatory: 0, foodFactory: 0, algaeFarm: 0, algaeFoodProcessor: 0, steelworks: 0, stoneQuarry: 0, buildingMaterialsFactory: 0, coalMine: 0, gasPlant: 0, co2Extraction: 0, co2ProcessingPlant: 0, orbitalCo2Extractor: 0, researchSatellite: 0, ironMine: 0, goldMine: 0, goldRefinery: 0, megaChipFactory: 0, megaNanoChipFactory: 0, nickelMine: 0, graphiteMine: 0, syntheticGraphitePlant: 0, siliconMine: 0, lithiumMine: 0, copperMine: 0, copperSmelter: 0, lithiumRefinery: 0, machineFactory: 0, glassFactory: 0, heliumExtractor: 0, fusionReactor: 0, outpost: 0, coalPowerPlant: 0, gasPowerPlant: 0, solarPlant: 0, researchLab: 0, moonBase: 0, crudeOilPump: 0, refinery: 0, polymerFactory: 0, rubberFactory: 0, plasticFactory: 0, vehicleFactory: 0, electronicsFactory: 0, uraniumMine: 0, ioniumMine: 0, uraniumProcessingPlant: 0, nuclearFuelPlant: 0, nuclearReactor: 0, nuclearReactorII: 0, radioactiveStorageSurface: 0, radioactiveStorageOrbit: 0, chipFactory: 0, solarSail: 0, warmingSail: 0, solarSatellite: 0, solarProbe: 0, bauxiteMine: 0, titanMine: 0, titanProcessing: 0, titanRefinery: 0, aluminiumOxideRefinery: 0, aluminiumSmelter: 0, hydroelectricPlant: 0, greenhouse: 0, cocoaPlantation: 0, woodcutter: 0, forester: 0, atmosphereRegulator: 0, gasRemoval: 0, waterElectrolysis: 0, treeNursery: 0 }
   }
   if (bodies[id].buildings.goldMine === undefined) bodies[id].buildings.goldMine = 0;
   if (bodies[id].buildings.goldRefinery === undefined) bodies[id].buildings.goldRefinery = 0;
@@ -954,7 +959,7 @@ const PERFORMANCE_CONTROLLED_BUILDINGS = new Set([
   'fusionReactor','coalPowerPlant','solarPlant','hydroelectricPlant','greenhouse','woodcutter','forester','treeNursery',
   'waterElectrolysis','foodFactory','iceMine','iceProcessingPlant','algaeFarm','algaeFoodProcessor','cocoaPlantation',
   'chocolateFactory','luxuryFurnitureFactory','crudeOilPump','refinery','uraniumMine','ioniumMine','uraniumProcessingPlant',
-  'nuclearFuelPlant','nuclearReactor','gasRemoval','chipFactory','electronicsFactory','polymerFactory','rubberFactory','plasticFactory',
+  'nuclearFuelPlant','nuclearReactor','nuclearReactorII','gasRemoval','chipFactory','electronicsFactory','polymerFactory','rubberFactory','plasticFactory',
   'syntheticGraphitePlant','lithiumBatteryFactory','vehicleFactory','titanMine','titanProcessing','titanRefinery'
 ]);
 
@@ -1061,7 +1066,7 @@ function radioactiveStorageCapacity(id, mode = 'surface') {
   const key = mode === 'orbit' ? 'radioactiveStorageOrbit' : 'radioactiveStorageSurface';
   return Math.max(0, Number(getBuildingsOnPlanet(id)[key] || 0)) * 10000;
 }
-function radioactiveStoredAmount(storage) { return ['uranium','processedUranium','nuclearFuel','ionium'].reduce((sum, key) => sum + Math.max(0, Number(storage[key] || 0)), 0); }
+function radioactiveStoredAmount(storage) { return ['uranium','processedUranium','nuclearFuel','ionium','plutonium'].reduce((sum, key) => sum + Math.max(0, Number(storage[key] || 0)), 0); }
 function refreshPlanetStorageDisplay() {
   const storageContent = document.querySelector('.planet-storage-content');
   if (!storageContent || !state.selected || !bodies[state.selected]) return;
@@ -1092,7 +1097,7 @@ function formatStorage(id) {
   const gasRow = `<details class="planet-resource-section gas-storage-section"><summary>🌫️ Gaslager <strong>${formatTons(gasUsed)} / ${formatTons(gasCapacity * gasKeys.length)}</strong></summary><div class="planet-resource-list"><small class="hint">Je Gas 100.000 t Kapazität pro gebautem Gaslager · ${mode === 'orbit' ? 'Orbit' : 'Planetenoberfläche'}</small><div class="liquid-storage-meter"><div class="liquid-storage-meter-label"><span>Gesamtauslastung</span><strong>${gasPct.toFixed(1)} %</strong></div><div class="liquid-storage-progress"><i style="width:${gasPct}%"></i></div></div>${gasKeys.map(key => `<div class="stat"><span>${ATMOSPHERE_RELEASE_GASES[key]?.icon || '🔥'} ${ATMOSPHERE_RELEASE_GASES[key]?.label || resourceNames[key] || 'Gas'}</span><strong>${formatAtmosphereTons(Number(st[key] || 0))} / ${formatAtmosphereTons(gasCapacity)}</strong></div>`).join('')}${gasCapacity <= 0 ? '<p class="hint">Noch kein Gaslager an diesem Standort gebaut. Atmosphärische Gase können hier nicht gelagert werden.</p>' : ''}</div></details>`;
   const radioactiveCapacity = radioactiveStorageCapacity(id, mode);
   const radioactiveUsed = radioactiveStoredAmount(st);
-  const radioactiveSummary = `<details class="planet-resource-section radioactive-storage-section"><summary>☢️ Radioaktivstofflager <strong>${formatTons(radioactiveUsed)} / ${formatTons(radioactiveCapacity)}</strong></summary><div class="planet-resource-list"><small class="hint">Ionium und andere radioaktive Stoffe sind in diesem Lager abgeschirmt. Kapazität: 10.000 t je gebautem Radioaktivstofflager · ${mode === 'orbit' ? 'Orbit' : 'Oberfläche'}</small>${['uranium','processedUranium','nuclearFuel','ionium'].map(k => `<div class="stat"><span>${resourceIcons[k] || '☢️'} ${resourceNames[k] || k}</span><strong>${formatTons(Number(st[k] || 0))}</strong></div>`).join('')}${radioactiveCapacity <= 0 ? '<p class="hint">Noch kein Radioaktivstofflager an diesem Standort gebaut.</p>' : ''}</div></details>`;
+  const radioactiveSummary = `<details class="planet-resource-section radioactive-storage-section"><summary>☢️ Radioaktivstofflager <strong>${formatTons(radioactiveUsed)} / ${formatTons(radioactiveCapacity)}</strong></summary><div class="planet-resource-list"><small class="hint">Ionium und andere radioaktive Stoffe sind in diesem Lager abgeschirmt. Kapazität: 10.000 t je gebautem Radioaktivstofflager · ${mode === 'orbit' ? 'Orbit' : 'Oberfläche'}</small>${['uranium','processedUranium','nuclearFuel','ionium','plutonium'].map(k => `<div class="stat"><span>${resourceIcons[k] || '☢️'} ${resourceNames[k] || k}</span><strong>${formatTons(Number(st[k] || 0))}</strong></div>`).join('')}${radioactiveCapacity <= 0 ? '<p class="hint">Noch kein Radioaktivstofflager an diesem Standort gebaut.</p>' : ''}</div></details>`;
   const fuel = liquidFuelAmount(id, mode);
   const fuelCapacity = liquidTankCapacity(id, mode);
   const fuelPct = fuelCapacity > 0 ? Math.min(100, fuel / fuelCapacity * 100) : 0;
@@ -1444,7 +1449,8 @@ function baseElectricityProduction(id = state.selected) {
     { key:'coalPowerPlant', perBuilding:20 },
     { key:'solarPlant', perBuilding:20 },
     { key:'fusionReactor', perBuilding:50 },
-    { key:'nuclearReactor', perBuilding:1000 }
+    { key:'nuclearReactor', perBuilding:1000 },
+    { key:'nuclearReactorII', perBuilding:900 }
   ];
   return generators.reduce((sum, source) => sum + Number(b[source.key] || 0) * source.perBuilding, 0);
 }
@@ -2305,6 +2311,8 @@ function renderTasks() {
       if (!modal) return;
       modal.hidden = false;
       modal.style.display = 'block';
+      document.documentElement.classList.add('prolog-fullscreen-open');
+      document.body.classList.add('prolog-fullscreen-open');
       if (modal === welcomeMessage) resolvePrologAudio(document, '01');
       if (modal === newsMessage) resolvePrologAudio(document, '02');
       if (modal === prologThreeMessage) {
@@ -2320,6 +2328,8 @@ function renderTasks() {
       const audio = modal?.querySelector('[data-prolog-audio]');
       if (audio) audio.pause();
       if (modal) { modal.hidden = true; modal.style.display = 'none'; }
+      document.documentElement.classList.remove('prolog-fullscreen-open');
+      document.body.classList.remove('prolog-fullscreen-open');
     };
     panel.querySelector('[data-open-prolog-message]')?.addEventListener('click', () => openModal(welcomeMessage));
     panel.querySelector('.prolog-task-accordion:not(.prolog-task-two) > summary')?.addEventListener('click', () => openModal(welcomeMessage));
@@ -3153,6 +3163,7 @@ function renderSystem() {
       ${buildButton('uraniumProcessingPlant')}
       ${buildButton('nuclearFuelPlant')}
       ${buildButton('nuclearReactor')}
+      ${buildButton('nuclearReactorII')}
       ${buildButton(state.viewMode === 'orbit' ? 'radioactiveStorageOrbit' : 'radioactiveStorageSurface')}
       ${buildButton('megaChipFactory')}
       ${buildButton('megaNanoChipFactory')}
@@ -3195,7 +3206,7 @@ function renderSystem() {
       { title: '🌱 Landwirtschaft & Versorgung', keys: ['greenhouse','hydroelectricPlant','cocoaPlantation','woodcutter'] },
       { title: '🍫 Kolonistenversorgung', keys: ['chocolateFactory','luxuryFurnitureFactory'] },
       { title: '🏭 Verarbeitung & Industrie', keys: ['lithiumBatteryFactory','syntheticGraphitePlant','titanProcessing','titanRefinery','goldRefinery','megaChipFactory','megaNanoChipFactory','steelworks','buildingMaterialsFactory','co2ProcessingPlant','aluminiumOxideRefinery','aluminiumSmelter','copperSmelter','lithiumRefinery','machineFactory','glassFactory','electronicsFactory','chipFactory','polymerFactory','rubberFactory','plasticFactory','vehicleFactory','foodFactory','iceProcessingPlant','algaeFarm','algaeFoodProcessor','uraniumProcessingPlant','nuclearFuelPlant','radioactiveStorageSurface','radioactiveStorageOrbit'] },
-      { title: '⚡ Energie & Forschung', keys: ['batteryStorage','coalPowerPlant','gasPowerPlant','solarPlant','fusionReactor','nuclearReactor','researchLab','observatory'] },
+      { title: '⚡ Energie & Forschung', keys: ['batteryStorage','coalPowerPlant','gasPowerPlant','solarPlant','fusionReactor','nuclearReactor','nuclearReactorII','researchLab','observatory'] },
       { title: '📦 Lager', keys: ['gasCarbonStorage','liquidStorage'] },
       { title: '🚀 Raumfahrt & Infrastruktur', keys: ['co2Extraction','moonBase','solarSail','warmingSail','outpost','rocketFactory','landingPad','solarSatellite','solarProbe'] },
       { title: '🛰️ Orbit-Gebäude', keys: ['orbitLandingPad','orbitalCo2Extractor','researchSatellite'] }
@@ -3541,10 +3552,10 @@ function renderTopResources() {
       const orbitEntries = makeEntries(orbitStorage, true);
       const surfaceRadioactiveCapacity = radioactiveStorageCapacity(id, 'surface');
       const surfaceRadioactiveUsed = radioactiveStoredAmount(storage);
-      const surfaceRadioactiveEntry = `<div class="planet-resource-section radioactive-storage-section"><div class="luxury-storage-title">☢️ Radioaktivlager · ${formatTons(surfaceRadioactiveUsed)} / ${formatTons(surfaceRadioactiveCapacity)}</div><div class="planet-resource-list">${['uranium','processedUranium','nuclearFuel','ionium'].map(k => `<span class="planet-resource-value" data-resource-key="${k}">${resourceIcons[k] || '☢️'} ${resourceNames[k] || k}: <strong>${formatTons(Number(storage[k] || 0))}</strong></span>`).join('')}</div></div>`;
+      const surfaceRadioactiveEntry = `<div class="planet-resource-section radioactive-storage-section"><div class="luxury-storage-title">☢️ Radioaktivlager · ${formatTons(surfaceRadioactiveUsed)} / ${formatTons(surfaceRadioactiveCapacity)}</div><div class="planet-resource-list">${['uranium','processedUranium','nuclearFuel','ionium','plutonium'].map(k => `<span class="planet-resource-value" data-resource-key="${k}">${resourceIcons[k] || '☢️'} ${resourceNames[k] || k}: <strong>${formatTons(Number(storage[k] || 0))}</strong></span>`).join('')}</div></div>`;
       const orbitRadioactiveCapacity = radioactiveStorageCapacity(id, 'orbit');
       const orbitRadioactiveUsed = radioactiveStoredAmount(orbitStorage);
-      const orbitRadioactiveEntry = `<div class="planet-resource-section radioactive-storage-section"><div class="luxury-storage-title">☢️ Radioaktivlager · ${formatTons(orbitRadioactiveUsed)} / ${formatTons(orbitRadioactiveCapacity)}</div><div class="planet-resource-list">${['uranium','processedUranium','nuclearFuel','ionium'].map(k => `<span class="planet-resource-value" data-resource-key="${k}">${resourceIcons[k] || '☢️'} ${resourceNames[k] || k}: <strong>${formatTons(Number(orbitStorage[k] || 0))}</strong></span>`).join('')}</div></div>`;
+      const orbitRadioactiveEntry = `<div class="planet-resource-section radioactive-storage-section"><div class="luxury-storage-title">☢️ Radioaktivlager · ${formatTons(orbitRadioactiveUsed)} / ${formatTons(orbitRadioactiveCapacity)}</div><div class="planet-resource-list">${['uranium','processedUranium','nuclearFuel','ionium','plutonium'].map(k => `<span class="planet-resource-value" data-resource-key="${k}">${resourceIcons[k] || '☢️'} ${resourceNames[k] || k}: <strong>${formatTons(Number(orbitStorage[k] || 0))}</strong></span>`).join('')}</div></div>`;
       const hasSurfaceRadioactive = surfaceRadioactiveCapacity > 0 || surfaceRadioactiveUsed > 0.000001;
       const hasOrbitRadioactive = orbitRadioactiveCapacity > 0 || orbitRadioactiveUsed > 0.000001;
       const surfaceFuel = liquidFuelAmount(id, 'surface');
@@ -3815,7 +3826,7 @@ function isBuildingAllowed(key, planetId = state.selected) {
   if (key === 'moonBase' && ['sun', 'earth'].includes(planetId)) return false;
   if (planetId === 'sun') return false;
   if (key === 'landingPad') return state.viewMode !== 'orbit' && planetId !== 'sun';
-  if (key !== 'nuclearReactor' && key !== 'radioactiveStorageSurface' && key !== 'radioactiveStorageOrbit' && key !== 'orbitalCo2Extractor' && key !== 'researchSatellite' && key !== 'iceMine' && key !== 'iceProcessingPlant' && key !== 'algaeFoodProcessor' && key !== 'treeNursery' && key !== 'refinery' && key !== 'radioactiveStorageSurface' && key !== 'radioactiveStorageOrbit' && planetId !== 'earth' && key !== 'outpost' && key !== 'solarSail' && key !== 'warmingSail' && Number(getBuildingsOnPlanet(planetId).outpost || 0) < 1) return false;
+  if (key !== 'nuclearReactor' && key !== 'nuclearReactorII' && key !== 'radioactiveStorageSurface' && key !== 'radioactiveStorageOrbit' && key !== 'orbitalCo2Extractor' && key !== 'researchSatellite' && key !== 'iceMine' && key !== 'iceProcessingPlant' && key !== 'algaeFoodProcessor' && key !== 'treeNursery' && key !== 'refinery' && key !== 'radioactiveStorageSurface' && key !== 'radioactiveStorageOrbit' && planetId !== 'earth' && key !== 'outpost' && key !== 'solarSail' && key !== 'warmingSail' && Number(getBuildingsOnPlanet(planetId).outpost || 0) < 1) return false;
   if (key === 'heliumExtractor' && !['luna','venus','jupiter'].includes(planetId)) return false;
    if (key === 'crudeOilPump' && planetId !== 'earth') return false;
   if (key === 'hydroelectricPlant' && planetId !== 'earth') return false;
@@ -4143,6 +4154,15 @@ function buildButtonUnsafe(key) {
     const affordable = Number(storage.steel || 0) >= 1000 && Number(storage.buildingMaterials || 0) >= 600 && Number(storage.electronics || 0) >= 100 && isBuildingAllowed(key);
     const allowedText = isBuildingAllowed(key) ? '' : ' · benötigt Uranaufbereitungsanlage oder aufbereitetes Uran';
     return `<div class="build-card"><div><strong>${b.icon} ${b.name}</strong><small>${b.text}${allowedText}</small></div><button class="build-resource" data-building="${key}" ${affordable ? '' : 'disabled'}>Bauen (${count})</button></div>`;
+  }
+
+  if (key === 'nuclearReactorII') {
+    const b = buildingTypes[key];
+    const count = Number(getBuildingsOnPlanet(state.selected).nuclearReactorII || 0);
+    const storage = getPlanetStorage(state.selected);
+    const costs = { steel: 3000, buildingMaterials: 5900 };
+    const affordable = isBuildingAllowed(key, state.selected) && Object.entries(costs).every(([r, amount]) => Number(storage[r] || 0) >= amount);
+    return `<div class="build-card"><div><strong>${b.icon} ${b.name}</strong><small>${b.text}</small></div><button class="build-resource" data-building="${key}" ${affordable ? '' : 'disabled'}>Bauen (${count})</button></div>`;
   }
 
   if (key === 'nuclearReactor') {
@@ -4730,6 +4750,7 @@ function demolitionCostMap(key, planetId, currentCount) {
     solarSail: { steel: 100, buildingMaterials: 100 },
     warmingSail: { steel: 100, buildingMaterials: 100 },
     nuclearReactor: { steel: 5000, buildingMaterials: 7000, electronics: 2000 },
+    nuclearReactorII: { steel: 3000, buildingMaterials: 5900 },
     solarPlant: { steel: 30, buildingMaterials: 10, electronics: 20 },
     hydroelectricPlant: { steel: 700, machines: 100, electronics: 50 },
     greenhouse: { steel: 500, polymers: 20, buildingMaterials: 300 },
@@ -5194,6 +5215,11 @@ function buildResourceBuilding(key) {
       renderSystem(); renderInfo(); renderTopResources(); saveAfterBuild();
       return;
     }
+  } else if (key === 'nuclearReactorII') {
+    if (Number(storage.steel || 0) < 3000 || Number(storage.buildingMaterials || 0) < 5900) return;
+    if (!isBuildingAllowed(key, planetId)) return;
+    storage.steel -= 3000;
+    storage.buildingMaterials -= 5900;
   } else if (key === 'nuclearReactor') {
     if (!state.research?.completed?.nuclearReactor) return;
     if (Number(storage.steel || 0) < 5000 || Number(storage.buildingMaterials || 0) < 7000 || Number(storage.electronics || 0) < 2000) return;
@@ -5455,6 +5481,8 @@ function launchHercules2(source, destination) {
   if (total > 300.000001) { rocketLaunchError('Die Fracht überschreitet 300 t Kapazität.'); return; }
 
   const targetMode = rocketDestinationMode;
+  const plutoniumLoad = cargo.filter(slot => slot.resource === 'plutonium').reduce((sum, slot) => sum + slot.amount, 0);
+  if (plutoniumLoad > 0 && !canReceivePlutonium(destination, targetMode, plutoniumLoad)) return rocketLaunchError('Plutonium kann nur zur Planetenoberfläche eines Zielplaneten mit Radioaktivstofflager transportiert werden; ausreichend freie Lagerkapazität ist erforderlich.');
   const sourceStorage = getLocationStorage(source, sourceMode);
   for (const slot of cargo) {
     if (Number(sourceStorage[slot.resource] || 0) + 0.000001 < slot.amount) return;
@@ -5499,6 +5527,8 @@ function launchAtlas1(source, destination) {
    const total = cargo.reduce((sum, slot) => sum + slot.amount, 0);
   if (total > 500.000001) { rocketLaunchError('Die Fracht überschreitet 500 t Kapazität.'); return; }
   const targetMode = rocketDestinationMode;
+  const plutoniumLoad = cargo.filter(slot => slot.resource === 'plutonium').reduce((sum, slot) => sum + slot.amount, 0);
+  if (plutoniumLoad > 0 && !canReceivePlutonium(destination, targetMode, plutoniumLoad)) return rocketLaunchError('Plutonium kann nur zur Planetenoberfläche eines Zielplaneten mit Radioaktivstofflager transportiert werden; ausreichend freie Lagerkapazität ist erforderlich.');
   if (!chargeRocketRoundTripFuel('atlas1', source, destination, sourceMode, targetMode)) return;
   const sourceStorage = getLocationStorage(source, sourceMode);
   for (const slot of cargo) if (Number(sourceStorage[slot.resource] || 0) + 0.000001 < slot.amount) return;
@@ -5522,6 +5552,8 @@ function launchTitan1(source, destination) {
    const total = cargo.reduce((sum, slot) => sum + slot.amount, 0);
   if (total <= 0 || total > 1500.000001) return rocketLaunchError('Die Fracht muss größer als 0 und darf höchstens 1.500 t/L betragen.');
   const targetMode = rocketDestinationMode;
+  const plutoniumLoad = cargo.filter(slot => slot.resource === 'plutonium').reduce((sum, slot) => sum + slot.amount, 0);
+  if (plutoniumLoad > 0 && !canReceivePlutonium(destination, targetMode, plutoniumLoad)) return rocketLaunchError('Plutonium kann nur zur Planetenoberfläche eines Zielplaneten mit Radioaktivstofflager transportiert werden; ausreichend freie Lagerkapazität ist erforderlich.');
   if (!chargeRocketRoundTripFuel('titan1', source, destination, sourceMode, targetMode)) return;
   const sourceStorage = getLocationStorage(source, sourceMode);
   for (const slot of cargo) if (Number(sourceStorage[slot.resource] || 0) + 0.000001 < slot.amount) return rocketLaunchError('Nicht genug Fracht im Lager.');
@@ -5547,6 +5579,8 @@ function launchAdler1(source, destination) {
    const total = cargo.reduce((sum, slot) => sum + slot.amount, 0);
   if (total <= 0 || total > 10000.000001) return rocketLaunchError('Die Fracht muss größer als 0 und darf höchstens 10.000 t/L betragen.');
   const targetMode = rocketDestinationMode;
+  const plutoniumLoad = cargo.filter(slot => slot.resource === 'plutonium').reduce((sum, slot) => sum + slot.amount, 0);
+  if (plutoniumLoad > 0 && !canReceivePlutonium(destination, targetMode, plutoniumLoad)) return rocketLaunchError('Plutonium kann nur zur Planetenoberfläche eines Zielplaneten mit Radioaktivstofflager transportiert werden; ausreichend freie Lagerkapazität ist erforderlich.');
   if (!chargeRocketRoundTripFuel('adler1', source, destination, sourceMode, targetMode)) return;
   const sourceStorage = getLocationStorage(source, sourceMode);
   for (const slot of cargo) if (Number(sourceStorage[slot.resource] || 0) + 0.000001 < slot.amount) return rocketLaunchError('Nicht genug Fracht im Lager.');
@@ -5716,7 +5750,7 @@ function renderRocketWindow(body) {
       : (cargo && cargo.amount > 0 ? `${resourceIcons[cargo.resource] || ''} ${resourceNames[cargo.resource] || cargo.resource}: ${(Number(cargo.amount) || 0).toFixed(2)} ${['crudeOil','water'].includes(cargo.resource) ? 'L' : 't'}` : 'Keine Fracht');
 
     if (r.status === 'orbit' || r.status === 'landed') {
-      const returnOptions = (isTankRocket ? [] : ['stone','ice','coal','gas','crudeOil','water','grain','vegetables','food','algaeBiomass','polymers','rubber','plastics','wood','biomass','vehicles','co2','carbon','oxygen','iron','goldOre','gold','silicon','lithium','copperOre','copper','batteries','buildingMaterials','machines','glass','electronics','uranium','processedUranium','nuclearFuel','steel','germanium','bauxite','aluminiumOxide','aluminium','titanium','nickelOre','graphite','nanochips'])
+      const returnOptions = (isTankRocket ? [] : ['stone','ice','coal','gas','crudeOil','water','grain','vegetables','food','algaeBiomass','polymers','rubber','plastics','wood','biomass','vehicles','co2','carbon','oxygen','iron','goldOre','gold','silicon','lithium','copperOre','copper','batteries','buildingMaterials','machines','glass','electronics','uranium','processedUranium','nuclearFuel','plutonium','steel','germanium','bauxite','aluminiumOxide','aluminium','titanium','nickelOre','graphite','nanochips'])
         .filter(k => Number(getLocationStorage(r.to, r.status === 'landed' ? 'surface' : 'orbit')[k] || 0) > 0.000001)
         .map(k => `<option value="${k}">${resourceIcons[k] || ''} ${resourceNames[k] || k}</option>`).join('');
       const phase = r.status === 'orbit' ? '🛰️ im Orbit' : '🛬 auf der Oberfläche';
@@ -5751,7 +5785,7 @@ function renderRocketWindow(body) {
   const localPolymers = getPlayerResourceAmount('polymers', source);
   const mobileMinerResearchDone = !!state.research?.completed?.mobileMiner;
 
-  const cargoOptions = ['stone','ice','coal','gas','crudeOil','water','grain','vegetables','food','algaeBiomass','polymers','rubber','plastics','wood','biomass','vehicles','co2','carbon','oxygen','iron','goldOre','gold','silicon','lithium','copperOre','copper','batteries','buildingMaterials','machines','glass','electronics','chips','microchip','uranium','processedUranium','nuclearFuel','steel','bauxite','aluminiumOxide','aluminium','titanium','nickelOre','graphite','nanochips']
+  const cargoOptions = ['stone','ice','coal','gas','crudeOil','water','grain','vegetables','food','algaeBiomass','polymers','rubber','plastics','wood','biomass','vehicles','co2','carbon','oxygen','iron','goldOre','gold','silicon','lithium','copperOre','copper','batteries','buildingMaterials','machines','glass','electronics','chips','microchip','uranium','processedUranium','nuclearFuel','plutonium','steel','bauxite','aluminiumOxide','aluminium','titanium','nickelOre','graphite','nanochips']
     .map(key => `<option value="${key}">${resourceIcons[key] || ''} ${resourceNames[key] || key}</option>`).join('');
 
   rocketCargoSlots = (Array.isArray(rocketCargoSlots) ? rocketCargoSlots : [])
@@ -7200,6 +7234,19 @@ function updateResources() {
         storage.chips = Math.max(0, availableChips - neededChips * factor);
         storage.lithium = Math.max(0, availableLithium - neededLithium * factor);
         storage.electronics = Number(storage.electronics || 0) + electronicsProduction(id) * delta * factor;
+      }
+    }
+
+    if (bld.nuclearReactorII > 0) {
+      const required = Number(bld.nuclearReactorII || 0) * 0.0001 * delta;
+      const available = Number(storage.uranium || 0);
+      const factor = required > 0 ? Math.min(1, available / required) : 0;
+      if (factor > 0) {
+        storage.uranium = Math.max(0, available - required * factor);
+        const capacity = radioactiveStorageCapacity(id, 'surface');
+        const used = radioactiveStoredAmount(storage);
+        const free = Math.max(0, capacity - used);
+        storage.plutonium = Number(storage.plutonium || 0) + Math.min(free, Number(bld.nuclearReactorII || 0) * 0.00008 * delta * factor);
       }
     }
 

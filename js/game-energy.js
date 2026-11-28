@@ -71,6 +71,7 @@
     { key: 'coalPowerPlant', name: 'Kohlekraftwerk', icon: '🏭', perBuilding: 20 },
     { key: 'solarPlant', name: 'Solaranlage', icon: '☀️', perBuilding: 20 },
     { key: 'fusionReactor', name: 'Fusionsreaktor', icon: '☢️', perBuilding: 50 },
-    { key: 'nuclearReactor', name: 'Kernkraftwerk', icon: '⚛️', perBuilding: 1000 }
+    { key: 'nuclearReactor', name: 'Kernkraftwerk', icon: '⚛️', perBuilding: 1000 },
+    { key: 'nuclearReactorII', name: 'Kernreaktor II', icon: '⚛️', perBuilding: 900 }
   ]);
 })();
