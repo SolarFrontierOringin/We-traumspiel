@@ -9,4 +9,6 @@ Freie Bevölkerung gibt es jetzt auf der Erde start wert 10.000
 
 
 Armösphäre 
-Auf Luna, Venus, Merkur kann eine Atmosphäre erzeugt werden. Kolonisten könnem auf diesen Planeten frei gegeben werden. Bei Guter Werten Vermehren sich die Weltbevölkerung Selbständig
+Die Atmosphäre ist für alle Planeten im 1 Sonnensystem jetzt frei geschalten. 
+
+
