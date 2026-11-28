@@ -2860,8 +2860,9 @@ function renderSystem() {
   }
   solarSystem.appendChild(asteroidBelt);
 
+  const system2BodyIds = new Set(futureSolarSystem.bodies.map(body => body.id));
   Object.entries(bodies).forEach(([id, body]) => {
-    if (id === 'sun' || id === 'luna' || body.sharedOrbitWith || !(body.orbit > 0)) return;
+    if (system2BodyIds.has(id) || id === 'sun' || id === 'luna' || body.sharedOrbitWith || !(body.orbit > 0)) return;
     const orbitRadius = Number(body.orbit) / 2;
     // Alle Planetenbahnen werden exakt nach dem Radius der Abstandstabelle gezeichnet.
     // Jupiter liegt bei 410 px knapp innerhalb des Gürtels; Saturn bei 670 px außerhalb.
@@ -2929,7 +2930,7 @@ function renderSystem() {
   requestAnimationFrame(animateLuna);
 
   Object.entries(bodies).forEach(([id, body]) => {
-    if (id === 'luna') return;
+    if (system2BodyIds.has(id) || id === 'luna') return;
     const element = document.createElement('button');
     element.className = `body ${body.className}${state.selected === id ? ' selected' : ''}`;
     element.dataset.bodyId = id;
