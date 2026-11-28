@@ -3095,3 +3095,12 @@ body > .planet-build-menu .planet-build-header {
   background-color: #05030d;
   background-repeat: no-repeat;
 }
+
+
+/* Einzigartiges Raketen-Silo */
+.rocket-silo-card { border-color: rgba(245, 190, 55, .42); background: linear-gradient(145deg, rgba(35,39,46,.98), rgba(12,17,25,.98)); }
+.rocket-silo-card h3 { color: #f4c84e; }
+.rocket-silo-lock { display:flex; align-items:center; justify-content:center; gap:12px; padding:18px 12px; margin:12px 0; border:1px solid rgba(245,190,55,.5); border-radius:12px; color:#ffd34f; background:linear-gradient(90deg,rgba(90,75,28,.25),rgba(20,24,30,.95)); text-align:center; }
+.rocket-silo-locked { border-color:rgba(245,190,55,.35); }
+.rocket-silo-panel { z-index:46; }
+.rocket-silo-dashboard { border-color:rgba(245,190,55,.35); }
