@@ -368,6 +368,22 @@
             <option value="fr">Français</option>
           </select>
         </div>
+        <div class="music-controls" aria-label="Musiksteuerung">
+          <div class="music-controls-head">
+            <strong>🎵 Hintergrundmusik</strong>
+            <span id="music-track-name">Pondering the Cosmos</span>
+          </div>
+          <div class="music-controls-buttons">
+            <button id="music-previous" type="button" aria-label="Vorheriges Lied" title="Vorheriges Lied">⏮ Zurück</button>
+            <button id="music-next" type="button" aria-label="Nächstes Lied" title="Nächstes Lied">⏭ Weiter</button>
+            <button id="music-mute" type="button" aria-label="Musik stummschalten">🔊 Musik an</button>
+          </div>
+          <label class="music-volume-row" for="music-volume">
+            <span>🔉 Lautstärke</span>
+            <input id="music-volume" type="range" min="0" max="100" step="1" value="35">
+            <output id="music-volume-value">35 %</output>
+          </label>
+        </div>
         <button id="save-menu-button" class="menu-item">💾 <span>Spiel</span></button>
         <button id="introduction-button" class="menu-item">📖 <span>Chronik</span></button>
         <button id="help-button" class="menu-item">❔ <span>Hilfe & Spielhandbuch</span></button>
@@ -674,7 +690,7 @@
   <script src="js/resource-registry.js?v=resource-registry-20261115-v2"></script>
   <script src="js/building-registry.js?v=building-registry-20261115-v2"></script>
   <script src="js/game-save.js?v=save-schema12-release-1.1.1"></script>
-  <script src="js/game.js?v=20261128-celtic-winds-audio03"></script>
+  <script src="js/game.js?v=20261128-audio-controls-fix01"></script>
   <script src="js/game-research.js?v=research-orders-split-20261122"></script>
   <script src="js/game-workforce.js?v=workforce-powerlink-20261114"></script>
 <script src="js/game-colonists.js?v=recruitment-20261114"></script>
@@ -683,7 +699,7 @@
 <script src="js/game-orders.js?v=finance-researchers-1.1.1"></script>
   <script src="js/unique-buildings.js?v=unique-research-hq-1.1.1"></script>
 <script src="js/game-recruitment.js?v=recruitment-20261114"></script>
-<script src="js/game-language-ui.js?v=20261127-no-breaking-news"></script>
+<script src="js/game-language-ui.js?v=20261128-audio-unlock-fix01"></script>
   <script>if ("serviceWorker" in navigator) navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{});</script>
 
 <script>
