@@ -12,5 +12,11 @@ Er Erzeugt 900mw (Bitte in der Energie.js hinterlegen), 0,00008t Plutonium
 
 # Neue Rohstoffe
 
-füge Plutonium dem Spiel hinzu 
-Plutonium 
+füge Plutonium dem Spiel hinzu.
+-füge Plutonium dem Radioaktivstofflager hinzu
+- füge es dem raketen Station als transport hinzi
+- - Es kann nur transportiert werden wenn auf dem zielplanet auf der oberfläche ein
+  - radioaltovstofflager gitb
+  - füge Plutonium dem marlt hinzu
+  - Es kann am markt bis zur auffüllung nicht mehr ald 10.000 tonnen gekauft werden
+  - 1 Tonne soll eine Durchschnittswert von 150.000 gd haben 
