@@ -34,6 +34,106 @@
     return hq;
   }
 
+  const SILO_COSTS = { steel: 19000, buildingMaterials: 22000, glass: 6000, electronics: 2000, chips: 7000 };
+
+  function ensureSilo() {
+    if (!state.uniqueBuildings || typeof state.uniqueBuildings !== 'object') state.uniqueBuildings = {};
+    let silo = state.uniqueBuildings.rocketSilo;
+    if (!silo || typeof silo !== 'object') silo = state.uniqueBuildings.rocketSilo = {};
+    silo.built = Boolean(silo.built);
+    silo.everBuilt = Boolean(silo.everBuilt || silo.built);
+    return silo;
+  }
+
+  function buildRocketSilo() {
+    const silo = ensureSilo();
+    if (silo.built) return;
+    const storage = getPlanetStorage('earth');
+    const missing = Object.entries(SILO_COSTS).filter(([key, amount]) => Number(storage[key] || 0) < amount);
+    if (missing.length) {
+      const parts = missing.map(([key, amount]) => {
+        const names = { steel: 'Stahl', buildingMaterials: 'Baustoffe', glass: 'Glas', electronics: 'Elektronik', chips: 'Chips' };
+        return `${fmt(amount - Number(storage[key] || 0))} t ${names[key]}`;
+      });
+      return notify(`Nicht genügend Bauressourcen. Es fehlen: ${parts.join(', ')}.`, false);
+    }
+    for (const [key, amount] of Object.entries(SILO_COSTS)) storage[key] = Number(storage[key] || 0) - amount;
+    silo.built = true;
+    silo.everBuilt = true;
+    saveGame(false);
+    renderUniqueBuildings();
+    renderSiloWindow();
+    notify('Raketen-Silo wurde auf der Erde errichtet.');
+  }
+
+  function demolishRocketSilo() {
+    const silo = ensureSilo();
+    if (!silo.built) return;
+    if (!confirm('Raketen-Silo wirklich abreißen? Du erhältst 75 % der Baukosten zurück.')) return;
+    const storage = getPlanetStorage('earth');
+    for (const [key, amount] of Object.entries(SILO_COSTS)) {
+      storage[key] = Number(storage[key] || 0) + Math.floor(amount * 0.75);
+    }
+    silo.built = false;
+    saveGame(false);
+    const panel = document.querySelector('#rocket-silo-panel');
+    if (panel) panel.hidden = true;
+    renderUniqueBuildings();
+    notify('Raketen-Silo abgerissen. 75 % der Baukosten wurden erstattet.');
+  }
+
+  function openSiloWindow() {
+    const panel = document.querySelector('#rocket-silo-panel');
+    if (!panel || !ensureSilo().built) return;
+    ['#unique-buildings-panel','#research-hq-panel'].forEach(selector => {
+      const other = document.querySelector(selector);
+      if (other) other.hidden = true;
+    });
+    const menu = document.querySelector('#main-menu');
+    if (menu) menu.hidden = true;
+    panel.hidden = false;
+    renderSiloWindow();
+  }
+
+  function renderSiloWindow() {
+    const root = document.querySelector('#rocket-silo-window');
+    if (!root) return;
+    const silo = ensureSilo();
+    if (!silo.built) {
+      root.innerHTML = '<p class="hint">Das Raketen-Silo wurde noch nicht gebaut.</p>';
+      return;
+    }
+    root.innerHTML = `
+      <section class="research-hq-dashboard rocket-silo-dashboard">
+        <div class="research-hq-heading">
+          <div><span class="unique-building-kicker">STRATEGISCHE RAUMFAHRTANLAGE · ERDE</span><h3>🚀 Raketen Silo</h3></div>
+          <span class="unique-building-status is-built">Gebaut · Erde</span>
+        </div>
+        <div class="research-hq-stats">
+          <div><span>Standort</span><strong>Erde</strong></div>
+          <div><span>Gebäudeanzahl</span><strong>1 / 1</strong></div>
+          <div><span>Raketenbau</span><strong>Nuklear I gesperrt</strong></div>
+          <div><span>Bauzeit je Rakete</span><strong>24 Ingame-Stunden</strong></div>
+        </div>
+      </section>
+      <section class="research-training-panel rocket-silo-locked">
+        <h3>☢️ Nuklear I</h3>
+        <div class="rocket-silo-lock">🔒 <strong>AKTUELL NOCH GESPERRT</strong></div>
+        <p>Diese Raketenstufe wird durch eine spätere Forschung freigeschaltet. Produktion und Warteschlange sind bis dahin deaktiviert.</p>
+        <div class="unique-building-meta">
+          <div><span>Bauzeit pro Rakete</span><strong>24 Ingame-Stunden</strong></div>
+          <div><span>Warteschlange</span><strong>Mehrere Aufträge möglich</strong></div>
+          <div><span>Rohstoffabbuchung</span><strong>Bei Auftragserteilung</strong></div>
+          <div><span>Produktionsablauf</span><strong>Nacheinander</strong></div>
+        </div>
+        <p class="unique-building-note">Sobald Nuklear I freigeschaltet ist, können mehrere Raketen eingereiht werden. Die Rohstoffe werden direkt beim Einreihen abgezogen; jede Rakete benötigt einen Ingame-Tag.</p>
+      </section>
+      <section class="research-training-panel">
+        <h3>📋 Bauwarteschlange</h3>
+        <p class="hint">Keine Bauaufträge · Die Warteschlange wird mit der Freischaltung von Nuklear I aktiviert.</p>
+      </section>`;
+  }
+
   function fmt(value, digits = 0) {
     return Number(value || 0).toLocaleString('de-DE', { maximumFractionDigits: digits });
   }
@@ -236,6 +336,27 @@
         <button type="button" class="primary-button unique-open-hq" data-open-research-hq>Forschungshauptquartier öffnen</button>` :
           `<p class="unique-building-note">Das Hauptquartier ist noch nicht gebaut. Nach einem Abriss können 75 % der Baukosten erstattet und das Gebäude erneut errichtet werden.</p>`}
       </section>
+      <section class="unique-building-card rocket-silo-card">
+        <div class="unique-building-card-head">
+          <div><span class="unique-building-kicker">EINZIGARTIGES GEBÄUDE · ERDE</span><h3>🚀 Raketen Silo</h3>
+          <p class="hint">Hochsicherer Komplex zum Bau von Nuklearraketen.</p></div>
+          <div class="unique-building-actions">${ensureSilo().built
+            ? `<span class="unique-building-status is-built">Gebaut</span><button type="button" class="danger-button" data-demolish-rocket-silo>Abriss</button>`
+            : `<button type="button" class="primary-button" data-build-rocket-silo>Bauen</button>`}</div>
+        </div>
+        <div class="unique-building-meta">
+          <div><span>Bauort</span><strong>Erde</strong></div>
+          <div><span>Bauanzahl</span><strong>Maximal 1 gleichzeitig</strong></div>
+          <div><span>Stahl</span><strong>19.000 t</strong></div>
+          <div><span>Baustoffe</span><strong>22.000 t</strong></div>
+          <div><span>Glas</span><strong>6.000 t</strong></div>
+          <div><span>Elektronik</span><strong>2.000 t</strong></div>
+          <div><span>Chips</span><strong>7.000 t</strong></div>
+          <div><span>Abriss</span><strong>75 % Rückerstattung</strong></div>
+        </div>
+        ${ensureSilo().built ? `<button type="button" class="primary-button unique-open-hq" data-open-rocket-silo>Raketen-Silo öffnen</button>` :
+          `<p class="unique-building-note">Einmalig auf der Erde baubar. Nach einem Abriss werden 75 % der Baukosten erstattet.</p>`}
+      </section>
       <p class="hint unique-building-footnote">Weitere einzigartige Gebäude können später in diesem Menü ergänzt werden.</p>`;
   }
 
@@ -372,6 +493,7 @@
 
   function setup() {
     ensureHQ();
+    ensureSilo();
     const menuButton = document.querySelector('#unique-buildings-button');
     const panel = document.querySelector('#unique-buildings-panel');
     const close = document.querySelector('#unique-buildings-close');
@@ -388,11 +510,20 @@
       if (shouldOpen) renderUniqueBuildings();
     });
     close?.addEventListener('click', () => { if (panel) panel.hidden = true; });
+    document.querySelector('#rocket-silo-close')?.addEventListener('click', () => {
+      const siloPanel = document.querySelector('#rocket-silo-panel');
+      if (siloPanel) siloPanel.hidden = true;
+    });
     document.querySelector('#research-hq-close')?.addEventListener('click', () => {
       const hqPanel = document.querySelector('#research-hq-panel');
       if (hqPanel) hqPanel.hidden = true;
     });
     document.addEventListener('click', event => {
+      const siloBuild = event.target.closest('[data-build-rocket-silo]');
+      if (siloBuild) return buildRocketSilo();
+      const siloDemolish = event.target.closest('[data-demolish-rocket-silo]');
+      if (siloDemolish) return demolishRocketSilo();
+      if (event.target.closest('[data-open-rocket-silo]')) return openSiloWindow();
       const build = event.target.closest('[data-build-research-hq]');
       if (build) return buildResearchHQ();
       const demolish = event.target.closest('[data-demolish-research-hq]');
@@ -414,6 +545,8 @@
         if (panel) panel.hidden = true;
         const hqPanel = document.querySelector('#research-hq-panel');
         if (hqPanel) hqPanel.hidden = true;
+        const siloPanel = document.querySelector('#rocket-silo-panel');
+        if (siloPanel) siloPanel.hidden = true;
       });
     });
 
@@ -433,6 +566,7 @@
     const hqPanel = document.querySelector('#research-hq-panel');
     if (hqPanel) hqPanel.hidden = true;
     renderAll();
+    renderSiloWindow();
     lastObservedGameTime = gameNow();
     window.setInterval(() => {
       const now = gameNow();

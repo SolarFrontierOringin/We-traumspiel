@@ -1956,6 +1956,26 @@ function updatePrologThreeProgress() {
     : 'Baue die benötigten Gebäude, um diese Aufgabe abzuschließen.';
   return { iron, stone, percent, complete: iron >= 6 && stone >= 6 };
 }
+function totalBuildingMaterialsFactoriesBuilt() {
+  return Object.keys(bodies).filter(id => id !== 'sun').reduce((sum, id) => sum + Number(getBuildingsOnPlanet(id).buildingMaterialsFactory || 0), 0);
+}
+function updatePrologFourProgress() {
+  const steelworks = Math.min(3, totalSteelworksBuilt());
+  const materials = Math.min(3, totalBuildingMaterialsFactoriesBuilt());
+  const percent = Math.floor(((steelworks + materials) / 6) * 100);
+  const bar = document.querySelector('[data-prolog-four-progress]');
+  const label = document.querySelector('[data-prolog-four-percent]');
+  const details = document.querySelector('[data-prolog-four-counts]');
+  if (bar) bar.style.width = `${percent}%`;
+  if (label) label.textContent = `${percent}%`;
+  if (details) details.textContent = `Stahlwerke: ${steelworks} / 3 · Baustoffwerke: ${materials} / 3`;
+  const status = document.querySelector('[data-prolog-four-status]');
+  if (status) status.textContent = steelworks >= 3 && materials >= 3
+    ? 'Aufgabe abgeschlossen! Alle 6 Gebäude wurden errichtet.'
+    : 'Baue die benötigten Gebäude, um diese Aufgabe abzuschließen.';
+  return { steelworks, materials, percent, complete: steelworks >= 3 && materials >= 3 };
+}
+
 function taskProgress(key) {
   const task = taskTypes[key];
   if (!task) return 0;
@@ -2140,6 +2160,13 @@ function renderTasks() {
             <button type="button" class="prolog-open-message prolog-open-green" data-open-prolog-three>Aufgabe öffnen</button>
           </div>
         </details>
+        <details class="prolog-task-accordion prolog-task-four">
+          <summary><span>🏗️ Die Grundlagen</span><span class="prolog-task-status">Prolog-Aufgabe 4</span></summary>
+          <div class="prolog-task-body">
+            <p>Baue die Infrastruktur deiner Firma weiter aus: Errichte 3 Stahlwerke und 3 Baustoffwerke.</p>
+            <button type="button" class="prolog-open-message prolog-open-green" data-open-prolog-four>Aufgabe öffnen</button>
+          </div>
+        </details>
         <section class="prolog-message-window" data-prolog-message hidden role="dialog" aria-modal="true" aria-labelledby="prolog-welcome-title">
           <div class="prolog-message-head">
             <div><span>PROLOG · NACHRICHT 01</span><h3 id="prolog-welcome-title">Willkommen</h3></div>
@@ -2211,6 +2238,28 @@ function renderTasks() {
             <div class="hint" data-prolog-audio-status="03">Suche nach audio/Geschichte-03 …</div>
           </div>
         </section>
+        <section class="prolog-message-window" data-prolog-four hidden role="dialog" aria-modal="true" aria-labelledby="prolog-four-title">
+          <div class="prolog-message-head">
+            <div><span>PROLOG · AUFGABE 04</span><h3 id="prolog-four-title">Die Grundlagen</h3></div>
+            <button type="button" class="icon-button" data-close-prolog-four aria-label="Aufgabe schließen">✕</button>
+          </div>
+          <div class="prolog-message-content prolog-green-content">
+            <p>So chef, es ist an der Zeit das wir doe Infrastruktur aufbauen.</p>
+            <p>Wir benötigen für den Anfang einige Rohstoffe und Gebäude um unsere Firma langsam auf zu Bauen.</p>
+          </div>
+          <div class="prolog-three-task">
+            <h4>Deine Aufgabe: Baue 3 Stahlwerke und 3 Baustoffwerke</h4>
+            <div class="prolog-three-progress-line"><strong>Fortschritt</strong><strong data-prolog-four-percent>0%</strong></div>
+            <div class="prolog-three-progress-track"><i data-prolog-four-progress style="width:0%"></i></div>
+            <p class="prolog-three-counts" data-prolog-four-counts>Stahlwerke: 0 / 3 · Baustoffwerke: 0 / 3</p>
+            <p class="prolog-three-status" data-prolog-four-status>Baue die benötigten Gebäude, um diese Aufgabe abzuschließen.</p>
+          </div>
+          <div class="prolog-audio-panel">
+            <div class="prolog-audio-heading">🎙️ Geschichte-04</div>
+            <audio controls preload="metadata" data-prolog-audio="04">Dein Browser unterstützt den Audioplayer nicht.</audio>
+            <div class="hint" data-prolog-audio-status="04">Suche nach audio/Geschichte-04 …</div>
+          </div>
+        </section>
       </div>`;
     panel.querySelector('[data-task-home]')?.addEventListener('click', () => {
       panel.dataset.activeTaskView = 'home';
@@ -2220,15 +2269,19 @@ function renderTasks() {
     const welcomeMessage = panel.querySelector('[data-prolog-message]');
     const newsMessage = panel.querySelector('[data-prolog-news]');
     const prologThreeMessage = panel.querySelector('[data-prolog-three]');
+    const prologFourMessage = panel.querySelector('[data-prolog-four]');
     const oldWelcome = document.querySelector('[data-prolog-message].prolog-message-window');
     const oldNews = document.querySelector('[data-prolog-news].prolog-message-window');
     const oldPrologThree = document.querySelector('[data-prolog-three].prolog-message-window');
+    const oldPrologFour = document.querySelector('[data-prolog-four].prolog-message-window');
     if (oldWelcome && oldWelcome !== welcomeMessage) oldWelcome.remove();
     if (oldNews && oldNews !== newsMessage) oldNews.remove();
     if (oldPrologThree && oldPrologThree !== prologThreeMessage) oldPrologThree.remove();
+    if (oldPrologFour && oldPrologFour !== prologFourMessage) oldPrologFour.remove();
     document.body.appendChild(welcomeMessage);
     document.body.appendChild(newsMessage);
     document.body.appendChild(prologThreeMessage);
+    document.body.appendChild(prologFourMessage);
 
     const openModal = modal => {
       if (!modal) return;
@@ -2239,6 +2292,10 @@ function renderTasks() {
       if (modal === prologThreeMessage) {
         resolvePrologAudio(document, '03');
         updatePrologThreeProgress();
+      }
+      if (modal === prologFourMessage) {
+        resolvePrologAudio(document, '04');
+        updatePrologFourProgress();
       }
     };
     const closeModal = modal => {
@@ -2252,10 +2309,14 @@ function renderTasks() {
     panel.querySelector('[data-open-prolog-news]')?.addEventListener('click', () => openModal(newsMessage));
     panel.querySelector('.prolog-task-three > summary')?.addEventListener('click', () => openModal(prologThreeMessage));
     panel.querySelector('[data-open-prolog-three]')?.addEventListener('click', () => openModal(prologThreeMessage));
+    panel.querySelector('.prolog-task-four > summary')?.addEventListener('click', () => openModal(prologFourMessage));
+    panel.querySelector('[data-open-prolog-four]')?.addEventListener('click', () => openModal(prologFourMessage));
     welcomeMessage?.querySelector('[data-close-prolog-message]')?.addEventListener('click', () => closeModal(welcomeMessage));
     newsMessage?.querySelector('[data-close-prolog-news]')?.addEventListener('click', () => closeModal(newsMessage));
     prologThreeMessage?.querySelector('[data-close-prolog-three]')?.addEventListener('click', () => closeModal(prologThreeMessage));
+    prologFourMessage?.querySelector('[data-close-prolog-four]')?.addEventListener('click', () => closeModal(prologFourMessage));
     updatePrologThreeProgress();
+    updatePrologFourProgress();
 
     newsMessage?.querySelector('[data-create-prolog-company]')?.addEventListener('click', () => {
       state.tasks = state.tasks || {};
@@ -2338,6 +2399,7 @@ function renderTasks() {
 function taskProgressUpdate() {
   const changed = updateTasks();
   updatePrologThreeProgress();
+  updatePrologFourProgress();
   const panel = document.querySelector('#tasks-panel');
   if (panel && !panel.hidden) renderTasks();
   updateCompanyHeadquartersMenu();
