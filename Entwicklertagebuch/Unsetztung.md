@@ -6,3 +6,6 @@ Er Erzeugt 900mw (Bitte in der Energie.js hinterlegen), 0,00008t Plutonium
 - Passe das Geöuse so an das er in der Gebäudekarte auch erscheint.
 - Kosten  3.000 Stahl, 5.900 Baustoffe
 - kann auf allen Oberflächen gebaut werden. 
+
+
+# Neue Rohstoffe
