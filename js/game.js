@@ -31,7 +31,7 @@ let activeSolarSystemId = 'system1';
 // AUDIO
 // ==========================================
 const AUDIO_SETTINGS_KEY = 'solarFrontierAudio_v1';
-const musicTracks = ['Ruskerdax - Pondering the Cosmos.mp3', 'humanstudioed-cyberpunk-techno-510219.mp3'];
+const musicTracks = ['Ruskerdax - Pondering the Cosmos.mp3', 'humanstudioed-cyberpunk-techno-510219.mp3', 'audio/psychronic-celtic-winds-439101.mp3'];
 let currentMusicTrack = 0;
 const backgroundMusic = new Audio(musicTracks[currentMusicTrack]);
 backgroundMusic.loop = false;
